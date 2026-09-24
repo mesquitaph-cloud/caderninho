@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caderninho</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Caderninho">
+<meta name="theme-color" content="#F9D3DC">
+<style>
+  :root{--bg:#FFF7F5;--surface:#FFFFFF;--ink:#3A2F45;--muted:#85798F;--line:#F0E1E4;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:calc(24px + env(safe-area-inset-top,0px)) 16px 32px}
+  main{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  h1{font-size:26px;margin:0}
+  p{margin:0;color:var(--muted)}
+  input{font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+  #code{letter-spacing:.3em;text-align:center;font-size:24px}
+  button{font:inherit;font-weight:700;font-size:17px;padding:14px;border-radius:14px;border:none;background:var(--accent);color:var(--on-accent);cursor:pointer}
+  button.link{background:none;color:var(--accent);padding:6px}
+  .err{color:var(--danger);font-weight:600;font-size:14px}
+  .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;font-size:14px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>Caderninho</h1>
+
+  <form id="stepEmail">
+    <p>Digite seu e-mail. Vamos mandar um código de 6 dígitos.</p>
+    <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+    <p class="err" id="errEmail" hidden></p>
+    <button type="submit">Receber código</button>
+  </form>
+
+  <form id="stepCode" hidden>
+    <p id="sentTo"></p>
+    <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+    <p class="err" id="errCode" hidden></p>
+    <button type="submit">Entrar</button>
+    <button type="button" class="link" id="back">Usar outro e-mail</button>
+  </form>
+
+  <section id="stepIn" hidden>
+    <p>Você entrou como</p>
+    <h1 id="who"></h1>
+    <div class="box" id="mode"></div>
+    <button type="button" class="link" id="logout">Sair</button>
+  </section>
+</main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+let email = '';
+
+function show(step){ for (const s of ['stepEmail','stepCode','stepIn']) $(s).hidden = s !== step; }
+function err(id, msg){ $(id).textContent = msg; $(id).hidden = !msg; }
+
+async function refresh(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) return show('stepEmail');
+  $('who').textContent = session.user.email;
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  $('mode').textContent = standalone ? 'Aberto pelo ícone da tela inicial.' : 'Aberto pelo navegador.';
+  show('stepIn');
+}
+
+$('stepEmail').addEventListener('submit', async e => {
+  e.preventDefault(); err('errEmail','');
+  email = $('email').value.trim().toLowerCase();
+  const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:true } });
+  if (error) return err('errEmail', 'Não foi possível enviar o código: ' + error.message);
+  $('sentTo').textContent = 'Código enviado para ' + email + '. Confira também o spam.';
+  $('code').value = ''; show('stepCode'); $('code').focus();
+});
+
+$('stepCode').addEventListener('submit', async e => {
+  e.preventDefault(); err('errCode','');
+  const token = $('code').value.replace(/\D/g,'');
+  if (token.length !== 6) return err('errCode', 'O código tem 6 dígitos.');
+  const { error } = await sb.auth.verifyOtp({ email, token, type:'email' });
+  if (error) return err('errCode', 'Código inválido ou vencido. Peça outro.');
+  refresh();
+});
+
+$('back').onclick = () => show('stepEmail');
+$('logout').onclick = async () => { await sb.auth.signOut(); refresh(); };
+refresh();
+</script>
+</body>
+</html>
