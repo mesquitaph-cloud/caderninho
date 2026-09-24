@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "mcp__Gmail__send_message",
+      "mcp__Gmail__reply",
+      "mcp__Gmail__forward",
+      "mcp__Google_Drive__share_file"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*[Ss]upabase.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/supabase-guard.mjs\" || { echo 'Trava do Supabase indisponível: ferramenta bloqueada.' >&2; exit 2; }",
+            "timeout": 15,
+            "statusMessage": "Conferindo a trava do Supabase"
+          }
+        ]
+      }
+    ]
+  }
+}
