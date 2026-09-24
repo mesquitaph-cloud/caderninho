@@ -11,19 +11,26 @@ O grupo de pessoas que cuida de um ou mais bebês e compartilha os mesmos regist
 _Evite_: perfil, conta, grupo, casa
 
 **Criador**:
-O membro que criou a família. É quem convida os demais.
+O membro que criou a família. É o único que convida, remove membros e apaga a família; se o
+criador sai, a família deixa de existir.
 _Evite_: dono, administrador, admin
 
 **Membro**:
-Uma pessoa que pertence a uma família. Todo membro vê e edita todos os registros da família.
+Uma pessoa que pertence a uma família. Todo membro vê e edita todos os registros da família. Uma
+pessoa pode ser membro de várias famílias.
 _Evite_: usuário, participante, cuidador
 
+**Nome de exibição**:
+Como a pessoa aparece para as famílias de que participa, escolhido por ela no primeiro acesso.
+_Evite_: apelido, username, e-mail
+
 **Convite**:
-O meio pelo qual o criador chama alguém para ser membro da família.
+Link que o criador gera para uma única pessoa entrar na família; vale 7 dias ou até ser usado.
 _Evite_: compartilhamento, acesso
 
 **Bebê**:
-Uma criança acompanhada por uma família. Uma família pode ter mais de um bebê.
+Uma criança acompanhada por uma família. Uma família pode ter mais de um bebê; cada registro é de
+um único bebê.
 _Evite_: filho, criança, paciente
 
 ## Registros
@@ -34,7 +41,7 @@ uma troca de fralda, um vômito ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
-O membro que fez o registro. Todo registro mostra seu autor.
+O membro que fez o registro. Todo registro mostra seu autor, mesmo depois que ele deixa a família.
 _Evite_: responsável, criador (criador é da família, não do registro)
 
 **Mamada**:
