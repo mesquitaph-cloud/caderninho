@@ -9,91 +9,108 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Caderninho">
 <meta name="theme-color" content="#F9D3DC">
-<style>
-  :root{--bg:#FFF7F5;--surface:#FFFFFF;--ink:#3A2F45;--muted:#85798F;--line:#F0E1E4;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
-       padding:calc(24px + env(safe-area-inset-top,0px)) 16px 32px}
-  main{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-  h1{font-size:26px;margin:0}
-  p{margin:0;color:var(--muted)}
-  input{font:inherit;font-size:18px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
-  #code{letter-spacing:.3em;text-align:center;font-size:24px}
-  button{font:inherit;font-weight:700;font-size:17px;padding:14px;border-radius:14px;border:none;background:var(--accent);color:var(--on-accent);cursor:pointer}
-  button.link{background:none;color:var(--accent);padding:6px}
-  .err{color:var(--danger);font-weight:600;font-size:14px}
-  .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;font-size:14px}
-  [hidden]{display:none!important}
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
 </head>
 <body>
-<main>
+
+<!-- Carregando -->
+<section class="screen" id="scrLoading"><p>Abrindo o Caderninho…</p></section>
+
+<!-- Login -->
+<section class="screen" id="scrLogin" hidden>
   <h1>Caderninho</h1>
-
-  <form id="stepEmail">
+  <form id="fEmail">
     <p>Digite seu e-mail. Vamos mandar um código para você entrar.</p>
-    <input id="email" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
+    <input class="field" id="emailIn" type="email" autocomplete="email" inputmode="email" placeholder="voce@email.com" required>
     <p class="err" id="errEmail" hidden></p>
-    <button type="submit">Receber código</button>
+    <button class="save" type="submit">Receber código</button>
   </form>
-
-  <form id="stepCode" hidden>
+  <form id="fCode" hidden>
     <p id="sentTo"></p>
-    <input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Código" required>
+    <input class="field" id="codeIn" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Código" required>
     <p class="err" id="errCode" hidden></p>
-    <button type="submit">Entrar</button>
-    <button type="button" class="link" id="back">Usar outro e-mail</button>
+    <button class="save" type="submit">Entrar</button>
+    <button type="button" class="link" id="backEmail">Usar outro e-mail</button>
   </form>
+</section>
 
-  <section id="stepIn" hidden>
-    <p>Você entrou como</p>
-    <h1 id="who"></h1>
-    <div class="box" id="mode"></div>
-    <button type="button" class="link" id="logout">Sair</button>
-  </section>
-</main>
+<!-- Nome de exibição -->
+<section class="screen" id="scrName" hidden>
+  <h1>Bem-vindo</h1>
+  <form id="fName">
+    <p>Como você quer aparecer para a família?</p>
+    <input class="field" id="nameIn" maxlength="40" placeholder="Patrick" required>
+    <p class="err" id="errName" hidden></p>
+    <button class="save" type="submit">Continuar</button>
+  </form>
+</section>
 
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+<!-- Convite -->
+<section class="screen" id="scrInvite" hidden>
+  <h1>Convite</h1>
+  <p id="inviteText"></p>
+  <p class="err" id="errInvite" hidden></p>
+  <button class="save" id="acceptInvite">Entrar na família</button>
+  <button type="button" class="link" id="skipInvite">Agora não</button>
+</section>
 
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-const $ = id => document.getElementById(id);
-let email = '';
+<!-- Criar família -->
+<section class="screen" id="scrCreate" hidden>
+  <h1>Criar família</h1>
+  <form id="fCreate">
+    <p>A família é quem cuida do bebê e vê os mesmos registros. Depois você convida as outras pessoas.</p>
+    <div><div class="lbl">Nome da família</div><input class="field" id="famIn" maxlength="60" placeholder="Família Mesquita" required></div>
+    <div><div class="lbl">Nome do bebê</div><input class="field" id="babyIn" maxlength="40" placeholder="Marina" required></div>
+    <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="birthIn" type="date"></div>
+    <p class="err" id="errCreate" hidden></p>
+    <button class="save" type="submit">Criar família</button>
+  </form>
+  <button type="button" class="link" id="cancelCreate" hidden>Voltar</button>
+</section>
 
-function show(step){ for (const s of ['stepEmail','stepCode','stepIn']) $(s).hidden = s !== step; }
-function err(id, msg){ $(id).textContent = msg; $(id).hidden = !msg; }
+<!-- App -->
+<div class="wrap" id="scrMain" hidden>
+  <header>
+    <button class="baby" id="babyBtn" aria-label="Editar bebê">
+      <div class="av" id="babyInitial">B</div>
+      <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
+    </button>
+    <div class="hbtns">
+      <button class="icon-btn" id="themeBtn" aria-label="Alternar modo noturno"></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Família e configurações"></button>
+    </div>
+  </header>
+  <div class="babies" id="babyTabs" hidden></div>
 
-async function refresh(){
-  const { data:{ session } } = await sb.auth.getSession();
-  if (!session) return show('stepEmail');
-  $('who').textContent = session.user.email;
-  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  $('mode').textContent = standalone ? 'Aberto pelo ícone da tela inicial.' : 'Aberto pelo navegador.';
-  show('stepIn');
-}
+  <div class="sleeping" id="sleepBanner" hidden>
+    <div><small>Dormindo há</small><span class="t" id="sleepFor">0 min</span></div>
+    <button class="pill" id="wakeBtn">Acordou</button>
+  </div>
 
-$('stepEmail').addEventListener('submit', async e => {
-  e.preventDefault(); err('errEmail','');
-  email = $('email').value.trim().toLowerCase();
-  const { error } = await sb.auth.signInWithOtp({ email, options:{ shouldCreateUser:true } });
-  if (error) return err('errEmail', 'Não foi possível enviar o código: ' + error.message);
-  $('sentTo').textContent = 'Código enviado para ' + email + '. Confira também o spam.';
-  $('code').value = ''; show('stepCode'); $('code').focus();
-});
+  <div class="grid">
+    <button class="act k-feed" data-k="feed"><span data-i="feed"></span><b>Mamada</b><span id="subFeed"></span></button>
+    <button class="act k-sleep" data-k="sleep"><span data-i="sleep"></span><b>Sono</b><span id="subSleep"></span></button>
+    <button class="act k-diaper" data-k="diaper"><span data-i="diaper"></span><b>Fralda</b><span id="subDiaper"></span></button>
+    <button class="act k-vomit" data-k="vomit"><span data-i="vomit"></span><b>Vômito</b><span id="subVomit"></span></button>
+    <button class="act k-other wide" data-k="other"><span data-i="other"></span><b>Outros</b><span>anotação livre</span></button>
+  </div>
 
-$('stepCode').addEventListener('submit', async e => {
-  e.preventDefault(); err('errCode','');
-  const token = $('code').value.replace(/\D/g,'');
-  if (token.length < 6) return err('errCode', 'Digite o código completo que chegou no e-mail.');
-  const { error } = await sb.auth.verifyOtp({ email, token, type:'email' });
-  if (error) return err('errCode', 'Código inválido ou vencido. Peça outro.');
-  refresh();
-});
+  <div class="daynav">
+    <button id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2 id="dayTitle">Hoje</h2>
+    <button id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="sum" id="summary"></div>
+  <div class="tl" id="timeline"></div>
+</div>
 
-$('back').onclick = () => show('stepEmail');
-$('logout').onclick = async () => { await sb.auth.signOut(); refresh(); };
-refresh();
-</script>
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="/app.js"></script>
 </body>
 </html>
