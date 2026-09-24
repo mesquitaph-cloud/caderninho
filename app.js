@@ -488,3 +488,25 @@ $('themeBtn').onclick = () => { const th = isDark() ? 'light' : 'dark'; document
 paintTheme();
 
 boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir o Caderninho. Confira a conexão e recarregue.'); });
+
+/* ---------- dica de instalação ---------- */
+// O iPhone nunca oferece instalar sozinho; o Android às vezes oferece (beforeinstallprompt).
+const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isMobile = isIOS || /Android/.test(navigator.userAgent);
+let installEvent = null;
+function paintInstallTip() {
+  const on = !standalone && isMobile && lsGet('cad-tip-off') !== '1';
+  document.querySelectorAll('.installTip').forEach(el => {
+    el.hidden = !on;
+    el.querySelector('.tipText').textContent = isIOS
+      ? 'Para usar como app: toque em Compartilhar (o quadrado com a seta) e depois em "Adicionar à Tela de Início".'
+      : installEvent ? 'Instale o Caderninho para abrir direto pelo ícone, como um app.'
+      : 'Para usar como app: no menu do navegador (⋮), toque em "Instalar app" ou "Adicionar à tela inicial".';
+    el.querySelector('.tipInstall').hidden = !installEvent;
+  });
+}
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvent = e; paintInstallTip(); });
+document.querySelectorAll('.tipInstall').forEach(b => b.onclick = async () => { if (!installEvent) return; installEvent.prompt(); await installEvent.userChoice; installEvent = null; paintInstallTip(); });
+document.querySelectorAll('.tipClose').forEach(b => b.onclick = () => { lsSet('cad-tip-off', '1'); paintInstallTip(); });
+paintInstallTip();
