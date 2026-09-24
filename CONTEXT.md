@@ -28,6 +28,11 @@ _Evite_: apelido, username, e-mail
 Link que o criador gera para uma única pessoa entrar na família; vale 7 dias ou até ser usado.
 _Evite_: compartilhamento, acesso
 
+**Indicação**:
+Mensagem com o link do Caderninho que qualquer membro manda para outra família começar a sua. Não
+dá acesso a nenhuma família: quem abre cria a própria.
+_Evite_: convite (convite é para entrar numa família), compartilhamento
+
 **Bebê**:
 Uma criança acompanhada por uma família. Uma família pode ter mais de um bebê; cada registro é de
 um único bebê.

@@ -33,6 +33,8 @@ const ERR = {
   invite_not_found: 'Este convite não existe. Confira o link com quem te convidou.',
 };
 function errMsg(e) { const m = e?.message || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return 'Não foi possível concluir. Confira a conexão e tente de novo.'; }
+// Indicação: link do app, sem convite. Quem abre cria a própria família.
+const REFER_TEXT = 'Conhece o Caderninho? É um app para anotar a rotina do bebê (mamadas, sono, fraldas) numa linha do tempo que toda a família vê junto. Não precisa baixar na loja: abra o link, entre com seu e-mail e crie a sua família.';
 
 /* ---------- início ---------- */
 async function boot() {
@@ -372,7 +374,7 @@ function drawMenu() {
   }).join('');
   if (creator) h += S.invite
     ? `<div class="invite">${esc(S.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
-    : '<button class="ghost" data-act="invite">Convidar pessoa</button>';
+    : '<button class="ghost" data-act="invite">Convidar para esta família</button>';
   h += '</div><div class="sec"><h4>Bebês</h4>' +
     st.babies.map(b => `<div class="li"><span>${esc(b.name)}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div>`).join('') +
     '<button class="ghost" data-act="addBaby">Adicionar bebê</button></div>';
@@ -380,6 +382,10 @@ function drawMenu() {
   h += '<div class="sec"><h4>Outras famílias</h4>' +
     st.families.filter(x => x.id !== f.id).map(x => `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('') +
     '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
+  h += '<div class="sec"><h4>Indicar o Caderninho</h4>' +
+    `<div class="invite">${esc(location.host)}</div>` +
+    `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
+    '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
   h += creator
     ? `<button class="danger-btn" data-act="delFam">${S.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
@@ -403,6 +409,8 @@ async function menuAction(a, v, btn) {
   }
   if (a === 'copyInv') return navigator.clipboard.writeText(S.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
   if (a === 'shareInv') return navigator.share({ title: 'Caderninho', text: 'Entre na família ' + f.name + ' no Caderninho:', url: S.invite }).catch(() => {});
+  if (a === 'shareApp') return navigator.share({ title: 'Caderninho', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
+  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'rm') {
     if (S.confirm !== 'rm:' + v) { S.confirm = 'rm:' + v; return drawMenu(); }
     const { error } = await sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', v);
