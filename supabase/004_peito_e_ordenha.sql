@@ -1,5 +1,5 @@
 -- Caderninho — qual peito na mamada e o registro de ordenha (25/09/2026).
--- Rodar uma vez no SQL Editor, depois do 003 e ANTES de publicar o app novo: o app novo grava
+-- Rodar uma vez no SQL Editor, ANTES de publicar o app novo (rodado em 25/09/2026): o app novo grava
 -- as colunas daqui e, sem elas, não salva nenhum registro. O app antigo continua funcionando.
 --
 -- Só acrescenta: nenhum registro existente muda, e todos já cumprem as regras novas.
@@ -27,7 +27,7 @@ alter table public.entries
   add constraint entries_left_min_side  check (left_min is null or (side in ('left','both')) is true),
   add constraint entries_right_min_side check (right_min is null or (side in ('right','both')) is true);
 
--- As colunas novas entram na lista do 003 (o que o app pode gravar num registro).
+-- O que o app pode gravar num registro. Só faz diferença depois do 003, que já inclui estas colunas.
 grant insert (side, left_min, right_min) on public.entries to authenticated;
 grant update (side, left_min, right_min) on public.entries to authenticated;
 

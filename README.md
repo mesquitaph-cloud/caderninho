@@ -12,6 +12,8 @@ tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
+- Rodar `supabase/003_endurece_colunas.sql`: em 25/09 o banco ainda deixava quem está logado gravar em
+  qualquer coluna. O arquivo já inclui as colunas do 004.
 
 ## Em andamento: peito na mamada e ordenha
 
@@ -44,8 +46,8 @@ regras novas do banco.
 
 Falta, nesta ordem:
 
-1. Rodar `supabase/004_peito_e_ordenha.sql` no SQL Editor. Roda tudo ou nada; o app que está no ar
-   continua funcionando depois.
+1. ~~Rodar `supabase/004_peito_e_ordenha.sql` no SQL Editor.~~ Feito em 25/09 e conferido pelo
+   conector: colunas, regras e permissões no lugar.
 2. Publicar o app. Antes do passo 1, o app novo não salva nenhum registro.
 3. No celular, registrar uma mamada no peito e uma ordenha, conferir e apagar.
 
