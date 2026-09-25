@@ -15,10 +15,13 @@ ICON.wake = ICON.sleep;
 
 export const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+export const MESES_L = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+export const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
 export const pad = n => String(n).padStart(2, '0');
 export function startOfDay(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
+// Pelo calendário, e não somando 24h: o dia pode ter 23h ou 25h quando muda o horário.
+export function addDays(d0, n) { const d = new Date(d0); d.setDate(d.getDate() + n); return startOfDay(d.getTime()); }
 export function hm(t) { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 export function dur(ms) {
   const m = Math.max(0, Math.round(ms / MIN));
@@ -33,6 +36,15 @@ export function dayTitle(d0) {
   const now = Date.now(), dt = new Date(d0);
   const nome = d0 === startOfDay(now) ? 'Hoje' : d0 === startOfDay(now - DAY) ? 'Ontem' : DIAS[dt.getDay()];
   return nome + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
+}
+
+// "sáb 20": o dia nos gráficos do painel.
+export function shortDay(d0) { const d = new Date(d0); return DIAS[d.getDay()].toLowerCase() + ' ' + d.getDate(); }
+// "19 a 25 set" ou "29 set a 5 out": os 7 dias do painel.
+export function rangeTitle(a, z) {
+  const A = new Date(a), Z = new Date(z);
+  return A.getMonth() === Z.getMonth() ? A.getDate() + ' a ' + Z.getDate() + ' ' + MESES[Z.getMonth()]
+    : A.getDate() + ' ' + MESES[A.getMonth()] + ' a ' + Z.getDate() + ' ' + MESES[Z.getMonth()];
 }
 
 export function ageText(birth) {
