@@ -12,6 +12,9 @@ tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
+- Vercel: o merge do #5 não gerou deploy de produção (o commit do merge ficou sem nenhum status do
+  Vercel). Conferir se a branch de produção é `main` (Settings → Environments → Production) e se o
+  próximo merge publica sozinho: o commit do merge no GitHub precisa ganhar o ✓ do Vercel.
 
 ## Feito recentemente
 
@@ -20,16 +23,16 @@ tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário
 - **25/09, `supabase/003_endurece_colunas.sql` rodado:** quem está logado só grava nas colunas que o
   app usa (antes, gravava em qualquer uma). Conferido pelo conector, sem erro de permissão nos logs.
 
-## Painel da semana, calendário e sugestões: feito, falta publicar
+## Painel da semana, calendário e sugestões: no ar desde 25/09
 
-Prévia interativa usada para decidir (privada): https://claude.ai/artifact/AsJs7ewJnFY3Jfhn3yoTUP
+Prévia interativa usada para decidir (privada): https://claude.ai/artifact/AsJs7ewJnFY3Jfhn3yoTUP.
+Prévia do código publicado, com registros de exemplo: https://claude.ai/artifact/4GD1B2QsL1zPGE5SJVTRux
 
-**Para publicar, nesta ordem:**
-
-1. ~~Rodar `supabase/005_feedback.sql` no SQL Editor.~~ Rodado em 25/09. Conferido pelo conector:
-   tabela, regra de acesso, permissões e trava como no arquivo, sem erro nos logs.
-2. Publicar o app e conferir no celular: aba Semana, calendário na data e uma mensagem de teste.
-3. Ver a mensagem de teste chegar (consulta abaixo).
+- `supabase/005_feedback.sql` rodado em 25/09. Conferido pelo conector: tabela, regra de acesso,
+  permissões e trava como no arquivo, sem erro nos logs.
+- App publicado em 25/09 pelo "Promote to Production" da prévia do #5 no Vercel (mesmos arquivos do
+  `main`), porque o merge não publicou sozinho (ver pendências).
+- Falta: mandar uma mensagem de teste pelo menu e ver chegar (consulta abaixo).
 
 **Como ficou:**
 
