@@ -83,3 +83,38 @@ _Evite_: nota, observação (observação é o comentário opcional dentro de qu
 **Linha do tempo**:
 Os registros de um bebê num dia, do mais recente para o mais antigo.
 _Evite_: histórico, feed, diário
+
+## Ver os registros
+
+**Painel da semana**:
+Os 7 dias que terminam no dia escolhido, lado a lado: como foram os dias de 0h a 24h, a média por
+dia, uma barra por dia e os maiores intervalos. Só junta o que foi registrado; não avalia nem compara
+com outros bebês.
+_Evite_: relatório, estatísticas, análise, desempenho
+
+**Média por dia**:
+O total de um tipo de registro dividido pelos dias que já terminaram e têm algum registro. Hoje não
+entra, e dia sem nada anotado também não: dia sem registro não é dia sem mamada.
+_Evite_: normal, esperado, meta
+
+**Maior sono seguido**:
+O sono mais longo entre um dormiu e o acordou seguinte, contado no dia em que começou. Sono de dia e
+de noite contam juntos.
+_Evite_: noite inteira, soneca
+
+**Calendário**:
+O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
+escolhido é o último dos 7.
+_Evite_: agenda
+
+## Conversa com quem cuida do app
+
+**Mensagem**:
+O que um membro manda pela seção "Sugestões e problemas" do menu: uma sugestão, algo que deu errado
+ou só o texto. Vai junto o nome de quem mandou, a família aberta e o tipo de celular. Pelo app, só dá
+para enviar: ninguém lê, nem quem mandou.
+_Evite_: feedback (na tela), ticket, chamado, reclamação
+
+**Quem cuida do Caderninho**:
+Quem mantém o app e lê as mensagens, pelo painel do Supabase.
+_Evite_: suporte, equipe, administrador, admin

@@ -18,8 +18,8 @@ const READ_TOOLS = new Set([
 const WRITE_WORDS = /\b(insert|update|delete|merge|upsert|drop|alter|create|grant|revoke|truncate|copy|call|do|execute|prepare|deallocate|vacuum|cluster|reindex|refresh|lock|comment|security|set|reset|listen|notify|unlisten|discard|import|load|begin|commit|rollback|savepoint|release|into|share)\b/;
 // Funções com efeito colateral ou que alcançam rede, arquivos e segredos.
 const DANGER = /\b(pg_terminate_backend|pg_cancel_backend|pg_reload_conf|pg_rotate_logfile|set_config|nextval|setval|pg_sleep|pg_advisory\w*|pg_notify|pg_read_file|pg_read_binary_file|pg_ls_dir|pg_stat_file|lo_\w+|dblink\w*|http\w*|net\s*\.|vault\s*\.|pg_shadow|pg_authid|create_family|accept_invite)\b/;
-// Dados pessoais ou segredos de login: só com confirmação.
-const PERSONAL = /\b(\w*email\w*|\w*phone\w*|note|name|display_name|birth_date|raw_user_meta_data|raw_app_meta_data|\w*token\w*|\w*password\w*)\b|\bauth\s*\.\s*(?!users\b)\w+/;
+// Dados pessoais ou segredos de login: só com confirmação. "message" é o texto das sugestões e problemas.
+const PERSONAL = /\b(\w*email\w*|\w*phone\w*|note|message|name|display_name|birth_date|raw_user_meta_data|raw_app_meta_data|\w*token\w*|\w*password\w*)\b|\bauth\s*\.\s*(?!users\b)\w+/;
 
 function decide(decision, reason) {
   process.stdout.write(JSON.stringify({ hookSpecificOutput: {

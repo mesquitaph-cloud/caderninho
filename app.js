@@ -1,7 +1,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { ICON, MIN, HOUR, DAY, startOfDay, hm, dur, ago, esc, dayTitle, ageText,
-         sleepIntervals, label, detail, SIDE_SHORT, lsGet, lsSet } from './util.js';
+import { ICON, MIN, HOUR, DAY, startOfDay, addDays, hm, dur, ago, esc, dayTitle, rangeTitle, ageText,
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
+import { weekHtml } from './week.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -14,7 +15,11 @@ const st = {
   babies: [], baby: null,
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
+  view: 'day',                 // 'day' (linha do tempo) ou 'week' (painel da semana)
   viewDay: startOfDay(Date.now()),
+  weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
+  show: { sleep: true, feed: true, diaper: true, pump: true },   // filtro de "Como foram os dias"
+  metric: 'sleep',             // o que aparece em "Dia a dia"
   channel: null,
 };
 
@@ -188,6 +193,8 @@ function subscribe(fid) {
 
 /* ---------- tela do dia ---------- */
 const sortedEntries = () => [...st.entries.values()].sort((a, b) => a.t - b.t);
+// Primeiro dia que dá para ver: o app carrega os últimos 60 dias.
+const firstDay = () => addDays(startOfDay(Date.now()), -(KEEP_DAYS - 1));
 // Última mamada em que marcaram o peito (no banco, só a mamada no peito tem peito marcado).
 const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
@@ -214,10 +221,27 @@ function render() {
   const vToday = evs.filter(e => e.kind === 'vomit' && e.t >= startOfDay(now)).length;
   $('subVomit').textContent = vToday ? vToday + ' hoje' : 'nenhum hoje';
 
-  const d0 = st.viewDay, d1 = d0 + DAY;
-  $('dayTitle').textContent = dayTitle(d0);
-  $('nextDay').disabled = d0 >= startOfDay(now);
-  $('prevDay').disabled = d0 <= startOfDay(now - (KEEP_DAYS - 1) * DAY);
+  const today = startOfDay(now), week = st.view === 'week';
+  $('tabDay').setAttribute('aria-selected', !week); $('tabWeek').setAttribute('aria-selected', week);
+  $('dayView').hidden = week; $('weekView').hidden = !week;
+  $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : 'Dia anterior');
+  $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : 'Próximo dia');
+  if (week) {
+    // Os 7 dias ficam dentro do que o app carrega.
+    st.weekEnd = Math.min(today, Math.max(st.weekEnd, addDays(firstDay(), 6)));
+    const title = rangeTitle(addDays(st.weekEnd, -6), st.weekEnd);
+    $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
+    $('nextDay').disabled = st.weekEnd >= today;
+    $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
+    $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
+      : weekHtml({ end: st.weekEnd, evs, sleep: { out: intervals, open }, now, show: st.show, metric: st.metric });
+    return;
+  }
+
+  const d0 = st.viewDay, d1 = addDays(d0, 1);
+  $('dayText').textContent = dayTitle(d0); $('dayTitle').setAttribute('aria-label', dayTitle(d0) + '. Escolher no calendário');
+  $('nextDay').disabled = d0 >= today;
+  $('prevDay').disabled = d0 <= firstDay();
 
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
   const feeds = day.filter(e => e.kind === 'feed'), ml = feeds.reduce((s, e) => s + (e.ml || 0), 0);
@@ -353,6 +377,35 @@ async function saveEntry(btn) {
   closeSheet(); toast('Salvo às ' + hm(ev.t), () => deleteEntry(row.id));
 }
 
+/* ---------- calendário ---------- */
+// No modo Semana, o dia escolhido é o último dos 7.
+const chosenDay = () => st.view === 'week' ? st.weekEnd : st.viewDay;
+function calSheet() { const d = new Date(chosenDay()); S = { mode: 'cal', y: d.getFullYear(), m: d.getMonth() }; drawCal(); }
+function drawCal() {
+  const today = startOfDay(Date.now()), min = firstDay(), week = st.view === 'week', sel = chosenDay(), from = week ? addDays(sel, -6) : sel;
+  const has = new Set([...st.entries.values()].map(e => startOfDay(e.t)));
+  const ym = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); }, cur = S.y * 12 + S.m;
+  const first = new Date(S.y, S.m, 1), days = new Date(S.y, S.m + 1, 0).getDate();
+  let cells = '<span></span>'.repeat(first.getDay());
+  for (let dd = 1; dd <= days; dd++) {
+    const d0 = new Date(S.y, S.m, dd).getTime(), off = d0 > today || d0 < min;
+    const cls = [has.has(d0) && 'has', d0 === today && 'today', d0 === sel && 'sel', d0 >= from && d0 < sel && 'wk'].filter(Boolean).join(' ');
+    cells += `<button class="${cls}" data-act="pickDay" data-val="${d0}"${off ? ' disabled' : ''}${d0 === sel ? ' aria-current="date"' : ''} aria-label="${esc(dayTitle(d0))}${has.has(d0) ? ', com registros' : ''}">${dd}</button>`;
+  }
+  const arrow = (dir, ok, name, path) => `<button data-act="mon" data-val="${dir}"${ok ? '' : ' disabled'} aria-label="${name}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${path}"/></svg></button>`;
+  openPanel(head(week ? 'Escolher semana' : 'Escolher dia') +
+    `<div class="mhead">${arrow(-1, cur > ym(min), 'Mês anterior', 'M15 5l-7 7 7 7')}<b>${MESES_L[S.m]} ${S.y}</b>${arrow(1, cur < ym(today), 'Próximo mês', 'M9 5l7 7-7 7')}</div>
+    <div class="wdays" aria-hidden="true">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
+    <div class="cal">${cells}</div>
+    <div class="calkey"><i></i>dia com registros · o Caderninho mostra os últimos ${KEEP_DAYS} dias</div>
+    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : ''}
+    <button class="ghost" data-act="pickDay" data-val="${today}">Ir para hoje</button>`);
+}
+function calAction(a, v) {
+  if (a === 'mon') { const d = new Date(S.y, S.m + (+v), 1); S.y = d.getFullYear(); S.m = d.getMonth(); return drawCal(); }
+  if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else st.viewDay = +v; closeSheet(); }
+}
+
 /* ---------- bebê e nome ---------- */
 function babySheet(b) {
   S = { mode: 'baby', b };
@@ -396,7 +449,7 @@ async function saveName(btn) {
 }
 
 /* ---------- família e configurações ---------- */
-function menuSheet() { S = { mode: 'menu', confirm: null, invite: null }; drawMenu(); }
+function menuSheet() { S = { mode: 'menu', confirm: null, invite: null }; FB.sent = false; FB.err = ''; drawMenu(); $('sheet').scrollTop = 0; }
 function drawMenu() {
   const f = st.family, creator = f.creator_id === st.user.id;
   let h = head(f.name) + '<div class="sec"><h4>Membros</h4>';
@@ -420,12 +473,47 @@ function drawMenu() {
     `<div class="invite">${esc(location.host)}</div>` +
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
+  h += '<div class="sec"><h4>Sugestões e problemas</h4>' + (FB.sent
+    ? '<div class="thanks" role="status"><b>Recebido, obrigado!</b><span>Sua mensagem chegou para quem cuida do Caderninho.</span></div><button class="ghost" data-act="fbAgain">Enviar outra</button>'
+    : `<div><div class="lbl">Sobre o quê? <small>(opcional)</small></div><div class="seg">${FB_TYPES.map(([k, t]) => `<button class="opt${FB.type === k ? ' on' : ''}" data-act="fbType" data-val="${k}" aria-pressed="${FB.type === k}">${t}</button>`).join('')}</div></div>
+       <div><label class="lbl" for="fbText">Sua mensagem</label><textarea class="field" id="fbText" maxlength="${FB_MAX}" placeholder="Ex.: queria ver as mamadas da madrugada separadas">${esc(FB.text)}</textarea>
+       <div class="fbmeta"><span>Quem cuida do Caderninho lê todas.</span><span id="fbCount">${FB.text.length} de ${FB_MAX}</span></div></div>
+       ${FB.err ? `<div class="err" id="fbErr">${esc(FB.err)}</div>` : ''}
+       <div class="lbl">Vai junto: seu nome, a família aberta e o tipo de celular.</div>
+       <button class="save" data-act="fbSend">Enviar</button>`) + '</div>';
   h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
   h += creator
     ? `<button class="danger-btn" data-act="delFam">${S.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
     : `<button class="danger-btn" data-act="leave">${S.confirm === 'leave' ? 'Toque de novo para sair da família' : 'Sair da família'}</button>`;
-  openPanel(h);
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
 }
+
+/* ---------- sugestões e problemas ---------- */
+// O rascunho sobrevive a fechar o menu sem querer. Pelo app, só dá para enviar: ninguém lê.
+const FB = { type: '', text: '', sent: false, err: '' }, FB_MAX = 1000;
+const FB_TYPES = [['idea', 'Sugestão'], ['bug', 'Algo deu errado']];
+async function sendFeedback(btn) {
+  const message = FB.text.trim();
+  if (!message) { FB.err = 'Escreva sua mensagem antes de enviar.'; return drawMenu(); }
+  busy(btn, true);
+  const { error } = await sb.from('feedback').insert({ family_id: st.family.id, kind: FB.type || null, message, device: deviceText() });
+  if (error) FB.err = error.message?.includes('feedback_limit') ? 'Você já mandou muitas mensagens hoje. Tente de novo amanhã.'
+                                                                 : 'Não foi possível enviar. Confira a conexão e tente de novo.';
+  else Object.assign(FB, { type: '', text: '', sent: true, err: '' });
+  // Se o menu foi fechado enquanto enviava, avisa pelo toast.
+  if (S?.mode === 'menu') drawMenu(); else toast(error ? FB.err : 'Mensagem enviada. Obrigado!');
+}
+// O tipo de celular que vai junto: aparelho, sistema, navegador e se o app está instalado.
+function deviceText() {
+  const u = navigator.userAgent, ios = u.match(/OS (\d+)[_.](\d+)/), and = u.match(/Android (\d+(?:\.\d+)?)/);
+  const dev = /iPad/.test(u) || (isIOS && !/iPhone|iPod/.test(u)) ? 'iPad' : isIOS ? 'iPhone'
+    : /Android/.test(u) ? 'Android' + (and ? ' ' + and[1] : '') : 'Computador';
+  const sys = /iPhone|iPad|iPod/.test(u) && ios ? 'iOS ' + ios[1] + '.' + ios[2] : '';
+  const nav = /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Edg(A|iOS)?\//.test(u) ? 'Edge' : /CriOS|Chrome\//.test(u) ? 'Chrome'
+    : /FxiOS|Firefox\//.test(u) ? 'Firefox' : /Safari\//.test(u) ? 'Safari' : 'outro navegador';
+  return [dev, sys, nav, standalone ? 'app instalado' : 'no navegador'].filter(Boolean).join(' · ');
+}
+
 async function afterLeavingFamily() {
   S = null; $('scrim').hidden = true; $('sheet').hidden = true;
   await loadFamilies();
@@ -459,6 +547,9 @@ async function menuAction(a, v, btn) {
     if (error) return toast('Não foi possível concluir.');
     return afterLeavingFamily();
   }
+  if (a === 'fbType') { FB.type = FB.type === v ? '' : v; return drawMenu(); }
+  if (a === 'fbSend') return sendFeedback(btn);
+  if (a === 'fbAgain') { FB.sent = false; return drawMenu(); }
   if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
   if (a === 'addBaby') return babySheet(null);
   if (a === 'rename') return renameSheet();
@@ -469,6 +560,11 @@ async function menuAction(a, v, btn) {
 
 /* ---------- eventos ---------- */
 $('sheetIn').addEventListener('input', e => {
+  if (e.target.id === 'fbText') {
+    FB.text = e.target.value; $('fbCount').textContent = FB.text.length + ' de ' + FB_MAX;
+    if (FB.err) { FB.err = ''; $('fbErr')?.remove(); }
+    return;
+  }
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
@@ -487,6 +583,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (a === 'saveBaby') return saveBaby(b);
   if (a === 'saveName') return saveName(b);
   if (S.mode === 'menu') return menuAction(a, v, b);
+  if (S.mode === 'cal') return calAction(a, v);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -519,8 +616,32 @@ $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
   const ev = st.entries.get(r.dataset.id); if (ev) openEntry(ev.kind, ev);
 });
-$('prevDay').onclick = () => { st.viewDay = startOfDay(st.viewDay - DAY / 2); render(); };
-$('nextDay').onclick = () => { st.viewDay = startOfDay(st.viewDay + DAY * 1.5); render(); };
+// Setas: um dia na linha do tempo, 7 dias no painel.
+$('prevDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, -7); else st.viewDay = addDays(st.viewDay, -1); render(); };
+$('nextDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, 7); else st.viewDay = addDays(st.viewDay, 1); render(); };
+$('dayTitle').onclick = calSheet;
+// Trocar de aba mantém o dia escolhido se ele estiver nos 7 dias do painel; senão, alinha os dois.
+const inWeek = d0 => d0 <= st.weekEnd && d0 > addDays(st.weekEnd, -7);
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
+  if (b.dataset.view === st.view) return;
+  st.view = b.dataset.view;
+  if (!inWeek(st.viewDay)) { if (st.view === 'week') st.weekEnd = st.viewDay; else st.viewDay = st.weekEnd; }
+  render();
+});
+// Painel da semana: filtro, métrica e tocar num dia para abrir a linha do tempo dele.
+function openDay(d0) {
+  st.viewDay = d0; st.view = 'day'; render();
+  $('dayTitle').closest('.daynav').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+$('weekView').addEventListener('click', e => {
+  const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = !st.show[f.dataset.flt]; return render(); }
+  const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
+  const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
+});
+$('weekView').addEventListener('keydown', e => {
+  const r = e.target.closest('.dayrow');
+  if (r && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDay(+r.dataset.day); }
+});
 $('scrim').onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSheet(); });
 

@@ -20,40 +20,47 @@ tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário
 - **25/09, `supabase/003_endurece_colunas.sql` rodado:** quem está logado só grava nas colunas que o
   app usa (antes, gravava em qualquer uma). Conferido pelo conector, sem erro de permissão nos logs.
 
-## Próximo: painel da semana, calendário e feedback
+## Painel da semana, calendário e sugestões: feito, falta publicar
 
-Prévia interativa (privada): https://claude.ai/artifact/AsJs7ewJnFY3Jfhn3yoTUP
+Prévia interativa usada para decidir (privada): https://claude.ai/artifact/AsJs7ewJnFY3Jfhn3yoTUP
 
-Decidido em 25/09:
+**Para publicar, nesta ordem:**
 
-- **Painel da semana:** aba "Dia | Semana" logo abaixo dos botões de registro. Sempre 7 dias,
-  terminando no dia escolhido; as setas andam 7 dias. Mostra:
-  - "Como foram os dias": uma linha por dia, de 0h a 24h. Sono em barras; mamadas, fraldas e
-    ordenhas em marcas, com filtro por tipo. Tocar num dia abre a linha do tempo dele.
-  - "Média por dia", sem contar hoje: sono (e o maior sono seguido), mamadas (tempo no peito e ml
-    na mamadeira), fraldas (quantas com cocô) e ordenhas (ml por dia).
+1. ~~Rodar `supabase/005_feedback.sql` no SQL Editor.~~ Rodado em 25/09. Conferido pelo conector:
+   tabela, regra de acesso, permissões e trava como no arquivo, sem erro nos logs.
+2. Publicar o app e conferir no celular: aba Semana, calendário na data e uma mensagem de teste.
+3. Ver a mensagem de teste chegar (consulta abaixo).
+
+**Como ficou:**
+
+- **Painel da semana:** aba "Dia | Semana" logo abaixo dos botões de registro (`week.js`). Sempre 7
+  dias, terminando no dia escolhido; as setas andam 7 dias, sem passar dos 60 que o app carrega.
+  - "Como foram os dias": uma linha por dia, de 0h a 24h, hoje no alto. Sono em barras; mamadas,
+    fraldas e ordenhas em marcas, com filtro por tipo. Tocar num dia abre a linha do tempo dele.
+  - "Média por dia": sono (e o maior sono seguido), mamadas (tempo no peito e ml na mamadeira),
+    fraldas (quantas com cocô) e ordenhas (ml por dia). Não conta hoje nem dia sem nenhum registro
+    (decidido na implementação: numa família que começou há 3 dias, a média de 7 sairia pela metade).
   - "Dia a dia": uma barra por dia de sono, mamadas, fraldas ou ml de ordenha; hoje mais claro.
-  - "Nestes 7 dias": maior sono seguido, maior intervalo entre mamadas, vezes em cada peito e
-    total ordenhado.
-  - Sono de dia e de noite juntos. Só o que foi registrado, sem avaliar nem comparar.
-- **Calendário:** tocar na data abre o mês, com um ponto nos dias que têm registros e hoje marcado.
-  Só os últimos 60 dias (o que o app já carrega) e nada no futuro. No modo Semana, o dia escolhido
-  é o último dos 7.
-- **Sugestões e problemas:** seção nova no menu. Tipo opcional (Sugestão ou Algo deu errado),
-  texto de até 1000 caracteres, aviso do que vai junto (nome, família e tipo de celular) e
-  "Recebido, obrigado!" ao enviar.
-  - Banco: tabela nova `feedback` (arquivo novo em `supabase/`) com quem mandou, família, tipo,
-    texto, data e aparelho. Pelo app, só dá para enviar; ninguém lê. Limite de envios por pessoa
-    por dia.
-  - Para ler: painel do Supabase, em Table Editor → `feedback`. O e-mail de quem mandou está em
-    Authentication → Users.
+  - "Nestes 7 dias": maior sono seguido, maior intervalo entre mamadas, vezes em cada peito nas
+    mamadas e total ordenhado.
+  - Trocar de aba mantém a semana se o dia aberto estiver nela: dá para abrir um dia e voltar.
+- **Calendário:** tocar na data abre o mês, com ponto nos dias com registros, hoje com contorno e,
+  no modo Semana, os 7 dias destacados. Só os últimos 60 dias, nada no futuro, e "Ir para hoje".
+- **Sugestões e problemas:** seção no menu, depois de "Indicar o Caderninho". Tipo opcional,
+  texto de até 1000 caracteres, aviso do que vai junto e "Recebido, obrigado!". O rascunho fica
+  guardado se o menu fechar sem querer.
+  - Banco: tabela `feedback` com quem mandou, família, tipo (`idea`, `bug` ou vazio), texto
+    (`message`), aparelho e data. Quem mandou e a data são preenchidos pelo banco. Pelo app, só dá
+    para enviar. Até 10 mensagens por pessoa a cada 24 horas.
+  - Aparelho: montado pelo app, por exemplo "iPhone · iOS 18.5 · Safari · app instalado".
+  - Para ler: Table Editor → `feedback`, ou a consulta no fim de `005_feedback.sql`, que já traz o
+    nome de quem mandou e da família. O e-mail está em Authentication → Users.
   - Aviso por e-mail de mensagem nova: depende do remetente dedicado (primeira pendência).
-  - Trava do Claude: pôr a coluna do texto na lista de dados pessoais de `supabase-guard.mjs`.
-  - Outras opções, piores: link de e-mail (depende de o celular ter e-mail configurado) e
-    formulário externo (os dados ficam fora do Supabase e não se sabe quem mandou).
+  - A trava do Claude pede confirmação para ler a coluna `message`.
 
-Falta: implementar, testar e publicar. Painel e calendário mudam só o app; o feedback precisa do SQL
-rodado antes. Termos novos no `CONTEXT.md` ao implementar.
+Testado em 25/09 com um Postgres local imitando o Supabase (rodando 001, 004, 003 e 005): envio,
+bloqueio de leitura e edição, família de outra pessoa, limite por dia e conta apagada. O app foi
+testado no navegador com 45 dias de registros de exemplo, claro e escuro, em telas de 360 e 390 px.
 
 ## Ideias para depois
 

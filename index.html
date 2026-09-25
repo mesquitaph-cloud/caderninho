@@ -102,13 +102,20 @@
     <button class="act k-other" data-k="other"><span data-i="other"></span><b>Outros</b><span>anotação livre</span></button>
   </div>
 
-  <div class="daynav">
-    <button id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <h2 id="dayTitle">Hoje</h2>
-    <button id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div class="views" role="tablist" aria-label="Ver por">
+    <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>
+    <button role="tab" id="tabWeek" aria-selected="false" aria-controls="weekView" data-view="week">Semana</button>
   </div>
-  <div class="sum" id="summary"></div>
-  <div class="tl" id="timeline"></div>
+  <div class="daynav">
+    <button class="arr" id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h2><button class="dtitle" id="dayTitle"><span id="dayText">Hoje</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button></h2>
+    <button class="arr" id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="view" id="dayView" role="tabpanel" aria-labelledby="tabDay">
+    <div class="sum" id="summary"></div>
+    <div class="tl" id="timeline"></div>
+  </div>
+  <div class="view" id="weekView" role="tabpanel" aria-labelledby="tabWeek" hidden></div>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>
