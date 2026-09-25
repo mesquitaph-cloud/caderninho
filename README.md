@@ -13,6 +13,30 @@ tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
+## Em andamento: peito na mamada e ordenha
+
+Prévia interativa (privada): https://claude.ai/artifact/RM2MDniYfSfwCAZciyz9py
+
+Decidido:
+
+- **Mamada no peito:** um toque marca o esquerdo, o direito ou os dois; marcar não é obrigatório.
+  Minutos de cada peito são opcionais (1 a 180); mexer nos minutos marca o peito, desmarcar apaga.
+  Linha do tempo: "Peito direito", "Peito esquerdo · 15 min", "Os dois peitos · 20 min" com
+  "esquerdo 12 min, direito 8 min" embaixo. O painel mostra "Última no peito: direito, há 1h20".
+- **Resumo do dia:** mamadas, ml e minutos no peito; logo depois, "último peito: direito · há 1h20"
+  (só em Hoje).
+- **Ordenha:** botão novo, azul, na 5ª posição ("Outros" deixa de ser largo). Peito opcional:
+  esquerdo, direito ou os dois. ml obrigatório, um total só. Linha: "Ordenha · 120 ml" com
+  "os dois peitos" embaixo; resumo "2 ordenhas · 190 ml". Termo novo no `CONTEXT.md`.
+- **Tempo acima de 24 horas em dias:** "há 1 dia", "há 2 dias".
+
+Banco: arquivo novo em `supabase/`, rodado à mão **antes** de publicar o código. O banco tem
+registros de uso real, então só acrescenta: `kind` aceita `pump`; colunas `side` (`left`, `right`,
+`both`), `left_min` e `right_min` (1 a 180); ordenha exige `ml`; minutos só com o peito
+correspondente; liberar as colunas novas nos grants do `003`.
+
+Falta: escrever o SQL, implementar no app, testar e publicar.
+
 ## Ideias para depois
 
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.

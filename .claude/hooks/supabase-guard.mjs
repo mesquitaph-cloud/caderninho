@@ -8,7 +8,7 @@
 import { readFileSync } from 'node:fs';
 
 const READ_TOOLS = new Set([
-  'search_docs', 'list_tables', 'list_extensions', 'list_migrations', 'get_logs', 'get_advisors',
+  'search_docs', 'list_tables', 'list_extensions', 'list_migrations', 'get_logs', 'query_logs', 'get_advisors',
   'list_organizations', 'get_organization', 'list_projects', 'get_project', 'get_project_url',
   'list_edge_functions', 'get_edge_function', 'list_branches', 'list_storage_buckets',
   'get_storage_config', 'generate_typescript_types', 'get_cost',
