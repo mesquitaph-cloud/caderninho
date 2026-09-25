@@ -26,8 +26,8 @@ Prévia interativa usada para decidir (privada): https://claude.ai/artifact/AsJs
 
 **Para publicar, nesta ordem:**
 
-1. Rodar `supabase/005_feedback.sql` no SQL Editor. Sem ele, o painel e o calendário funcionam, mas
-   enviar mensagem pelo menu dá erro.
+1. ~~Rodar `supabase/005_feedback.sql` no SQL Editor.~~ Rodado em 25/09. Conferido pelo conector:
+   tabela, regra de acesso, permissões e trava como no arquivo, sem erro nos logs.
 2. Publicar o app e conferir no celular: aba Semana, calendário na data e uma mensagem de teste.
 3. Ver a mensagem de teste chegar (consulta abaixo).
 

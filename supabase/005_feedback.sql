@@ -1,5 +1,6 @@
 -- Caderninho — sugestões e problemas: mensagens que os membros mandam pelo menu (25/09/2026).
--- Rodar uma vez no SQL Editor, ANTES de publicar o app novo: sem a tabela, o envio pelo menu dá erro.
+-- Rodar uma vez no SQL Editor, ANTES de publicar o app novo (rodado em 25/09/2026): sem a tabela, o
+-- envio pelo menu dá erro.
 -- O painel da semana e o calendário não dependem deste arquivo.
 --
 -- Pelo app, quem está logado só consegue enviar. Não há regra de leitura: ninguém lê as mensagens
