@@ -1,5 +1,14 @@
 {
   "permissions": {
+    "allow": [
+      "mcp__Supabase_carderninho__execute_sql",
+      "mcp__Supabase_carderninho__list_tables",
+      "mcp__Supabase_carderninho__list_migrations",
+      "mcp__Supabase_carderninho__list_extensions",
+      "mcp__Supabase_carderninho__get_advisors",
+      "mcp__Supabase_carderninho__query_logs",
+      "mcp__Supabase_carderninho__search_docs"
+    ],
     "deny": [
       "mcp__Gmail__send_message",
       "mcp__Gmail__reply",
