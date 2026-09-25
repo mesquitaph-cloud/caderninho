@@ -2,20 +2,20 @@
   --bg:#FFF7F5;--surface:#FFFFFF;--surface2:#FBEEEF;--ink:#3A2F45;--muted:#85798F;--line:#F0E1E4;
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
-  --other:#E3E8F0;--other-ink:#45536A;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
+  --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
-  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;
-  --scrim:rgba(0,0,0,.55);}}
+  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;
+  --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
-  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;
-  --scrim:rgba(0,0,0,.55);}
+  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;
+  --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
@@ -38,9 +38,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .act svg{width:28px;height:28px;grid-row:span 2}
 .act b{font-family:var(--display);font-weight:600;font-size:19px;line-height:1}
 .act span{font-size:13px;opacity:.85}
-.act.wide{grid-column:1/-1;min-height:0;grid-template-columns:auto auto 1fr;padding:12px 14px}.act.wide svg{grid-row:auto}
 .k-feed{--kbg:var(--feed);background:var(--feed);color:var(--feed-ink)}.k-sleep,.k-wake{--kbg:var(--sleep);background:var(--sleep);color:var(--sleep-ink)}
 .k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
+.k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}
 .daynav{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
 .daynav h2{font-family:var(--display);font-weight:600;font-size:18px;margin:0}
 .daynav button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
@@ -65,6 +65,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .shead{display:flex;align-items:center;justify-content:space-between}.x{width:40px;height:40px;border-radius:50%;background:var(--surface2);font-size:24px;line-height:1;color:var(--muted)}
 .sheet h3{font-family:var(--display);font-weight:600;font-size:21px;margin:0}
 .lbl{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px}
+.lbl small{font-weight:600;font-size:12px}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
 .opt{border:1.5px solid var(--line);border-radius:14px;padding:12px 16px;font-weight:700;font-size:16px;background:var(--surface)}
 .opt.on{border-color:currentColor;background:var(--kbg,var(--surface2))}
@@ -73,6 +74,26 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ml button{width:48px;height:48px;border-radius:50%;background:var(--surface2);font-size:24px;font-weight:700}
 .ml input{width:100px;text-align:center;font-size:28px;font-family:var(--display);font-weight:600;border:none;background:none;color:var(--ink)}
 .ml em{font-style:normal;color:var(--muted)}
+/* Peito na mamada: marcar o peito e, se quiser, os minutos */
+.sides{display:flex;flex-direction:column;gap:8px}
+.side{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px 4px 4px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
+.side.on{background:var(--feed);border-color:var(--feed-ink)}
+.pick{flex:1;display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;text-align:left}
+.pick .ck{width:26px;height:26px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent}
+.pick .ck svg{width:16px;height:16px}
+.side.on .ck{background:var(--feed-ink);border-color:var(--feed-ink);color:var(--feed)}
+.pick b{font-family:var(--display);font-weight:600;font-size:18px}
+.side.on .pick b{color:var(--feed-ink)}
+.step{display:flex;align-items:center;gap:2px;opacity:.6}
+.side.on .step{opacity:1}
+.step button{width:40px;height:40px;border-radius:50%;background:var(--surface2);font-size:22px;font-weight:700;color:var(--feed-ink)}
+.side.on .step button{background:var(--surface)}
+.step input{width:44px;text-align:center;font-size:22px;font-family:var(--display);font-weight:600;border:none;background:none;color:var(--ink);font-variant-numeric:tabular-nums}
+.step input::placeholder{color:var(--muted);opacity:.7}
+.step em{font-style:normal;color:var(--muted);font-size:13px;margin-right:2px}
+.hint{font-size:13px;color:var(--muted);margin:-2px 0 8px}
+.total{font-size:14px;color:var(--muted);font-weight:700;margin-top:8px}
+.total:empty{display:none}
 .time{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .time input,.field{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
 .field{width:100%}

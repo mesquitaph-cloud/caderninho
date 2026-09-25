@@ -41,8 +41,8 @@ _Evite_: filho, criança, paciente
 ## Registros
 
 **Registro**:
-Uma anotação de algo que aconteceu com um bebê num horário: uma mamada, um dormiu, um acordou,
-uma troca de fralda, um vômito ou outro fato anotado à mão.
+Uma anotação de algo que aconteceu com um bebê num horário: uma mamada, uma ordenha, um dormiu,
+um acordou, uma troca de fralda, um vômito ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
@@ -50,8 +50,18 @@ O membro que fez o registro. Todo registro mostra seu autor, mesmo depois que el
 _Evite_: responsável, criador (criador é da família, não do registro)
 
 **Mamada**:
-Registro de alimentação, feita no peito ou na mamadeira; na mamadeira, com a quantidade em ml.
+Registro de alimentação, feita no peito ou na mamadeira; na mamadeira, com a quantidade em ml. No
+peito, pode dizer qual peito e quantos minutos em cada um; nada disso é obrigatório.
 _Evite_: refeição, alimentação, "comeu"
+
+**Peito**:
+Qual peito, na mamada no peito e na ordenha: o esquerdo, o direito ou os dois.
+_Evite_: lado, mama, seio
+
+**Ordenha**:
+Registro do leite tirado do peito, com bomba ou à mão: a quantidade em ml e, se quiser, qual peito.
+Não é mamada: conta o leite que saiu, não o que o bebê tomou.
+_Evite_: extração, bombeamento, coleta
 
 **Dormiu / Acordou**:
 Os dois registros que marcam o início e o fim de um sono. O sono em si não é registrado: é o

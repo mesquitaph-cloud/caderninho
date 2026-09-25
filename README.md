@@ -35,7 +35,39 @@ registros de uso real, então só acrescenta: `kind` aceita `pump`; colunas `sid
 `both`), `left_min` e `right_min` (1 a 180); ordenha exige `ml`; minutos só com o peito
 correspondente; liberar as colunas novas nos grants do `003`.
 
-Falta: escrever o SQL, implementar no app, testar e publicar.
+Feito: o SQL (`supabase/004_peito_e_ordenha.sql`) e o app. Além do combinado, o banco recusa
+peito fora da mamada no peito e da ordenha, e minutos fora da mamada no peito. O SQL foi testado
+num Postgres local com registros no mesmo formato dos reais (mamada sem dizer se foi no peito ou na
+mamadeira, mamadeira sem ml): todos continuam valendo, e cada regra nova recusa o que deve. O app
+foi testado num navegador com um banco de mentira, e os registros que ele gravou passaram pelas
+regras novas do banco.
+
+Falta, nesta ordem:
+
+1. Rodar `supabase/004_peito_e_ordenha.sql` no SQL Editor. Roda tudo ou nada; o app que está no ar
+   continua funcionando depois.
+2. Publicar o app. Antes do passo 1, o app novo não salva nenhum registro.
+3. No celular, registrar uma mamada no peito e uma ordenha, conferir e apagar.
+
+## Próximo: botão de feedback
+
+Um jeito de quem usa mandar sugestão ou avisar de problema sem sair do app. Vale ter antes de
+convidar amigos. Proposta, ainda a decidir:
+
+- **Onde fica:** no menu (família e configurações), uma seção "Sugestões e problemas" com caixa de
+  texto e botão Enviar; ao enviar, "Recebido, obrigado!".
+- **Onde chega:** tabela nova `feedback` no Supabase (arquivo novo em `supabase/`): quem mandou, a
+  família aberta, o texto (até 1000 caracteres), a data e o aparelho (celular e navegador). Pelo
+  app, quem usa só consegue enviar, não ler. Limite de envios por pessoa por dia.
+- **Como ler:** no painel do Supabase (Table Editor → `feedback`). Para responder, o e-mail de quem
+  mandou está em Authentication → Users.
+- **Aviso de feedback novo:** um e-mail automático depende do remetente dedicado (primeira
+  pendência). Até lá, olhar a tabela de tempos em tempos.
+- **Trava do Claude:** pôr a coluna do texto na lista de dados pessoais de `supabase-guard.mjs`,
+  para o Claude só ler com confirmação.
+
+Outras opções, piores: link de e-mail (depende de o celular ter e-mail configurado) e formulário
+externo (os dados ficam fora do Supabase e não se sabe quem mandou).
 
 ## Ideias para depois
 
