@@ -6,7 +6,7 @@
 -- o criador inventar um convite com validade de 100 anos ou um código fácil de adivinhar;
 -- alguém gravar autor, data de criação ou família diretamente num registro.
 --
--- Até 25/09/2026 este arquivo ainda não tinha sido rodado no banco. As listas abaixo já incluem as
+-- Rodado no banco só em 25/09/2026, depois do 004. As listas abaixo já incluem as
 -- colunas do 004 (side, left_min, right_min): o revoke da tabela toda também apaga as permissões
 -- por coluna dadas antes, então sem elas o app deixaria de salvar mamada e ordenha.
 
