@@ -19,10 +19,12 @@ Prévia interativa usada para decidir (privada): https://claude.ai/artifact/3oP2
 
 **Para publicar, nesta ordem:**
 
-1. Rodar `supabase/006_remedios.sql` no SQL Editor, **antes** de publicar o app. O app novo grava as
-   colunas do registro de remédio em todo registro: sem o 006, não salva nenhum (nem mamada).
-2. Conferir pelo conector: tabela `medicines`, regras de acesso, permissões, a marcação única por
-   dose e nenhum erro nos logs.
+1. ~~Rodar `supabase/006_remedios.sql` no SQL Editor, **antes** de publicar o app.~~ Rodado em 26/09.
+   O app novo grava as colunas do registro de remédio em todo registro: sem o 006, não salva nenhum.
+2. ~~Conferir pelo conector.~~ Conferido em 26/09: tabela `medicines` com regras de acesso, trava e
+   permissões como no arquivo (membro lê, programa e edita; ninguém apaga; deslogado não vê), tipo
+   `med` e marcação única por dose em `entries`, as duas tabelas na sincronização ao vivo. Sem erro
+   nos logs.
 3. Publicar o app e conferir no celular: programar um remédio de teste, ver a dose no alto da tela,
    marcar pela caixinha, ver "dada por…" no celular de outro membro e, no fim, "Parar este remédio".
    No painel da semana, conferir as fraldas com cocô.
