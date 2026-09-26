@@ -2,11 +2,11 @@
 // Só junta o que foi registrado: não avalia nem compara com outros bebês.
 import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS } from './util.js';
 
-// "Dia a dia": uma barra por dia do que estiver escolhido.
+// "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 export const METRICS = {
   sleep:  { name: 'Sono',     cls: 'm-sleep',  val: s => s.slept,        fmt: v => dur(v) },
   feed:   { name: 'Mamadas',  cls: 'm-feed',   val: s => s.feeds.length, fmt: String },
-  diaper: { name: 'Fraldas',  cls: 'm-diaper', val: s => s.dia.length,   fmt: String },
+  diaper: { name: 'Fraldas',  cls: 'm-diaper', val: s => s.dia.length,   fmt: String, sub: s => s.poo, subCls: 'm-poo' },
   pump:   { name: 'Ordenhas', cls: 'm-pump',   val: s => s.pumpMl,       fmt: v => v ? v + ' ml' : '0' },
 };
 const FILTERS = [['sleep', 'Sono', '--c-sleep'], ['feed', 'Mamada', '--c-feed'], ['diaper', 'Fralda', '--c-diaper'], ['pump', 'Ordenha', '--c-pump']];
@@ -46,7 +46,11 @@ function routineChart(all, sleeps, now, show) {
     for (const e of d.day) {
       const cx = x(f(e.t));
       if (e.kind === 'feed' && show.feed) s += `<circle class="m-feed" cx="${cx}" cy="${mid}" r="3.6"/>`;
-      if (e.kind === 'diaper' && show.diaper) s += `<circle class="m-diaper" cx="${cx}" cy="${y + RH - 3.5}" r="2.3"/>`;
+      // Fralda: o mesmo ponto verde. Com cocô, ganha um miolo marrom.
+      if (e.kind === 'diaper' && show.diaper) {
+        s += `<circle class="m-diaper dot" cx="${cx}" cy="${y + RH - 4.3}" r="4"/>`;
+        if (e.poo) s += `<circle class="m-poo dot" cx="${cx}" cy="${y + RH - 4.3}" r="2.4"/>`;
+      }
       if (e.kind === 'pump' && show.pump) s += `<rect class="m-pump" x="${(cx - 2.6).toFixed(1)}" y="${y + 1.2}" width="5.2" height="5.2" rx="1"/>`;
     }
     if (d.d0 === today) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
@@ -60,10 +64,22 @@ function barChart(all, now, metric) {
   const m = METRICS[metric], today = startOfDay(now);
   const W = 340, H = 150, TOP = 20, BOT = 32, PH = H - TOP - BOT, slot = W / all.length, bw = slot * .56;
   const vals = all.map(m.val), max = Math.max(1, ...vals);
-  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)} por dia: ${esc(all.map((d, i) => shortDay(d.d0) + ' ' + m.fmt(vals[i])).join(', '))}"><line class="base" x1="0" x2="${W}" y1="${TOP + PH}" y2="${TOP + PH}"/>`;
+  const aria = all.map((d, i) => shortDay(d.d0) + ' ' + m.fmt(vals[i]) + (m.sub ? ', ' + m.sub(d) + ' com cocô' : '')).join('; ');
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(m.name)} por dia: ${esc(aria)}"><line class="base" x1="0" x2="${W}" y1="${TOP + PH}" y2="${TOP + PH}"/>`;
   all.forEach((d, i) => {
     const v = vals[i], h = v / max * PH, bx = i * slot + (slot - bw) / 2, cx = i * slot + slot / 2, isToday = d.d0 === today;
-    if (h > 0) s += `<rect class="${m.cls}${isToday ? ' part' : ''}" x="${bx.toFixed(1)}" y="${(TOP + PH - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4"/>`;
+    const X = bx.toFixed(1), BW = bw.toFixed(1);
+    let bar = '', inner = '';
+    if (h > 0) bar += `<rect class="${m.cls}" x="${X}" y="${(TOP + PH - h).toFixed(1)}" width="${BW}" height="${h.toFixed(1)}" rx="4"/>`;
+    // A parte de baixo, com o topo reto quando há barra acima; o número vai dentro se couber.
+    const p = m.sub ? m.sub(d) : 0, hp = p / max * PH;
+    if (hp > 0) {
+      bar += `<rect class="${m.subCls}" x="${X}" y="${(TOP + PH - hp).toFixed(1)}" width="${BW}" height="${hp.toFixed(1)}" rx="4"/>`;
+      if (hp < h) bar += `<rect class="${m.subCls}" x="${X}" y="${(TOP + PH - hp).toFixed(1)}" width="${BW}" height="${Math.min(4, hp / 2).toFixed(1)}"/>`;
+      if (hp >= 15 && !isToday) inner = `<text class="vi" x="${cx.toFixed(1)}" y="${(TOP + PH - hp / 2 + 3.5).toFixed(1)}" text-anchor="middle">${p}</text>`;
+    }
+    // Hoje fica mais claro de uma vez só, para as duas partes não se somarem.
+    s += (isToday && bar ? `<g class="part">${bar}</g>` : bar) + inner;
     s += `<text class="vl" x="${cx.toFixed(1)}" y="${(TOP + PH - h - 5).toFixed(1)}" text-anchor="middle">${esc(m.fmt(v))}</text>`;
     const dt = new Date(d.d0);
     s += `<text class="ax" x="${cx.toFixed(1)}" y="${H - 17}" text-anchor="middle">${isToday ? 'hoje' : DIAS[dt.getDay()].toLowerCase()}</text><text class="ax" x="${cx.toFixed(1)}" y="${H - 4}" text-anchor="middle">${dt.getDate()}</text>`;
@@ -73,6 +89,16 @@ function barChart(all, now, metric) {
 
 const nf = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const span = ([a, z]) => dur(z - a) + ' · ' + shortDay(startOfDay(a)) + ', das ' + hm(a) + ' às ' + hm(z);
+// Intervalo que pode passar de um dia: "1 dia e 5h · de seg 21, 07:30 a ter 22, 12:40".
+function durLong(ms) {
+  const m = Math.round(ms / MIN); if (m < 24 * 60) return dur(ms);
+  const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60);
+  return (d === 1 ? '1 dia' : d + ' dias') + (h ? ' e ' + h + 'h' : '');
+}
+const spanLong = ([a, z]) => startOfDay(a) === startOfDay(z) ? span([a, z])
+  : durLong(z - a) + ' · de ' + shortDay(startOfDay(a)) + ', ' + hm(a) + ' a ' + shortDay(startOfDay(z)) + ', ' + hm(z);
+const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/></svg>fralda só xixi</span>'
+  + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
 export function weekHtml({ end, evs, sleep, now, show, metric }) {
@@ -87,13 +113,17 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
   const cap = n === done.length ? (hasToday ? 'Sem contar hoje, que ainda não terminou.' : '')
     : (n ? `Só dos ${n} ${n === 1 ? 'dia' : 'dias'} com registros` : 'Nenhum dia com registros para a média') + (hasToday ? ', sem contar hoje.' : '.');
 
-  // Destaques: o sono é do dia em que começou; o intervalo, do dia da mamada que o encerrou.
+  // Destaques: o sono é do dia em que começou; o intervalo, do dia do registro que o encerrou.
   const longest = sleep.out.filter(([s0]) => s0 >= a && s0 < z).reduce((b, iv) => !b || iv[1] - iv[0] > b[1] - b[0] ? iv : b, null);
-  const feeds = evs.filter(e => e.kind === 'feed'); let gap = null;
-  for (let i = 1; i < feeds.length; i++) {
-    const p = feeds[i - 1].t, q = feeds[i].t;
-    if (q >= a && q < z && (!gap || q - p > gap[1] - gap[0])) gap = [p, q];
-  }
+  const gapOf = list => {
+    let g = null;
+    for (let i = 1; i < list.length; i++) {
+      const p = list[i - 1].t, q = list[i].t;
+      if (q >= a && q < z && (!g || q - p > g[1] - g[0])) g = [p, q];
+    }
+    return g;
+  };
+  const gap = gapOf(evs.filter(e => e.kind === 'feed')), pooGap = gapOf(evs.filter(e => e.kind === 'diaper' && e.poo));
   const sides = { left: 0, right: 0, both: 0 }; for (const d of all) for (const e of d.feeds) if (e.side) sides[e.side]++;
   const pumps = all.reduce((s, d) => s + d.pumps.length, 0), pumpMl = all.reduce((s, d) => s + d.pumpMl, 0);
 
@@ -103,7 +133,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
 
   let h = `<div class="card"><h3>Como foram os dias</h3><p class="cap">Cada linha é um dia, de 0h a 24h. Toque num dia para ver os registros.</p>
     <div class="flts">${FILTERS.map(([k, t, c]) => `<button class="flt" data-flt="${k}" aria-pressed="${show[k]}" style="--sw:var(${c})"><i></i>${t}</button>`).join('')}</div>
-    <div class="svgbox">${routineChart(all, sleeps, now, show)}</div></div>`;
+    <div class="svgbox">${routineChart(all, sleeps, now, show)}</div>${show.diaper ? LGD_DIAPER : ''}</div>`;
 
   h += `<div class="card"><h3>Média por dia</h3>${cap ? `<p class="cap">${cap}</p>` : ''}<div class="tiles">
     ${tile('--c-sleep', 'Sono', dur(avg(d => d.slept)), 'maior sono seguido: ' + (longest ? dur(longest[1] - longest[0]) : '—'))}
@@ -113,11 +143,13 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
   </div></div>`;
 
   h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).map(([k, m]) => `<button class="met" data-met="${k}" aria-pressed="${metric === k}">${m.name}</button>`).join('')}</div>
-    <div class="svgbox">${barChart(all, now, metric)}</div>${hasToday ? '<p class="foot">A barra mais clara é hoje, até agora.</p>' : ''}</div>`;
+    <div class="svgbox">${barChart(all, now, metric)}</div>
+    ${METRICS[metric].sub ? '<div class="lgd"><span style="--sw:var(--c-poo)"><i></i>com cocô</span><span style="--sw:var(--c-diaper)"><i></i>só xixi</span></div>' : ''}${hasToday ? '<p class="foot">A barra mais clara é hoje, até agora.</p>' : ''}</div>`;
 
   h += `<div class="card"><h3>Nestes 7 dias</h3><div class="hl">
     <div><b>Maior sono seguido</b><span>${longest ? span(longest) : '—'}</span></div>
     <div><b>Maior intervalo entre mamadas</b><span>${gap ? span(gap) : '—'}</span></div>
+    <div><b>Maior intervalo entre cocôs</b><span>${pooGap ? spanLong(pooGap) : '—'}</span></div>
     <div><b>Peito nas mamadas</b><span>${sides.left + sides.right + sides.both ? `esquerdo ${sides.left}× · direito ${sides.right}× · os dois ${sides.both}×` : '—'}</span></div>
     <div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>
   </div><p class="foot">O painel só junta o que foi registrado. Não avalia nem compara com outros bebês.</p></div>`;
