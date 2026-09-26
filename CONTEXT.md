@@ -1,7 +1,7 @@
 # Caderninho
 
-Aplicativo para famílias registrarem a rotina dos seus bebês — mamadas, sono, fraldas, vômitos — e
-reverem o dia numa linha do tempo compartilhada. Serve à organização da própria família; não
+Aplicativo para famílias registrarem a rotina dos seus bebês — mamadas, sono, fraldas, vômitos,
+remédios — e reverem o dia numa linha do tempo compartilhada. Serve à organização da própria família; não
 interpreta os registros nem sugere condutas.
 
 ## Pessoas e grupos
@@ -42,7 +42,7 @@ _Evite_: filho, criança, paciente
 
 **Registro**:
 Uma anotação de algo que aconteceu com um bebê num horário: uma mamada, uma ordenha, um dormiu,
-um acordou, uma troca de fralda, um vômito ou outro fato anotado à mão.
+um acordou, uma troca de fralda, um vômito, um remédio dado ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
@@ -84,6 +84,38 @@ _Evite_: nota, observação (observação é o comentário opcional dentro de qu
 Os registros de um bebê num dia, do mais recente para o mais antigo.
 _Evite_: histórico, feed, diário
 
+## Remédios
+
+**Remédio**:
+O que a família programa para dar a um bebê: o nome, quanto dar (se quiser) e quando — em horários
+fixos, de tantas em tantas horas ou só quando precisar — por alguns dias ou sem data para acabar. O
+Caderninho só lembra o que a família programou; não sugere remédio, dose nem horário. Parar um
+remédio tira ele da lista e das doses, mas não apaga os registros.
+_Evite_: medicamento, medicação, receita, prescrição
+
+**Dose**:
+Cada horário em que um remédio programado deve ser dado. Meia hora antes, a próxima dose ganha a
+caixinha na tela inicial e fica em destaque até alguém marcar que deu ou pular. Cada dose só pode
+ser marcada uma vez: quem marca depois vê quem marcou antes.
+_Evite_: tomada, aplicação
+
+**Intervalo**:
+No remédio de só quando precisar, o tempo entre uma vez e outra que a família programou (por
+exemplo, de 6 em 6 horas). O app mostra a partir de que horas pode dar de novo e pede confirmação
+antes disso.
+_Evite_: intervalo mínimo, limite, dose máxima
+
+**Registro de remédio**:
+O registro de que uma dose foi dada ou pulada, ou de que um remédio de só quando precisar foi dado,
+com quem marcou e a que horas. Guarda o nome e a quantidade daquele momento.
+_Evite_: administração, aplicação
+
+**Remédios e horários**:
+A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
+Abre pelo botão Remédio (o do lápis) e por "Ver todas", no cartão de remédios da tela inicial, que
+mostra só a última dose e a próxima.
+_Evite_: farmácia, receituário
+
 ## Ver os registros
 
 **Painel da semana**:
@@ -96,6 +128,11 @@ _Evite_: relatório, estatísticas, análise, desempenho
 O total de um tipo de registro dividido pelos dias que já terminaram e têm algum registro. Hoje não
 entra, e dia sem nada anotado também não: dia sem registro não é dia sem mamada.
 _Evite_: normal, esperado, meta
+
+**Maior intervalo entre cocôs**:
+O maior tempo entre duas fraldas com cocô, contado no dia da fralda que o encerrou. Só junta o que foi
+registrado: fralda que não foi anotada não conta.
+_Evite_: prisão de ventre, intestino preso, constipação
 
 **Maior sono seguido**:
 O sono mais longo entre um dormiu e o acordou seguinte, contado no dia em que começou. Sono de dia e

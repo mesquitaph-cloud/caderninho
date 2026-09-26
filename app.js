@@ -1,6 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { ICON, MIN, HOUR, DAY, startOfDay, addDays, hm, dur, ago, esc, dayTitle, rangeTitle, ageText,
+import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
 import { weekHtml } from './week.js';
 
@@ -15,6 +15,7 @@ const st = {
   babies: [], baby: null,
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
+  meds: [],                    // remédios programados do bebê aberto (sem os parados)
   view: 'day',                 // 'day' (linha do tempo) ou 'week' (painel da semana)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
@@ -154,7 +155,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await loadEntries();
+  await Promise.all([loadEntries(), loadMeds()]);
   show('scrMain'); render();
 }
 
@@ -180,13 +181,29 @@ async function loadEntries() {
 }
 const withT = r => ({ ...r, t: Date.parse(r.at) });
 
+async function loadMeds() {
+  st.meds = [];
+  if (!st.baby) return;
+  const { data, error } = await sb.from('medicines').select('*').eq('baby_id', st.baby.id).is('stopped_at', null).order('created_at');
+  if (error) return toast('Não foi possível carregar os remédios.');
+  st.meds = data;
+}
+// Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
+function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
+
 function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
   st.channel = sb.channel('familia-' + fid)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: 'family_id=eq.' + fid }, async p => {
       if (p.eventType === 'DELETE') st.entries.delete(p.old.id);
       else if (st.baby && p.new.baby_id === st.baby.id) { st.entries.set(p.new.id, withT(p.new)); await loadNames([p.new.author_id]); }
-      if (!S) render();
+      refresh();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'medicines', filter: 'family_id=eq.' + fid }, p => {
+      const m = p.new; if (!m?.id || !st.baby || m.baby_id !== st.baby.id) return;
+      st.meds = st.meds.filter(x => x.id !== m.id);
+      if (!m.stopped_at) st.meds = [...st.meds, m].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+      refresh();
     })
     .subscribe();
 }
@@ -220,6 +237,8 @@ function render() {
   $('subDiaper').textContent = ld ? 'troca ' + ago(ld.t) : 'sem registro';
   const vToday = evs.filter(e => e.kind === 'vomit' && e.t >= startOfDay(now)).length;
   $('subVomit').textContent = vToday ? vToday + ' hoje' : 'nenhum hoje';
+  $('subMed').textContent = medSub();
+  renderMeds();
 
   const today = startOfDay(now), week = st.view === 'week';
   $('tabDay').setAttribute('aria-selected', !week); $('tabWeek').setAttribute('aria-selected', week);
@@ -250,6 +269,7 @@ function render() {
   const all = intervals.slice(); if (open !== null) all.push([open, now]);
   const slept = all.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, d1) - Math.max(a, d0)), 0);
   const dia = day.filter(e => e.kind === 'diaper'), vom = day.filter(e => e.kind === 'vomit').length;
+  const md = day.filter(e => e.kind === 'med' && !e.skipped).length;
   const chips = [['feed', feeds.length + (feeds.length === 1 ? ' mamada' : ' mamadas') + (ml ? ' · ' + ml + ' ml' : '') + (breastMin ? ' · ' + dur(breastMin * MIN) + ' no peito' : '')]];
   const lb = lastBreast(evs);
   if (lb && d0 === startOfDay(now)) chips.push(['feed', 'último peito: ' + SIDE_SHORT[lb.side] + ' · ' + ago(lb.t)]);
@@ -257,6 +277,7 @@ function render() {
   chips.push(['sleep', dur(slept) + ' de sono'],
     ['diaper', dia.length + (dia.length === 1 ? ' fralda' : ' fraldas') + ' · ' + dia.filter(e => e.pee).length + ' xixi · ' + dia.filter(e => e.poo).length + ' cocô']);
   if (vom) chips.push(['vomit', vom + (vom === 1 ? ' vômito' : ' vômitos')]);
+  if (md) chips.push(['med', md + (md === 1 ? ' dose de remédio' : ' doses de remédio')]);
   $('summary').innerHTML = chips.map(([k, t]) => `<span class="chip k-${k}">${esc(t)}</span>`).join('');
 
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
@@ -272,11 +293,15 @@ function render() {
 function fields(ev) {
   return { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
            side: ev.side ?? null, left_min: ev.left_min ?? null, right_min: ev.right_min ?? null,
-           pee: ev.pee ?? null, poo: ev.poo ?? null, note: ev.note ?? null };
+           pee: ev.pee ?? null, poo: ev.poo ?? null, note: ev.note ?? null,
+           medicine_id: ev.medicine_id ?? null, med_name: ev.med_name ?? null, med_amount: ev.med_amount ?? null,
+           dose_at: ev.dose_at ?? null, skipped: ev.skipped ?? null };
 }
 async function addEntry(ev) {
   const { data, error } = await sb.from('entries')
     .insert({ family_id: st.family.id, baby_id: st.baby.id, ...fields(ev) }).select().single();
+  // 23505: a dose já foi marcada (duas pessoas marcaram juntas). Recarrega para mostrar quem marcou.
+  if (error?.code === '23505') { toast('Alguém já marcou esta dose.'); await loadEntries(); refresh(); return null; }
   if (error) { toast('Não foi possível salvar. Confira a conexão.'); return null; }
   st.entries.set(data.id, withT(data)); render(); return data;
 }
@@ -293,7 +318,7 @@ async function deleteEntry(id) {
 
 /* ---------- painel de registro ---------- */
 let S = null;   // estado do painel aberto (null = fechado)
-const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros' };
+const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio' };
 function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
 function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
@@ -312,6 +337,7 @@ function markSide(key) { const r = $('row-' + key); if (!r) return; r.classList.
 
 function openEntry(k, edit) {
   if (!st.baby) return babySheet(null);
+  if (k === 'med' && !edit) return medsSheet();
   const { open } = sleepIntervals(sortedEntries());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
   S = { mode: 'entry', k: k === 'wake' ? 'sleep' : k, edit, base: startOfDay(t), time: hm(t),
@@ -336,7 +362,8 @@ function drawEntry() {
   if (k === 'pump') h += `<div><div class="lbl">Qual peito <small>(opcional, marque um ou os dois)</small></div><div class="seg ${c}" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div></div>` + mlBlock(k);
   if (k === 'sleep') h += `<div class="seg ${c}" style="background:none">${opt('Dormiu', S.sk === 'sleep', 'sk', 'sleep', 1)}${opt('Acordou', S.sk === 'wake', 'sk', 'wake', 1)}</div>`;
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
-  if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Tomou vitamina D" value="${esc(S.note)}"></div>`;
+  if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
+  if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
   h += `<div><div class="lbl">Horário</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
   if (k !== 'other') h += `<input class="field" id="noteIn" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
@@ -369,6 +396,7 @@ async function saveEntry(btn) {
   }
   if (k === 'pump') { ev.side = side; ev.ml = +S.ml; }
   if (k === 'diaper') { ev.pee = !!S.pee; ev.poo = !!S.poo; }
+  if (k === 'med') for (const f of ['medicine_id', 'med_name', 'med_amount', 'dose_at', 'skipped']) ev[f] = S.edit[f];
   if (S.note.trim()) ev.note = S.note.trim().slice(0, 300);
   busy(btn, true);
   if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast('Salvo às ' + hm(ev.t)); } else busy(btn, false); return; }
@@ -406,6 +434,275 @@ function calAction(a, v) {
   if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else st.viewDay = +v; closeSheet(); }
 }
 
+/* ---------- remédios ---------- */
+// A família programa o remédio e os horários; o Caderninho só lembra. Cada horário do dia é uma dose,
+// identificada por "remédio@horário" (ms). Marcar ou pular a dose grava um registro de remédio.
+const SOON = 30 * MIN;   // meia hora antes, a próxima dose ganha a caixinha na tela inicial
+const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
+const EVERY = [4, 6, 8, 12];
+const MED_RULE = '<p class="dim">Só a família programa. O Caderninho lembra os horários; não sugere remédio nem dose.</p>';
+const localDate = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const dayOf = ymd => startOfDay(new Date(ymd + 'T00:00').getTime());
+const atTime = (d0, hhmm) => { const d = new Date(d0), [H, M] = hhmm.split(':').map(Number); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), H, M).getTime(); };
+const medTimes = m => (m.times || []).map(x => x.slice(0, 5)).sort();
+const medEnd = m => m.days ? addDays(dayOf(m.start_date), m.days) : Infinity;   // primeiro dia sem o remédio
+const medOn = (m, d0) => m.schedule !== 'prn' && d0 >= dayOf(m.start_date) && d0 < medEnd(m);
+// De X em X horas: os horários do dia que saem da conta, a partir da primeira dose.
+function everyTimes(every, first) {
+  const [H, M] = (first || '08:00').split(':').map(Number), step = every * 60, out = [];
+  for (let k = (H * 60 + M) % step; k < 1440; k += step) out.push(pad(Math.floor(k / 60)) + ':' + pad(k % 60));
+  return out;
+}
+const whoGave = e => e.author_id === st.user.id ? 'você' : (st.names[e.author_id] || 'alguém').split(' ')[0];
+const whenText = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return (d0 === t0 ? 'hoje' : d0 === addDays(t0, -1) ? 'ontem' : shortDay(d0)) + ' às ' + hm(t); };
+const dayWord = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return d0 === t0 ? '' : d0 < t0 ? 'ontem' : 'amanhã'; };
+
+// As doses com horário entre a e z, com o estado de cada uma. Horário de antes de o remédio ser
+// programado não conta: quem programa às 8h40 um remédio de 6 em 6 horas não tem a dose das 7h.
+function dosesFrom(a, z) {
+  const marked = new Map();
+  for (const e of st.entries.values()) if (e.kind === 'med' && e.dose_at) marked.set(e.medicine_id + '@' + Date.parse(e.dose_at), e);
+  const now = Date.now(), out = [];
+  for (let d0 = startOfDay(a); d0 < z; d0 = addDays(d0, 1))
+    for (const m of st.meds) if (medOn(m, d0)) for (const hhmm of medTimes(m)) {
+      const due = atTime(d0, hhmm); if (due < a || due >= z || due < Date.parse(m.created_at)) continue;
+      const id = m.id + '@' + due, e = marked.get(id);
+      const state = e ? (e.skipped ? 'skip' : 'done') : now >= due ? 'late' : now >= due - SOON ? 'soon' : 'later';
+      out.push({ id, m, due, hhmm, e, state });
+    }
+  return out.sort((x, y) => x.due - y.due || x.m.name.localeCompare(y.m.name));
+}
+const doseById = id => { const due = +id.split('@')[1]; return dosesFrom(due, due + 1).find(d => d.id === id); };
+const todayDoses = () => { const t0 = startOfDay(Date.now()); return dosesFrom(t0, addDays(t0, 1)); };
+function doseStatus(d) {
+  return d.state === 'done' ? 'dada por ' + whoGave(d.e) + ' às ' + hm(d.e.t)
+    : d.state === 'skip' ? 'pulada por ' + whoGave(d.e)
+    : d.state === 'late' ? 'passou ' + dur(Date.now() - d.due) + ' · ainda não marcada'
+    : d.state === 'soon' ? 'daqui a ' + dur(d.due - Date.now()) : '';
+}
+// Uma dose. Na lista completa (all), toda dose tem caixinha; na tela inicial, só perto da hora.
+function doseRow(d, { all = false, tag = '' } = {}) {
+  const m = d.m, name = esc(m.name), st2 = [tag, doseStatus(d)].filter(Boolean).join(' · ');
+  const can = d.state === 'soon' || d.state === 'late' || (all && d.state === 'later');
+  const ck = can
+      ? `<button class="ck" role="checkbox" aria-checked="false" data-act="check" data-val="${d.id}" aria-label="Marcar ${name} das ${d.hhmm} como dada">${CHECK}</button>`
+    : d.e
+      ? `<button class="ck" role="checkbox" aria-checked="true" data-act="dose" data-val="${d.id}" aria-label="${name} das ${d.hhmm}, ${esc(st2)}. Ver ou desmarcar">${d.state === 'skip' ? DASH : CHECK}</button>`
+    : '<span class="ck" aria-hidden="true"></span>';
+  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button></div>`;
+}
+
+// Tela inicial: só a última dose (a mais recente que já passou da hora) e a próxima, nas últimas e
+// próximas 24 horas. Uma dose de hoje mais antiga que ficou sem marcar vira um aviso para a lista.
+function renderMeds() {
+  const box = $('meds'), now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
+  box.hidden = !ds.length; if (!ds.length) return;
+  const past = ds.filter(d => d.due <= now), lastT = past.at(-1)?.due, nextT = ds.find(d => d.due > now)?.due;
+  const shown = ds.filter(d => d.due === lastT || d.due === nextT);
+  const missed = past.filter(d => d.due !== lastT && d.state === 'late' && !dayWord(d.due)).length;
+  const hot = shown.some(d => d.state === 'soon' || d.state === 'late'), n = todayDoses().length;
+  box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${hot ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
+    <div class="doses">${shown.map(d => doseRow(d, { tag: [d.due <= now ? 'última dose' : 'próxima dose', dayWord(d.due)].filter(Boolean).join(' · ') })).join('')}</div>
+    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? 'Mais 1 dose de hoje sem marcar' : 'Mais ' + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
+}
+function medSub() {
+  const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
+  const soon = ds.find(d => d.state === 'soon'), next = ds.find(d => d.due > now);
+  if (ds.some(d => d.state === 'late')) return 'dose sem marcar';
+  if (soon) return 'daqui a ' + dur(soon.due - now);
+  if (next) return 'próxima ' + (dayWord(next.due) ? dayWord(next.due) + ' ' : '') + 'às ' + next.hhmm;
+  return st.meds.length ? 'remédios e horários' : 'programar horários';
+}
+
+// Remédios e horários: as doses de hoje, cada uma com caixinha, e os remédios programados.
+function medsSheet() { S = { mode: 'meds' }; drawMeds(); $('sheet').scrollTop = 0; }
+function drawMeds() {
+  const ds = todayDoses(), t0 = startOfDay(Date.now()), meds = st.meds.filter(m => medEnd(m) > t0);
+  let h = `<div class="grab"></div><div class="shead"><h3>Remédios e horários<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
+  h += meds.length
+    ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
+    : `<div class="soft">Anote aqui quais são os remédios de ${esc(st.baby.name)} e os horários de cada um. Depois de salvar, as doses do dia começam a aparecer no alto da tela inicial.</div><button class="save" data-act="newMed">Programar um remédio</button>`;
+  const top = $('sheet').scrollTop; openPanel(h + MED_RULE); $('sheet').scrollTop = top;
+}
+const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && e.medicine_id === m.id && !e.skipped).reduce((b, e) => !b || e.t > b.t ? e : b, null);
+// "Só quando precisar" com intervalo: quando pode dar de novo (nulo se já pode).
+const prnNext = (m, last = lastGiven(m)) => last && m.every_hours && last.t + m.every_hours * HOUR > Date.now() ? last.t + m.every_hours * HOUR : null;
+function medCard(m) {
+  let times, sub, sub2 = '';
+  if (m.schedule === 'prn') {
+    const last = lastGiven(m), next = prnNext(m, last), ask = S.prnAsk === m.id;
+    times = `<span class="tpill plain">quando precisar${m.every_hours ? ` · de ${m.every_hours} em ${m.every_hours}h` : ''}</span>`
+      + `<button class="pillbtn" data-act="prnNow" data-val="${esc(m.id)}">${ask ? 'Marcar mesmo assim' : 'Dei agora'}</button>`;
+    sub = last ? 'última vez ' + whenText(last.t) + ', por ' + whoGave(last) : 'ainda não foi dado';
+    // Intervalo programado pela família: mostra a partir de quando pode dar de novo e confirma antes.
+    if (ask) sub2 = `A última foi há ${dur(Date.now() - last.t)}; vocês programaram de ${m.every_hours} em ${m.every_hours} horas.`;
+    else if (next) sub2 = 'Pode dar de novo a partir das ' + hm(next) + (dayWord(next) ? ' de ' + dayWord(next) : '') + '.';
+  } else {
+    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('');
+    sub = (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
+      + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
+  }
+  return `<div class="mcard"><div class="mtop"><div><b>${esc(m.name)}</b>${m.amount ? `<span class="mq">${esc(m.amount)}</span>` : ''}</div>
+    <button data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}">${ICON.pencil}Editar</button></div>
+    <div class="mtimes">${times}</div><div class="msub">${esc(sub)}</div>${sub2 ? `<div class="msub wait">${esc(sub2)}</div>` : ''}</div>`;
+}
+
+// Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega.
+async function giveDose(id, t, note, skipped) {
+  const d = doseById(id); if (!d) return;
+  const row = await addEntry({ kind: 'med', t, medicine_id: d.m.id, med_name: d.m.name, med_amount: d.m.amount,
+                               dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null });
+  if (!row) return;
+  if (S?.mode === 'meds') drawMeds();
+  toast(skipped ? 'Dose pulada' : 'Dose de ' + d.m.name + ' marcada às ' + hm(t), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+}
+async function prnNow(mid) {
+  const m = st.meds.find(x => x.id === mid); if (!m) return;
+  const row = await addEntry({ kind: 'med', t: Date.now(), medicine_id: m.id, med_name: m.name, med_amount: m.amount });
+  if (!row) return;
+  if (S?.mode === 'meds') drawMeds();
+  toast('Dose de ' + m.name + ' marcada às ' + hm(Date.parse(row.at)), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+}
+
+// Uma dose: marcar com outro horário, pular ou desmarcar. "back" volta para a lista, se veio dela.
+function doseSheet(id, back) { S = { mode: 'dose', id, back, base: startOfDay(Date.now()), time: hm(Date.now()), note: '', err: '' }; drawDose(); }
+function drawDose() {
+  const d = doseById(S.id); if (!d) return closeSheet();
+  const m = d.m, when = dayWord(d.due);
+  let h = head(m.name) + `<p class="dsub">${esc([m.amount, 'dose das ' + d.hhmm + (when ? ' de ' + when : '')].filter(Boolean).join(' · '))}</p>`;
+  if (d.e) {
+    h += `<div class="given${d.e.skipped ? ' skip' : ''}"><span class="ck">${d.e.skipped ? DASH : CHECK}</span><span>${d.e.skipped ? 'Pulada por ' + esc(whoGave(d.e)) : 'Dada por ' + esc(whoGave(d.e)) + ' às ' + hm(d.e.t)}</span></div>`;
+    h += `<button class="ghost" data-act="unmark">${d.e.skipped ? 'Desfazer' : 'Desmarcar'}</button>`;
+    if (!d.e.skipped) h += '<p class="dim">Desmarcar apaga o registro da linha do tempo. Use só se marcou por engano.</p>';
+  } else {
+    if (d.state === 'later') h += `<div class="soft">Ainda não é a hora: a dose é às ${d.hhmm}${when ? ' de ' + when : ''}. Se já deu, dá para marcar.</div>`;
+    h += `<div><div class="lbl">Horário que deu</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
+    h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
+    h += '<button class="save" data-act="give">Marcar como dada</button><button class="del" data-act="skip">Pular esta dose</button>';
+  }
+  openPanel(h);
+}
+const leaveDose = () => S.back === 'meds' ? medsSheet() : closeSheet();
+
+// Programar ou editar um remédio.
+function medForm(m) {
+  const sched = m?.schedule || 'fixed', times = m && sched !== 'prn' ? medTimes(m) : ['09:00'];
+  S = { mode: 'medform', edit: m || null, name: m?.name || '', amount: m?.amount || '', sched, times,
+        every: m?.every_hours || (sched === 'prn' ? 6 : 8), first: sched === 'every' ? times[0] : '08:00',
+        gap: sched === 'prn' && m?.every_hours ? 'every' : 'none',
+        dur: m?.days ? 'days' : 'none', days: m?.days || 7, start: m ? dayOf(m.start_date) : startOfDay(Date.now()),
+        err: '', confirmStop: false };
+  drawMedForm(); $('sheet').scrollTop = 0;
+}
+const everyHint = () => 'Horários: ' + everyTimes(S.every, S.first).join(', ');
+function drawMedForm() {
+  const today = startOfDay(Date.now());
+  let h = head(S.edit ? 'Editar remédio' : 'Programar remédio');
+  h += `<div><label class="lbl" for="mName">Nome</label><input class="field" id="mName" maxlength="40" placeholder="Ex.: Vitamina D" value="${esc(S.name)}"></div>`;
+  h += `<div><label class="lbl" for="mAmount">Quanto <small>(opcional)</small></label><input class="field" id="mAmount" maxlength="30" placeholder="Ex.: 2 gotas, 2,5 ml" value="${esc(S.amount)}"></div>`;
+  h += `<div><div class="lbl">Quando dar</div><div class="seg k-med" style="background:none">${opt('Horários fixos', S.sched === 'fixed', 'sched', 'fixed')}${opt('De X em X horas', S.sched === 'every', 'sched', 'every')}${opt('Só quando precisar', S.sched === 'prn', 'sched', 'prn')}</div></div>`;
+  if (S.sched === 'fixed')
+    h += `<div><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip"><input type="time" id="mt-${i}" value="${t}" aria-label="Horário ${i + 1}">${S.times.length > 1 ? `<button data-act="rmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="addTime">+ horário</button>' : ''}</div></div>`;
+  const stepper = `<div class="ml"><button data-act="every" data-val="-1" aria-label="Menos horas">−</button><output>${S.every}</output><em>horas</em><button data-act="every" data-val="1" aria-label="Mais horas">+</button></div>`;
+  if (S.sched === 'every')
+    h += `<div><div class="lbl">De quantas em quantas horas</div>${stepper}</div>
+      <div><label class="lbl" for="mFirst">Primeira dose do dia</label><div class="time"><input type="time" id="mFirst" value="${S.first}"></div><div class="hint" id="everyHint" style="margin-top:8px">${esc(everyHint())}</div></div>`;
+  if (S.sched === 'prn') {
+    h += `<div><div class="lbl">Intervalo entre as doses <small>(opcional)</small></div><div class="seg k-med" style="background:none">${opt('Sem intervalo', S.gap === 'none', 'gap', 'none')}${opt('De X em X horas', S.gap === 'every', 'gap', 'every')}</div>`;
+    if (S.gap === 'every') h += `<div style="margin-top:10px">${stepper}</div>`;
+    h += '</div>';
+  }
+  if (S.sched !== 'prn') {
+    h += `<div><div class="lbl">Até quando</div><div class="seg k-med" style="background:none">${opt('Sem data para acabar', S.dur === 'none', 'dur', 'none')}${opt('Por alguns dias', S.dur === 'days', 'dur', 'days')}</div>`;
+    if (S.dur === 'days') h += `<div class="ml" style="margin-top:10px"><button data-act="days" data-val="-1" aria-label="Menos um dia">−</button><output>${S.days}</output><em>${S.days === 1 ? 'dia' : 'dias'}</em><button data-act="days" data-val="1" aria-label="Mais um dia">+</button></div>
+      <div class="hint" style="margin-top:8px">${S.start === today ? 'Começa hoje' : 'Começou ' + dayTitle(S.start).toLowerCase()}. Último dia: ${dayTitle(addDays(S.start, S.days - 1)).toLowerCase()}.</div>`;
+    h += '</div>';
+  }
+  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Meia hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar. Fica assim até alguém marcar.'}</span></div>`;
+  h += '<p class="dim">O Caderninho só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
+  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
+  h += '<button class="save" data-act="saveMed">Salvar</button>';
+  if (S.edit) h += `<button class="del" data-act="stopMed">${S.confirmStop ? 'Toque de novo para parar este remédio' : 'Parar este remédio'}</button>`;
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+async function saveMed(btn) {
+  const name = S.name.trim(), amount = S.amount.trim();
+  const times = S.sched === 'fixed' ? [...new Set(S.times.filter(Boolean))].sort() : S.sched === 'every' ? everyTimes(S.every, S.first) : null;
+  if (!name) { S.err = 'Escreva o nome do remédio.'; return drawMedForm(); }
+  if (S.sched === 'fixed' && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawMedForm(); }
+  if (S.sched === 'every' && !S.first) { S.err = 'Escolha o horário da primeira dose.'; return drawMedForm(); }
+  const row = { name, amount: amount || null, schedule: S.sched, times,
+                every_hours: S.sched === 'every' || (S.sched === 'prn' && S.gap === 'every') ? S.every : null,
+                days: S.sched !== 'prn' && S.dur === 'days' ? S.days : null };
+  busy(btn, true);
+  const q = S.edit ? sb.from('medicines').update(row).eq('id', S.edit.id)
+                   : sb.from('medicines').insert({ family_id: st.family.id, baby_id: st.baby.id, start_date: localDate(Date.now()), ...row });
+  const { data, error } = await q.select().single();
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
+  st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  render(); medsSheet(); toast('Salvo');
+}
+// Parar não apaga: o remédio some da lista e das doses, e os registros continuam na linha do tempo.
+async function stopMed(btn) {
+  busy(btn, true);
+  const { error } = await sb.from('medicines').update({ stopped_at: new Date().toISOString() }).eq('id', S.edit.id);
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível parar. Confira a conexão e tente de novo.'; return drawMedForm(); }
+  st.meds = st.meds.filter(x => x.id !== S.edit.id);
+  render(); medsSheet(); toast('Remédio parado');
+}
+
+function medInput(el) {
+  const id = el.id, v = el.value;
+  if (id === 'mName') S.name = v;
+  else if (id === 'mAmount') S.amount = v;
+  else if (id.startsWith('mt-')) S.times[+id.slice(3)] = v;
+  else if (id === 'mFirst') { S.first = v; $('everyHint').textContent = everyHint(); }
+  else if (id === 'timeIn') S.time = v;
+  else if (id === 'noteIn') S.note = v;
+  if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
+}
+async function medAction(a, v, btn) {
+  if (S.mode === 'meds') {
+    if (a === 'newMed') return medForm(null);
+    if (a === 'editMed') return medForm(st.meds.find(m => m.id === v));
+    if (a === 'prnNow') {
+      const m = st.meds.find(x => x.id === v);
+      if (m && prnNext(m) && S.prnAsk !== v) { S.prnAsk = v; return drawMeds(); }
+      S.prnAsk = null; return prnNow(v);
+    }
+    if (a === 'check') return giveDose(v, Date.now());
+    if (a === 'dose') return doseSheet(v, 'meds');
+    return;
+  }
+  if (S.mode === 'dose') {
+    if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
+    else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
+    else if (a === 'give' || a === 'skip') {
+      const { id, note } = S, t = a === 'give' ? computeT() : Date.now();
+      leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), a === 'skip');
+    }
+    else if (a === 'unmark') {
+      const d = doseById(S.id); leaveDose();
+      if (d?.e && await deleteEntry(d.e.id)) { if (S?.mode === 'meds') drawMeds(); toast(d.e.skipped ? 'Dose de volta' : 'Dose desmarcada'); }
+      return;
+    }
+    return drawDose();
+  }
+  if (a === 'sched') S.sched = v;
+  else if (a === 'dur') S.dur = v;
+  else if (a === 'gap') S.gap = v;
+  else if (a === 'addTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 12) % 24) + ':' + pad(M)); }
+  else if (a === 'rmTime') S.times.splice(+v, 1);
+  else if (a === 'every') S.every = EVERY[Math.max(0, Math.min(EVERY.length - 1, EVERY.indexOf(S.every) + (+v)))];
+  else if (a === 'days') S.days = Math.max(1, Math.min(60, S.days + (+v)));
+  else if (a === 'saveMed') return saveMed(btn);
+  else if (a === 'stopMed') { if (S.confirmStop) return stopMed(btn); S.confirmStop = true; }
+  S.err = ''; drawMedForm();
+}
+
 /* ---------- bebê e nome ---------- */
 function babySheet(b) {
   S = { mode: 'baby', b };
@@ -430,7 +727,7 @@ async function saveBaby(btn) {
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
-  await loadEntries(); render();
+  await Promise.all([loadEntries(), loadMeds()]); render();
 }
 function renameSheet() {
   S = { mode: 'rename' };
@@ -565,6 +862,7 @@ $('sheetIn').addEventListener('input', e => {
     if (FB.err) { FB.err = ''; $('fbErr')?.remove(); }
     return;
   }
+  if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
@@ -584,6 +882,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (a === 'saveName') return saveName(b);
   if (S.mode === 'menu') return menuAction(a, v, b);
   if (S.mode === 'cal') return calAction(a, v);
+  if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -609,6 +908,12 @@ $('wakeBtn').onclick = async () => {
   const row = await addEntry({ kind: 'wake', t: Date.now() });
   if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));
 };
+$('meds').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  if (b.dataset.act === 'check') return giveDose(b.dataset.val, Date.now());
+  if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
+  if (b.dataset.act === 'allMeds') return medsSheet();
+});
 $('babyBtn').onclick = () => babySheet(st.baby);
 $('menuBtn').onclick = menuSheet;
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
@@ -647,9 +952,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSh
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) loadEntries().then(render);
+  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds()]).then(render);
 });
-setInterval(() => { if (!S) render(); }, 30000);
+setInterval(refresh, 30000);
 
 function isDark() { const a = document.documentElement.dataset.theme; return a ? a === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
 function paintTheme() { $('themeBtn').innerHTML = isDark() ? ICON.sun : ICON.sleep; }
