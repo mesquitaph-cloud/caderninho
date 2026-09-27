@@ -59,45 +59,50 @@ function routineChart(all, sleeps, now, show) {
   return s + '</svg>';
 }
 
-// O dia aberto na linha do tempo, de 0h a 24h: uma faixa por tipo, com o total à direita. Sono,
-// mamadas, xixi e cocô sempre; ordenha, remédio, vômito e outros só se tiver no dia. Xixi e cocô em
-// faixas separadas: a fralda com os dois aparece nas duas. Tocar numa marca abre o registro.
-export function dayChart({ d0, evs, sleeps, now }) {
+// "Como foi o dia": o dia aberto numa linha só, com as mesmas marcas do painel da semana, um pouco
+// maiores, e os sintomas (vômito junto) num losango âmbar no alto. A contagem vai embaixo. Tocar numa
+// marca abre o registro. pumpOn/symptomOn: se a família usa esses botões.
+export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
   const d1 = addDays(d0, 1), end = Math.min(d1, now), day = evs.filter(e => e.t >= d0 && e.t < d1);
-  const of = k => day.filter(e => e.kind === k), dia = of('diaper');
-  const slept = sleeps.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, end) - Math.max(a, d0)), 0);
-  const pump = of('pump'), meds = of('med').filter(e => !e.skipped);
-  const lanes = [
-    ['sleep', 'Sono', null, slept ? dur(slept) : '0'],
-    ['feed', 'Mamadas', of('feed'), String(of('feed').length)],
-    ['diaper', 'Xixi', dia.filter(e => e.pee), String(dia.filter(e => e.pee).length)],
-    ['poo', 'Cocô', dia.filter(e => e.poo), String(dia.filter(e => e.poo).length)],
-  ];
-  if (pump.length) lanes.push(['pump', 'Ordenha', pump, pump.reduce((s, e) => s + e.ml, 0) + ' ml']);
-  if (meds.length) lanes.push(['med', 'Remédio', meds, String(meds.length)]);
-  if (of('vomit').length) lanes.push(['vomit', 'Vômito', of('vomit'), String(of('vomit').length)]);
-  if (of('other').length) lanes.push(['other', 'Outros', of('other'), String(of('other').length)]);
-  const W = 360, LW = 66, RW = 50, CW = W - LW - RW, RH = 26, TOP = 18, H = TOP + lanes.length * RH + 4;
+  const K = 1.45, RH = 50, W = 360, LW = 8, CW = W - 2 * LW, TOP = 16, H = TOP + RH + 4, y = TOP, mid = y + RH / 2;
   const x = t => +(LW + (t - d0) / (d1 - d0) * CW).toFixed(1);
-  const aria = lanes.map(([, n, , tot]) => n + ' ' + tot).join(', ');
-  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="${esc('Como foi o dia, de 0h a 24h: ' + aria)}">`;
-  for (const h of [0, 6, 12, 18, 24])
-    s += `<line class="gl" x1="${x(d0 + h / 24 * (d1 - d0))}" x2="${x(d0 + h / 24 * (d1 - d0))}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${x(d0 + h / 24 * (d1 - d0))}" y="${TOP - 8}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
-  lanes.forEach(([k, name, marks, tot], i) => {
-    const y = TOP + i * RH, mid = y + RH / 2;
-    s += `<text class="dl" x="0" y="${mid + 4}">${name}</text><text class="vl" x="${W}" y="${mid + 4}" text-anchor="end">${esc(tot)}</text>`;
-    s += `<line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
-    if (k === 'sleep') for (const [a, z] of sleeps) {
-      const A = Math.max(a, d0), Z = Math.min(z, end);
-      if (Z > A) s += `<rect class="m-sleep" x="${x(A)}" y="${y + 6}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${RH - 12}" rx="4"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
+  const mark = (e, shape) => `<g class="mk" data-id="${esc(e.id)}"><circle class="hit" cx="${x(e.t)}" cy="${mid}" r="12"/>${shape}<title>${esc(hm(e.t) + ' · ' + [label(e, evs), detail(e)].filter(Boolean).join(' · '))}</title></g>`;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foi o dia, de 0h a 24h">`;
+  for (const h of [0, 6, 12, 18, 24]) {
+    const hx = x(d0 + h / 24 * (d1 - d0));
+    s += `<line class="gl" x1="${hx}" x2="${hx}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${hx}" y="${TOP - 6}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
+  }
+  s += `<line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
+  let slept = 0;
+  for (const [a, z] of sleeps) {
+    const A = Math.max(a, d0), Z = Math.min(z, end); if (Z <= A) continue;
+    slept += Z - A;
+    s += `<rect class="m-sleep" x="${x(A)}" y="${(y + 7 * K).toFixed(1)}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${(RH - 14 * K).toFixed(1)}" rx="3"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
+  }
+  const dy = (y + RH - 4.3 * K).toFixed(1), top = y + 1.2;
+  for (const e of day) {
+    const cx = x(e.t);
+    if (e.kind === 'feed') s += mark(e, `<circle class="m-feed" cx="${cx}" cy="${mid}" r="${(3.6 * K).toFixed(1)}"/>`);
+    if (e.kind === 'diaper') s += mark(e, `<circle class="m-diaper dot" cx="${cx}" cy="${dy}" r="${(4 * K).toFixed(1)}"/>` + (e.poo ? `<circle class="m-poo dot" cx="${cx}" cy="${dy}" r="${(2.4 * K).toFixed(1)}"/>` : ''));
+    if (e.kind === 'pump') s += mark(e, `<rect class="m-pump" x="${(cx - 2.6 * K).toFixed(1)}" y="${top}" width="${(5.2 * K).toFixed(1)}" height="${(5.2 * K).toFixed(1)}" rx="1.5"/>`);
+    if (e.kind === 'symptom' || e.kind === 'vomit') {
+      const r = 4.2 * K, cy = top + r;
+      s += mark(e, `<path class="m-vomit dot" d="M${cx} ${(cy - r).toFixed(1)}L${(cx + r).toFixed(1)} ${cy.toFixed(1)}L${cx} ${(cy + r).toFixed(1)}L${(cx - r).toFixed(1)} ${cy.toFixed(1)}Z"/>`);
     }
-    else for (const e of marks) {
-      const tip = hm(e.t) + ' · ' + [label(e, evs), detail(e)].filter(Boolean).join(' · ');
-      s += `<g class="mk" data-id="${esc(e.id)}"><circle class="hit" cx="${x(e.t)}" cy="${mid}" r="11"/><circle class="m-${k} dot2" cx="${x(e.t)}" cy="${mid}" r="4.5"/><title>${esc(tip)}</title></g>`;
-    }
-  });
+  }
   if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
-  return s + '</svg>';
+  s += '</svg>';
+  const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump'), sym = n(e => e.kind === 'symptom' || e.kind === 'vomit');
+  const key = shape => `<svg viewBox="0 0 12 12" aria-hidden="true">${shape}</svg>`;
+  const items = [
+    [key('<rect class="m-sleep" x="0" y="3" width="12" height="6" rx="2"/>'), 'Sono', dur(slept)],
+    [key('<circle class="m-feed" cx="6" cy="6" r="5"/>'), 'Mamadas', n(e => e.kind === 'feed')],
+    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/>'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
+    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
+  ];
+  if (pumpOn || pump.length) items.push([key('<rect class="m-pump" x="1" y="1" width="10" height="10" rx="2"/>'), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
+  if (symptomOn || sym) items.push([key('<path class="m-vomit" d="M6 .5L11.5 6L6 11.5L.5 6Z"/>'), 'Sintomas', sym]);
+  return `<div class="svgbox">${s}</div><div class="lgd day">${items.map(([i, t, v]) => `<span>${i}<em>${t}</em> ${esc(String(v))}</span>`).join('')}</div>`;
 }
 
 // "Dia a dia": hoje fica mais claro, porque ainda não terminou.

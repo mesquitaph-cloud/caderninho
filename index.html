@@ -83,7 +83,7 @@
   <header>
     <button class="baby" id="babyBtn" aria-label="Bebê: peso, marcos, nome e nascimento">
       <div class="av" id="babyInitial">B</div>
-      <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
+      <div><div class="bn"><span id="babyName">Bebê</span><span class="pen" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></div><div class="ba" id="babyAge"></div></div>
     </button>
     <div class="hbtns">
       <button class="icon-btn" id="themeBtn" aria-label="Alternar modo noturno"></button>
@@ -100,15 +100,7 @@
 
   <section class="meds" id="meds" hidden aria-label="Remédios"></section>
 
-  <div class="grid">
-    <button class="act k-feed" data-k="feed"><span data-i="feed"></span><b>Mamada</b><span id="subFeed"></span></button>
-    <button class="act k-sleep" data-k="sleep"><span data-i="sleep"></span><b>Sono</b><span id="subSleep"></span></button>
-    <button class="act k-diaper" data-k="diaper"><span data-i="diaper"></span><b>Fralda</b><span id="subDiaper"></span></button>
-    <button class="act k-vomit" data-k="vomit"><span data-i="vomit"></span><b>Vômito</b><span id="subVomit"></span></button>
-    <button class="act k-pump" data-k="pump"><span data-i="pump"></span><b>Ordenha</b><span id="subPump"></span></button>
-    <button class="act k-med" data-k="med"><span class="mico"><span data-i="med"></span><i class="edit" aria-hidden="true"><span data-i="pencil"></span></i></span><b>Remédio</b><span id="subMed"></span></button>
-    <button class="act k-other wide" data-k="other"><span data-i="other"></span><b>Outros</b><span>anotação livre</span></button>
-  </div>
+  <div class="grid" id="grid"></div>
 
   <div class="views" role="tablist" aria-label="Ver por">
     <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>

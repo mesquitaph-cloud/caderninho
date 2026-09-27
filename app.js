@@ -1,8 +1,8 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
-import { weekHtml, dayChart } from './week.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE } from './util.js';
+import { weekHtml, dayLine } from './week.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
 
@@ -20,6 +20,9 @@ const st = {
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
   weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
   growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
+  settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
+  settingsOk: true,            // falso se não deu para carregar (por exemplo, antes do 008)
+  settingsCh: null,
   view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
@@ -179,7 +182,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await Promise.all([loadEntries(), loadMeds(), loadGrowth()]);
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadSettings(fid)]);
   show('scrMain'); render();
 }
 
@@ -221,8 +224,23 @@ async function loadGrowth() {
   st.growthOk = !w.error && !m.error;
   st.weights = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
 }
+// Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
+// dos registros poderia derrubar a sincronização de tudo.
+async function loadSettings(fid) {
+  const { data, error } = await sb.from('family_settings').select('hidden_kinds').eq('family_id', fid).maybeSingle();
+  st.settingsOk = !error;
+  st.settings = { hidden: data?.hidden_kinds || [] };
+  if (st.settingsCh) { sb.removeChannel(st.settingsCh); st.settingsCh = null; }
+  if (error) return;
+  st.settingsCh = sb.channel('botoes-' + fid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'family_settings', filter: 'family_id=eq.' + fid }, p => {
+      if (p.new?.family_id !== st.family?.id) return;
+      st.settings = { hidden: p.new.hidden_kinds || [] }; refresh();
+    })
+    .subscribe();
+}
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
-function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
+function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } else if (S.mode === 'buttons') { render(); drawButtons(); } }
 
 function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
@@ -268,14 +286,7 @@ function render() {
   const { out: intervals, open } = sleepIntervals(evs);
   $('sleepBanner').hidden = open === null;
   if (open !== null) $('sleepFor').textContent = dur(now - open);
-  const lf = last(['feed']), lw = last(['wake']), ld = last(['diaper']), lp = last(['pump']);
-  $('subFeed').textContent = lf ? ago(lf.t) : 'sem registro';
-  $('subPump').textContent = lp ? ago(lp.t) : 'sem registro';
-  $('subSleep').textContent = open !== null ? 'dormindo' : lw ? 'acordou ' + ago(lw.t) : 'sem registro';
-  $('subDiaper').textContent = ld ? 'troca ' + ago(ld.t) : 'sem registro';
-  const vToday = evs.filter(e => e.kind === 'vomit' && e.t >= startOfDay(now)).length;
-  $('subVomit').textContent = vToday ? vToday + ' hoje' : 'nenhum hoje';
-  $('subMed').textContent = medSub();
+  renderGrid(last, open, now);
   renderMeds();
 
   const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
@@ -283,7 +294,8 @@ function render() {
   $('dayView').hidden = st.view !== 'day'; $('weekView').hidden = !week; $('monthView').hidden = !month;
   $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : month ? 'Mês anterior' : 'Dia anterior');
   $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : month ? 'Próximo mês' : 'Próximo dia');
-  const sleep = { out: intervals, open }, logs = { weights: st.weights, milestones: st.milestones };
+  // O resumo segue os botões da família (sem Ordenha ligada, não fala de ordenha).
+  const sleep = { out: intervals, open }, logs = { weights: st.weights, milestones: st.milestones, on: isOn };
   if (month) {
     st.month = clampMonth(st.month || now);
     const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
@@ -320,33 +332,92 @@ function render() {
   $('prevDay').disabled = d0 <= firstDay();
 
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
-  // Como foi o dia: o gráfico de 0h a 24h, com os totais, e embaixo o que não cabe nele.
-  const feeds = day.filter(e => e.kind === 'feed'), ml = feeds.reduce((s, e) => s + (e.ml || 0), 0);
-  const breastMin = feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0);
+  // Como foi o dia: numa linha só, como no painel da semana, com a contagem embaixo.
   const sleeps = open === null ? intervals : [...intervals, [open, now]];
-  const lb = lastBreast(evs);
-  const more = [ml ? ml + ' ml na mamadeira' : '', breastMin ? dur(breastMin * MIN) + ' no peito' : '',
-                lb && d0 === startOfDay(now) ? 'último peito: ' + SIDE_SHORT[lb.side] + ', ' + ago(lb.t) : ''].filter(Boolean);
   const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
   $('summary').innerHTML = !b || (!day.length && !slept) ? ''
-    : `<div class="card daycard"><div class="svgbox">${dayChart({ d0, evs, sleeps, now })}</div>${more.length ? `<p class="cap">${esc(more.join(' · '))}</p>` : ''}</div>`;
+    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, pumpOn: isOn('pump'), symptomOn: isOn('symptom') })}</div>`;
 
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
     : !day.length ? '<div class="empty">Nada registrado neste dia.</div>'
     : day.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
-        const sub = [esc(detail(e)), e.kind !== 'other' && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
+        const noteIsName = e.kind === 'other' || (e.kind === 'symptom' && e.symptom === 'outro');
+        const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
         return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
 
+/* ---------- botões da tela inicial ---------- */
+// Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
+// família. Três por linha; na última, Outros de um lado e Editar do outro. Sem nada salvo, todos aparecem.
+const BTN = {
+  feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
+  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'],
+  massage: ['Massagem', 'k-care'], bath: ['Banho', 'k-care'], nasal: ['Lavagem nasal', 'k-care'],
+};
+const FIXED = ['feed', 'sleep', 'diaper'], OPTIONAL = ['med', 'symptom', 'pump', 'massage', 'bath', 'nasal'];
+const isOn = k => !st.settings.hidden.includes(k);
+// O último sintoma de hoje, para o botão: "febre há 2h". Vômito conta como sintoma.
+function symptomSub(last, now) {
+  const e = last(['symptom', 'vomit']);
+  if (!e || e.t < startOfDay(now)) return 'nada hoje';
+  return (e.kind === 'vomit' ? 'vômito' : e.symptom === 'outro' ? 'outro' : (SYMPTOM[e.symptom] || 'sintoma').toLowerCase()) + ' ' + ago(e.t);
+}
+function renderGrid(last, open, now) {
+  const sub = k => {
+    const e = last([k === 'sleep' ? 'wake' : k]);
+    if (k === 'sleep') return open !== null ? 'dormindo' : e ? 'acordou ' + ago(e.t) : 'sem registro';
+    if (k === 'diaper') return e ? 'troca ' + ago(e.t) : 'sem registro';
+    if (k === 'med') return medSub();
+    if (k === 'symptom') return symptomSub(last, now);
+    return e ? ago(e.t) : 'sem registro';
+  };
+  // Sobra no fim: o último ocupa o espaço que falta na linha.
+  const ks = [...FIXED, ...OPTIONAL.filter(isOn)], r = ks.length % 3;
+  $('grid').innerHTML = ks.map((k, i) => {
+    const span = r && i === ks.length - 1 ? (r === 1 ? ' span3 row' : ' span2') : '';
+    return `<button class="act ${BTN[k][1]}${span}" data-k="${k}">${ICON[k]}<b>${BTN[k][0]}</b><span>${esc(sub(k))}</span></button>`;
+  }).join('')
+    + `<button class="act k-other span2 row" data-k="other">${ICON.other}<b>Outros</b><span>anotação livre</span></button>`
+    + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.gear}<b>Editar</b><span>botões</span></button>`;
+}
+
+// Editar: liga ou desliga os botões da família. Cada toque salva na hora, um de cada vez.
+function buttonsSheet() { S = { mode: 'buttons' }; drawButtons(); $('sheet').scrollTop = 0; }
+function drawButtons() {
+  let h = head('Botões da tela inicial') + '<p class="dim">Valem para toda a família.</p>';
+  if (!st.settingsOk) h += '<div class="soft">Não foi possível carregar os botões da família. Confira a conexão e abra de novo.</div>';
+  h += '<div class="sec"><h4>Sempre aparecem</h4><div class="li"><span>Mamada, Sono, Fralda <small>· e Outros</small></span></div></div>';
+  h += '<div class="sec"><h4>Escolha os outros</h4>' + OPTIONAL.map(k => { const on = isOn(k);
+    return `<button class="li tg" role="switch" aria-checked="${on}" data-act="tgBtn" data-val="${k}"${st.settingsOk ? '' : ' disabled'}><span>${BTN[k][0]}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`; }).join('');
+  if (!isOn('med') && st.meds.length) h += '<p class="dim">Os remédios programados continuam: o cartão aparece na hora da dose.</p>';
+  if (!isOn('symptom')) h += '<p class="dim">Sem Sintomas, o vômito também sai da tela inicial; os registros antigos continuam na linha do tempo.</p>';
+  h += '</div><button class="save" data-act="close">Pronto</button>';
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+let btnSave = Promise.resolve();
+function toggleBtn(k) {
+  const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => x !== k);
+  st.settings = { hidden }; render(); if (S?.mode === 'buttons') drawButtons();
+  btnSave = btnSave.then(async () => {
+    const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, hidden_kinds: st.settings.hidden }, { onConflict: 'family_id' });
+    if (!error) return;
+    toast('Não foi possível salvar. Confira a conexão.');
+    await loadSettings(st.family.id); render(); if (S?.mode === 'buttons') drawButtons();
+  });
+}
+
 /* ---------- gravar registros ---------- */
+// As colunas do sintoma só vão no sintoma: assim, se o 008 ainda não rodou, o resto continua salvando.
 function fields(ev) {
-  return { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
+  const f = { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
            side: ev.side ?? null, left_min: ev.left_min ?? null, right_min: ev.right_min ?? null,
            pee: ev.pee ?? null, poo: ev.poo ?? null, note: ev.note ?? null,
            medicine_id: ev.medicine_id ?? null, med_name: ev.med_name ?? null, med_amount: ev.med_amount ?? null,
            dose_at: ev.dose_at ?? null, skipped: ev.skipped ?? null };
+  if (ev.kind === 'symptom') Object.assign(f, { symptom: ev.symptom, temp_c: ev.temp_c ?? null, duration_min: ev.duration_min ?? null });
+  return f;
 }
 async function addEntry(ev) {
   const { data, error } = await sb.from('entries')
@@ -369,7 +440,12 @@ async function deleteEntry(id) {
 
 /* ---------- painel de registro ---------- */
 let S = null;   // estado do painel aberto (null = fechado)
-const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio' };
+const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio',
+                symptom:'Sintomas', massage:'Massagem', bath:'Banho', nasal:'Lavagem nasal' };
+// As opções do botão Sintomas, na ordem da tela. Vômito grava o registro de vômito de sempre.
+const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'], ['tosse', 'Tosse'],
+                      ['assadura', 'Assadura'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
+const withDuration = sym => sym === 'colica' || sym === 'choro';
 function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
 function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
@@ -396,12 +472,13 @@ function openEntry(k, edit) {
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false,
-        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '' };
+        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '',
+        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
   drawEntry();
 }
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
-  let h = head(S.edit ? 'Editar ' + TITLE[k].toLowerCase() : TITLE[k]);
+  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
     if (S.src === 'breast') {
@@ -415,10 +492,18 @@ function drawEntry() {
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
+  // Sintomas: o que aconteceu; a febre pode ter a temperatura, a cólica e o choro a duração.
+  if (k === 'symptom') {
+    const opts = S.edit ? SYMPTOM_OPTS.filter(([id]) => id !== 'vomito') : SYMPTOM_OPTS;
+    h += `<div><div class="lbl">O que aconteceu</div><div class="seg ${c}" style="background:none">${opts.map(([id, n]) => opt(n, S.sym === id, 'sym', id)).join('')}</div></div>`;
+    if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
+    if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
+  }
   h += `<div><div class="lbl">Horário</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
-  if (k !== 'other') h += `<input class="field" id="noteIn" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
+  if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
+  if (k === 'symptom') h += '<p class="dim">O Caderninho só anota o que a família marcar; não avalia nem orienta.</p>';
   if (S.edit) h += `<button class="del" data-act="del">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar registro'}</button>`;
   openPanel(h);
 }
@@ -438,7 +523,20 @@ async function saveEntry(btn) {
   if ((k === 'pump' || (k === 'feed' && S.src === 'bottle')) && +S.ml > 1000) { S.err = 'No máximo 1000 ml.'; return drawEntry(); }
   const okMin = v => v === '' || (+v >= 1 && +v <= 180);
   if (k === 'feed' && S.src === 'breast' && !(okMin(S.lmin) && okMin(S.rmin))) { S.err = 'O tempo em cada peito vai de 1 a 180 min.'; return drawEntry(); }
-  const ev = { kind: k === 'sleep' ? S.sk : k, t: computeT() };
+  const temp = parseFloat(String(S.temp).replace(',', '.')), dmin = +S.dmin;
+  if (k === 'symptom') {
+    if (!S.sym) { S.err = 'Escolha o que aconteceu.'; return drawEntry(); }
+    if (S.sym === 'outro' && !S.note.trim()) { S.err = 'Escreva o que aconteceu.'; return drawEntry(); }
+    if (S.sym === 'febre' && S.temp !== '' && !(temp >= 34 && temp <= 43)) { S.err = 'A temperatura vai de 34 a 43 °C. Ex.: 37,8'; return drawEntry(); }
+    if (withDuration(S.sym) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'A duração vai de 1 a 600 minutos.'; return drawEntry(); }
+  }
+  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre.
+  const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k, t: computeT() };
+  if (ev.kind === 'symptom') {
+    ev.symptom = S.sym;
+    if (S.sym === 'febre' && S.temp !== '') ev.temp_c = Math.round(temp * 10) / 10;
+    if (withDuration(S.sym) && S.dmin !== '') ev.duration_min = dmin;
+  }
   const side = S.l && S.r ? 'both' : S.l ? 'left' : S.r ? 'right' : null;
   if (k === 'feed') {
     ev.src = S.src;
@@ -829,7 +927,7 @@ function drawLog() {
     h += `<div><label class="lbl" for="lgTitle">O que aconteceu</label><input class="field" id="lgTitle" maxlength="60" placeholder="Ex.: Sorriu pela primeira vez" value="${esc(S.title)}">
       ${sugs.length ? `<div class="sugs">${sugs.map(t => `<button class="small" data-act="sug" data-val="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>`;
   }
-  h += `<div><label class="lbl" for="lgDate">Dia</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
+  h += `<div><label class="lbl" for="lgDate">${w ? 'Dia da pesagem' : 'Dia'}</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
     <div class="hint" id="lgAge" style="margin:6px 0 0">${esc(ageOn(b.birth_date, S.date))}</div></div>`;
   h += w ? `<input class="field" id="lgNote" maxlength="100" placeholder="Onde pesou (opcional). Ex.: pediatra" value="${esc(S.note)}">`
          : `<input class="field" id="lgNote" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
@@ -858,9 +956,10 @@ async function saveLog(btn) {
     if (!S.title.trim()) return fail('Escreva o que aconteceu.');
     row.title = S.title.trim().slice(0, 60);
   }
-  if (!S.date) return fail('Escolha o dia.');
-  if (S.date > today) return fail('O dia não pode ser depois de hoje.');
-  if (b.birth_date && S.date < b.birth_date) return fail('O dia não pode ser antes do nascimento.');
+  const o = kind === 'weight' ? 'O dia da pesagem' : 'O dia';
+  if (!S.date) return fail(kind === 'weight' ? 'Escolha o dia da pesagem.' : 'Escolha o dia.');
+  if (S.date > today) return fail(o + ' não pode ser depois de hoje.');
+  if (b.birth_date && S.date < b.birth_date) return fail(o + ' não pode ser antes do nascimento.');
   busy(btn, true);
   const q = S.edit ? sb.from(L.table).update(row).eq('id', S.edit.id)
                    : sb.from(L.table).insert({ family_id: st.family.id, baby_id: b.id, ...row });
@@ -1060,6 +1159,9 @@ $('sheetIn').addEventListener('input', e => {
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
   if (id === 'timeIn') S.time = e.target.value;
+  if (id === 'tempIn') S.temp = e.target.value.replace(/[^\d,.]/g, '').slice(0, 4);
+  if (id === 'durIn') S.dmin = e.target.value.replace(/\D/g, '').slice(0, 3);
+  if ((id === 'tempIn' || id === 'durIn') && S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
   if (id === 'mlIn') S.ml = e.target.value.replace(/\D/g, '').slice(0, 4);
   if (id === 'min-l' || id === 'min-r') {
     const key = id.slice(4); S[key + 'min'] = e.target.value.replace(/\D/g, '').slice(0, 3);
@@ -1077,6 +1179,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'hub' || S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
+  if (S.mode === 'buttons') { if (a === 'tgBtn') toggleBtn(v); return; }
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -1084,6 +1187,7 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'pick') { S[v] = !S[v]; if (!S[v]) S[v + 'min'] = ''; }
   else if (a === 'minstep') { const [key, d] = v.split(':'); S[key + 'min'] = Math.min(180, Math.max(0, (+S[key + 'min'] || 0) + (+d))) || ''; if (S[key + 'min']) S[key] = true; }
   else if (a === 'sk') S.sk = v;
+  else if (a === 'sym') { S.sym = v; if (v !== 'febre') S.temp = ''; if (!withDuration(v)) S.dmin = ''; }
   else if (a === 'pee' || a === 'poo') S[a] = !S[a];
   else if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
   else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
@@ -1097,7 +1201,11 @@ $('sheetIn').addEventListener('click', async e => {
 
 document.querySelectorAll('[data-i]').forEach(el => el.outerHTML = ICON[el.dataset.i]);
 $('menuBtn').innerHTML = ICON.menu;
-document.querySelectorAll('.act').forEach(b => b.addEventListener('click', () => openEntry(b.dataset.k)));
+$('grid').addEventListener('click', e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  if (b.dataset.k === 'edit') return buttonsSheet();
+  openEntry(b.dataset.k);
+});
 $('wakeBtn').onclick = async () => {
   const row = await addEntry({ kind: 'wake', t: Date.now() });
   if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));

@@ -14,37 +14,65 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
-## Botões da tela inicial: prévia, aguardando decisão
-
-Pedido de 27/09: a tela está poluída. Decidido na conversa: a grade continua de dois em dois; Mamada,
-Sono e Fralda ficam sempre; a família esconde o que não usa (Vômito, Ordenha, Remédio, Outros) e cria
-atalhos próprios (ex.: Massagem), que gravam um "Outros" com aquele nome. A escolha vale para a família
-toda e fica no banco (um SQL novo, 008). Na segunda conversa, os atalhos de texto livre saíram:
-Massagem e outros cuidados viram botões prontos, iguais para todas as famílias.
-
-Prévia interativa (privada): https://claude.ai/artifact/Aer9Qjy3YWKnaD14jGtAuV. Na segunda versão, a
-pedido: três botões por linha (comparando com dois); Outros e Editar na última linha; "Como foi o dia"
-numa linha só, como no painel da semana; um botão para os dias difíceis (febre, cólica, choro
-inconsolável e outras opções); Massagem e outros cuidados como botões prontos, sem texto livre; e a tela
-do remédio, com a opção de tirar o cartão do alto. As escolhas ficam guardadas na própria prévia para
-o Claude ler. O código só começa depois da prévia aprovada.
-
 ## Melhorias de 27/09: feito, falta publicar
 
-Pedidos da conversa de 27/09: remédios, sono x mamada e cocô, peso e marcos, resumo para os pais e
-entrar com Google. Tudo no código; detalhes de cada um abaixo.
+Pedidos da conversa de 27/09: remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
+entrar com Google e, depois das prévias, botões da tela inicial, Sintomas e cuidados. Tudo no código;
+detalhes de cada um abaixo.
 
 **Para publicar, nesta ordem:**
 
 1. Rodar `supabase/007_peso_e_marcos.sql` no SQL Editor e conferir pelo conector (seção "Peso e marcos").
-2. Publicar o app. Remédios, painel da semana, peso e marcos e o resumo do mês vão juntos; o botão do
-   Google continua escondido.
-3. Conferir no celular o roteiro de cada seção abaixo.
-4. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
+2. Rodar `supabase/008_botoes_e_sintomas.sql` no SQL Editor e conferir pelo conector (seção "Botões da
+   tela inicial, Sintomas e cuidados"). O app novo precisa dele para salvar sintoma e cuidado.
+3. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
+4. Conferir no celular o roteiro de cada seção abaixo.
+5. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
    `config.js` e publicar de novo.
 
-Testado em 27/09 no navegador com um Supabase de mentira (93 checagens: remédios, Google, painel,
-peso e marcos, resumo), claro e escuro, em 360 e 390 px, e o 007 num Postgres local (32 casos).
+Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
+390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
+
+### Botões da tela inicial, Sintomas e cuidados
+
+Pedido de 27/09: a tela estava poluída. Decidido em três prévias (privada, com as escolhas guardadas:
+https://claude.ai/artifact/Aer9Qjy3YWKnaD14jGtAuV).
+
+**Para publicar:** rodar `supabase/008_botoes_e_sintomas.sql` antes do app. Sem ele, o app novo mostra
+todos os botões e salva o resto, mas não salva sintoma, massagem, banho nem lavagem nasal, e Editar
+avisa que não conseguiu carregar. Conferir pelo conector: tabela `family_settings`, colunas `symptom`,
+`temp_c` e `duration_min` em `entries`, regras de acesso e nenhum erro nos logs. No celular: desligar
+Ordenha em Editar e ver sumir no celular de outro membro; anotar febre com temperatura, cólica com
+duração e um vômito por Sintomas; anotar uma massagem; ver os losangos em "Como foi o dia".
+
+**Como ficou:**
+
+- **Grade de três por linha.** Mamada, Sono e Fralda sempre. Remédio, Sintomas, Ordenha, Massagem,
+  Banho e Lavagem nasal a família liga ou desliga; sem nada salvo, todos aparecem. Na última linha,
+  Outros de um lado e **Editar** do outro. Um botão que sobra sozinho numa linha ocupa a linha toda.
+- **Editar:** "Botões da tela inicial", com um interruptor para cada botão. Salva na hora e vale para
+  todos da família; muda ao vivo no celular dos outros. Desligar Remédio não para os remédios
+  programados: o cartão continua aparecendo na hora da dose.
+- **Sintomas:** febre (temperatura opcional, de 34 a 43 °C), cólica e choro inconsolável (duração
+  opcional, em minutos), vômito, tosse, assadura, reação à vacina, incômodo dos dentes e outro (com o
+  que aconteceu escrito). Vômito continua sendo o registro de vômito; o botão Vômito saiu da tela. O
+  botão mostra o último sintoma do dia ("febre há 2h"). Na telinha: "O Caderninho só anota o que a
+  família marcar; não avalia nem orienta."
+- **Cuidados:** Massagem, Banho e Lavagem nasal, com horário e observação, como o vômito.
+- **Como foi o dia:** numa linha só, como no painel da semana (barra de sono, ponto de mamada, ponto de
+  fralda com miolo marrom se teve cocô, quadradinho de ordenha), um pouco maior, e um losango âmbar
+  para sintomas e vômito. Embaixo, a contagem: sono, mamadas, xixi, cocô, ordenha e sintomas. Saiu a
+  linha com ml na mamadeira, minutos no peito e último peito (o último peito aparece ao abrir Mamada; os
+  totais estão no painel da semana e no Mês).
+- **Resumo para mandar** (Semana e Mês): segue os botões da família. Sem Ordenha ligada, não fala de
+  ordenha; sem Remédio, não fala de doses; os cuidados ligados entram ("Cuidados: 15 massagens, 26
+  banhos"). Sintomas e vômito ficam sempre de fora.
+- **Peso:** a tela do bebê abre tocando no nome, agora com um lápis ao lado. O campo virou "Dia da
+  pesagem".
+- **Banco (008):** tabela `family_settings` (uma linha por família, com os botões desligados; só membros
+  veem e mudam; não se apaga pelo app; vai para a sincronização ao vivo) e, em `entries`, os tipos
+  `symptom`, `massage`, `bath` e `nasal`, com `symptom`, `temp_c` (só na febre) e `duration_min` (só na
+  cólica e no choro). "Outro" exige a observação.
 
 ### Remédios: só perto da hora, Pular e Dei agora
 
@@ -63,15 +91,6 @@ Não muda o banco; basta publicar o app.
   alto, pular, desfazer, marcar e ver sumir; na lista, "Dei agora" num remédio de horário.
 - De passagem: em telas de 360 px, a coluna da direita dos botões de registro passava da margem;
   agora as duas colunas têm a mesma largura. Em 320 px (iPhone SE antigo) ainda aperta.
-
-### Gráfico do dia
-
-Não muda o banco. Pedido na mesma conversa: ver no Dia, de forma gráfica, quantos xixis e cocôs. No
-alto da linha do tempo, o dia de 0h a 24h com uma faixa por tipo (sono em barras; mamadas, xixi, cocô
-em pontos; ordenha, remédio, vômito e outros só se tiver no dia) e o total à direita. A fralda com xixi
-e cocô aparece nas duas faixas. Tocar num ponto abre o registro. Entra no lugar das etiquetas de resumo
-do dia; o que não cabe no gráfico (ml na mamadeira, minutos no peito e o último peito) fica numa linha
-embaixo dele. Dia sem registro fica sem gráfico.
 
 ### Sono, mamada e cocô no painel da semana
 

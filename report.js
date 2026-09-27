@@ -1,5 +1,6 @@
 // Resumo para mandar à família: os totais de uma semana ou de um mês, em tela e em texto para
-// compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê.
+// compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê. Segue os botões
+// da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
 import { MIN, HOUR, esc, dur, shortDate } from './util.js';
 import { kg } from './growth.js';
 
@@ -9,8 +10,11 @@ const hours = ms => ms >= 10 * HOUR ? Math.round(ms / HOUR) + ' h' : dur(ms);
 const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 const ymd = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
+const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos'], nasal: ['lavagem nasal', 'lavagens nasais'] };
+
 // Totais de [a, z). sleep: o que sleepIntervals devolve; o sono em andamento conta até agora.
-export function periodStats({ a, z, evs, sleep, now, weights, milestones }) {
+// on(k): se a família usa o botão k (Ordenha, Remédio e os cuidados só entram se usar).
+export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = () => true }) {
   const end = Math.min(z, now), day = evs.filter(e => e.t >= a && e.t < end);
   const feeds = day.filter(e => e.kind === 'feed'), bottles = feeds.filter(e => e.src === 'bottle');
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
@@ -23,14 +27,17 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones }) {
     slept: sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, end) - Math.max(x, a)), 0),
     longest: inP.reduce((b, iv) => !b || iv[1] - iv[0] > b[1] - b[0] ? iv : b, null),
     diapers: day.filter(e => e.kind === 'diaper').length, poos: day.filter(e => e.kind === 'diaper' && e.poo).length,
-    pumpMl: day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0),
-    doses: day.filter(e => e.kind === 'med' && !e.skipped).length,
+    pumpMl: on('pump') ? day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0) : 0,
+    doses: on('med') ? day.filter(e => e.kind === 'med' && !e.skipped).length : 0,
+    care: Object.keys(CARE_WORDS).filter(on).map(k => [k, day.filter(e => e.kind === k).length]).filter(([, n]) => n),
     // Peso: o último antes do período e o último dentro dele, para dizer de quanto para quanto.
     wFrom: weights.filter(w => w.measured_on < A).at(-1) || null,
     wTo: weights.filter(w => w.measured_on >= A && w.measured_on <= Z).at(-1) || null,
     marks: milestones.filter(m => m.happened_on >= A && m.happened_on <= Z),
   };
 }
+
+const careText = s => s.care.map(([k, n]) => plural(n, ...CARE_WORDS[k])).join(', ');
 
 // As linhas do resumo, iguais na tela e no texto.
 function lines(s) {
@@ -41,6 +48,7 @@ function lines(s) {
   if (s.diapers) out.push(['diaper', plural(s.diapers, 'fralda', 'fraldas') + ', ' + s.poos + ' com cocô']);
   if (s.pumpMl) out.push(['pump', liters(s.pumpMl) + ' de leite ordenhado']);
   if (s.doses) out.push(['med', plural(s.doses, 'dose de remédio dada', 'doses de remédio dadas')]);
+  if (s.care.length) out.push(['care', 'Cuidados: ' + careText(s)]);
   if (s.wTo) out.push(['weight', 'Peso: ' + (s.wFrom ? 'de ' + kg(s.wFrom.grams) + ' (' + shortDate(s.wFrom.measured_on) + ') para ' : '') + kg(s.wTo.grams) + ' (' + shortDate(s.wTo.measured_on) + ')']);
   if (s.marks.length) out.push(['mark', (s.marks.length === 1 ? 'Marco: ' : 'Marcos: ') + s.marks.map(m => m.title + ' (' + shortDate(m.happened_on) + ')').join(', ')]);
   return out;
@@ -67,6 +75,7 @@ export function monthHtml(s, { heading, cap }) {
   h += '</div>';
   const extra = [];
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);
+  if (s.care.length) extra.push(['Cuidados', careText(s)]);
   if (s.wTo) extra.push(['Peso', (s.wFrom ? kg(s.wFrom.grams) + ' → ' : '') + kg(s.wTo.grams)]);
   if (s.marks.length) extra.push([s.marks.length === 1 ? 'Marco' : 'Marcos', s.marks.map(m => m.title).join(', ')]);
   if (extra.length) h += `<div class="hl">${extra.map(([k, v]) => `<div><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('')}</div>`;
