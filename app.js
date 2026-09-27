@@ -306,7 +306,7 @@ function render() {
     const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
     st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês' }) : '';
-    $('monthView').innerHTML = monthHtml(s, { heading, cap: (partial ? 'O mês ainda não terminou. ' : '') + 'Só soma o que foi registrado.' })
+    $('monthView').innerHTML = monthHtml(s, { heading })
       + (s.any ? shareHtml(st.shareText) : '');
     return;
   }

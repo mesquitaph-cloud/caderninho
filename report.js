@@ -63,10 +63,10 @@ export function reportText(s, { title, name, span }) {
 
 const TILE = { feed: '--c-feed', sleep: '--c-sleep', diaper: '--c-diaper', pump: '--c-pump' };
 // Cartão do mês: os números grandes e a lista, e o botão de compartilhar.
-export function monthHtml(s, { heading, cap }) {
+export function monthHtml(s, { heading }) {
   if (!s.any) return `<div class="card"><h3>${esc(heading)}</h3><div class="empty">Nada registrado neste mês.</div></div>`;
   const tile = (c, k, big, sub) => `<div class="tile" style="--sw:var(${c})"><span class="k"><i></i>${k}</span><b>${esc(big)}</b><span>${esc(sub)}</span></div>`;
-  let h = `<div class="card"><h3>${esc(heading)}</h3><p class="cap">${esc(cap)}</p><div class="tiles">`;
+  let h = `<div class="card"><h3>${esc(heading)}</h3><div class="tiles">`;
   h += s.bottleMl ? tile(TILE.feed, 'Na mamadeira', liters(s.bottleMl), 'em ' + plural(s.bottles, 'mamadeira', 'mamadeiras')) : '';
   h += tile(TILE.feed, 'Mamadas', String(s.feeds), s.breastMs ? hours(s.breastMs) + ' no peito' : '');
   h += tile(TILE.sleep, 'Sono', hours(s.slept), s.longest ? 'maior seguido: ' + dur(s.longest[1] - s.longest[0]) : '');
