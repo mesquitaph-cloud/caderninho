@@ -19,11 +19,15 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 Pedido de 27/09: a tela está poluída. Decidido na conversa: a grade continua de dois em dois; Mamada,
 Sono e Fralda ficam sempre; a família esconde o que não usa (Vômito, Ordenha, Remédio, Outros) e cria
 atalhos próprios (ex.: Massagem), que gravam um "Outros" com aquele nome. A escolha vale para a família
-toda e fica no banco (um SQL novo, 008).
+toda e fica no banco (um SQL novo, 008). Na segunda conversa, os atalhos de texto livre saíram:
+Massagem e outros cuidados viram botões prontos, iguais para todas as famílias.
 
-Prévia interativa (privada): https://claude.ai/artifact/Aer9Qjy3YWKnaD14jGtAuV. Falta decidir: onde fica
-"Arrumar botões", se o toque no atalho anota na hora ou abre para conferir, e a cor dos atalhos. O
-código só começa depois da prévia aprovada.
+Prévia interativa (privada): https://claude.ai/artifact/Aer9Qjy3YWKnaD14jGtAuV. Na segunda versão, a
+pedido: três botões por linha (comparando com dois); Outros e Editar na última linha; "Como foi o dia"
+numa linha só, como no painel da semana; um botão para os dias difíceis (febre, cólica, choro
+inconsolável e outras opções); Massagem e outros cuidados como botões prontos, sem texto livre; e a tela
+do remédio, com a opção de tirar o cartão do alto. As escolhas ficam guardadas na própria prévia para
+o Claude ler. O código só começa depois da prévia aprovada.
 
 ## Melhorias de 27/09: feito, falta publicar
 
