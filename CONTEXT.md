@@ -117,6 +117,24 @@ Abre pelo botão Remédio (o do lápis) e por "Ver todas", no cartão de remédi
 mostra só as doses a uma hora do horário ou atrasadas sem marcar.
 _Evite_: farmácia, receituário
 
+## Peso e marcos
+
+**Tela do bebê**:
+Abre ao tocar no nome do bebê, no alto: o peso, os marcos e o nome e nascimento. Só guarda o que a
+família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
+_Evite_: perfil do bebê, ficha, prontuário
+
+**Peso**:
+O peso do bebê num dia, anotado pela família (da consulta, da farmácia, da balança de casa), com uma
+observação opcional de onde pesou. Com dois ou mais, aparece um gráfico; o último vai no alto da tela.
+Não é registro: não entra na linha do tempo nem no painel da semana.
+_Evite_: pesagem (como nome do dado), curva, percentil
+
+**Marco**:
+Uma primeira vez do bebê, com o dia em que aconteceu: sorriu, rolou, primeiro dente. O nome é livre;
+o app sugere alguns, sem idade esperada, e mostra a idade do bebê naquele dia.
+_Evite_: marco esperado, atraso, desenvolvimento normal
+
 ## Ver os registros
 
 **Painel da semana**:

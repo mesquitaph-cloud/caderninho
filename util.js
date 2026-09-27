@@ -40,6 +40,9 @@ export function dayTitle(d0) {
   return nome + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
 }
 
+// "27 set 2026": o dia de um peso ou de um marco (aaaa-mm-dd).
+export function fullDate(ymd) { const d = new Date(ymd + 'T00:00'); return d.getDate() + ' ' + MESES[d.getMonth()] + ' ' + d.getFullYear(); }
+export const shortDate = ymd => { const d = new Date(ymd + 'T00:00'); return d.getDate() + ' ' + MESES[d.getMonth()]; };
 // "sáb 20": o dia nos gráficos do painel.
 export function shortDay(d0) { const d = new Date(d0); return DIAS[d.getDay()].toLowerCase() + ' ' + d.getDate(); }
 // "19 a 25 set" ou "29 set a 5 out": os 7 dias do painel.
@@ -49,9 +52,10 @@ export function rangeTitle(a, z) {
     : A.getDate() + ' ' + MESES[A.getMonth()] + ' a ' + Z.getDate() + ' ' + MESES[Z.getMonth()];
 }
 
-export function ageText(birth) {
+// Idade hoje ou, com "at" (aaaa-mm-dd), naquele dia: "2 meses e 7 dias".
+export function ageText(birth, at) {
   if (!birth) return '';
-  const b = new Date(birth + 'T00:00'), n = new Date();
+  const b = new Date(birth + 'T00:00'), n = at ? new Date(at + 'T00:00') : new Date();
   let m = (n.getFullYear() - b.getFullYear()) * 12 + n.getMonth() - b.getMonth();
   if (n.getDate() < b.getDate()) m--;
   if (m <= 0) { const t = Math.floor((startOfDay(n) - b.getTime()) / DAY); return t === 1 ? '1 dia' : t + ' dias'; }

@@ -1,8 +1,9 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
-import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText,
+import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
 import { weekHtml } from './week.js';
+import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -16,6 +17,8 @@ const st = {
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
+  weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
+  growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
   view: 'day',                 // 'day' (linha do tempo) ou 'week' (painel da semana)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
@@ -173,7 +176,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await Promise.all([loadEntries(), loadMeds()]);
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth()]);
   show('scrMain'); render();
 }
 
@@ -205,6 +208,14 @@ async function loadMeds() {
   const { data, error } = await sb.from('medicines').select('*').eq('baby_id', st.baby.id).is('stopped_at', null).order('created_at');
   if (error) return toast('Não foi possível carregar os remédios.');
   st.meds = data;
+}
+async function loadGrowth() {
+  st.weights = []; st.milestones = [];
+  if (!st.baby) return;
+  const [w, m] = await Promise.all([sb.from('weights').select('*').eq('baby_id', st.baby.id),
+                                    sb.from('milestones').select('*').eq('baby_id', st.baby.id)]);
+  st.growthOk = !w.error && !m.error;
+  st.weights = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
 }
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
 function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
@@ -238,7 +249,8 @@ function render() {
   const evs = sortedEntries(), now = Date.now(), b = st.baby;
   $('babyName').textContent = b ? b.name : 'Sem bebê';
   $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
-  $('babyAge').textContent = b ? ageText(b.birth_date) : 'toque para cadastrar';
+  $('babyAge').textContent = !b ? 'toque para cadastrar'
+    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso e marcos';
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
@@ -747,9 +759,120 @@ async function medAction(a, v, btn) {
   S.err = ''; drawMedForm();
 }
 
+/* ---------- peso e marcos ---------- */
+// A tela do bebê (toque no nome, no alto): peso, marcos e nome e nascimento. Só guarda o que a família
+// anota; não compara com curva de crescimento nem com a idade de outros bebês.
+const LOG = {
+  weight:    { table: 'weights',    list: 'weights',    day: 'measured_on', sort: sortWeights },
+  milestone: { table: 'milestones', list: 'milestones', day: 'happened_on', sort: sortMilestones },
+};
+function babyHub() { S = { mode: 'hub' }; drawHub(); $('sheet').scrollTop = 0; }
+function drawHub() {
+  const b = st.baby, ws = st.weights, ms = st.milestones;
+  const sub = [ageText(b.birth_date), b.birth_date ? 'nasceu em ' + fullDate(b.birth_date) : ''].filter(Boolean).join(' · ');
+  let h = `<div class="grab"></div><div class="shead"><h3>${esc(b.name)}${sub ? `<span class="ps">${esc(sub)}</span>` : ''}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
+  else {
+    h += '<div class="sec"><h4>Peso</h4>';
+    if (ws.length >= 2) h += `<div class="svgbox">${weightChart(ws)}</div>`;
+    h += ws.length
+      ? `<div class="recs">${ws.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(kg(w.grams))}</span></button>`).join('')}</div>`
+      : '<div class="soft">Anote o peso de cada consulta ou pesagem. Com dois ou mais, aparece o gráfico.</div>';
+    h += '<button class="ghost" data-act="newWeight">+ Anotar peso</button></div>';
+    h += '<div class="sec"><h4>Marcos</h4>';
+    h += ms.length
+      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
+      : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
+    h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
+  }
+  h += `<div class="sec"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBabyHub">Editar</button></div></div>`;
+  h += '<p class="dim">O Caderninho só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+
+// Anotar ou editar um peso ou um marco.
+function logForm(kind, row) {
+  const today = localDate(Date.now());
+  S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '', confirmDel: false,
+        kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '', title: row?.title || '' };
+  drawLog(); $('sheet').scrollTop = 0;
+}
+function drawLog() {
+  const w = S.mode === 'weight', b = st.baby, today = localDate(Date.now());
+  let h = head(S.edit ? (w ? 'Editar peso' : 'Editar marco') : (w ? 'Anotar peso' : 'Anotar marco'));
+  if (w) h += `<div><label class="lbl" for="lgKg">Peso</label><div class="ml"><input id="lgKg" inputmode="decimal" value="${esc(S.kg)}" placeholder="0,000" autocomplete="off"><em>kg</em></div></div>`;
+  else {
+    const sugs = MILESTONES.filter(t => t !== S.title && !st.milestones.some(m => m.title === t && m.id !== S.edit?.id));
+    h += `<div><label class="lbl" for="lgTitle">O que aconteceu</label><input class="field" id="lgTitle" maxlength="60" placeholder="Ex.: Sorriu pela primeira vez" value="${esc(S.title)}">
+      ${sugs.length ? `<div class="sugs">${sugs.map(t => `<button class="small" data-act="sug" data-val="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>`;
+  }
+  h += `<div><label class="lbl" for="lgDate">Dia</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
+    <div class="hint" id="lgAge" style="margin:6px 0 0">${esc(ageOn(b.birth_date, S.date))}</div></div>`;
+  h += w ? `<input class="field" id="lgNote" maxlength="100" placeholder="Onde pesou (opcional). Ex.: pediatra" value="${esc(S.note)}">`
+         : `<input class="field" id="lgNote" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
+  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
+  h += '<button class="save" data-act="saveLog">Salvar</button>';
+  if (S.edit) h += `<button class="del" data-act="delLog">${S.confirmDel ? 'Toque de novo para apagar' : w ? 'Apagar este peso' : 'Apagar este marco'}</button>`;
+  openPanel(h);
+}
+function logInput(el) {
+  if (el.id === 'lgKg') S.kg = el.value;
+  else if (el.id === 'lgTitle') S.title = el.value;
+  else if (el.id === 'lgNote') S.note = el.value;
+  else if (el.id === 'lgDate') { S.date = el.value; $('lgAge').textContent = ageOn(st.baby.birth_date, S.date); }
+  if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
+}
+async function saveLog(btn) {
+  const kind = S.mode, L = LOG[kind], b = st.baby, today = localDate(Date.now());
+  const fail = msg => { S.err = msg; drawLog(); };
+  const row = { [L.day]: S.date, note: S.note.trim() || null };
+  if (kind === 'weight') {
+    const g = parseKg(S.kg);
+    if (!S.kg.trim()) return fail('Escreva o peso.');
+    if (!g || g < 500 || g > 30000) return fail('Confira o peso: de 0,5 a 30 kg. Ex.: 5,2');
+    row.grams = g;
+  } else {
+    if (!S.title.trim()) return fail('Escreva o que aconteceu.');
+    row.title = S.title.trim().slice(0, 60);
+  }
+  if (!S.date) return fail('Escolha o dia.');
+  if (S.date > today) return fail('O dia não pode ser depois de hoje.');
+  if (b.birth_date && S.date < b.birth_date) return fail('O dia não pode ser antes do nascimento.');
+  busy(btn, true);
+  const q = S.edit ? sb.from(L.table).update(row).eq('id', S.edit.id)
+                   : sb.from(L.table).insert({ family_id: st.family.id, baby_id: b.id, ...row });
+  const { data, error } = await q.select().single();
+  busy(btn, false);
+  if (error) return fail('Não foi possível salvar. Confira a conexão e tente de novo.');
+  st[L.list] = L.sort([...st[L.list].filter(x => x.id !== data.id), data]);
+  render(); babyHub(); toast('Salvo');
+}
+async function delLog(btn) {
+  const L = LOG[S.mode], id = S.edit.id;
+  busy(btn, true);
+  const { error } = await sb.from(L.table).delete().eq('id', id);
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawLog(); }
+  st[L.list] = st[L.list].filter(x => x.id !== id);
+  render(); babyHub(); toast('Apagado');
+}
+function growthAction(a, v, btn) {
+  if (S.mode === 'hub') {
+    if (a === 'newWeight') return logForm('weight');
+    if (a === 'newMilestone') return logForm('milestone');
+    if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
+    if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
+    if (a === 'editBabyHub') return babySheet(st.baby, 'hub');
+    return;
+  }
+  if (a === 'sug') { S.title = v; S.err = ''; return drawLog(); }
+  if (a === 'saveLog') return saveLog(btn);
+  if (a === 'delLog') { if (S.confirmDel) return delLog(btn); S.confirmDel = true; return drawLog(); }
+}
+
 /* ---------- bebê e nome ---------- */
-function babySheet(b) {
-  S = { mode: 'baby', b };
+function babySheet(b, back) {
+  S = { mode: 'baby', b, back };
   openPanel(head(b ? 'Editar bebê' : 'Adicionar bebê') +
     `<div><div class="lbl">Nome do bebê</div><input class="field" id="bName" maxlength="40" value="${esc(b?.name || '')}" placeholder="Marina"></div>
      <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="bBirth" type="date" value="${esc(b?.birth_date || '')}"></div>
@@ -766,12 +889,14 @@ async function saveBaby(btn) {
   if (error) return err('bErr', errMsg(error));
   const i = st.babies.findIndex(x => x.id === data.id);
   if (i >= 0) st.babies[i] = data; else st.babies.push(data);
+  const back = S.back;
   if (!S.b || st.baby?.id === data.id) await selectBaby(data.id);
-  closeSheet(); toast('Salvo');
+  if (back === 'hub') babyHub(); else closeSheet();
+  toast('Salvo');
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
-  await Promise.all([loadEntries(), loadMeds()]); render();
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth()]); render();
 }
 function renameSheet() {
   S = { mode: 'rename' };
@@ -907,6 +1032,7 @@ $('sheetIn').addEventListener('input', e => {
     return;
   }
   if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
+  if (S?.mode === 'weight' || S?.mode === 'milestone') return logInput(e.target);
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
@@ -927,6 +1053,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'menu') return menuAction(a, v, b);
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
+  if (S.mode === 'hub' || S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -959,7 +1086,7 @@ $('meds').addEventListener('click', e => {
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
 });
-$('babyBtn').onclick = () => babySheet(st.baby);
+$('babyBtn').onclick = () => st.baby ? babyHub() : babySheet(null);
 $('menuBtn').onclick = menuSheet;
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
 $('timeline').addEventListener('click', e => {
@@ -998,7 +1125,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSh
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds()]).then(render);
+  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds(), loadGrowth()]).then(render);
 });
 setInterval(refresh, 30000);
 

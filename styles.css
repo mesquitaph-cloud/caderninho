@@ -3,7 +3,7 @@
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
   --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
-  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;
+  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -11,13 +11,13 @@
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
@@ -163,6 +163,17 @@ svg .part{opacity:.45}
 .lsi .ln{display:flex;align-items:baseline;gap:8px;font-weight:600;font-variant-numeric:tabular-nums}
 .lsi .ln i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
 .lsi em{font-style:normal;color:var(--muted);font-weight:700}
+/* Peso e marcos: a tela do bebê */
+.recs{display:flex;flex-direction:column;gap:6px}
+.rec{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;width:100%}
+.rec b{font-weight:700;font-size:15px}
+.rec small{display:block;font-size:13px;color:var(--muted);font-weight:600}
+.rec small.nt{color:var(--ink);font-weight:400;margin-top:2px}
+.rec .v{font-family:var(--display);font-weight:600;font-size:18px;flex:none}
+.sugs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+svg .wl{fill:none;stroke:var(--c-weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg .wp{fill:var(--c-weight);stroke:var(--surface);stroke-width:2}
+svg .wh{fill:transparent}
 /* Calendário */
 .mhead{display:flex;align-items:center;justify-content:space-between}
 .mhead b{font-family:var(--display);font-weight:600;font-size:18px}

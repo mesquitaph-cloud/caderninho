@@ -42,6 +42,35 @@ com ml, peito com minutos) e o último cocô antes de dormir. Tocar num sono abr
 implementação: mostrar lado a lado, sem calcular relação nem dizer o que fez dormir mais, porque o
 Caderninho não interpreta os registros (`CONTEXT.md`); a família tira as conclusões.
 
+### Peso e marcos
+
+**Para publicar, nesta ordem:**
+
+1. Rodar `supabase/007_peso_e_marcos.sql` no SQL Editor, antes de publicar o app. Sem ele, o app novo
+   funciona, mas a tela do bebê avisa que não conseguiu carregar peso e marcos.
+2. Conferir pelo conector: tabelas `weights` e `milestones`, regras de acesso, permissões e nenhum erro
+   nos logs.
+3. Publicar o app e conferir no celular: tocar no nome do bebê, anotar dois pesos (aparece o gráfico),
+   anotar um marco pela sugestão, editar e apagar; ver o peso no celular de outro membro.
+
+**Como ficou:**
+
+- **Tela do bebê:** tocar no nome do bebê, no alto, abre peso, marcos e "Nome e nascimento" (antes,
+  abria direto a edição do nome). No alto da tela inicial, ao lado da idade, vai o último peso.
+- **Peso:** o dia (de hoje para trás, não antes do nascimento), o peso em kg ("5,2" ou "5,235"; em
+  gramas também serve) e onde pesou, opcional. A lista mostra a idade naquele dia. Com dois ou mais
+  pesos, um gráfico com o valor do último; sem curva de percentil, que compararia com outros bebês.
+- **Marcos:** o que aconteceu (livre, com sugestões como "Sorriu" e "Primeiro dente", sem idade
+  esperada; as já anotadas somem da sugestão), o dia e uma observação. A lista mostra a idade naquele dia.
+- **Banco:** tabelas `weights` (gramas, de 500 g a 30 kg) e `milestones`. Só membros veem, anotam,
+  editam e apagam; quem anotou e as datas vêm do banco; bebê e família não mudam ao editar. Não vão
+  para a sincronização ao vivo: o app recarrega ao voltar para ele, como os registros.
+
+Testado em 27/09 com um Postgres local imitando o Supabase (rodando 001, 004, 003, 005, 006 e 007):
+32 casos de regra de acesso, permissões e limites, incluindo outra família, quem saiu da família e
+apagar a família. O app foi testado no navegador com um Supabase de mentira, claro e escuro, em 390 px,
+e também sem as tabelas (como antes do 007).
+
 ### Entrar com Google
 
 O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail continua igual. A mesma
