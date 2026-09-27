@@ -60,8 +60,8 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
 **Cuidados:**
 
 - **iPhone com o app instalado:** testar antes de avisar as famílias. O login sai do app para o
-  Google e pode terminar no Safari, e não no app instalado; é por isso que o login foi feito por
-  código, e não por link. Se acontecer, o caminho no app instalado continua sendo o código.
+  Google e pode terminar no Safari, e não no app instalado (o mesmo risco de um link de login por
+  e-mail). Se acontecer, o caminho no app instalado continua sendo o código.
 - A tela do Google mostra "vrhgirpklyklhvzwdfiq.supabase.co" como destino. Para mostrar o nome do app
   é preciso um domínio próprio no Supabase (Custom Domain, pago).
 - Apple exige conta de desenvolvedor paga; ficou para depois.
