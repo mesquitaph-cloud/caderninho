@@ -33,6 +33,8 @@ Não muda o banco; basta publicar o app.
   de uma hora, o primeiro toque avisa qual dose vai marcar e o segundo marca.
 - **Conferir no celular:** programar um remédio de teste com horário daqui a 50 minutos, ver aparecer no
   alto, pular, desfazer, marcar e ver sumir; na lista, "Dei agora" num remédio de horário.
+- De passagem: em telas de 360 px, a coluna da direita dos botões de registro passava da margem;
+  agora as duas colunas têm a mesma largura. Em 320 px (iPhone SE antigo) ainda aperta.
 
 ### Sono, mamada e cocô no painel da semana
 
@@ -70,6 +72,32 @@ Testado em 27/09 com um Postgres local imitando o Supabase (rodando 001, 004, 00
 32 casos de regra de acesso, permissões e limites, incluindo outra família, quem saiu da família e
 apagar a família. O app foi testado no navegador com um Supabase de mentira, claro e escuro, em 390 px,
 e também sem as tabelas (como antes do 007).
+
+### Resumo da semana e do mês, para mandar à família
+
+Não muda o banco; basta publicar o app.
+
+- **Aba Mês**, ao lado de Dia e Semana: o mês atual (até hoje) ou o anterior, inteiro. Números grandes
+  de leite na mamadeira, mamadas (e tempo no peito), sono (e o maior seguido), fraldas (e com cocô) e
+  ordenha; embaixo, doses de remédio dadas, peso (de quanto para quanto) e marcos do mês. As setas e o
+  calendário escolhem entre os dois meses.
+- **Mandar para a família:** embaixo, a prévia do texto e os botões Compartilhar (abre o WhatsApp e
+  outros apps do celular) e Copiar texto. No fim do painel da semana, o mesmo para os 7 dias. Exemplo:
+
+  > Setembro de Marina, até 27 set, pelo Caderninho:
+  > • 186 mamadas: 11,6 L na mamadeira e 24 h no peito
+  > • 393 h de sono; o maior sono seguido foi de 5h29
+  > • 186 fraldas, 79 com cocô
+  > • Peso: de 4,15 kg (20 ago) para 5,02 kg (20 set)
+  > • Marco: Rolou (25 set)
+  > Parabéns a quem cuida de Marina por mais um mês de cuidado!
+
+- Decidido na implementação: "de Marina", e não "da"/"do", porque o nome não diz qual (como no resto do
+  app); o parabéns vai para quem cuida, sem avaliar o bebê; o leite em litros é só o da mamadeira (o
+  peito não tem volume anotado); vômitos ficam de fora do resumo.
+- Para o mês anterior sair inteiro, o app passa a carregar os registros desde o dia 1º do mês passado
+  (até 62 dias, em vez de 60). O calendário continua mostrando os últimos 60 dias.
+- **E-mail automático:** ficou para depois. Plano em "Ideias para depois".
 
 ### Entrar com Google
 
@@ -206,6 +234,15 @@ bloqueio de leitura e edição, família de outra pessoa, limite por dia e conta
 testado no navegador com 45 dias de registros de exemplo, claro e escuro, em telas de 360 e 390 px.
 
 ## Ideias para depois
+
+- **Resumo por e-mail, todo mês ou toda semana.** O texto já existe no app (aba Mês); falta mandar
+  sozinho. Precisa, nesta ordem: (1) o remetente dedicado da primeira pendência, com domínio próprio e
+  um serviço de envio (Resend, Postmark ou parecido), com os registros de DNS; (2) uma função no
+  Supabase que monte o resumo de cada família no servidor, com a chave `service_role` (ignora as
+  regras de acesso: é a parte mais sensível); (3) o agendamento com `pg_cron`; (4) cada membro
+  escolher se quer receber, e um link de "não quero mais" em todo e-mail; (5) o fuso da família
+  (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
+  o que vai no e-mail (talvez só os números, sem remédios).
 
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - Remédios no painel da semana ("Como foram os dias").

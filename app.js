@@ -1,9 +1,10 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
-import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate,
+import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
 import { weekHtml } from './week.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
+import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -19,9 +20,11 @@ const st = {
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
   weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
   growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
-  view: 'day',                 // 'day' (linha do tempo) ou 'week' (painel da semana)
+  view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
+  month: 0,                    // primeiro dia do mês do resumo (0 = o mês atual)
+  shareText: '',               // o resumo da semana ou do mês aberto, pronto para compartilhar
   show: { sleep: true, feed: true, diaper: true, pump: true },   // filtro de "Como foram os dias"
   metric: 'sleep',             // o que aparece em "Dia a dia"
   channel: null,
@@ -190,7 +193,8 @@ async function loadNames(ids) {
 async function loadEntries() {
   st.entries = new Map();
   if (!st.baby) return;
-  const since = new Date(startOfDay(Date.now() - KEEP_DAYS * DAY)).toISOString();
+  // Os últimos 60 dias e, para o resumo do mês anterior sair inteiro, desde o dia 1º dele.
+  const since = new Date(Math.min(startOfDay(Date.now() - KEEP_DAYS * DAY), prevMonth())).toISOString();
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb.from('entries').select('*').eq('baby_id', st.baby.id)
       .gte('at', since).order('at').range(from, from + 999);
@@ -241,6 +245,10 @@ function subscribe(fid) {
 const sortedEntries = () => [...st.entries.values()].sort((a, b) => a.t - b.t);
 // Primeiro dia que dá para ver: o app carrega os últimos 60 dias.
 const firstDay = () => addDays(startOfDay(Date.now()), -(KEEP_DAYS - 1));
+// Resumo do mês: o mês atual e o anterior.
+const monthStart = (t, n = 0) => { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth() + n, 1).getTime(); };
+const curMonth = () => monthStart(Date.now()), prevMonth = () => monthStart(Date.now(), -1);
+const clampMonth = t => Math.min(curMonth(), Math.max(monthStart(t), prevMonth()));
 // Última mamada em que marcaram o peito (no banco, só a mamada no peito tem peito marcado).
 const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
@@ -270,11 +278,26 @@ function render() {
   $('subMed').textContent = medSub();
   renderMeds();
 
-  const today = startOfDay(now), week = st.view === 'week';
-  $('tabDay').setAttribute('aria-selected', !week); $('tabWeek').setAttribute('aria-selected', week);
-  $('dayView').hidden = week; $('weekView').hidden = !week;
-  $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : 'Dia anterior');
-  $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : 'Próximo dia');
+  const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
+  $('tabDay').setAttribute('aria-selected', st.view === 'day'); $('tabWeek').setAttribute('aria-selected', week); $('tabMonth').setAttribute('aria-selected', month);
+  $('dayView').hidden = st.view !== 'day'; $('weekView').hidden = !week; $('monthView').hidden = !month;
+  $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : month ? 'Mês anterior' : 'Dia anterior');
+  $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : month ? 'Próximo mês' : 'Próximo dia');
+  const sleep = { out: intervals, open }, logs = { weights: st.weights, milestones: st.milestones };
+  if (month) {
+    st.month = clampMonth(st.month || now);
+    const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
+    const title = MESES_L[d.getMonth()] + ' ' + d.getFullYear();
+    $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
+    $('nextDay').disabled = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
+    if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
+    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
+    const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
+    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês' }) : '';
+    $('monthView').innerHTML = monthHtml(s, { heading, cap: (partial ? 'O mês ainda não terminou. ' : '') + 'Só soma o que foi registrado.' })
+      + (s.any ? shareHtml(st.shareText) : '');
+    return;
+  }
   if (week) {
     // Os 7 dias ficam dentro do que o app carrega.
     st.weekEnd = Math.min(today, Math.max(st.weekEnd, addDays(firstDay(), 6)));
@@ -282,8 +305,12 @@ function render() {
     $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
     $('nextDay').disabled = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
+    // No fim do painel, o resumo destes 7 dias pronto para mandar.
+    const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
+    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana' }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep: { out: intervals, open }, now, show: st.show, metric: st.metric });
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric })
+        + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
   }
 
@@ -436,11 +463,13 @@ async function saveEntry(btn) {
 }
 
 /* ---------- calendário ---------- */
-// No modo Semana, o dia escolhido é o último dos 7.
-const chosenDay = () => st.view === 'week' ? st.weekEnd : st.viewDay;
+// No modo Semana, o dia escolhido é o último dos 7; no Mês, o último dia do mês que já chegou.
+const chosenDay = () => st.view === 'week' ? st.weekEnd
+  : st.view === 'month' ? Math.min(startOfDay(Date.now()), addDays(monthStart(st.month || Date.now(), 1), -1)) : st.viewDay;
 function calSheet() { const d = new Date(chosenDay()); S = { mode: 'cal', y: d.getFullYear(), m: d.getMonth() }; drawCal(); }
 function drawCal() {
-  const today = startOfDay(Date.now()), min = firstDay(), week = st.view === 'week', sel = chosenDay(), from = week ? addDays(sel, -6) : sel;
+  const today = startOfDay(Date.now()), week = st.view === 'week', month = st.view === 'month', sel = chosenDay();
+  const min = month ? Math.min(firstDay(), prevMonth()) : firstDay(), from = week ? addDays(sel, -6) : month ? monthStart(sel) : sel;
   const has = new Set([...st.entries.values()].map(e => startOfDay(e.t)));
   const ym = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); }, cur = S.y * 12 + S.m;
   const first = new Date(S.y, S.m, 1), days = new Date(S.y, S.m + 1, 0).getDate();
@@ -451,17 +480,17 @@ function drawCal() {
     cells += `<button class="${cls}" data-act="pickDay" data-val="${d0}"${off ? ' disabled' : ''}${d0 === sel ? ' aria-current="date"' : ''} aria-label="${esc(dayTitle(d0))}${has.has(d0) ? ', com registros' : ''}">${dd}</button>`;
   }
   const arrow = (dir, ok, name, path) => `<button data-act="mon" data-val="${dir}"${ok ? '' : ' disabled'} aria-label="${name}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${path}"/></svg></button>`;
-  openPanel(head(week ? 'Escolher semana' : 'Escolher dia') +
+  openPanel(head(week ? 'Escolher semana' : month ? 'Escolher mês' : 'Escolher dia') +
     `<div class="mhead">${arrow(-1, cur > ym(min), 'Mês anterior', 'M15 5l-7 7 7 7')}<b>${MESES_L[S.m]} ${S.y}</b>${arrow(1, cur < ym(today), 'Próximo mês', 'M9 5l7 7-7 7')}</div>
     <div class="wdays" aria-hidden="true">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
     <div class="cal">${cells}</div>
     <div class="calkey"><i></i>dia com registros · o Caderninho mostra os últimos ${KEEP_DAYS} dias</div>
-    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : ''}
+    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : month ? '<p class="dim">O resumo mostra o mês atual e o anterior.</p>' : ''}
     <button class="ghost" data-act="pickDay" data-val="${today}">Ir para hoje</button>`);
 }
 function calAction(a, v) {
   if (a === 'mon') { const d = new Date(S.y, S.m + (+v), 1); S.y = d.getFullYear(); S.m = d.getMonth(); return drawCal(); }
-  if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else st.viewDay = +v; closeSheet(); }
+  if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else if (st.view === 'month') st.month = clampMonth(+v); else st.viewDay = +v; closeSheet(); }
 }
 
 /* ---------- remédios ---------- */
@@ -1093,24 +1122,39 @@ $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
   const ev = st.entries.get(r.dataset.id); if (ev) openEntry(ev.kind, ev);
 });
-// Setas: um dia na linha do tempo, 7 dias no painel.
-$('prevDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, -7); else st.viewDay = addDays(st.viewDay, -1); render(); };
-$('nextDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, 7); else st.viewDay = addDays(st.viewDay, 1); render(); };
+// Setas: um dia na linha do tempo, 7 dias no painel, um mês no resumo.
+function step(n) {
+  if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, 7 * n);
+  else if (st.view === 'month') st.month = clampMonth(monthStart(st.month || Date.now(), n));
+  else st.viewDay = addDays(st.viewDay, n);
+  render();
+}
+$('prevDay').onclick = () => step(-1);
+$('nextDay').onclick = () => step(1);
 $('dayTitle').onclick = calSheet;
 // Trocar de aba mantém o dia escolhido se ele estiver nos 7 dias do painel; senão, alinha os dois.
 const inWeek = d0 => d0 <= st.weekEnd && d0 > addDays(st.weekEnd, -7);
+// O Mês abre no mês do dia escolhido; voltar do Mês mantém o dia e a semana de antes.
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
-  if (b.dataset.view === st.view) return;
-  st.view = b.dataset.view;
-  if (!inWeek(st.viewDay)) { if (st.view === 'week') st.weekEnd = st.viewDay; else st.viewDay = st.weekEnd; }
-  render();
+  const to = b.dataset.view; if (to === st.view) return;
+  if (to === 'month') st.month = clampMonth(chosenDay());
+  else if (st.view !== 'month' && !inWeek(st.viewDay)) { if (to === 'week') st.weekEnd = st.viewDay; else st.viewDay = st.weekEnd; }
+  st.view = to; render();
 });
+// Compartilhar o resumo da semana ou do mês: pelo celular (WhatsApp, mensagem) ou copiando o texto.
+function shareReport(how) {
+  const text = st.shareText; if (!text) return;
+  if (how === 'share') return navigator.share({ text }).catch(() => {});
+  navigator.clipboard.writeText(text).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
+}
+$('monthView').addEventListener('click', e => { const sh = e.target.closest('[data-share]'); if (sh) shareReport(sh.dataset.share); });
 // Painel da semana: filtro, métrica e tocar num dia para abrir a linha do tempo dele.
 function openDay(d0) {
   st.viewDay = d0; st.view = 'day'; render();
   $('dayTitle').closest('.daynav').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 $('weekView').addEventListener('click', e => {
+  const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
   const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = !st.show[f.dataset.flt]; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
   const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);

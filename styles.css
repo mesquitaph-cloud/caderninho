@@ -35,7 +35,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sleeping .t{font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
 .sleeping small{display:block;font-size:13px}
 .pill{background:var(--surface);color:var(--sleep-ink);border-radius:999px;padding:10px 18px;font-weight:700}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .act{border-radius:20px;padding:14px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:2px;align-items:center;min-height:76px;text-align:left;transition:transform .08s}
 .act:active{transform:scale(.97)}
 .act svg{width:28px;height:28px;grid-row:span 2}
@@ -53,6 +53,8 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .act.wide{grid-column:1/-1;min-height:54px;padding:10px 16px;grid-template-columns:auto auto 1fr}
 .act.wide svg{grid-row:auto;width:24px;height:24px}
 .act.wide span{justify-self:end}
+/* Telas estreitas (360 px ou menos): menos espaço em volta, para os nomes caberem nas duas colunas */
+@media (max-width:370px){.act{padding:12px;column-gap:8px}.act.k-med{column-gap:13px}.act b{font-size:18px}}
 /* Cartão de remédios na tela inicial: a última dose e a próxima */
 .meds{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .meds .mh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 2px 0 6px}
@@ -88,8 +90,8 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
   .dose.late .ck{animation:pulse 1.8s ease-in-out infinite}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--c-med)}60%{box-shadow:0 0 0 7px transparent}}
 }
-/* Dia | Semana e a data, que abre o calendário */
-.views{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface2);margin-top:4px}
+/* Dia | Semana | Mês e a data, que abre o calendário */
+.views{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface2);margin-top:4px}
 .views button{padding:9px;border-radius:12px;font-family:var(--display);font-weight:600;font-size:16px;color:var(--muted)}
 .views button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(58,47,69,.12)}
 .daynav{display:flex;align-items:center;justify-content:space-between;scroll-margin-top:12px}
@@ -163,6 +165,8 @@ svg .part{opacity:.45}
 .lsi .ln{display:flex;align-items:baseline;gap:8px;font-weight:600;font-variant-numeric:tabular-nums}
 .lsi .ln i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
 .lsi em{font-style:normal;color:var(--muted);font-weight:700}
+/* Resumo para mandar à família: a prévia da mensagem */
+.msgbox{white-space:pre-wrap;background:var(--surface2);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5}
 /* Peso e marcos: a tela do bebê */
 .recs{display:flex;flex-direction:column;gap:6px}
 .rec{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;width:100%}

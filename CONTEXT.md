@@ -163,9 +163,21 @@ Os 3 sonos mais longos dos 7 dias do painel, cada um com a última mamada e o ú
 antes de dormir. Só põe lado a lado; não diz o que fez o bebê dormir mais.
 _Evite_: causa, relação, correlação, análise do sono
 
+**Resumo do mês**:
+A aba Mês: os totais do mês atual (até agora) ou do anterior, inteiro. Mamadas, leite na mamadeira,
+tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que
+foi registrado.
+_Evite_: relatório, balanço, desempenho
+
+**Resumo para mandar**:
+O texto com os totais da semana (no fim do painel da semana) ou do mês, que um membro compartilha
+pelo WhatsApp ou copia. Termina com um parabéns a quem cuida do bebê, sem avaliar o bebê. Só sai do
+Caderninho quando alguém compartilha.
+_Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Caderninho)
+
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
-escolhido é o último dos 7.
+escolhido é o último dos 7; no resumo do mês, escolhe o mês (o atual ou o anterior).
 _Evite_: agenda
 
 ## Conversa com quem cuida do app
