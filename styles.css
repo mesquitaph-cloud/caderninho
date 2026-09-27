@@ -108,6 +108,9 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .dtitle{display:inline-flex;align-items:center;gap:6px;font-family:var(--display);font-weight:600;font-size:18px;padding:6px 10px 6px 14px;border-radius:999px}
 .dtitle svg{width:18px;height:18px;color:var(--muted)}
 .dtitle:active{background:var(--surface2)}
+/* "Hoje": só aparece fora de hoje (ou da semana e do mês atuais) e volta para eles */
+.daynav .mid{display:flex;align-items:center;gap:4px}
+.today{font-family:var(--display);font-weight:600;font-size:14px;padding:5px 12px;border-radius:999px;background:var(--feed);color:var(--feed-ink)}
 .view{display:flex;flex-direction:column;gap:14px}
 .tl{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:4px 14px}
 .row{display:grid;grid-template-columns:46px 34px 1fr;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}

@@ -301,7 +301,7 @@ function render() {
     const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
     const title = MESES_L[d.getMonth()] + ' ' + d.getFullYear();
     $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
-    $('nextDay').disabled = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
+    $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
     if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
     const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
@@ -315,7 +315,7 @@ function render() {
     st.weekEnd = Math.min(today, Math.max(st.weekEnd, addDays(firstDay(), 6)));
     const title = rangeTitle(addDays(st.weekEnd, -6), st.weekEnd);
     $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
-    $('nextDay').disabled = st.weekEnd >= today;
+    $('nextDay').disabled = $('toToday').hidden = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
     const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
@@ -328,7 +328,7 @@ function render() {
 
   const d0 = st.viewDay, d1 = addDays(d0, 1);
   $('dayText').textContent = dayTitle(d0); $('dayTitle').setAttribute('aria-label', dayTitle(d0) + '. Escolher no calendário');
-  $('nextDay').disabled = d0 >= today;
+  $('nextDay').disabled = $('toToday').hidden = d0 >= today;
   $('prevDay').disabled = d0 <= firstDay();
 
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
@@ -1239,6 +1239,12 @@ function step(n) {
 $('prevDay').onclick = () => step(-1);
 $('nextDay').onclick = () => step(1);
 $('dayTitle').onclick = calSheet;
+// Hoje: volta para hoje, para os 7 dias que terminam hoje ou para o mês atual.
+$('toToday').onclick = () => {
+  const today = startOfDay(Date.now());
+  if (st.view === 'week') st.weekEnd = today; else if (st.view === 'month') st.month = curMonth(); else st.viewDay = today;
+  render();
+};
 // Trocar de aba mantém o dia escolhido se ele estiver nos 7 dias do painel; senão, alinha os dois.
 const inWeek = d0 => d0 <= st.weekEnd && d0 > addDays(st.weekEnd, -7);
 // O Mês abre no mês do dia escolhido; voltar do Mês mantém o dia e a semana de antes.
