@@ -994,11 +994,35 @@ function growthAction(a, v, btn) {
 
 /* ---------- bebê e nome ---------- */
 function babySheet(b, back) {
-  S = { mode: 'baby', b, back };
-  openPanel(head(b ? 'Editar bebê' : 'Adicionar bebê') +
-    `<div><div class="lbl">Nome do bebê</div><input class="field" id="bName" maxlength="40" value="${esc(b?.name || '')}" placeholder="Marina"></div>
-     <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="bBirth" type="date" value="${esc(b?.birth_date || '')}"></div>
-     <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`);
+  S = { mode: 'baby', b, back, name: b?.name || '', birth: b?.birth_date || '', confirmDel: false };
+  drawBaby();
+}
+// Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
+function drawBaby() {
+  const b = S.b, del = b && st.family.creator_id === st.user.id;
+  let h = head(b ? 'Editar bebê' : 'Adicionar bebê') +
+    `<div><div class="lbl">Nome do bebê</div><input class="field" id="bName" maxlength="40" value="${esc(S.name)}" placeholder="Marina"></div>
+     <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="bBirth" type="date" value="${esc(S.birth)}"></div>
+     <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
+  if (del) h += S.confirmDel
+    ? `<div class="warn" role="alert"><b>Tem certeza?</b><span>Essa ação não poderá ser desfeita. ${esc(b.name)} e todos os seus registros serão apagados.</span></div>
+       <div class="row2"><button class="ghost" data-act="keepBaby">Cancelar</button><button class="danger-btn" data-act="delBaby">Apagar</button></div>`
+    : '<button class="danger-btn" data-act="askDelBaby">Apagar bebê</button>';
+  openPanel(h);
+}
+async function delBaby(btn) {
+  const id = S.b.id;
+  busy(btn, true);
+  // Sem permissão, o banco não dá erro: só não apaga nada. Por isso confere o que voltou.
+  const { data, error } = await sb.from('babies').delete().eq('id', id).select('id');
+  busy(btn, false);
+  if (error || !data?.length) return err('bErr', error ? errMsg(error) : 'Só quem criou a família pode apagar um bebê.');
+  st.babies = st.babies.filter(x => x.id !== id);
+  if (st.baby?.id === id) {
+    if (st.babies.length) await selectBaby(st.babies[0].id);
+    else { st.baby = null; st.entries = new Map(); st.meds = []; st.weights = []; st.milestones = []; }
+  }
+  closeSheet(); toast('Apagado');
 }
 async function saveBaby(btn) {
   const name = $('bName').value.trim(), birth_date = $('bBirth').value || null;
@@ -1051,7 +1075,7 @@ function drawMenu() {
     ? `<div class="invite">${esc(S.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
     : '<button class="ghost" data-act="invite">Convidar para esta família</button>';
   h += '</div><div class="sec"><h4>Bebês</h4>' +
-    st.babies.map(b => `<div class="li"><span>${esc(b.name)}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div>`).join('') +
+    st.babies.map(b => `<button class="li tg" data-act="editBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}</span><span class="go">Editar</span></button>`).join('') +
     '<button class="ghost" data-act="addBaby">Adicionar bebê</button></div>';
   h += `<div class="sec"><h4>Você</h4><div class="li"><span>${esc(st.profile.display_name)}</span><button data-act="rename">Mudar nome</button></div></div>`;
   h += '<div class="sec"><h4>Outras famílias</h4>' +
@@ -1174,6 +1198,10 @@ $('sheetIn').addEventListener('click', async e => {
   const a = b.dataset.act, v = b.dataset.val;
   if (a === 'close') return closeSheet();
   if (a === 'saveBaby') return saveBaby(b);
+  if (a === 'askDelBaby' || a === 'keepBaby') {
+    S.name = $('bName').value; S.birth = $('bBirth').value; S.confirmDel = a === 'askDelBaby'; return drawBaby();
+  }
+  if (a === 'delBaby') return delBaby(b);
   if (a === 'saveName') return saveName(b);
   if (S.mode === 'menu') return menuAction(a, v, b);
   if (S.mode === 'cal') return calAction(a, v);
