@@ -6,12 +6,67 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Front:** HTML/CSS/JS puro, sem build. Publicado no Vercel.
 - **Back:** Supabase (região São Paulo) — banco, login por código no e-mail, sincronização.
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
+  Entrar com Google está pronto no código, desligado em `config.js` até a configuração abaixo.
 
 ## Pendências antes de convidar amigos
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
+
+## Melhorias de 27/09: feito, falta publicar
+
+Pedidos da conversa de 27/09. O que já está no código, e o que falta de cada um.
+
+### Remédios: só perto da hora, Pular e Dei agora
+
+Não muda o banco; basta publicar o app.
+
+- **Cartão da tela inicial:** de cada remédio, só a dose que está a uma hora ou menos do horário, ou
+  que passou da hora sem ninguém marcar. Dose marcada ou pulada sai do cartão (antes, mostrava a
+  última dose dada e a próxima, mesmo faltando horas). Sem nada perto da hora, o cartão some; o botão
+  Remédio continua dizendo "próxima às 16:00". A caixinha aparece uma hora antes (era meia hora).
+- **Pular:** botão embaixo da dose perto da hora ou atrasada, para quando não deu. Grava a dose como
+  pulada, com "Desfazer". Continua também dentro da dose ("Pular esta dose").
+- **Dei agora nos remédios de horário:** na lista de remédios. Se a dose mais recente ficou sem
+  marcar, marca ela; senão, adianta a próxima (dose das 20:00 dada às 19:00). Se a próxima está a mais
+  de uma hora, o primeiro toque avisa qual dose vai marcar e o segundo marca.
+- **Conferir no celular:** programar um remédio de teste com horário daqui a 50 minutos, ver aparecer no
+  alto, pular, desfazer, marcar e ver sumir; na lista, "Dei agora" num remédio de horário.
+
+### Entrar com Google
+
+O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail continua igual. A mesma
+pessoa, com o mesmo e-mail, cai na mesma conta (o Supabase junta as duas formas de entrar), com as
+mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google preenchido, e pode trocar.
+
+**Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
+
+1. **Google Cloud** (console.cloud.google.com): criar um projeto "Caderninho". Em Google Auth Platform:
+   - Identidade visual: nome "Caderninho", e-mail de suporte e, em domínios autorizados,
+     `vrhgirpklyklhvzwdfiq.supabase.co` e o domínio do app.
+   - Público: externo, e "Publicar app" (em teste, só entra quem estiver na lista de testadores). Só
+     com e-mail e perfil, o Google não pede verificação.
+   - Clientes → Criar cliente → Aplicativo da Web. Origens JavaScript: o endereço do app (ex.:
+     `https://caderninho.vercel.app`). URI de redirecionamento:
+     `https://vrhgirpklyklhvzwdfiq.supabase.co/auth/v1/callback`. Copiar o ID e a chave secreta.
+2. **Supabase:** Authentication → Sign In / Providers → Google: ligar, colar o ID e a chave, salvar.
+   Em Authentication → URL Configuration, conferir o Site URL e pôr o endereço do app com `/` no fim
+   em Redirect URLs.
+3. **App:** em `config.js`, `GOOGLE_LOGIN = true`, e publicar.
+4. **Conferir:** entrar com Google no navegador do celular; entrar com uma conta Google de mesmo
+   e-mail que já usava o código e ver as mesmas famílias; cancelar no Google e ver o aviso.
+
+**Cuidados:**
+
+- **iPhone com o app instalado:** testar antes de avisar as famílias. O login sai do app para o
+  Google e pode terminar no Safari, e não no app instalado; é por isso que o login foi feito por
+  código, e não por link. Se acontecer, o caminho no app instalado continua sendo o código.
+- A tela do Google mostra "vrhgirpklyklhvzwdfiq.supabase.co" como destino. Para mostrar o nome do app
+  é preciso um domínio próprio no Supabase (Custom Domain, pago).
+- Apple exige conta de desenvolvedor paga; ficou para depois.
+- Menos códigos por e-mail aliviam o limite do Gmail, mas não resolvem a primeira pendência: quem entra
+  por e-mail e os convites continuam dependendo do remetente.
 
 ## Cocô no painel e remédios programados: feito, falta publicar
 

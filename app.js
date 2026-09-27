@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
 import { weekHtml } from './week.js';
@@ -47,12 +47,22 @@ async function boot() {
   const tok = new URLSearchParams(location.search).get('convite');
   if (tok) { lsSet('cad-invite', tok); history.replaceState(null, '', '/'); }
 
+  // Voltou do Google sem entrar (cancelou ou deu erro): o endereço traz "#error=...".
+  const googleFailed = /[#&]error/.test(location.hash);
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { show('scrLogin'); return; }
+  if (!session) {
+    if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errGoogle', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
+    show('scrLogin'); return;
+  }
   st.user = session.user;
 
   const { data: prof } = await sb.from('profiles').select('id,display_name').eq('id', st.user.id).maybeSingle();
-  if (!prof) { show('scrName'); $('nameIn').focus(); return; }
+  if (!prof) {
+    // Quem entrou pelo Google já vem com o nome; dá para trocar antes de continuar.
+    const meta = st.user.user_metadata || {};
+    if (!$('nameIn').value) $('nameIn').value = String(meta.full_name || meta.name || '').trim().slice(0, 40);
+    show('scrName'); $('nameIn').focus(); return;
+  }
   st.profile = prof; st.names[prof.id] = prof.display_name;
 
   const inv = lsGet('cad-invite');
@@ -94,6 +104,14 @@ $('fCode').addEventListener('submit', async e => {
   show('scrLoading'); boot();
 });
 $('backEmail').onclick = () => { $('fCode').hidden = true; $('fEmail').hidden = false; };
+// Entrar com Google: sai do app para o Google e volta para cá já com a sessão (o convite, se houver,
+// ficou guardado no celular). A mesma pessoa, com o mesmo e-mail, cai na mesma conta do código.
+$('sso').hidden = !GOOGLE_LOGIN;
+$('googleBtn').onclick = async () => {
+  err('errGoogle'); busy($('googleBtn'), true);
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/' } });
+  if (error) { busy($('googleBtn'), false); err('errGoogle', 'Não foi possível abrir o Google. Confira a conexão e tente de novo.'); }
+};
 
 /* ---------- nome de exibição ---------- */
 $('fName').addEventListener('submit', async e => {
