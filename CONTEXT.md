@@ -42,7 +42,8 @@ _Evite_: filho, criança, paciente
 
 **Registro**:
 Uma anotação de algo que aconteceu com um bebê num horário: uma mamada, uma ordenha, um dormiu,
-um acordou, uma troca de fralda, um vômito, um remédio dado ou outro fato anotado à mão.
+um acordou, uma troca de fralda, um vômito, um sintoma, um cuidado (massagem, banho, lavagem nasal),
+um remédio dado ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
@@ -73,16 +74,39 @@ Registro de uma troca de fralda, com xixi, cocô ou os dois.
 _Evite_: troca, evacuação, diurese
 
 **Vômito**:
-Registro de um vômito.
+Registro de um vômito. Anota-se pelo botão Sintomas, mas continua sendo o registro de vômito.
 _Evite_: golfada, regurgitação
+
+**Sintoma**:
+Registro do botão Sintomas: febre (com a temperatura, se quiser), cólica ou choro inconsolável (com
+quanto tempo durou, se quiser), tosse, assadura, reação à vacina, incômodo dos dentes ou outro, com o
+que aconteceu escrito. O Caderninho só anota; não avalia nem orienta. Fica fora do resumo para mandar.
+_Evite_: doença, diagnóstico, mal-estar, intercorrência
+
+**Cuidado**:
+Massagem, banho ou lavagem nasal: registros prontos, iguais para todas as famílias, com o horário e
+uma observação, se quiser.
+_Evite_: atividade, procedimento, atalho
 
 **Outros**:
 Registro de texto livre para o que não cabe nas demais categorias.
 _Evite_: nota, observação (observação é o comentário opcional dentro de qualquer registro)
 
+**Botões da tela inicial**:
+Os botões de registro, três por linha. Mamada, Sono e Fralda aparecem sempre, e Outros também. Os
+outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) cada família liga ou desliga em
+Editar, e vale para todos da família.
+_Evite_: atalhos, menu, configurações
+
 **Linha do tempo**:
 Os registros de um bebê num dia, do mais recente para o mais antigo.
 _Evite_: histórico, feed, diário
+
+**Como foi o dia**:
+No alto da linha do tempo, o dia aberto numa linha só, de 0h a 24h, com as mesmas marcas do painel da
+semana e um losango para os sintomas. A contagem (sono, mamadas, xixi, cocô, ordenha, sintomas) vai
+embaixo. Tocar numa marca abre o registro.
+_Evite_: resumo (resumo é o do mês e o para mandar), estatística, gráfico do dia
 
 ## Remédios
 
@@ -94,9 +118,10 @@ remédio tira ele da lista e das doses, mas não apaga os registros.
 _Evite_: medicamento, medicação, receita, prescrição
 
 **Dose**:
-Cada horário em que um remédio programado deve ser dado. Meia hora antes, a próxima dose ganha a
-caixinha na tela inicial e fica em destaque até alguém marcar que deu ou pular. Cada dose só pode
-ser marcada uma vez: quem marca depois vê quem marcou antes.
+Cada horário em que um remédio programado deve ser dado. Uma hora antes, a dose aparece na tela
+inicial com a caixinha e o botão Pular, e fica em destaque até alguém marcar que deu ou pular;
+marcada ou pulada, sai da tela inicial. "Dei agora", na lista, marca a dose atrasada ou adianta a
+próxima. Cada dose só pode ser marcada uma vez: quem marca depois vê quem marcou antes.
 _Evite_: tomada, aplicação
 
 **Intervalo**:
@@ -113,8 +138,27 @@ _Evite_: administração, aplicação
 **Remédios e horários**:
 A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
 Abre pelo botão Remédio (o do lápis) e por "Ver todas", no cartão de remédios da tela inicial, que
-mostra só a última dose e a próxima.
+mostra só as doses a uma hora do horário ou atrasadas sem marcar.
 _Evite_: farmácia, receituário
+
+## Peso e marcos
+
+**Tela do bebê**:
+Abre ao tocar no nome do bebê, no alto (o lápis ao lado mostra que dá para mexer): o peso, os marcos
+e o nome e nascimento. Só guarda o que a
+família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
+_Evite_: perfil do bebê, ficha, prontuário
+
+**Peso**:
+O peso do bebê no dia da pesagem, anotado pela família (da consulta, da farmácia, da balança de casa),
+com uma observação opcional de onde pesou. O dia da pesagem pode ser outro que não hoje. Com dois ou mais, aparece um gráfico; o último vai no alto da tela.
+Não é registro: não entra na linha do tempo nem no painel da semana.
+_Evite_: pesagem (como nome do dado), curva, percentil
+
+**Marco**:
+Uma primeira vez do bebê, com o dia em que aconteceu: sorriu, rolou, primeiro dente. O nome é livre;
+o app sugere alguns, sem idade esperada, e mostra a idade do bebê naquele dia.
+_Evite_: marco esperado, atraso, desenvolvimento normal
 
 ## Ver os registros
 
@@ -139,9 +183,27 @@ O sono mais longo entre um dormiu e o acordou seguinte, contado no dia em que co
 de noite contam juntos.
 _Evite_: noite inteira, soneca
 
+**Os maiores sonos e o que veio antes**:
+Os 3 sonos mais longos dos 7 dias do painel, cada um com a última mamada e o último cocô registrados
+antes de dormir. Só põe lado a lado; não diz o que fez o bebê dormir mais.
+_Evite_: causa, relação, correlação, análise do sono
+
+**Resumo do mês**:
+A aba Mês: os totais do mês atual (até agora) ou do anterior, inteiro. Mamadas, leite na mamadeira,
+tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que
+foi registrado.
+_Evite_: relatório, balanço, desempenho
+
+**Resumo para mandar**:
+O texto com os totais da semana (no fim do painel da semana) ou do mês, que um membro compartilha
+pelo WhatsApp ou copia. Segue os botões da família: sem Ordenha ligada, não fala de ordenha; os
+cuidados ligados entram. Sintomas e vômito ficam de fora. Termina com um parabéns a quem cuida do
+bebê, sem avaliar o bebê. Só sai do Caderninho quando alguém compartilha.
+_Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Caderninho)
+
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
-escolhido é o último dos 7.
+escolhido é o último dos 7; no resumo do mês, escolhe o mês (o atual ou o anterior).
 _Evite_: agenda
 
 ## Conversa com quem cuida do app

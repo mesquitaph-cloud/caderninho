@@ -1,8 +1,10 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
-import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
-import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
-import { weekHtml } from './week.js';
+import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
+import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE } from './util.js';
+import { weekHtml, dayLine } from './week.js';
+import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
+import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -16,9 +18,16 @@ const st = {
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
-  view: 'day',                 // 'day' (linha do tempo) ou 'week' (painel da semana)
+  weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
+  growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
+  settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
+  settingsOk: true,            // falso se não deu para carregar (por exemplo, antes do 008)
+  settingsCh: null,
+  view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
+  month: 0,                    // primeiro dia do mês do resumo (0 = o mês atual)
+  shareText: '',               // o resumo da semana ou do mês aberto, pronto para compartilhar
   show: { sleep: true, feed: true, diaper: true, pump: true },   // filtro de "Como foram os dias"
   metric: 'sleep',             // o que aparece em "Dia a dia"
   channel: null,
@@ -47,12 +56,22 @@ async function boot() {
   const tok = new URLSearchParams(location.search).get('convite');
   if (tok) { lsSet('cad-invite', tok); history.replaceState(null, '', '/'); }
 
+  // Voltou do Google sem entrar (cancelou ou deu erro): o endereço traz "#error=...".
+  const googleFailed = /[#&]error/.test(location.hash);
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { show('scrLogin'); return; }
+  if (!session) {
+    if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errGoogle', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
+    show('scrLogin'); return;
+  }
   st.user = session.user;
 
   const { data: prof } = await sb.from('profiles').select('id,display_name').eq('id', st.user.id).maybeSingle();
-  if (!prof) { show('scrName'); $('nameIn').focus(); return; }
+  if (!prof) {
+    // Quem entrou pelo Google já vem com o nome; dá para trocar antes de continuar.
+    const meta = st.user.user_metadata || {};
+    if (!$('nameIn').value) $('nameIn').value = String(meta.full_name || meta.name || '').trim().slice(0, 40);
+    show('scrName'); $('nameIn').focus(); return;
+  }
   st.profile = prof; st.names[prof.id] = prof.display_name;
 
   const inv = lsGet('cad-invite');
@@ -94,6 +113,14 @@ $('fCode').addEventListener('submit', async e => {
   show('scrLoading'); boot();
 });
 $('backEmail').onclick = () => { $('fCode').hidden = true; $('fEmail').hidden = false; };
+// Entrar com Google: sai do app para o Google e volta para cá já com a sessão (o convite, se houver,
+// ficou guardado no celular). A mesma pessoa, com o mesmo e-mail, cai na mesma conta do código.
+$('sso').hidden = !GOOGLE_LOGIN;
+$('googleBtn').onclick = async () => {
+  err('errGoogle'); busy($('googleBtn'), true);
+  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/' } });
+  if (error) { busy($('googleBtn'), false); err('errGoogle', 'Não foi possível abrir o Google. Confira a conexão e tente de novo.'); }
+};
 
 /* ---------- nome de exibição ---------- */
 $('fName').addEventListener('submit', async e => {
@@ -155,7 +182,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await Promise.all([loadEntries(), loadMeds()]);
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadSettings(fid)]);
   show('scrMain'); render();
 }
 
@@ -169,7 +196,8 @@ async function loadNames(ids) {
 async function loadEntries() {
   st.entries = new Map();
   if (!st.baby) return;
-  const since = new Date(startOfDay(Date.now() - KEEP_DAYS * DAY)).toISOString();
+  // Os últimos 60 dias e, para o resumo do mês anterior sair inteiro, desde o dia 1º dele.
+  const since = new Date(Math.min(startOfDay(Date.now() - KEEP_DAYS * DAY), prevMonth())).toISOString();
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb.from('entries').select('*').eq('baby_id', st.baby.id)
       .gte('at', since).order('at').range(from, from + 999);
@@ -188,8 +216,31 @@ async function loadMeds() {
   if (error) return toast('Não foi possível carregar os remédios.');
   st.meds = data;
 }
+async function loadGrowth() {
+  st.weights = []; st.milestones = [];
+  if (!st.baby) return;
+  const [w, m] = await Promise.all([sb.from('weights').select('*').eq('baby_id', st.baby.id),
+                                    sb.from('milestones').select('*').eq('baby_id', st.baby.id)]);
+  st.growthOk = !w.error && !m.error;
+  st.weights = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
+}
+// Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
+// dos registros poderia derrubar a sincronização de tudo.
+async function loadSettings(fid) {
+  const { data, error } = await sb.from('family_settings').select('hidden_kinds').eq('family_id', fid).maybeSingle();
+  st.settingsOk = !error;
+  st.settings = { hidden: data?.hidden_kinds || [] };
+  if (st.settingsCh) { sb.removeChannel(st.settingsCh); st.settingsCh = null; }
+  if (error) return;
+  st.settingsCh = sb.channel('botoes-' + fid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'family_settings', filter: 'family_id=eq.' + fid }, p => {
+      if (p.new?.family_id !== st.family?.id) return;
+      st.settings = { hidden: p.new.hidden_kinds || [] }; refresh();
+    })
+    .subscribe();
+}
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
-function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
+function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } else if (S.mode === 'buttons') { render(); drawButtons(); } }
 
 function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
@@ -212,6 +263,10 @@ function subscribe(fid) {
 const sortedEntries = () => [...st.entries.values()].sort((a, b) => a.t - b.t);
 // Primeiro dia que dá para ver: o app carrega os últimos 60 dias.
 const firstDay = () => addDays(startOfDay(Date.now()), -(KEEP_DAYS - 1));
+// Resumo do mês: o mês atual e o anterior.
+const monthStart = (t, n = 0) => { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth() + n, 1).getTime(); };
+const curMonth = () => monthStart(Date.now()), prevMonth = () => monthStart(Date.now(), -1);
+const clampMonth = t => Math.min(curMonth(), Math.max(monthStart(t), prevMonth()));
 // Última mamada em que marcaram o peito (no banco, só a mamada no peito tem peito marcado).
 const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
@@ -220,7 +275,8 @@ function render() {
   const evs = sortedEntries(), now = Date.now(), b = st.baby;
   $('babyName').textContent = b ? b.name : 'Sem bebê';
   $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
-  $('babyAge').textContent = b ? ageText(b.birth_date) : 'toque para cadastrar';
+  $('babyAge').textContent = !b ? 'toque para cadastrar'
+    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso e marcos';
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
@@ -230,21 +286,30 @@ function render() {
   const { out: intervals, open } = sleepIntervals(evs);
   $('sleepBanner').hidden = open === null;
   if (open !== null) $('sleepFor').textContent = dur(now - open);
-  const lf = last(['feed']), lw = last(['wake']), ld = last(['diaper']), lp = last(['pump']);
-  $('subFeed').textContent = lf ? ago(lf.t) : 'sem registro';
-  $('subPump').textContent = lp ? ago(lp.t) : 'sem registro';
-  $('subSleep').textContent = open !== null ? 'dormindo' : lw ? 'acordou ' + ago(lw.t) : 'sem registro';
-  $('subDiaper').textContent = ld ? 'troca ' + ago(ld.t) : 'sem registro';
-  const vToday = evs.filter(e => e.kind === 'vomit' && e.t >= startOfDay(now)).length;
-  $('subVomit').textContent = vToday ? vToday + ' hoje' : 'nenhum hoje';
-  $('subMed').textContent = medSub();
+  renderGrid(last, open, now);
   renderMeds();
 
-  const today = startOfDay(now), week = st.view === 'week';
-  $('tabDay').setAttribute('aria-selected', !week); $('tabWeek').setAttribute('aria-selected', week);
-  $('dayView').hidden = week; $('weekView').hidden = !week;
-  $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : 'Dia anterior');
-  $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : 'Próximo dia');
+  const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
+  $('tabDay').setAttribute('aria-selected', st.view === 'day'); $('tabWeek').setAttribute('aria-selected', week); $('tabMonth').setAttribute('aria-selected', month);
+  $('dayView').hidden = st.view !== 'day'; $('weekView').hidden = !week; $('monthView').hidden = !month;
+  $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : month ? 'Mês anterior' : 'Dia anterior');
+  $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : month ? 'Próximo mês' : 'Próximo dia');
+  // O resumo segue os botões da família (sem Ordenha ligada, não fala de ordenha).
+  const sleep = { out: intervals, open }, logs = { weights: st.weights, milestones: st.milestones, on: isOn };
+  if (month) {
+    st.month = clampMonth(st.month || now);
+    const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
+    const title = MESES_L[d.getMonth()] + ' ' + d.getFullYear();
+    $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
+    $('nextDay').disabled = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
+    if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
+    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
+    const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
+    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês' }) : '';
+    $('monthView').innerHTML = monthHtml(s, { heading, cap: (partial ? 'O mês ainda não terminou. ' : '') + 'Só soma o que foi registrado.' })
+      + (s.any ? shareHtml(st.shareText) : '');
+    return;
+  }
   if (week) {
     // Os 7 dias ficam dentro do que o app carrega.
     st.weekEnd = Math.min(today, Math.max(st.weekEnd, addDays(firstDay(), 6)));
@@ -252,8 +317,12 @@ function render() {
     $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
     $('nextDay').disabled = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
+    // No fim do painel, o resumo destes 7 dias pronto para mandar.
+    const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
+    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana' }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep: { out: intervals, open }, now, show: st.show, metric: st.metric });
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric })
+        + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
   }
 
@@ -263,39 +332,92 @@ function render() {
   $('prevDay').disabled = d0 <= firstDay();
 
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
-  const feeds = day.filter(e => e.kind === 'feed'), ml = feeds.reduce((s, e) => s + (e.ml || 0), 0);
-  const breastMin = feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0);
-  const pumps = day.filter(e => e.kind === 'pump'), pumped = pumps.reduce((s, e) => s + e.ml, 0);
-  const all = intervals.slice(); if (open !== null) all.push([open, now]);
-  const slept = all.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, d1) - Math.max(a, d0)), 0);
-  const dia = day.filter(e => e.kind === 'diaper'), vom = day.filter(e => e.kind === 'vomit').length;
-  const md = day.filter(e => e.kind === 'med' && !e.skipped).length;
-  const chips = [['feed', feeds.length + (feeds.length === 1 ? ' mamada' : ' mamadas') + (ml ? ' · ' + ml + ' ml' : '') + (breastMin ? ' · ' + dur(breastMin * MIN) + ' no peito' : '')]];
-  const lb = lastBreast(evs);
-  if (lb && d0 === startOfDay(now)) chips.push(['feed', 'último peito: ' + SIDE_SHORT[lb.side] + ' · ' + ago(lb.t)]);
-  if (pumps.length) chips.push(['pump', pumps.length + (pumps.length === 1 ? ' ordenha' : ' ordenhas') + ' · ' + pumped + ' ml']);
-  chips.push(['sleep', dur(slept) + ' de sono'],
-    ['diaper', dia.length + (dia.length === 1 ? ' fralda' : ' fraldas') + ' · ' + dia.filter(e => e.pee).length + ' xixi · ' + dia.filter(e => e.poo).length + ' cocô']);
-  if (vom) chips.push(['vomit', vom + (vom === 1 ? ' vômito' : ' vômitos')]);
-  if (md) chips.push(['med', md + (md === 1 ? ' dose de remédio' : ' doses de remédio')]);
-  $('summary').innerHTML = chips.map(([k, t]) => `<span class="chip k-${k}">${esc(t)}</span>`).join('');
+  // Como foi o dia: numa linha só, como no painel da semana, com a contagem embaixo.
+  const sleeps = open === null ? intervals : [...intervals, [open, now]];
+  const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
+  $('summary').innerHTML = !b || (!day.length && !slept) ? ''
+    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, pumpOn: isOn('pump'), symptomOn: isOn('symptom') })}</div>`;
 
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
     : !day.length ? '<div class="empty">Nada registrado neste dia.</div>'
     : day.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
-        const sub = [esc(detail(e)), e.kind !== 'other' && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
+        const noteIsName = e.kind === 'other' || (e.kind === 'symptom' && e.symptom === 'outro');
+        const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
         return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
 
+/* ---------- botões da tela inicial ---------- */
+// Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
+// família. Três por linha; na última, Outros de um lado e Editar do outro. Sem nada salvo, todos aparecem.
+const BTN = {
+  feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
+  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'],
+  massage: ['Massagem', 'k-care'], bath: ['Banho', 'k-care'], nasal: ['Lavagem nasal', 'k-care'],
+};
+const FIXED = ['feed', 'sleep', 'diaper'], OPTIONAL = ['med', 'symptom', 'pump', 'massage', 'bath', 'nasal'];
+const isOn = k => !st.settings.hidden.includes(k);
+// O último sintoma de hoje, para o botão: "febre há 2h". Vômito conta como sintoma.
+function symptomSub(last, now) {
+  const e = last(['symptom', 'vomit']);
+  if (!e || e.t < startOfDay(now)) return 'nada hoje';
+  return (e.kind === 'vomit' ? 'vômito' : e.symptom === 'outro' ? 'outro' : (SYMPTOM[e.symptom] || 'sintoma').toLowerCase()) + ' ' + ago(e.t);
+}
+function renderGrid(last, open, now) {
+  const sub = k => {
+    const e = last([k === 'sleep' ? 'wake' : k]);
+    if (k === 'sleep') return open !== null ? 'dormindo' : e ? 'acordou ' + ago(e.t) : 'sem registro';
+    if (k === 'diaper') return e ? 'troca ' + ago(e.t) : 'sem registro';
+    if (k === 'med') return medSub();
+    if (k === 'symptom') return symptomSub(last, now);
+    return e ? ago(e.t) : 'sem registro';
+  };
+  // Sobra no fim: o último ocupa o espaço que falta na linha.
+  const ks = [...FIXED, ...OPTIONAL.filter(isOn)], r = ks.length % 3;
+  $('grid').innerHTML = ks.map((k, i) => {
+    const span = r && i === ks.length - 1 ? (r === 1 ? ' span3 row' : ' span2') : '';
+    return `<button class="act ${BTN[k][1]}${span}" data-k="${k}">${ICON[k]}<b>${BTN[k][0]}</b><span>${esc(sub(k))}</span></button>`;
+  }).join('')
+    + `<button class="act k-other span2 row" data-k="other">${ICON.other}<b>Outros</b><span>anotação livre</span></button>`
+    + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.gear}<b>Editar</b><span>botões</span></button>`;
+}
+
+// Editar: liga ou desliga os botões da família. Cada toque salva na hora, um de cada vez.
+function buttonsSheet() { S = { mode: 'buttons' }; drawButtons(); $('sheet').scrollTop = 0; }
+function drawButtons() {
+  let h = head('Botões da tela inicial') + '<p class="dim">Valem para toda a família.</p>';
+  if (!st.settingsOk) h += '<div class="soft">Não foi possível carregar os botões da família. Confira a conexão e abra de novo.</div>';
+  h += '<div class="sec"><h4>Sempre aparecem</h4><div class="li"><span>Mamada, Sono, Fralda <small>· e Outros</small></span></div></div>';
+  h += '<div class="sec"><h4>Escolha os outros</h4>' + OPTIONAL.map(k => { const on = isOn(k);
+    return `<button class="li tg" role="switch" aria-checked="${on}" data-act="tgBtn" data-val="${k}"${st.settingsOk ? '' : ' disabled'}><span>${BTN[k][0]}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`; }).join('');
+  if (!isOn('med') && st.meds.length) h += '<p class="dim">Os remédios programados continuam: o cartão aparece na hora da dose.</p>';
+  if (!isOn('symptom')) h += '<p class="dim">Sem Sintomas, o vômito também sai da tela inicial; os registros antigos continuam na linha do tempo.</p>';
+  h += '</div><button class="save" data-act="close">Pronto</button>';
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+let btnSave = Promise.resolve();
+function toggleBtn(k) {
+  const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => x !== k);
+  st.settings = { hidden }; render(); if (S?.mode === 'buttons') drawButtons();
+  btnSave = btnSave.then(async () => {
+    const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, hidden_kinds: st.settings.hidden }, { onConflict: 'family_id' });
+    if (!error) return;
+    toast('Não foi possível salvar. Confira a conexão.');
+    await loadSettings(st.family.id); render(); if (S?.mode === 'buttons') drawButtons();
+  });
+}
+
 /* ---------- gravar registros ---------- */
+// As colunas do sintoma só vão no sintoma: assim, se o 008 ainda não rodou, o resto continua salvando.
 function fields(ev) {
-  return { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
+  const f = { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
            side: ev.side ?? null, left_min: ev.left_min ?? null, right_min: ev.right_min ?? null,
            pee: ev.pee ?? null, poo: ev.poo ?? null, note: ev.note ?? null,
            medicine_id: ev.medicine_id ?? null, med_name: ev.med_name ?? null, med_amount: ev.med_amount ?? null,
            dose_at: ev.dose_at ?? null, skipped: ev.skipped ?? null };
+  if (ev.kind === 'symptom') Object.assign(f, { symptom: ev.symptom, temp_c: ev.temp_c ?? null, duration_min: ev.duration_min ?? null });
+  return f;
 }
 async function addEntry(ev) {
   const { data, error } = await sb.from('entries')
@@ -318,7 +440,12 @@ async function deleteEntry(id) {
 
 /* ---------- painel de registro ---------- */
 let S = null;   // estado do painel aberto (null = fechado)
-const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio' };
+const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio',
+                symptom:'Sintomas', massage:'Massagem', bath:'Banho', nasal:'Lavagem nasal' };
+// As opções do botão Sintomas, na ordem da tela. Vômito grava o registro de vômito de sempre.
+const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'], ['tosse', 'Tosse'],
+                      ['assadura', 'Assadura'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
+const withDuration = sym => sym === 'colica' || sym === 'choro';
 function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
 function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
@@ -345,12 +472,13 @@ function openEntry(k, edit) {
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false,
-        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '' };
+        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '',
+        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
   drawEntry();
 }
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
-  let h = head(S.edit ? 'Editar ' + TITLE[k].toLowerCase() : TITLE[k]);
+  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
     if (S.src === 'breast') {
@@ -364,10 +492,18 @@ function drawEntry() {
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
+  // Sintomas: o que aconteceu; a febre pode ter a temperatura, a cólica e o choro a duração.
+  if (k === 'symptom') {
+    const opts = S.edit ? SYMPTOM_OPTS.filter(([id]) => id !== 'vomito') : SYMPTOM_OPTS;
+    h += `<div><div class="lbl">O que aconteceu</div><div class="seg ${c}" style="background:none">${opts.map(([id, n]) => opt(n, S.sym === id, 'sym', id)).join('')}</div></div>`;
+    if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
+    if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
+  }
   h += `<div><div class="lbl">Horário</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
-  if (k !== 'other') h += `<input class="field" id="noteIn" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
+  if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
+  if (k === 'symptom') h += '<p class="dim">O Caderninho só anota o que a família marcar; não avalia nem orienta.</p>';
   if (S.edit) h += `<button class="del" data-act="del">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar registro'}</button>`;
   openPanel(h);
 }
@@ -387,7 +523,20 @@ async function saveEntry(btn) {
   if ((k === 'pump' || (k === 'feed' && S.src === 'bottle')) && +S.ml > 1000) { S.err = 'No máximo 1000 ml.'; return drawEntry(); }
   const okMin = v => v === '' || (+v >= 1 && +v <= 180);
   if (k === 'feed' && S.src === 'breast' && !(okMin(S.lmin) && okMin(S.rmin))) { S.err = 'O tempo em cada peito vai de 1 a 180 min.'; return drawEntry(); }
-  const ev = { kind: k === 'sleep' ? S.sk : k, t: computeT() };
+  const temp = parseFloat(String(S.temp).replace(',', '.')), dmin = +S.dmin;
+  if (k === 'symptom') {
+    if (!S.sym) { S.err = 'Escolha o que aconteceu.'; return drawEntry(); }
+    if (S.sym === 'outro' && !S.note.trim()) { S.err = 'Escreva o que aconteceu.'; return drawEntry(); }
+    if (S.sym === 'febre' && S.temp !== '' && !(temp >= 34 && temp <= 43)) { S.err = 'A temperatura vai de 34 a 43 °C. Ex.: 37,8'; return drawEntry(); }
+    if (withDuration(S.sym) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'A duração vai de 1 a 600 minutos.'; return drawEntry(); }
+  }
+  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre.
+  const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k, t: computeT() };
+  if (ev.kind === 'symptom') {
+    ev.symptom = S.sym;
+    if (S.sym === 'febre' && S.temp !== '') ev.temp_c = Math.round(temp * 10) / 10;
+    if (withDuration(S.sym) && S.dmin !== '') ev.duration_min = dmin;
+  }
   const side = S.l && S.r ? 'both' : S.l ? 'left' : S.r ? 'right' : null;
   if (k === 'feed') {
     ev.src = S.src;
@@ -406,11 +555,13 @@ async function saveEntry(btn) {
 }
 
 /* ---------- calendário ---------- */
-// No modo Semana, o dia escolhido é o último dos 7.
-const chosenDay = () => st.view === 'week' ? st.weekEnd : st.viewDay;
+// No modo Semana, o dia escolhido é o último dos 7; no Mês, o último dia do mês que já chegou.
+const chosenDay = () => st.view === 'week' ? st.weekEnd
+  : st.view === 'month' ? Math.min(startOfDay(Date.now()), addDays(monthStart(st.month || Date.now(), 1), -1)) : st.viewDay;
 function calSheet() { const d = new Date(chosenDay()); S = { mode: 'cal', y: d.getFullYear(), m: d.getMonth() }; drawCal(); }
 function drawCal() {
-  const today = startOfDay(Date.now()), min = firstDay(), week = st.view === 'week', sel = chosenDay(), from = week ? addDays(sel, -6) : sel;
+  const today = startOfDay(Date.now()), week = st.view === 'week', month = st.view === 'month', sel = chosenDay();
+  const min = month ? Math.min(firstDay(), prevMonth()) : firstDay(), from = week ? addDays(sel, -6) : month ? monthStart(sel) : sel;
   const has = new Set([...st.entries.values()].map(e => startOfDay(e.t)));
   const ym = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); }, cur = S.y * 12 + S.m;
   const first = new Date(S.y, S.m, 1), days = new Date(S.y, S.m + 1, 0).getDate();
@@ -421,23 +572,23 @@ function drawCal() {
     cells += `<button class="${cls}" data-act="pickDay" data-val="${d0}"${off ? ' disabled' : ''}${d0 === sel ? ' aria-current="date"' : ''} aria-label="${esc(dayTitle(d0))}${has.has(d0) ? ', com registros' : ''}">${dd}</button>`;
   }
   const arrow = (dir, ok, name, path) => `<button data-act="mon" data-val="${dir}"${ok ? '' : ' disabled'} aria-label="${name}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="${path}"/></svg></button>`;
-  openPanel(head(week ? 'Escolher semana' : 'Escolher dia') +
+  openPanel(head(week ? 'Escolher semana' : month ? 'Escolher mês' : 'Escolher dia') +
     `<div class="mhead">${arrow(-1, cur > ym(min), 'Mês anterior', 'M15 5l-7 7 7 7')}<b>${MESES_L[S.m]} ${S.y}</b>${arrow(1, cur < ym(today), 'Próximo mês', 'M9 5l7 7-7 7')}</div>
     <div class="wdays" aria-hidden="true">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
     <div class="cal">${cells}</div>
     <div class="calkey"><i></i>dia com registros · o Caderninho mostra os últimos ${KEEP_DAYS} dias</div>
-    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : ''}
+    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : month ? '<p class="dim">O resumo mostra o mês atual e o anterior.</p>' : ''}
     <button class="ghost" data-act="pickDay" data-val="${today}">Ir para hoje</button>`);
 }
 function calAction(a, v) {
   if (a === 'mon') { const d = new Date(S.y, S.m + (+v), 1); S.y = d.getFullYear(); S.m = d.getMonth(); return drawCal(); }
-  if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else st.viewDay = +v; closeSheet(); }
+  if (a === 'pickDay') { if (st.view === 'week') st.weekEnd = +v; else if (st.view === 'month') st.month = clampMonth(+v); else st.viewDay = +v; closeSheet(); }
 }
 
 /* ---------- remédios ---------- */
 // A família programa o remédio e os horários; o Caderninho só lembra. Cada horário do dia é uma dose,
 // identificada por "remédio@horário" (ms). Marcar ou pular a dose grava um registro de remédio.
-const SOON = 30 * MIN;   // meia hora antes, a próxima dose ganha a caixinha na tela inicial
+const SOON = HOUR;   // uma hora antes, a dose aparece na tela inicial com a caixinha
 const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
 const EVERY = [4, 6, 8, 12];
 const MED_RULE = '<p class="dim">Só a família programa. O Caderninho lembra os horários; não sugere remédio nem dose.</p>';
@@ -481,34 +632,41 @@ function doseStatus(d) {
     : d.state === 'soon' ? 'daqui a ' + dur(d.due - Date.now()) : '';
 }
 // Uma dose. Na lista completa (all), toda dose tem caixinha; na tela inicial, só perto da hora.
+// Perto da hora ou atrasada, ganha também o "Pular", para quando não deu.
 function doseRow(d, { all = false, tag = '' } = {}) {
   const m = d.m, name = esc(m.name), st2 = [tag, doseStatus(d)].filter(Boolean).join(' · ');
-  const can = d.state === 'soon' || d.state === 'late' || (all && d.state === 'later');
+  const hot = d.state === 'soon' || d.state === 'late', can = hot || (all && d.state === 'later');
   const ck = can
       ? `<button class="ck" role="checkbox" aria-checked="false" data-act="check" data-val="${d.id}" aria-label="Marcar ${name} das ${d.hhmm} como dada">${CHECK}</button>`
     : d.e
       ? `<button class="ck" role="checkbox" aria-checked="true" data-act="dose" data-val="${d.id}" aria-label="${name} das ${d.hhmm}, ${esc(st2)}. Ver ou desmarcar">${d.state === 'skip' ? DASH : CHECK}</button>`
     : '<span class="ck" aria-hidden="true"></span>';
-  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button></div>`;
+  const skip = hot ? `<button class="skipbtn" data-act="skipDose" data-val="${d.id}" aria-label="Pular ${name} das ${d.hhmm}: não foi dada">Pular</button>` : '';
+  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button>${skip}</div>`;
 }
 
-// Tela inicial: só a última dose (a mais recente que já passou da hora) e a próxima, nas últimas e
-// próximas 24 horas. Uma dose de hoje mais antiga que ficou sem marcar vira um aviso para a lista.
+// Tela inicial: só o que precisa de alguém. De cada remédio, a dose mais recente que já está a uma
+// hora ou menos do horário, se ninguém marcou nem pulou; dose marcada sai do cartão. Uma dose de hoje
+// mais antiga que ficou sem marcar vira um aviso para a lista.
+function homeDoses() {
+  const now = Date.now(), ds = dosesFrom(now - DAY, now + SOON + 1), cur = new Map();
+  for (const d of ds) cur.set(d.m.id, d);   // em ordem de horário: fica a mais recente de cada remédio
+  const shown = ds.filter(d => cur.get(d.m.id) === d && (d.state === 'soon' || d.state === 'late'));
+  const missed = ds.filter(d => d.state === 'late' && !shown.includes(d) && !dayWord(d.due)).length;
+  return { shown, missed };
+}
 function renderMeds() {
-  const box = $('meds'), now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
-  box.hidden = !ds.length; if (!ds.length) return;
-  const past = ds.filter(d => d.due <= now), lastT = past.at(-1)?.due, nextT = ds.find(d => d.due > now)?.due;
-  const shown = ds.filter(d => d.due === lastT || d.due === nextT);
-  const missed = past.filter(d => d.due !== lastT && d.state === 'late' && !dayWord(d.due)).length;
-  const hot = shown.some(d => d.state === 'soon' || d.state === 'late'), n = todayDoses().length;
-  box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${hot ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
-    <div class="doses">${shown.map(d => doseRow(d, { tag: [d.due <= now ? 'última dose' : 'próxima dose', dayWord(d.due)].filter(Boolean).join(' · ') })).join('')}</div>
-    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? 'Mais 1 dose de hoje sem marcar' : 'Mais ' + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
+  const box = $('meds'), { shown, missed } = homeDoses();
+  box.hidden = !shown.length && !missed; if (box.hidden) return;
+  const n = todayDoses().length, more = shown.length ? 'Mais ' : '';
+  box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${shown.length ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
+    ${shown.length ? `<div class="doses">${shown.map(d => doseRow(d, { tag: dayWord(d.due) })).join('')}</div>` : ''}
+    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? more + '1 dose de hoje sem marcar' : more + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
 }
 function medSub() {
-  const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
-  const soon = ds.find(d => d.state === 'soon'), next = ds.find(d => d.due > now);
-  if (ds.some(d => d.state === 'late')) return 'dose sem marcar';
+  const now = Date.now(), { shown, missed } = homeDoses(), next = dosesFrom(now, now + DAY).find(d => !d.e);
+  if (missed || shown.some(d => d.state === 'late')) return 'dose sem marcar';
+  const soon = shown.find(d => d.state === 'soon');
   if (soon) return 'daqui a ' + dur(soon.due - now);
   if (next) return 'próxima ' + (dayWord(next.due) ? dayWord(next.due) + ' ' : '') + 'às ' + next.hhmm;
   return st.meds.length ? 'remédios e horários' : 'programar horários';
@@ -539,13 +697,24 @@ function medCard(m) {
     if (ask) sub2 = `A última foi há ${dur(Date.now() - last.t)}; vocês programaram de ${m.every_hours} em ${m.every_hours} horas.`;
     else if (next) sub2 = 'Pode dar de novo a partir das ' + hm(next) + (dayWord(next) ? ' de ' + dayWord(next) : '') + '.';
   } else {
-    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('');
+    const nd = nowDose(m), ask = nd && S.nowAsk === m.id;
+    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')
+      + (nd ? `<button class="pillbtn" data-act="giveNow" data-val="${esc(m.id)}">${ask ? 'Marcar a das ' + nd.hhmm : 'Dei agora'}</button>` : '');
     sub = (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
       + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
+    if (ask) sub2 = `A próxima dose é às ${nd.hhmm}${dayWord(nd.due) ? ' de ' + dayWord(nd.due) : ''}. Toque de novo para marcar como dada agora.`;
   }
   return `<div class="mcard"><div class="mtop"><div><b>${esc(m.name)}</b>${m.amount ? `<span class="mq">${esc(m.amount)}</span>` : ''}</div>
     <button data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}">${ICON.pencil}Editar</button></div>
     <div class="mtimes">${times}</div><div class="msub">${esc(sub)}</div>${sub2 ? `<div class="msub wait">${esc(sub2)}</div>` : ''}</div>`;
+}
+
+// "Dei agora" no remédio de horário: se a dose mais recente que já passou da hora ficou sem marcar,
+// é ela; senão, adianta a próxima sem marcar. Nulo se não há dose nas próximas 24 horas.
+function nowDose(m) {
+  const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY).filter(d => d.m.id === m.id);
+  const cur = ds.findLast(d => d.due <= now);
+  return cur && !cur.e ? cur : ds.find(d => d.due > now && !d.e) || null;
 }
 
 // Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega.
@@ -555,7 +724,9 @@ async function giveDose(id, t, note, skipped) {
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null });
   if (!row) return;
   if (S?.mode === 'meds') drawMeds();
-  toast(skipped ? 'Dose pulada' : 'Dose de ' + d.m.name + ' marcada às ' + hm(t), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+  const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
+    : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
+  toast(msg, async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
 }
 async function prnNow(mid) {
   const m = st.meds.find(x => x.id === mid); if (!m) return;
@@ -619,7 +790,7 @@ function drawMedForm() {
       <div class="hint" style="margin-top:8px">${S.start === today ? 'Começa hoje' : 'Começou ' + dayTitle(S.start).toLowerCase()}. Último dia: ${dayTitle(addDays(S.start, S.days - 1)).toLowerCase()}.</div>`;
     h += '</div>';
   }
-  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Meia hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar. Fica assim até alguém marcar.'}</span></div>`;
+  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Uma hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar e o “Pular”. Fica assim até alguém marcar ou pular.'}</span></div>`;
   h += '<p class="dim">O Caderninho só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveMed">Salvar</button>';
@@ -673,7 +844,13 @@ async function medAction(a, v, btn) {
       if (m && prnNext(m) && S.prnAsk !== v) { S.prnAsk = v; return drawMeds(); }
       S.prnAsk = null; return prnNow(v);
     }
+    if (a === 'giveNow') {
+      const m = st.meds.find(x => x.id === v), d = m && nowDose(m); if (!d) return;
+      if (d.due - Date.now() > SOON && S.nowAsk !== v) { S.nowAsk = v; return drawMeds(); }
+      S.nowAsk = null; return giveDose(d.id, Date.now());
+    }
     if (a === 'check') return giveDose(v, Date.now());
+    if (a === 'skipDose') return giveDose(v, Date.now(), null, true);
     if (a === 'dose') return doseSheet(v, 'meds');
     return;
   }
@@ -703,9 +880,121 @@ async function medAction(a, v, btn) {
   S.err = ''; drawMedForm();
 }
 
+/* ---------- peso e marcos ---------- */
+// A tela do bebê (toque no nome, no alto): peso, marcos e nome e nascimento. Só guarda o que a família
+// anota; não compara com curva de crescimento nem com a idade de outros bebês.
+const LOG = {
+  weight:    { table: 'weights',    list: 'weights',    day: 'measured_on', sort: sortWeights },
+  milestone: { table: 'milestones', list: 'milestones', day: 'happened_on', sort: sortMilestones },
+};
+function babyHub() { S = { mode: 'hub' }; drawHub(); $('sheet').scrollTop = 0; }
+function drawHub() {
+  const b = st.baby, ws = st.weights, ms = st.milestones;
+  const sub = [ageText(b.birth_date), b.birth_date ? 'nasceu em ' + fullDate(b.birth_date) : ''].filter(Boolean).join(' · ');
+  let h = `<div class="grab"></div><div class="shead"><h3>${esc(b.name)}${sub ? `<span class="ps">${esc(sub)}</span>` : ''}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
+  else {
+    h += '<div class="sec"><h4>Peso</h4>';
+    if (ws.length >= 2) h += `<div class="svgbox">${weightChart(ws)}</div>`;
+    h += ws.length
+      ? `<div class="recs">${ws.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(kg(w.grams))}</span></button>`).join('')}</div>`
+      : '<div class="soft">Anote o peso de cada consulta ou pesagem. Com dois ou mais, aparece o gráfico.</div>';
+    h += '<button class="ghost" data-act="newWeight">+ Anotar peso</button></div>';
+    h += '<div class="sec"><h4>Marcos</h4>';
+    h += ms.length
+      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
+      : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
+    h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
+  }
+  h += `<div class="sec"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBabyHub">Editar</button></div></div>`;
+  h += '<p class="dim">O Caderninho só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+
+// Anotar ou editar um peso ou um marco.
+function logForm(kind, row) {
+  const today = localDate(Date.now());
+  S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '', confirmDel: false,
+        kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '', title: row?.title || '' };
+  drawLog(); $('sheet').scrollTop = 0;
+}
+function drawLog() {
+  const w = S.mode === 'weight', b = st.baby, today = localDate(Date.now());
+  let h = head(S.edit ? (w ? 'Editar peso' : 'Editar marco') : (w ? 'Anotar peso' : 'Anotar marco'));
+  if (w) h += `<div><label class="lbl" for="lgKg">Peso</label><div class="ml"><input id="lgKg" inputmode="decimal" value="${esc(S.kg)}" placeholder="0,000" autocomplete="off"><em>kg</em></div></div>`;
+  else {
+    const sugs = MILESTONES.filter(t => t !== S.title && !st.milestones.some(m => m.title === t && m.id !== S.edit?.id));
+    h += `<div><label class="lbl" for="lgTitle">O que aconteceu</label><input class="field" id="lgTitle" maxlength="60" placeholder="Ex.: Sorriu pela primeira vez" value="${esc(S.title)}">
+      ${sugs.length ? `<div class="sugs">${sugs.map(t => `<button class="small" data-act="sug" data-val="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>`;
+  }
+  h += `<div><label class="lbl" for="lgDate">${w ? 'Dia da pesagem' : 'Dia'}</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
+    <div class="hint" id="lgAge" style="margin:6px 0 0">${esc(ageOn(b.birth_date, S.date))}</div></div>`;
+  h += w ? `<input class="field" id="lgNote" maxlength="100" placeholder="Onde pesou (opcional). Ex.: pediatra" value="${esc(S.note)}">`
+         : `<input class="field" id="lgNote" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
+  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
+  h += '<button class="save" data-act="saveLog">Salvar</button>';
+  if (S.edit) h += `<button class="del" data-act="delLog">${S.confirmDel ? 'Toque de novo para apagar' : w ? 'Apagar este peso' : 'Apagar este marco'}</button>`;
+  openPanel(h);
+}
+function logInput(el) {
+  if (el.id === 'lgKg') S.kg = el.value;
+  else if (el.id === 'lgTitle') S.title = el.value;
+  else if (el.id === 'lgNote') S.note = el.value;
+  else if (el.id === 'lgDate') { S.date = el.value; $('lgAge').textContent = ageOn(st.baby.birth_date, S.date); }
+  if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
+}
+async function saveLog(btn) {
+  const kind = S.mode, L = LOG[kind], b = st.baby, today = localDate(Date.now());
+  const fail = msg => { S.err = msg; drawLog(); };
+  const row = { [L.day]: S.date, note: S.note.trim() || null };
+  if (kind === 'weight') {
+    const g = parseKg(S.kg);
+    if (!S.kg.trim()) return fail('Escreva o peso.');
+    if (!g || g < 500 || g > 30000) return fail('Confira o peso: de 0,5 a 30 kg. Ex.: 5,2');
+    row.grams = g;
+  } else {
+    if (!S.title.trim()) return fail('Escreva o que aconteceu.');
+    row.title = S.title.trim().slice(0, 60);
+  }
+  const o = kind === 'weight' ? 'O dia da pesagem' : 'O dia';
+  if (!S.date) return fail(kind === 'weight' ? 'Escolha o dia da pesagem.' : 'Escolha o dia.');
+  if (S.date > today) return fail(o + ' não pode ser depois de hoje.');
+  if (b.birth_date && S.date < b.birth_date) return fail(o + ' não pode ser antes do nascimento.');
+  busy(btn, true);
+  const q = S.edit ? sb.from(L.table).update(row).eq('id', S.edit.id)
+                   : sb.from(L.table).insert({ family_id: st.family.id, baby_id: b.id, ...row });
+  const { data, error } = await q.select().single();
+  busy(btn, false);
+  if (error) return fail('Não foi possível salvar. Confira a conexão e tente de novo.');
+  st[L.list] = L.sort([...st[L.list].filter(x => x.id !== data.id), data]);
+  render(); babyHub(); toast('Salvo');
+}
+async function delLog(btn) {
+  const L = LOG[S.mode], id = S.edit.id;
+  busy(btn, true);
+  const { error } = await sb.from(L.table).delete().eq('id', id);
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawLog(); }
+  st[L.list] = st[L.list].filter(x => x.id !== id);
+  render(); babyHub(); toast('Apagado');
+}
+function growthAction(a, v, btn) {
+  if (S.mode === 'hub') {
+    if (a === 'newWeight') return logForm('weight');
+    if (a === 'newMilestone') return logForm('milestone');
+    if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
+    if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
+    if (a === 'editBabyHub') return babySheet(st.baby, 'hub');
+    return;
+  }
+  if (a === 'sug') { S.title = v; S.err = ''; return drawLog(); }
+  if (a === 'saveLog') return saveLog(btn);
+  if (a === 'delLog') { if (S.confirmDel) return delLog(btn); S.confirmDel = true; return drawLog(); }
+}
+
 /* ---------- bebê e nome ---------- */
-function babySheet(b) {
-  S = { mode: 'baby', b };
+function babySheet(b, back) {
+  S = { mode: 'baby', b, back };
   openPanel(head(b ? 'Editar bebê' : 'Adicionar bebê') +
     `<div><div class="lbl">Nome do bebê</div><input class="field" id="bName" maxlength="40" value="${esc(b?.name || '')}" placeholder="Marina"></div>
      <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="bBirth" type="date" value="${esc(b?.birth_date || '')}"></div>
@@ -722,12 +1011,14 @@ async function saveBaby(btn) {
   if (error) return err('bErr', errMsg(error));
   const i = st.babies.findIndex(x => x.id === data.id);
   if (i >= 0) st.babies[i] = data; else st.babies.push(data);
+  const back = S.back;
   if (!S.b || st.baby?.id === data.id) await selectBaby(data.id);
-  closeSheet(); toast('Salvo');
+  if (back === 'hub') babyHub(); else closeSheet();
+  toast('Salvo');
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
-  await Promise.all([loadEntries(), loadMeds()]); render();
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth()]); render();
 }
 function renameSheet() {
   S = { mode: 'rename' };
@@ -863,10 +1154,14 @@ $('sheetIn').addEventListener('input', e => {
     return;
   }
   if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
+  if (S?.mode === 'weight' || S?.mode === 'milestone') return logInput(e.target);
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
   if (id === 'timeIn') S.time = e.target.value;
+  if (id === 'tempIn') S.temp = e.target.value.replace(/[^\d,.]/g, '').slice(0, 4);
+  if (id === 'durIn') S.dmin = e.target.value.replace(/\D/g, '').slice(0, 3);
+  if ((id === 'tempIn' || id === 'durIn') && S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
   if (id === 'mlIn') S.ml = e.target.value.replace(/\D/g, '').slice(0, 4);
   if (id === 'min-l' || id === 'min-r') {
     const key = id.slice(4); S[key + 'min'] = e.target.value.replace(/\D/g, '').slice(0, 3);
@@ -883,6 +1178,8 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'menu') return menuAction(a, v, b);
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
+  if (S.mode === 'hub' || S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
+  if (S.mode === 'buttons') { if (a === 'tgBtn') toggleBtn(v); return; }
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -890,6 +1187,7 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'pick') { S[v] = !S[v]; if (!S[v]) S[v + 'min'] = ''; }
   else if (a === 'minstep') { const [key, d] = v.split(':'); S[key + 'min'] = Math.min(180, Math.max(0, (+S[key + 'min'] || 0) + (+d))) || ''; if (S[key + 'min']) S[key] = true; }
   else if (a === 'sk') S.sk = v;
+  else if (a === 'sym') { S.sym = v; if (v !== 'febre') S.temp = ''; if (!withDuration(v)) S.dmin = ''; }
   else if (a === 'pee' || a === 'poo') S[a] = !S[a];
   else if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
   else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
@@ -903,7 +1201,11 @@ $('sheetIn').addEventListener('click', async e => {
 
 document.querySelectorAll('[data-i]').forEach(el => el.outerHTML = ICON[el.dataset.i]);
 $('menuBtn').innerHTML = ICON.menu;
-document.querySelectorAll('.act').forEach(b => b.addEventListener('click', () => openEntry(b.dataset.k)));
+$('grid').addEventListener('click', e => {
+  const b = e.target.closest('[data-k]'); if (!b) return;
+  if (b.dataset.k === 'edit') return buttonsSheet();
+  openEntry(b.dataset.k);
+});
 $('wakeBtn').onclick = async () => {
   const row = await addEntry({ kind: 'wake', t: Date.now() });
   if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));
@@ -911,37 +1213,59 @@ $('wakeBtn').onclick = async () => {
 $('meds').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   if (b.dataset.act === 'check') return giveDose(b.dataset.val, Date.now());
+  if (b.dataset.act === 'skipDose') return giveDose(b.dataset.val, Date.now(), null, true);
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
 });
-$('babyBtn').onclick = () => babySheet(st.baby);
+$('babyBtn').onclick = () => st.baby ? babyHub() : babySheet(null);
 $('menuBtn').onclick = menuSheet;
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
+// Tocar numa marca do gráfico do dia abre o registro, como na linha do tempo.
+$('summary').addEventListener('click', e => {
+  const m = e.target.closest('[data-id]'); if (!m) return;
+  const ev = st.entries.get(m.dataset.id); if (ev) openEntry(ev.kind, ev);
+});
 $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
   const ev = st.entries.get(r.dataset.id); if (ev) openEntry(ev.kind, ev);
 });
-// Setas: um dia na linha do tempo, 7 dias no painel.
-$('prevDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, -7); else st.viewDay = addDays(st.viewDay, -1); render(); };
-$('nextDay').onclick = () => { if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, 7); else st.viewDay = addDays(st.viewDay, 1); render(); };
+// Setas: um dia na linha do tempo, 7 dias no painel, um mês no resumo.
+function step(n) {
+  if (st.view === 'week') st.weekEnd = addDays(st.weekEnd, 7 * n);
+  else if (st.view === 'month') st.month = clampMonth(monthStart(st.month || Date.now(), n));
+  else st.viewDay = addDays(st.viewDay, n);
+  render();
+}
+$('prevDay').onclick = () => step(-1);
+$('nextDay').onclick = () => step(1);
 $('dayTitle').onclick = calSheet;
 // Trocar de aba mantém o dia escolhido se ele estiver nos 7 dias do painel; senão, alinha os dois.
 const inWeek = d0 => d0 <= st.weekEnd && d0 > addDays(st.weekEnd, -7);
+// O Mês abre no mês do dia escolhido; voltar do Mês mantém o dia e a semana de antes.
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => {
-  if (b.dataset.view === st.view) return;
-  st.view = b.dataset.view;
-  if (!inWeek(st.viewDay)) { if (st.view === 'week') st.weekEnd = st.viewDay; else st.viewDay = st.weekEnd; }
-  render();
+  const to = b.dataset.view; if (to === st.view) return;
+  if (to === 'month') st.month = clampMonth(chosenDay());
+  else if (st.view !== 'month' && !inWeek(st.viewDay)) { if (to === 'week') st.weekEnd = st.viewDay; else st.viewDay = st.weekEnd; }
+  st.view = to; render();
 });
+// Compartilhar o resumo da semana ou do mês: pelo celular (WhatsApp, mensagem) ou copiando o texto.
+function shareReport(how) {
+  const text = st.shareText; if (!text) return;
+  if (how === 'share') return navigator.share({ text }).catch(() => {});
+  navigator.clipboard.writeText(text).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
+}
+$('monthView').addEventListener('click', e => { const sh = e.target.closest('[data-share]'); if (sh) shareReport(sh.dataset.share); });
 // Painel da semana: filtro, métrica e tocar num dia para abrir a linha do tempo dele.
 function openDay(d0) {
   st.viewDay = d0; st.view = 'day'; render();
   $('dayTitle').closest('.daynav').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 $('weekView').addEventListener('click', e => {
+  const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
   const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = !st.show[f.dataset.flt]; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
   const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
+  const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
 });
 $('weekView').addEventListener('keydown', e => {
   const r = e.target.closest('.dayrow');
@@ -952,7 +1276,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSh
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds()]).then(render);
+  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds(), loadGrowth()]).then(render);
 });
 setInterval(refresh, 30000);
 

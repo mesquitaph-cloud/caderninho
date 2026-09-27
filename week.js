@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia nem compara com outros bebês.
-import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS } from './util.js';
+import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 export const METRICS = {
@@ -59,6 +59,52 @@ function routineChart(all, sleeps, now, show) {
   return s + '</svg>';
 }
 
+// "Como foi o dia": o dia aberto numa linha só, com as mesmas marcas do painel da semana, um pouco
+// maiores, e os sintomas (vômito junto) num losango âmbar no alto. A contagem vai embaixo. Tocar numa
+// marca abre o registro. pumpOn/symptomOn: se a família usa esses botões.
+export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
+  const d1 = addDays(d0, 1), end = Math.min(d1, now), day = evs.filter(e => e.t >= d0 && e.t < d1);
+  const K = 1.45, RH = 50, W = 360, LW = 8, CW = W - 2 * LW, TOP = 16, H = TOP + RH + 4, y = TOP, mid = y + RH / 2;
+  const x = t => +(LW + (t - d0) / (d1 - d0) * CW).toFixed(1);
+  const mark = (e, shape) => `<g class="mk" data-id="${esc(e.id)}"><circle class="hit" cx="${x(e.t)}" cy="${mid}" r="12"/>${shape}<title>${esc(hm(e.t) + ' · ' + [label(e, evs), detail(e)].filter(Boolean).join(' · '))}</title></g>`;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foi o dia, de 0h a 24h">`;
+  for (const h of [0, 6, 12, 18, 24]) {
+    const hx = x(d0 + h / 24 * (d1 - d0));
+    s += `<line class="gl" x1="${hx}" x2="${hx}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${hx}" y="${TOP - 6}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
+  }
+  s += `<line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
+  let slept = 0;
+  for (const [a, z] of sleeps) {
+    const A = Math.max(a, d0), Z = Math.min(z, end); if (Z <= A) continue;
+    slept += Z - A;
+    s += `<rect class="m-sleep" x="${x(A)}" y="${(y + 7 * K).toFixed(1)}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${(RH - 14 * K).toFixed(1)}" rx="3"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
+  }
+  const dy = (y + RH - 4.3 * K).toFixed(1), top = y + 1.2;
+  for (const e of day) {
+    const cx = x(e.t);
+    if (e.kind === 'feed') s += mark(e, `<circle class="m-feed" cx="${cx}" cy="${mid}" r="${(3.6 * K).toFixed(1)}"/>`);
+    if (e.kind === 'diaper') s += mark(e, `<circle class="m-diaper dot" cx="${cx}" cy="${dy}" r="${(4 * K).toFixed(1)}"/>` + (e.poo ? `<circle class="m-poo dot" cx="${cx}" cy="${dy}" r="${(2.4 * K).toFixed(1)}"/>` : ''));
+    if (e.kind === 'pump') s += mark(e, `<rect class="m-pump" x="${(cx - 2.6 * K).toFixed(1)}" y="${top}" width="${(5.2 * K).toFixed(1)}" height="${(5.2 * K).toFixed(1)}" rx="1.5"/>`);
+    if (e.kind === 'symptom' || e.kind === 'vomit') {
+      const r = 4.2 * K, cy = top + r;
+      s += mark(e, `<path class="m-vomit dot" d="M${cx} ${(cy - r).toFixed(1)}L${(cx + r).toFixed(1)} ${cy.toFixed(1)}L${cx} ${(cy + r).toFixed(1)}L${(cx - r).toFixed(1)} ${cy.toFixed(1)}Z"/>`);
+    }
+  }
+  if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
+  s += '</svg>';
+  const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump'), sym = n(e => e.kind === 'symptom' || e.kind === 'vomit');
+  const key = shape => `<svg viewBox="0 0 12 12" aria-hidden="true">${shape}</svg>`;
+  const items = [
+    [key('<rect class="m-sleep" x="0" y="3" width="12" height="6" rx="2"/>'), 'Sono', dur(slept)],
+    [key('<circle class="m-feed" cx="6" cy="6" r="5"/>'), 'Mamadas', n(e => e.kind === 'feed')],
+    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/>'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
+    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
+  ];
+  if (pumpOn || pump.length) items.push([key('<rect class="m-pump" x="1" y="1" width="10" height="10" rx="2"/>'), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
+  if (symptomOn || sym) items.push([key('<path class="m-vomit" d="M6 .5L11.5 6L6 11.5L.5 6Z"/>'), 'Sintomas', sym]);
+  return `<div class="svgbox">${s}</div><div class="lgd day">${items.map(([i, t, v]) => `<span>${i}<em>${t}</em> ${esc(String(v))}</span>`).join('')}</div>`;
+}
+
 // "Dia a dia": hoje fica mais claro, porque ainda não terminou.
 function barChart(all, now, metric) {
   const m = METRICS[metric], today = startOfDay(now);
@@ -97,6 +143,22 @@ function durLong(ms) {
 }
 const spanLong = ([a, z]) => startOfDay(a) === startOfDay(z) ? span([a, z])
   : durLong(z - a) + ' · de ' + shortDay(startOfDay(a)) + ', ' + hm(a) + ' a ' + shortDay(startOfDay(z)) + ', ' + hm(z);
+// "Os maiores sonos": os 3 sonos mais longos que começaram nestes dias e, para cada um, a última
+// mamada e o último cocô registrados antes de dormir. Só põe lado a lado; não tira conclusão.
+function before(list, t) { let b = null; for (const e of list) { if (e.t >= t) break; b = e; } return b; }
+const agoFrom = (e, t) => startOfDay(e.t) === startOfDay(t) ? hm(e.t) : shortDay(startOfDay(e.t)) + ', ' + hm(e.t);
+function longSleeps(sleeps, evs, a, z) {
+  const top = sleeps.filter(([s0]) => s0 >= a && s0 < z).sort((x, y) => (y[1] - y[0]) - (x[1] - x[0])).slice(0, 3);
+  if (!top.length) return '';
+  const feeds = evs.filter(e => e.kind === 'feed'), poos = evs.filter(e => e.kind === 'diaper' && e.poo);
+  const line = (k, what, e, s0, more = '') => `<span class="ln"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
+    ? esc(agoFrom(e, s0) + ', ' + durLong(s0 - e.t) + ' antes' + more) : 'sem registro antes'}</span></span>`;
+  return `<div class="card"><h3>Os maiores sonos e o que veio antes</h3><p class="cap">Os 3 sonos mais longos destes 7 dias, com a última mamada e o último cocô registrados antes de dormir. Toque para ver o dia.</p>
+    <div class="ls">${top.map(iv => `<button class="lsi" data-open="${startOfDay(iv[0])}"><b>${esc(span(iv))}</b>
+      ${(f => line('--c-feed', 'Última mamada', f, iv[0], f ? ' · ' + label(f, evs) : ''))(before(feeds, iv[0]))}${line('--c-poo', 'Último cocô', before(poos, iv[0]), iv[0])}</button>`).join('')}</div>
+    <p class="foot">Mostra só o que foi registrado antes de cada sono. Não tira conclusão sobre o que fez dormir mais.</p></div>`;
+}
+
 const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/></svg>fralda só xixi</span>'
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
@@ -153,5 +215,6 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
     <div><b>Peito nas mamadas</b><span>${sides.left + sides.right + sides.both ? `esquerdo ${sides.left}× · direito ${sides.right}× · os dois ${sides.both}×` : '—'}</span></div>
     <div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>
   </div><p class="foot">O painel só junta o que foi registrado. Não avalia nem compara com outros bebês.</p></div>`;
+  h += longSleeps(sleep.out, evs, a, z);
   return h;
 }

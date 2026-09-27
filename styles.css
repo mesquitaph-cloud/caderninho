@@ -2,22 +2,22 @@
   --bg:#FFF7F5;--surface:#FFFFFF;--surface2:#FBEEEF;--ink:#3A2F45;--muted:#85798F;--line:#F0E1E4;
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
-  --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
-  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;
+  --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--care:#FBDCCB;--care-ink:#8C3B17;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
+  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B8801A;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
-  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;
+  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;--care:#43271B;--care-ink:#F6C3A6;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
-  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;
+  --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;--care:#43271B;--care-ink:#F6C3A6;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
@@ -29,30 +29,39 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .av{width:44px;height:44px;border-radius:50%;background:var(--feed);color:var(--feed-ink);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:20px}
 .bn{font-family:var(--display);font-weight:600;font-size:21px;line-height:1.1}
 .ba{font-size:13px;color:var(--muted)}
+/* O lápis ao lado do nome: tocar abre a tela do bebê (peso, marcos, nome e nascimento) */
+.bn .pen{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:6px;border-radius:50%;background:var(--surface2);color:var(--muted);vertical-align:2px}
+.bn .pen svg{width:12px;height:12px}
 .icon-btn{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
 .icon-btn svg{width:20px;height:20px}
 .sleeping{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--sleep);color:var(--sleep-ink);border-radius:18px;padding:12px 16px}
 .sleeping .t{font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
 .sleeping small{display:block;font-size:13px}
 .pill{background:var(--surface);color:var(--sleep-ink);border-radius:999px;padding:10px 18px;font-weight:700}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.act{border-radius:20px;padding:14px;display:grid;grid-template-columns:auto 1fr;column-gap:10px;row-gap:2px;align-items:center;min-height:76px;text-align:left;transition:transform .08s}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+/* Botões de registro, três por linha: ícone, nome e há quanto tempo */
+.act{border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr;row-gap:2px;align-content:start;min-height:88px;text-align:left;transition:transform .08s}
 .act:active{transform:scale(.97)}
-.act svg{width:28px;height:28px;grid-row:span 2}
-.act b{font-family:var(--display);font-weight:600;font-size:19px;line-height:1}
-.act span{font-size:13px;opacity:.85}
+.act svg{width:24px;height:24px;margin-bottom:2px}
+.act b{font-family:var(--display);font-weight:600;font-size:16px;line-height:1.05;overflow-wrap:break-word;hyphens:auto}
+.act span{font-size:12.5px;opacity:.85;line-height:1.25}
+.act.span2{grid-column:span 2}.act.span3{grid-column:span 3}
+/* Outros (e um botão que sobre sozinho na linha): deitado, com o texto à direita */
+.act.row{grid-template-columns:auto auto 1fr;column-gap:9px;align-items:center;align-content:center;min-height:56px;padding-inline:14px}
+.act.row svg{margin:0;width:22px;height:22px}.act.row span{justify-self:end;text-align:right}
+.act.k-edit{background:var(--surface);color:var(--muted);border:1.5px dashed var(--line);justify-items:center;align-content:center;text-align:center}
 .k-feed{--kbg:var(--feed);background:var(--feed);color:var(--feed-ink)}.k-sleep,.k-wake{--kbg:var(--sleep);background:var(--sleep);color:var(--sleep-ink)}
-.k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
+.k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit,.k-symptom{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
 .k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}
 .k-med{--kbg:var(--med);background:var(--med);color:var(--med-ink)}
-/* Remédio: o lápis no ícone mostra que é ali que se programa. Outros vira uma faixa embaixo. */
-.act.k-med{column-gap:16px}
-.act .mico{grid-row:span 2;position:relative;display:grid;opacity:1}
-.act .mico .edit{position:absolute;right:-8px;bottom:-7px;width:20px;height:20px;border-radius:50%;background:var(--med-ink);color:var(--med);display:grid;place-items:center;box-shadow:0 0 0 2px var(--med)}
-.act .mico .edit svg{width:11px;height:11px;grid-row:auto}
-.act.wide{grid-column:1/-1;min-height:54px;padding:10px 16px;grid-template-columns:auto auto 1fr}
-.act.wide svg{grid-row:auto;width:24px;height:24px}
-.act.wide span{justify-self:end}
+.k-care,.k-massage,.k-bath,.k-nasal{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
+/* Editar: liga e desliga os botões da família */
+.li.tg{width:100%;text-align:left}
+.li.tg:disabled{opacity:.5;cursor:default}
+.sw{width:42px;height:25px;border-radius:13px;background:var(--line);position:relative;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw.on{background:var(--accent)}.sw.on i{left:20px}
+@media (prefers-reduced-motion:no-preference){.sw,.sw i{transition:left .15s,background .15s}}
 /* Cartão de remédios na tela inicial: a última dose e a próxima */
 .meds{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .meds .mh{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 2px 0 6px}
@@ -76,6 +85,9 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .dose .st{display:block;font-size:13px;color:var(--muted)}
 .dose .st:empty{display:none}
 .dose .tm{font-family:var(--display);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums;flex:none}
+/* Pular: para quando a dose não foi dada. Fica embaixo do nome, só perto da hora ou atrasada. */
+.skipbtn{grid-column:2;justify-self:start;margin:-4px 0 10px;padding:6px 14px;border-radius:999px;border:1.5px solid currentColor;background:var(--surface);font-weight:700;font-size:13px}
+.dose:has(.skipbtn) .ck{grid-row:1/3}
 .dose.done b,.dose.done .tm,.dose.skip b,.dose.skip .tm{color:var(--muted)}
 .dose.soon,.dose.late{background:var(--med);border-color:var(--med-ink);color:var(--med-ink)}
 .dose.soon .ck,.dose.late .ck{width:34px;height:34px;border-color:var(--med-ink);background:var(--surface)}
@@ -85,8 +97,8 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
   .dose.late .ck{animation:pulse 1.8s ease-in-out infinite}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--c-med)}60%{box-shadow:0 0 0 7px transparent}}
 }
-/* Dia | Semana e a data, que abre o calendário */
-.views{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface2);margin-top:4px}
+/* Dia | Semana | Mês e a data, que abre o calendário */
+.views{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface2);margin-top:4px}
 .views button{padding:9px;border-radius:12px;font-family:var(--display);font-weight:600;font-size:16px;color:var(--muted)}
 .views button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(58,47,69,.12)}
 .daynav{display:flex;align-items:center;justify-content:space-between;scroll-margin-top:12px}
@@ -97,8 +109,6 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .dtitle svg{width:18px;height:18px;color:var(--muted)}
 .dtitle:active{background:var(--surface2)}
 .view{display:flex;flex-direction:column;gap:14px}
-.sum{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:13px;padding:5px 11px;border-radius:999px;font-weight:600}
 .tl{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:4px 14px}
 .row{display:grid;grid-template-columns:46px 34px 1fr;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}
 .row:last-child{border-bottom:none}
@@ -133,6 +143,13 @@ svg .m-diaper{fill:var(--c-diaper)}
 svg .m-pump{fill:var(--c-pump)}
 svg .dot{stroke:var(--surface);stroke-width:1}
 svg .m-poo{fill:var(--c-poo)}
+/* Como foi o dia: as marcas da semana, maiores; sintomas num losango âmbar; tocar abre o registro */
+svg .m-vomit{fill:var(--c-vomit)}
+svg .mk{cursor:pointer}
+svg .now,svg .gl,svg .base{pointer-events:none}
+.daycard h3{margin:0}
+.lgd.day{justify-content:flex-start;gap:4px 12px;color:var(--ink);font-size:12.5px}
+.lgd.day em{font-style:normal;color:var(--muted);font-weight:700}
 svg .vi{fill:#FFFFFF;font:700 10px var(--body);font-variant-numeric:tabular-nums}
 .lgd{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--muted)}
 .lgd span{display:inline-flex;align-items:center;gap:5px}
@@ -153,6 +170,26 @@ svg .part{opacity:.45}
 .hl div{display:flex;flex-direction:column;gap:1px;padding:10px 12px;border-radius:14px;background:var(--surface2)}
 .hl b{font-size:13px;color:var(--muted)}
 .hl span{font-weight:700;font-variant-numeric:tabular-nums}
+/* Os maiores sonos e o que veio antes */
+.ls{display:flex;flex-direction:column;gap:8px}
+.lsi{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;font-size:14px}
+.lsi b{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.lsi .ln{display:flex;align-items:baseline;gap:8px;font-weight:600;font-variant-numeric:tabular-nums}
+.lsi .ln i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
+.lsi em{font-style:normal;color:var(--muted);font-weight:700}
+/* Resumo para mandar à família: a prévia da mensagem */
+.msgbox{white-space:pre-wrap;background:var(--surface2);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5}
+/* Peso e marcos: a tela do bebê */
+.recs{display:flex;flex-direction:column;gap:6px}
+.rec{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;width:100%}
+.rec b{font-weight:700;font-size:15px}
+.rec small{display:block;font-size:13px;color:var(--muted);font-weight:600}
+.rec small.nt{color:var(--ink);font-weight:400;margin-top:2px}
+.rec .v{font-family:var(--display);font-weight:600;font-size:18px;flex:none}
+.sugs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+svg .wl{fill:none;stroke:var(--c-weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg .wp{fill:var(--c-weight);stroke:var(--surface);stroke-width:2}
+svg .wh{fill:transparent}
 /* Calendário */
 .mhead{display:flex;align-items:center;justify-content:space-between}
 .mhead b{font-family:var(--display);font-weight:600;font-size:18px}
@@ -222,9 +259,17 @@ svg .part{opacity:.45}
 .screen{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-top:12px}
 .screen h1{font-family:var(--display);font-weight:600;font-size:28px;margin:0}
 .screen p{margin:0;color:var(--muted)}
+.screen .err{color:var(--danger)}
 .screen form{display:flex;flex-direction:column;gap:12px}
 .screen .field{font-size:18px}
 #codeIn{letter-spacing:.25em;text-align:center;font-size:24px}
+/* Entrar com Google: botão claro com o G colorido, como o Google pede, nos dois temas */
+.sso{display:flex;flex-direction:column;gap:12px}
+.google{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px solid #DADCE0;background:#FFFFFF;color:#1F1F1F;font-weight:700;font-size:17px}
+.google svg{width:20px;height:20px;flex:none}
+.google:disabled{opacity:.6}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:14px;font-weight:600}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .link{color:var(--accent);font-weight:700;padding:8px;align-self:center}
 .babies{display:flex;gap:6px;flex-wrap:wrap}
 .babies button{padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);font-weight:700;font-size:14px;background:var(--surface)}
