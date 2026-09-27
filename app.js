@@ -987,6 +987,7 @@ $('weekView').addEventListener('click', e => {
   const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = !st.show[f.dataset.flt]; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
   const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
+  const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
 });
 $('weekView').addEventListener('keydown', e => {
   const r = e.target.closest('.dayrow');

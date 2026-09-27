@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia nem compara com outros bebês.
-import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS } from './util.js';
+import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 export const METRICS = {
@@ -97,6 +97,22 @@ function durLong(ms) {
 }
 const spanLong = ([a, z]) => startOfDay(a) === startOfDay(z) ? span([a, z])
   : durLong(z - a) + ' · de ' + shortDay(startOfDay(a)) + ', ' + hm(a) + ' a ' + shortDay(startOfDay(z)) + ', ' + hm(z);
+// "Os maiores sonos": os 3 sonos mais longos que começaram nestes dias e, para cada um, a última
+// mamada e o último cocô registrados antes de dormir. Só põe lado a lado; não tira conclusão.
+function before(list, t) { let b = null; for (const e of list) { if (e.t >= t) break; b = e; } return b; }
+const agoFrom = (e, t) => startOfDay(e.t) === startOfDay(t) ? hm(e.t) : shortDay(startOfDay(e.t)) + ', ' + hm(e.t);
+function longSleeps(sleeps, evs, a, z) {
+  const top = sleeps.filter(([s0]) => s0 >= a && s0 < z).sort((x, y) => (y[1] - y[0]) - (x[1] - x[0])).slice(0, 3);
+  if (!top.length) return '';
+  const feeds = evs.filter(e => e.kind === 'feed'), poos = evs.filter(e => e.kind === 'diaper' && e.poo);
+  const line = (k, what, e, s0, more = '') => `<span class="ln"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
+    ? esc(agoFrom(e, s0) + ', ' + durLong(s0 - e.t) + ' antes' + more) : 'sem registro antes'}</span></span>`;
+  return `<div class="card"><h3>Os maiores sonos e o que veio antes</h3><p class="cap">Os 3 sonos mais longos destes 7 dias, com a última mamada e o último cocô registrados antes de dormir. Toque para ver o dia.</p>
+    <div class="ls">${top.map(iv => `<button class="lsi" data-open="${startOfDay(iv[0])}"><b>${esc(span(iv))}</b>
+      ${(f => line('--c-feed', 'Última mamada', f, iv[0], f ? ' · ' + label(f, evs) : ''))(before(feeds, iv[0]))}${line('--c-poo', 'Último cocô', before(poos, iv[0]), iv[0])}</button>`).join('')}</div>
+    <p class="foot">Mostra só o que foi registrado antes de cada sono. Não tira conclusão sobre o que fez dormir mais.</p></div>`;
+}
+
 const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/></svg>fralda só xixi</span>'
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
@@ -153,5 +169,6 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
     <div><b>Peito nas mamadas</b><span>${sides.left + sides.right + sides.both ? `esquerdo ${sides.left}× · direito ${sides.right}× · os dois ${sides.both}×` : '—'}</span></div>
     <div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>
   </div><p class="foot">O painel só junta o que foi registrado. Não avalia nem compara com outros bebês.</p></div>`;
+  h += longSleeps(sleep.out, evs, a, z);
   return h;
 }

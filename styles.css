@@ -156,6 +156,13 @@ svg .part{opacity:.45}
 .hl div{display:flex;flex-direction:column;gap:1px;padding:10px 12px;border-radius:14px;background:var(--surface2)}
 .hl b{font-size:13px;color:var(--muted)}
 .hl span{font-weight:700;font-variant-numeric:tabular-nums}
+/* Os maiores sonos e o que veio antes */
+.ls{display:flex;flex-direction:column;gap:8px}
+.lsi{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;font-size:14px}
+.lsi b{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;margin-bottom:2px}
+.lsi .ln{display:flex;align-items:baseline;gap:8px;font-weight:600;font-variant-numeric:tabular-nums}
+.lsi .ln i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
+.lsi em{font-style:normal;color:var(--muted);font-weight:700}
 /* Calendário */
 .mhead{display:flex;align-items:center;justify-content:space-between}
 .mhead b{font-family:var(--display);font-weight:600;font-size:18px}

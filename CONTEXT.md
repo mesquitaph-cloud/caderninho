@@ -140,6 +140,11 @@ O sono mais longo entre um dormiu e o acordou seguinte, contado no dia em que co
 de noite contam juntos.
 _Evite_: noite inteira, soneca
 
+**Os maiores sonos e o que veio antes**:
+Os 3 sonos mais longos dos 7 dias do painel, cada um com a última mamada e o último cocô registrados
+antes de dormir. Só põe lado a lado; não diz o que fez o bebê dormir mais.
+_Evite_: causa, relação, correlação, análise do sono
+
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
 escolhido é o último dos 7.

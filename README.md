@@ -34,6 +34,14 @@ Não muda o banco; basta publicar o app.
 - **Conferir no celular:** programar um remédio de teste com horário daqui a 50 minutos, ver aparecer no
   alto, pular, desfazer, marcar e ver sumir; na lista, "Dei agora" num remédio de horário.
 
+### Sono, mamada e cocô no painel da semana
+
+Não muda o banco. No fim do painel, o cartão "Os maiores sonos e o que veio antes": os 3 sonos mais
+longos dos 7 dias, e para cada um a última mamada (horário, quanto tempo antes e como foi: mamadeira
+com ml, peito com minutos) e o último cocô antes de dormir. Tocar num sono abre o dia. Decidido na
+implementação: mostrar lado a lado, sem calcular relação nem dizer o que fez dormir mais, porque o
+Caderninho não interpreta os registros (`CONTEXT.md`); a família tira as conclusões.
+
 ### Entrar com Google
 
 O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail continua igual. A mesma
