@@ -3,6 +3,7 @@ import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
+import { clockHtml } from './clock.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
 
@@ -476,6 +477,8 @@ function openEntry(k, edit) {
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
   drawEntry();
 }
+// Cor do ajuste de horário para cada tipo de registro.
+const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit', massage: 'care', bath: 'care', nasal: 'care' };
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
   let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
@@ -499,7 +502,7 @@ function drawEntry() {
     if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
     if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
   }
-  h += `<div><div class="lbl">Horário</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
+  h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}<div class="time"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
@@ -748,7 +751,7 @@ function drawDose() {
     if (!d.e.skipped) h += '<p class="dim">Desmarcar apaga o registro da linha do tempo. Use só se marcou por engano.</p>';
   } else {
     if (d.state === 'later') h += `<div class="soft">Ainda não é a hora: a dose é às ${d.hhmm}${when ? ' de ' + when : ''}. Se já deu, dá para marcar.</div>`;
-    h += `<div><div class="lbl">Horário que deu</div><div class="time"><input type="time" id="timeIn" value="${S.time}"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
+    h += `<div><div class="lbl">Horário que deu</div>${clockHtml('timeIn', S.time, 'med', 'Horário que deu')}<div class="time"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
     h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
     h += '<button class="save" data-act="give">Marcar como dada</button><button class="del" data-act="skip">Pular esta dose</button>';
   }
@@ -774,11 +777,11 @@ function drawMedForm() {
   h += `<div><label class="lbl" for="mAmount">Quanto <small>(opcional)</small></label><input class="field" id="mAmount" maxlength="30" placeholder="Ex.: 2 gotas, 2,5 ml" value="${esc(S.amount)}"></div>`;
   h += `<div><div class="lbl">Quando dar</div><div class="seg k-med" style="background:none">${opt('Horários fixos', S.sched === 'fixed', 'sched', 'fixed')}${opt('De X em X horas', S.sched === 'every', 'sched', 'every')}${opt('Só quando precisar', S.sched === 'prn', 'sched', 'prn')}</div></div>`;
   if (S.sched === 'fixed')
-    h += `<div><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip"><input type="time" id="mt-${i}" value="${t}" aria-label="Horário ${i + 1}">${S.times.length > 1 ? `<button data-act="rmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="addTime">+ horário</button>' : ''}</div></div>`;
+    h += `<div><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip${S.openTime === i ? ' on' : ''}"><button class="t" data-act="openTime" data-val="${i}" aria-expanded="${S.openTime === i}"><b id="mtl-${i}">${t}</b></button>${S.times.length > 1 ? `<button data-act="rmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="addTime">+ horário</button>' : ''}</div>${S.openTime != null && S.times[S.openTime] != null ? clockHtml('mt-' + S.openTime, S.times[S.openTime], 'med', 'Horário ' + (S.openTime + 1)) : ''}</div>`;
   const stepper = `<div class="ml"><button data-act="every" data-val="-1" aria-label="Menos horas">−</button><output>${S.every}</output><em>horas</em><button data-act="every" data-val="1" aria-label="Mais horas">+</button></div>`;
   if (S.sched === 'every')
     h += `<div><div class="lbl">De quantas em quantas horas</div>${stepper}</div>
-      <div><label class="lbl" for="mFirst">Primeira dose do dia</label><div class="time"><input type="time" id="mFirst" value="${S.first}"></div><div class="hint" id="everyHint" style="margin-top:8px">${esc(everyHint())}</div></div>`;
+      <div><div class="lbl">Primeira dose do dia</div>${clockHtml('mFirst', S.first, 'med', 'Primeira dose do dia')}<div class="hint" id="everyHint">${esc(everyHint())}</div></div>`;
   if (S.sched === 'prn') {
     h += `<div><div class="lbl">Intervalo entre as doses <small>(opcional)</small></div><div class="seg k-med" style="background:none">${opt('Sem intervalo', S.gap === 'none', 'gap', 'none')}${opt('De X em X horas', S.gap === 'every', 'gap', 'every')}</div>`;
     if (S.gap === 'every') h += `<div style="margin-top:10px">${stepper}</div>`;
@@ -829,7 +832,7 @@ function medInput(el) {
   const id = el.id, v = el.value;
   if (id === 'mName') S.name = v;
   else if (id === 'mAmount') S.amount = v;
-  else if (id.startsWith('mt-')) S.times[+id.slice(3)] = v;
+  else if (id.startsWith('mt-')) { S.times[+id.slice(3)] = v; const l = $('mtl-' + id.slice(3)); if (l) l.textContent = v; }
   else if (id === 'mFirst') { S.first = v; $('everyHint').textContent = everyHint(); }
   else if (id === 'timeIn') S.time = v;
   else if (id === 'noteIn') S.note = v;
@@ -871,8 +874,9 @@ async function medAction(a, v, btn) {
   if (a === 'sched') S.sched = v;
   else if (a === 'dur') S.dur = v;
   else if (a === 'gap') S.gap = v;
-  else if (a === 'addTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 12) % 24) + ':' + pad(M)); }
-  else if (a === 'rmTime') S.times.splice(+v, 1);
+  else if (a === 'addTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 12) % 24) + ':' + pad(M)); S.openTime = S.times.length - 1; }
+  else if (a === 'rmTime') { S.times.splice(+v, 1); if (S.openTime === +v) S.openTime = null; else if (S.openTime > +v) S.openTime--; }
+  else if (a === 'openTime') S.openTime = S.openTime === +v ? null : +v;
   else if (a === 'every') S.every = EVERY[Math.max(0, Math.min(EVERY.length - 1, EVERY.indexOf(S.every) + (+v)))];
   else if (a === 'days') S.days = Math.max(1, Math.min(60, S.days + (+v)));
   else if (a === 'saveMed') return saveMed(btn);

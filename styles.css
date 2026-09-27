@@ -251,6 +251,15 @@ svg .wh{fill:transparent}
 .time{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .time input,.field{font:inherit;font-size:17px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
 .field{width:100%}
+/* Ajuste de horário (clock.js): digitar é o principal; − e + ao lado */
+.clock{display:flex;align-items:center;justify-content:center;gap:2px;border:1.5px solid var(--line);border-radius:16px;padding:8px 6px;margin-bottom:8px}
+.cunit{display:flex;align-items:center;gap:2px}
+.cunit button{width:clamp(32px,10vw,42px);height:clamp(32px,10vw,42px);flex:none;border-radius:50%;background:var(--surface2);font-size:22px;font-weight:700;color:var(--k,var(--accent));touch-action:manipulation}
+.cunit input{width:clamp(46px,15vw,60px);height:52px;text-align:center;font-family:var(--display);font-weight:600;font-size:32px;font-variant-numeric:tabular-nums;border:1.5px solid transparent;border-radius:12px;background:var(--surface2);color:var(--ink);padding:0;caret-color:transparent}
+.cunit input:focus{outline:none;border-color:var(--k,var(--accent));background:var(--surface)}
+.cunit input.typing{color:var(--k,var(--accent))}
+.cunit input::placeholder{color:var(--muted);opacity:.6}
+.clock .colon{font-family:var(--display);font-weight:600;font-size:30px;color:var(--muted)}
 .small{font-size:14px;padding:8px 12px;border-radius:999px;background:var(--surface2);font-weight:700}
 .save{background:var(--accent);color:var(--on-accent);border-radius:16px;padding:16px;font-size:18px;font-weight:700;font-family:var(--display)}
 .del{color:var(--danger);font-weight:700;padding:10px}
@@ -318,8 +327,11 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 .note svg{width:18px;height:18px;flex:none;margin-top:1px}
 .tchips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .tchip{display:inline-flex;align-items:center;gap:2px;border:1.5px solid var(--line);border-radius:12px;padding:3px 3px 3px 10px;background:var(--surface)}
-.tchip input{border:none;background:none;font:inherit;font-weight:700;font-size:17px;color:var(--ink);padding:5px 0}
 .tchip button{width:34px;height:34px;border-radius:50%;color:var(--muted);font-size:20px;line-height:1}
+/* Tocar num horário do remédio abre o ajuste embaixo */
+.tchip .t{width:auto;height:auto;border-radius:8px;padding:5px 2px;color:inherit;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.tchip.on{border-color:var(--med-ink);background:var(--med);color:var(--med-ink)}
+.tchips+.clock{margin:10px 0 0}
 .ml output{min-width:64px;text-align:center;font-size:28px;font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums}
 .dsub{margin:-10px 0 0;color:var(--muted);font-weight:600}
 .given{display:flex;align-items:center;gap:10px;background:var(--med);color:var(--med-ink);border-radius:14px;padding:12px 14px;font-weight:700}

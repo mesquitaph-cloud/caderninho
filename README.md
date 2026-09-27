@@ -155,6 +155,19 @@ Não muda o banco; basta publicar o app.
   (até 62 dias, em vez de 60). O calendário continua mostrando os últimos 60 dias.
 - **E-mail automático:** ficou para depois. Plano em "Ideias para depois".
 
+### Horário digitado, sem o relógio do celular
+
+Pedido de 27/09: tocar nos números só selecionava, e o relógio do celular deixava o "Definir" fora
+da tela em alguns aparelhos. Esse relógio é do sistema, e o app não consegue mudar o tamanho dele.
+Decidido na prévia (https://claude.ai/artifact/C4L2it3q32xLyTWF7htHL5): o ajuste fica na própria
+tela (`clock.js`). Digitar é o principal: tocar na hora, digitar dois números, e o cursor pula para
+os minutos. O − e o + mudam de 1 em 1, e segurando anda rápido. Vale nos registros, na dose, na
+primeira dose e nos horários fixos do remédio. Nos horários fixos, tocar na etiqueta abre o ajuste
+embaixo.
+
+**No celular:** anotar uma mamada digitando 1447 (vira 14:47); segurar o + dos minutos; num remédio
+com horários fixos, tocar num horário, mudar e salvar. Conferir com teclado de Android e de iPhone.
+
 ### Entrar com Google
 
 O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail continua igual. A mesma
