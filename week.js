@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia nem compara com outros bebês.
-import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label } from './util.js';
+import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 export const METRICS = {
@@ -56,6 +56,47 @@ function routineChart(all, sleeps, now, show) {
     if (d.d0 === today) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
     s += '</g>';
   });
+  return s + '</svg>';
+}
+
+// O dia aberto na linha do tempo, de 0h a 24h: uma faixa por tipo, com o total à direita. Sono,
+// mamadas, xixi e cocô sempre; ordenha, remédio, vômito e outros só se tiver no dia. Xixi e cocô em
+// faixas separadas: a fralda com os dois aparece nas duas. Tocar numa marca abre o registro.
+export function dayChart({ d0, evs, sleeps, now }) {
+  const d1 = addDays(d0, 1), end = Math.min(d1, now), day = evs.filter(e => e.t >= d0 && e.t < d1);
+  const of = k => day.filter(e => e.kind === k), dia = of('diaper');
+  const slept = sleeps.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, end) - Math.max(a, d0)), 0);
+  const pump = of('pump'), meds = of('med').filter(e => !e.skipped);
+  const lanes = [
+    ['sleep', 'Sono', null, slept ? dur(slept) : '0'],
+    ['feed', 'Mamadas', of('feed'), String(of('feed').length)],
+    ['diaper', 'Xixi', dia.filter(e => e.pee), String(dia.filter(e => e.pee).length)],
+    ['poo', 'Cocô', dia.filter(e => e.poo), String(dia.filter(e => e.poo).length)],
+  ];
+  if (pump.length) lanes.push(['pump', 'Ordenha', pump, pump.reduce((s, e) => s + e.ml, 0) + ' ml']);
+  if (meds.length) lanes.push(['med', 'Remédio', meds, String(meds.length)]);
+  if (of('vomit').length) lanes.push(['vomit', 'Vômito', of('vomit'), String(of('vomit').length)]);
+  if (of('other').length) lanes.push(['other', 'Outros', of('other'), String(of('other').length)]);
+  const W = 360, LW = 66, RW = 50, CW = W - LW - RW, RH = 26, TOP = 18, H = TOP + lanes.length * RH + 4;
+  const x = t => +(LW + (t - d0) / (d1 - d0) * CW).toFixed(1);
+  const aria = lanes.map(([, n, , tot]) => n + ' ' + tot).join(', ');
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="${esc('Como foi o dia, de 0h a 24h: ' + aria)}">`;
+  for (const h of [0, 6, 12, 18, 24])
+    s += `<line class="gl" x1="${x(d0 + h / 24 * (d1 - d0))}" x2="${x(d0 + h / 24 * (d1 - d0))}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${x(d0 + h / 24 * (d1 - d0))}" y="${TOP - 8}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
+  lanes.forEach(([k, name, marks, tot], i) => {
+    const y = TOP + i * RH, mid = y + RH / 2;
+    s += `<text class="dl" x="0" y="${mid + 4}">${name}</text><text class="vl" x="${W}" y="${mid + 4}" text-anchor="end">${esc(tot)}</text>`;
+    s += `<line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
+    if (k === 'sleep') for (const [a, z] of sleeps) {
+      const A = Math.max(a, d0), Z = Math.min(z, end);
+      if (Z > A) s += `<rect class="m-sleep" x="${x(A)}" y="${y + 6}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${RH - 12}" rx="4"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
+    }
+    else for (const e of marks) {
+      const tip = hm(e.t) + ' · ' + [label(e, evs), detail(e)].filter(Boolean).join(' · ');
+      s += `<g class="mk" data-id="${esc(e.id)}"><circle class="hit" cx="${x(e.t)}" cy="${mid}" r="11"/><circle class="m-${k} dot2" cx="${x(e.t)}" cy="${mid}" r="4.5"/><title>${esc(tip)}</title></g>`;
+    }
+  });
+  if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
   return s + '</svg>';
 }
 

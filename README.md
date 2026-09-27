@@ -49,6 +49,15 @@ Não muda o banco; basta publicar o app.
 - De passagem: em telas de 360 px, a coluna da direita dos botões de registro passava da margem;
   agora as duas colunas têm a mesma largura. Em 320 px (iPhone SE antigo) ainda aperta.
 
+### Gráfico do dia
+
+Não muda o banco. Pedido na mesma conversa: ver no Dia, de forma gráfica, quantos xixis e cocôs. No
+alto da linha do tempo, o dia de 0h a 24h com uma faixa por tipo (sono em barras; mamadas, xixi, cocô
+em pontos; ordenha, remédio, vômito e outros só se tiver no dia) e o total à direita. A fralda com xixi
+e cocô aparece nas duas faixas. Tocar num ponto abre o registro. Entra no lugar das etiquetas de resumo
+do dia; o que não cabe no gráfico (ml na mamadeira, minutos no peito e o último peito) fica numa linha
+embaixo dele. Dia sem registro fica sem gráfico.
+
 ### Sono, mamada e cocô no painel da semana
 
 Não muda o banco. No fim do painel, o cartão "Os maiores sonos e o que veio antes": os 3 sonos mais

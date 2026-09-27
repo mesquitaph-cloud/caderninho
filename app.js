@@ -2,7 +2,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet } from './util.js';
-import { weekHtml } from './week.js';
+import { weekHtml, dayChart } from './week.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
 
@@ -320,22 +320,16 @@ function render() {
   $('prevDay').disabled = d0 <= firstDay();
 
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
+  // Como foi o dia: o gráfico de 0h a 24h, com os totais, e embaixo o que não cabe nele.
   const feeds = day.filter(e => e.kind === 'feed'), ml = feeds.reduce((s, e) => s + (e.ml || 0), 0);
   const breastMin = feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0);
-  const pumps = day.filter(e => e.kind === 'pump'), pumped = pumps.reduce((s, e) => s + e.ml, 0);
-  const all = intervals.slice(); if (open !== null) all.push([open, now]);
-  const slept = all.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, d1) - Math.max(a, d0)), 0);
-  const dia = day.filter(e => e.kind === 'diaper'), vom = day.filter(e => e.kind === 'vomit').length;
-  const md = day.filter(e => e.kind === 'med' && !e.skipped).length;
-  const chips = [['feed', feeds.length + (feeds.length === 1 ? ' mamada' : ' mamadas') + (ml ? ' · ' + ml + ' ml' : '') + (breastMin ? ' · ' + dur(breastMin * MIN) + ' no peito' : '')]];
+  const sleeps = open === null ? intervals : [...intervals, [open, now]];
   const lb = lastBreast(evs);
-  if (lb && d0 === startOfDay(now)) chips.push(['feed', 'último peito: ' + SIDE_SHORT[lb.side] + ' · ' + ago(lb.t)]);
-  if (pumps.length) chips.push(['pump', pumps.length + (pumps.length === 1 ? ' ordenha' : ' ordenhas') + ' · ' + pumped + ' ml']);
-  chips.push(['sleep', dur(slept) + ' de sono'],
-    ['diaper', dia.length + (dia.length === 1 ? ' fralda' : ' fraldas') + ' · ' + dia.filter(e => e.pee).length + ' xixi · ' + dia.filter(e => e.poo).length + ' cocô']);
-  if (vom) chips.push(['vomit', vom + (vom === 1 ? ' vômito' : ' vômitos')]);
-  if (md) chips.push(['med', md + (md === 1 ? ' dose de remédio' : ' doses de remédio')]);
-  $('summary').innerHTML = chips.map(([k, t]) => `<span class="chip k-${k}">${esc(t)}</span>`).join('');
+  const more = [ml ? ml + ' ml na mamadeira' : '', breastMin ? dur(breastMin * MIN) + ' no peito' : '',
+                lb && d0 === startOfDay(now) ? 'último peito: ' + SIDE_SHORT[lb.side] + ', ' + ago(lb.t) : ''].filter(Boolean);
+  const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
+  $('summary').innerHTML = !b || (!day.length && !slept) ? ''
+    : `<div class="card daycard"><div class="svgbox">${dayChart({ d0, evs, sleeps, now })}</div>${more.length ? `<p class="cap">${esc(more.join(' · '))}</p>` : ''}</div>`;
 
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
     : !day.length ? '<div class="empty">Nada registrado neste dia.</div>'
@@ -1118,6 +1112,11 @@ $('meds').addEventListener('click', e => {
 $('babyBtn').onclick = () => st.baby ? babyHub() : babySheet(null);
 $('menuBtn').onclick = menuSheet;
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
+// Tocar numa marca do gráfico do dia abre o registro, como na linha do tempo.
+$('summary').addEventListener('click', e => {
+  const m = e.target.closest('[data-id]'); if (!m) return;
+  const ev = st.entries.get(m.dataset.id); if (ev) openEntry(ev.kind, ev);
+});
 $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
   const ev = st.entries.get(r.dataset.id); if (ev) openEntry(ev.kind, ev);

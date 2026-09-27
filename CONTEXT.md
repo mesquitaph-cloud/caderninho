@@ -84,6 +84,12 @@ _Evite_: nota, observação (observação é o comentário opcional dentro de qu
 Os registros de um bebê num dia, do mais recente para o mais antigo.
 _Evite_: histórico, feed, diário
 
+**Gráfico do dia**:
+No alto da linha do tempo, o dia de 0h a 24h: uma faixa para sono, mamadas, xixi e cocô (e ordenha,
+remédio, vômito e outros, se tiver), com o total de cada um. A fralda com xixi e cocô aparece nas
+duas faixas. Tocar numa marca abre o registro.
+_Evite_: resumo (resumo é o do mês e o para mandar), estatística
+
 ## Remédios
 
 **Remédio**:

@@ -3,7 +3,7 @@
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
   --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
-  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;
+  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B8801A;--c-other:#6B7A93;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -11,13 +11,13 @@
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;--c-other:#8390A8;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;--c-other:#8390A8;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
@@ -102,8 +102,6 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .dtitle svg{width:18px;height:18px;color:var(--muted)}
 .dtitle:active{background:var(--surface2)}
 .view{display:flex;flex-direction:column;gap:14px}
-.sum{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-size:13px;padding:5px 11px;border-radius:999px;font-weight:600}
 .tl{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:4px 14px}
 .row{display:grid;grid-template-columns:46px 34px 1fr;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}
 .row:last-child{border-bottom:none}
@@ -138,6 +136,11 @@ svg .m-diaper{fill:var(--c-diaper)}
 svg .m-pump{fill:var(--c-pump)}
 svg .dot{stroke:var(--surface);stroke-width:1}
 svg .m-poo{fill:var(--c-poo)}
+/* Gráfico do dia: marcas maiores, com anel da cor do fundo, e a área de toque em volta */
+svg .dot2{stroke:var(--surface);stroke-width:2}
+svg .m-med{fill:var(--c-med)}svg .m-vomit{fill:var(--c-vomit)}svg .m-other{fill:var(--c-other)}
+svg .mk{cursor:pointer}
+.daycard .cap{margin:0}
 svg .vi{fill:#FFFFFF;font:700 10px var(--body);font-variant-numeric:tabular-nums}
 .lgd{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--muted)}
 .lgd span{display:inline-flex;align-items:center;gap:5px}
