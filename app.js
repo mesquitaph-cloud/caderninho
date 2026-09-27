@@ -437,7 +437,7 @@ function calAction(a, v) {
 /* ---------- remédios ---------- */
 // A família programa o remédio e os horários; o Caderninho só lembra. Cada horário do dia é uma dose,
 // identificada por "remédio@horário" (ms). Marcar ou pular a dose grava um registro de remédio.
-const SOON = 30 * MIN;   // meia hora antes, a próxima dose ganha a caixinha na tela inicial
+const SOON = HOUR;   // uma hora antes, a dose aparece na tela inicial com a caixinha
 const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
 const EVERY = [4, 6, 8, 12];
 const MED_RULE = '<p class="dim">Só a família programa. O Caderninho lembra os horários; não sugere remédio nem dose.</p>';
@@ -481,34 +481,41 @@ function doseStatus(d) {
     : d.state === 'soon' ? 'daqui a ' + dur(d.due - Date.now()) : '';
 }
 // Uma dose. Na lista completa (all), toda dose tem caixinha; na tela inicial, só perto da hora.
+// Perto da hora ou atrasada, ganha também o "Pular", para quando não deu.
 function doseRow(d, { all = false, tag = '' } = {}) {
   const m = d.m, name = esc(m.name), st2 = [tag, doseStatus(d)].filter(Boolean).join(' · ');
-  const can = d.state === 'soon' || d.state === 'late' || (all && d.state === 'later');
+  const hot = d.state === 'soon' || d.state === 'late', can = hot || (all && d.state === 'later');
   const ck = can
       ? `<button class="ck" role="checkbox" aria-checked="false" data-act="check" data-val="${d.id}" aria-label="Marcar ${name} das ${d.hhmm} como dada">${CHECK}</button>`
     : d.e
       ? `<button class="ck" role="checkbox" aria-checked="true" data-act="dose" data-val="${d.id}" aria-label="${name} das ${d.hhmm}, ${esc(st2)}. Ver ou desmarcar">${d.state === 'skip' ? DASH : CHECK}</button>`
     : '<span class="ck" aria-hidden="true"></span>';
-  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button></div>`;
+  const skip = hot ? `<button class="skipbtn" data-act="skipDose" data-val="${d.id}" aria-label="Pular ${name} das ${d.hhmm}: não foi dada">Pular</button>` : '';
+  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button>${skip}</div>`;
 }
 
-// Tela inicial: só a última dose (a mais recente que já passou da hora) e a próxima, nas últimas e
-// próximas 24 horas. Uma dose de hoje mais antiga que ficou sem marcar vira um aviso para a lista.
+// Tela inicial: só o que precisa de alguém. De cada remédio, a dose mais recente que já está a uma
+// hora ou menos do horário, se ninguém marcou nem pulou; dose marcada sai do cartão. Uma dose de hoje
+// mais antiga que ficou sem marcar vira um aviso para a lista.
+function homeDoses() {
+  const now = Date.now(), ds = dosesFrom(now - DAY, now + SOON + 1), cur = new Map();
+  for (const d of ds) cur.set(d.m.id, d);   // em ordem de horário: fica a mais recente de cada remédio
+  const shown = ds.filter(d => cur.get(d.m.id) === d && (d.state === 'soon' || d.state === 'late'));
+  const missed = ds.filter(d => d.state === 'late' && !shown.includes(d) && !dayWord(d.due)).length;
+  return { shown, missed };
+}
 function renderMeds() {
-  const box = $('meds'), now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
-  box.hidden = !ds.length; if (!ds.length) return;
-  const past = ds.filter(d => d.due <= now), lastT = past.at(-1)?.due, nextT = ds.find(d => d.due > now)?.due;
-  const shown = ds.filter(d => d.due === lastT || d.due === nextT);
-  const missed = past.filter(d => d.due !== lastT && d.state === 'late' && !dayWord(d.due)).length;
-  const hot = shown.some(d => d.state === 'soon' || d.state === 'late'), n = todayDoses().length;
-  box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${hot ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
-    <div class="doses">${shown.map(d => doseRow(d, { tag: [d.due <= now ? 'última dose' : 'próxima dose', dayWord(d.due)].filter(Boolean).join(' · ') })).join('')}</div>
-    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? 'Mais 1 dose de hoje sem marcar' : 'Mais ' + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
+  const box = $('meds'), { shown, missed } = homeDoses();
+  box.hidden = !shown.length && !missed; if (box.hidden) return;
+  const n = todayDoses().length, more = shown.length ? 'Mais ' : '';
+  box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${shown.length ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
+    ${shown.length ? `<div class="doses">${shown.map(d => doseRow(d, { tag: dayWord(d.due) })).join('')}</div>` : ''}
+    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? more + '1 dose de hoje sem marcar' : more + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
 }
 function medSub() {
-  const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY);
-  const soon = ds.find(d => d.state === 'soon'), next = ds.find(d => d.due > now);
-  if (ds.some(d => d.state === 'late')) return 'dose sem marcar';
+  const now = Date.now(), { shown, missed } = homeDoses(), next = dosesFrom(now, now + DAY).find(d => !d.e);
+  if (missed || shown.some(d => d.state === 'late')) return 'dose sem marcar';
+  const soon = shown.find(d => d.state === 'soon');
   if (soon) return 'daqui a ' + dur(soon.due - now);
   if (next) return 'próxima ' + (dayWord(next.due) ? dayWord(next.due) + ' ' : '') + 'às ' + next.hhmm;
   return st.meds.length ? 'remédios e horários' : 'programar horários';
@@ -539,13 +546,24 @@ function medCard(m) {
     if (ask) sub2 = `A última foi há ${dur(Date.now() - last.t)}; vocês programaram de ${m.every_hours} em ${m.every_hours} horas.`;
     else if (next) sub2 = 'Pode dar de novo a partir das ' + hm(next) + (dayWord(next) ? ' de ' + dayWord(next) : '') + '.';
   } else {
-    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('');
+    const nd = nowDose(m), ask = nd && S.nowAsk === m.id;
+    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')
+      + (nd ? `<button class="pillbtn" data-act="giveNow" data-val="${esc(m.id)}">${ask ? 'Marcar a das ' + nd.hhmm : 'Dei agora'}</button>` : '');
     sub = (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
       + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
+    if (ask) sub2 = `A próxima dose é às ${nd.hhmm}${dayWord(nd.due) ? ' de ' + dayWord(nd.due) : ''}. Toque de novo para marcar como dada agora.`;
   }
   return `<div class="mcard"><div class="mtop"><div><b>${esc(m.name)}</b>${m.amount ? `<span class="mq">${esc(m.amount)}</span>` : ''}</div>
     <button data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}">${ICON.pencil}Editar</button></div>
     <div class="mtimes">${times}</div><div class="msub">${esc(sub)}</div>${sub2 ? `<div class="msub wait">${esc(sub2)}</div>` : ''}</div>`;
+}
+
+// "Dei agora" no remédio de horário: se a dose mais recente que já passou da hora ficou sem marcar,
+// é ela; senão, adianta a próxima sem marcar. Nulo se não há dose nas próximas 24 horas.
+function nowDose(m) {
+  const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY).filter(d => d.m.id === m.id);
+  const cur = ds.findLast(d => d.due <= now);
+  return cur && !cur.e ? cur : ds.find(d => d.due > now && !d.e) || null;
 }
 
 // Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega.
@@ -555,7 +573,9 @@ async function giveDose(id, t, note, skipped) {
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null });
   if (!row) return;
   if (S?.mode === 'meds') drawMeds();
-  toast(skipped ? 'Dose pulada' : 'Dose de ' + d.m.name + ' marcada às ' + hm(t), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+  const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
+    : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
+  toast(msg, async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
 }
 async function prnNow(mid) {
   const m = st.meds.find(x => x.id === mid); if (!m) return;
@@ -619,7 +639,7 @@ function drawMedForm() {
       <div class="hint" style="margin-top:8px">${S.start === today ? 'Começa hoje' : 'Começou ' + dayTitle(S.start).toLowerCase()}. Último dia: ${dayTitle(addDays(S.start, S.days - 1)).toLowerCase()}.</div>`;
     h += '</div>';
   }
-  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Meia hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar. Fica assim até alguém marcar.'}</span></div>`;
+  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Uma hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar e o “Pular”. Fica assim até alguém marcar ou pular.'}</span></div>`;
   h += '<p class="dim">O Caderninho só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveMed">Salvar</button>';
@@ -673,7 +693,13 @@ async function medAction(a, v, btn) {
       if (m && prnNext(m) && S.prnAsk !== v) { S.prnAsk = v; return drawMeds(); }
       S.prnAsk = null; return prnNow(v);
     }
+    if (a === 'giveNow') {
+      const m = st.meds.find(x => x.id === v), d = m && nowDose(m); if (!d) return;
+      if (d.due - Date.now() > SOON && S.nowAsk !== v) { S.nowAsk = v; return drawMeds(); }
+      S.nowAsk = null; return giveDose(d.id, Date.now());
+    }
     if (a === 'check') return giveDose(v, Date.now());
+    if (a === 'skipDose') return giveDose(v, Date.now(), null, true);
     if (a === 'dose') return doseSheet(v, 'meds');
     return;
   }
@@ -911,6 +937,7 @@ $('wakeBtn').onclick = async () => {
 $('meds').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   if (b.dataset.act === 'check') return giveDose(b.dataset.val, Date.now());
+  if (b.dataset.act === 'skipDose') return giveDose(b.dataset.val, Date.now(), null, true);
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
 });

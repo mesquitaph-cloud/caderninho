@@ -94,9 +94,10 @@ remédio tira ele da lista e das doses, mas não apaga os registros.
 _Evite_: medicamento, medicação, receita, prescrição
 
 **Dose**:
-Cada horário em que um remédio programado deve ser dado. Meia hora antes, a próxima dose ganha a
-caixinha na tela inicial e fica em destaque até alguém marcar que deu ou pular. Cada dose só pode
-ser marcada uma vez: quem marca depois vê quem marcou antes.
+Cada horário em que um remédio programado deve ser dado. Uma hora antes, a dose aparece na tela
+inicial com a caixinha e o botão Pular, e fica em destaque até alguém marcar que deu ou pular;
+marcada ou pulada, sai da tela inicial. "Dei agora", na lista, marca a dose atrasada ou adianta a
+próxima. Cada dose só pode ser marcada uma vez: quem marca depois vê quem marcou antes.
 _Evite_: tomada, aplicação
 
 **Intervalo**:
@@ -113,7 +114,7 @@ _Evite_: administração, aplicação
 **Remédios e horários**:
 A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
 Abre pelo botão Remédio (o do lápis) e por "Ver todas", no cartão de remédios da tela inicial, que
-mostra só a última dose e a próxima.
+mostra só as doses a uma hora do horário ou atrasadas sem marcar.
 _Evite_: farmácia, receituário
 
 ## Ver os registros

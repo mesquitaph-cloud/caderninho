@@ -76,6 +76,9 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .dose .st{display:block;font-size:13px;color:var(--muted)}
 .dose .st:empty{display:none}
 .dose .tm{font-family:var(--display);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums;flex:none}
+/* Pular: para quando a dose não foi dada. Fica embaixo do nome, só perto da hora ou atrasada. */
+.skipbtn{grid-column:2;justify-self:start;margin:-4px 0 10px;padding:6px 14px;border-radius:999px;border:1.5px solid currentColor;background:var(--surface);font-weight:700;font-size:13px}
+.dose:has(.skipbtn) .ck{grid-row:1/3}
 .dose.done b,.dose.done .tm,.dose.skip b,.dose.skip .tm{color:var(--muted)}
 .dose.soon,.dose.late{background:var(--med);border-color:var(--med-ink);color:var(--med-ink)}
 .dose.soon .ck,.dose.late .ck{width:34px;height:34px;border-color:var(--med-ink);background:var(--surface)}
