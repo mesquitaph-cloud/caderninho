@@ -1307,6 +1307,11 @@ $('weekView').addEventListener('keydown', e => {
 });
 $('scrim').onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSheet(); });
+// Tocar em qualquer parte do horário abre o relógio, não só no ícone.
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t instanceof HTMLInputElement && t.type === 'time' && t.showPicker) { try { t.showPicker(); } catch {} }
+});
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
