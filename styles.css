@@ -284,6 +284,7 @@ svg .wh{fill:transparent}
 .li small{color:var(--muted);font-weight:600}
 .li button{color:var(--accent);font-weight:700;font-size:14px;padding:4px 8px}
 .li button.danger{color:var(--danger)}
+.li .go{color:var(--accent);font-weight:700;font-size:14px;padding:4px 8px}
 .invite{word-break:break-all;font-size:13px;background:var(--surface2);border-radius:12px;padding:10px;user-select:all}
 .row2{display:flex;gap:8px}.row2>*{flex:1}
 .ghost{border:1.5px solid var(--line);border-radius:14px;padding:12px;font-weight:700;background:var(--surface)}
@@ -294,6 +295,8 @@ label.lbl{display:block}
 textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 .fbmeta{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
 .thanks{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:14px;background:var(--diaper);color:var(--diaper-ink)}
+.warn{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:14px;border:1.5px solid var(--danger);color:var(--ink);font-weight:600}
+.warn b{font-family:var(--display);font-weight:600;font-size:18px;color:var(--danger)}
 .thanks b{font-family:var(--display);font-weight:600;font-size:18px}
 /* Remédios e horários: doses de hoje e remédios programados */
 .shead .ps{display:block;font-size:13px;color:var(--muted);font-weight:600}
