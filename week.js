@@ -93,10 +93,12 @@ export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
   if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
   s += '</svg>';
   const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump'), sym = n(e => e.kind === 'symptom' || e.kind === 'vomit');
+  // Volume: só das mamadeiras (mamada no peito não tem ml).
+  const ml = day.reduce((a, e) => a + (e.kind === 'feed' && e.ml || 0), 0);
   const key = shape => `<svg viewBox="0 0 12 12" aria-hidden="true">${shape}</svg>`;
   const items = [
     [key('<rect class="m-sleep" x="0" y="3" width="12" height="6" rx="2"/>'), 'Sono', dur(slept)],
-    [key('<circle class="m-feed" cx="6" cy="6" r="5"/>'), 'Mamadas', n(e => e.kind === 'feed')],
+    [key('<circle class="m-feed" cx="6" cy="6" r="5"/>'), 'Mamadas', n(e => e.kind === 'feed') + (ml ? ' · ' + ml + ' ml' : '')],
     [key('<circle class="m-diaper" cx="6" cy="6" r="5"/>'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
     [key('<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
   ];
