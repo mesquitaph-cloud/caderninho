@@ -2,6 +2,11 @@
 
 Vocabulário em `CONTEXT.md`; pilha, pendências e ideias em `README.md`.
 
+## Mudança de tela
+
+Antes de escrever o código de qualquer tela nova ou mudança visual, mostrar a prévia num artefato
+(com dados de exemplo e os estilos do app) e esperar a aprovação. Só depois programar.
+
 ## Banco de dados (Supabase)
 
 O conector do Supabase serve para consultar, não para mudar nada.

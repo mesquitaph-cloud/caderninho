@@ -14,6 +14,17 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
+## Botões da tela inicial: prévia, aguardando decisão
+
+Pedido de 27/09: a tela está poluída. Decidido na conversa: a grade continua de dois em dois; Mamada,
+Sono e Fralda ficam sempre; a família esconde o que não usa (Vômito, Ordenha, Remédio, Outros) e cria
+atalhos próprios (ex.: Massagem), que gravam um "Outros" com aquele nome. A escolha vale para a família
+toda e fica no banco (um SQL novo, 008).
+
+Prévia interativa (privada): https://claude.ai/artifact/Aer9Qjy3YWKnaD14jGtAuV. Falta decidir: onde fica
+"Arrumar botões", se o toque no atalho anota na hora ou abre para conferir, e a cor dos atalhos. O
+código só começa depois da prévia aprovada.
+
 ## Melhorias de 27/09: feito, falta publicar
 
 Pedidos da conversa de 27/09: remédios, sono x mamada e cocô, peso e marcos, resumo para os pais e
