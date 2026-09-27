@@ -16,7 +16,20 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 ## Melhorias de 27/09: feito, falta publicar
 
-Pedidos da conversa de 27/09. O que já está no código, e o que falta de cada um.
+Pedidos da conversa de 27/09: remédios, sono x mamada e cocô, peso e marcos, resumo para os pais e
+entrar com Google. Tudo no código; detalhes de cada um abaixo.
+
+**Para publicar, nesta ordem:**
+
+1. Rodar `supabase/007_peso_e_marcos.sql` no SQL Editor e conferir pelo conector (seção "Peso e marcos").
+2. Publicar o app. Remédios, painel da semana, peso e marcos e o resumo do mês vão juntos; o botão do
+   Google continua escondido.
+3. Conferir no celular o roteiro de cada seção abaixo.
+4. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
+   `config.js` e publicar de novo.
+
+Testado em 27/09 no navegador com um Supabase de mentira (93 checagens: remédios, Google, painel,
+peso e marcos, resumo), claro e escuro, em 360 e 390 px, e o 007 num Postgres local (32 casos).
 
 ### Remédios: só perto da hora, Pular e Dei agora
 
@@ -133,7 +146,10 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
 - Menos códigos por e-mail aliviam o limite do Gmail, mas não resolvem a primeira pendência: quem entra
   por e-mail e os convites continuam dependendo do remetente.
 
-## Cocô no painel e remédios programados: feito, falta publicar
+## Cocô no painel e remédios programados: no ar
+
+Conferido pelo conector em 27/09: a tabela `medicines` existe e registros de remédio estão sendo
+gravados, então o 006 foi rodado e o app com remédios está publicado.
 
 Prévia interativa usada para decidir (privada): https://claude.ai/artifact/3oP2guNYqCeZhnMJzAK727
 
