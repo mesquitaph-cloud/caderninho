@@ -360,6 +360,17 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
   o que vai no e-mail (talvez só os números, sem remédios).
 
+- **Resumo para a consulta (pedido de 28/09), esperando aprovação da prévia:**
+  https://claude.ai/artifact/8un2HvXiY652U1oLYPrG9n. Botão "Para a consulta" na tela do bebê e no fim
+  do Mês: escolher o período (7, 15, 30 dias, desde a última pesagem ou outras datas), escrever as
+  dúvidas e mandar ao pediatra em PDF ou texto. Diferente do resumo para a família, leva sintomas e
+  vômitos. Não muda o banco.
+- **Entrar com a Apple** (28/09): exige a conta de desenvolvedor da Apple (US$ 99 por ano). Cadastro em
+  um toque ajuda a não perder quem chega; o Google já está pronto, falta ligar.
+- **Plano pago com Apple Pay e Google Pay** (28/09): fora da loja, a cobrança seria por um serviço de
+  pagamento na web (Stripe ou Mercado Pago), que aceita os dois e Pix. Antes, decidir o que é pago.
+- **Divulgação** (28/09, fora do código): indicação boca a boca para os testes; depois, perfil no
+  Instagram e TikTok e anúncios para quem pesquisa sobre bebês, começando por uma região.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
