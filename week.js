@@ -9,7 +9,30 @@ export const METRICS = {
   diaper: { name: 'Fraldas',  cls: 'm-diaper', val: s => s.dia.length,   fmt: String, sub: s => s.poo, subCls: 'm-poo' },
   pump:   { name: 'Ordenhas', cls: 'm-pump',   val: s => s.pumpMl,       fmt: v => v ? v + ' ml' : '0' },
 };
-const FILTERS = [['sleep', 'Sono', '--c-sleep'], ['feed', 'Mamada', '--c-feed'], ['diaper', 'Fralda', '--c-diaper'], ['pump', 'Ordenha', '--c-pump']];
+const FILTERS = [['sleep', 'Sono', '--c-sleep'], ['feed', 'Mamada', '--c-feed'], ['diaper', 'Fralda', '--c-diaper'], ['pump', 'Ordenha', '--c-pump'],
+                 ['symptom', 'Sintomas', '--c-vomit'], ['med', 'Remédio', '--c-med'], ['care', 'Cuidados', '--c-care']];
+
+// Os gráficos levam só os botões que a família escolheu (Mamada, Sono e Fralda são fixos). Lugar de
+// cada marca na linha: fralda embaixo, mamada no meio, todo o resto em cima.
+const CARE_KINDS = ['massage', 'bath', 'nasal'];
+export const shownKinds = on => ({ sleep: true, feed: true, diaper: true, pump: on('pump'), symptom: on('symptom'),
+  med: on('med'), care: CARE_KINDS.some(on), massage: on('massage'), bath: on('bath'), nasal: on('nasal') });
+// Grupo da marca de cima (ou null): sintomas levam o vômito junto; dose pulada não vira marca.
+function topKind(e, k) {
+  if (e.kind === 'pump') return k.pump ? 'pump' : null;
+  if (e.kind === 'symptom' || e.kind === 'vomit') return k.symptom ? 'symptom' : null;
+  if (e.kind === 'med') return k.med && !e.skipped ? 'med' : null;
+  if (CARE_KINDS.includes(e.kind)) return k[e.kind] ? 'care' : null;
+  return null;
+}
+// Marcas de cima, centradas em (x, y), com meia largura r.
+const TOP_MARK = {
+  pump: (x, y, r) => `<rect class="m-pump" x="${f1(x - r)}" y="${f1(y - r)}" width="${f1(2 * r)}" height="${f1(2 * r)}" rx="1.2"/>`,
+  symptom: (x, y, r) => `<path class="m-vomit dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y)}L${x} ${f1(y + r * 1.2)}L${f1(x - r * 1.2)} ${f1(y)}Z"/>`,
+  med: (x, y, r) => `<circle class="m-med dot" cx="${x}" cy="${f1(y)}" r="${f1(r)}"/>`,
+  care: (x, y, r) => `<path class="m-care dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y + r)}L${f1(x - r * 1.2)} ${f1(y + r)}Z"/>`,
+};
+const f1 = v => +v.toFixed(1);
 
 // Números de um dia. "sleeps" são os sonos [início, fim]; o sono em andamento termina agora.
 function dayStats(d0, evs, sleeps, now) {
@@ -27,7 +50,7 @@ function dayStats(d0, evs, sleeps, now) {
 }
 
 // "Como foram os dias": uma linha por dia, de 0h a 24h, com hoje no alto.
-function routineChart(all, sleeps, now, show) {
+function routineChart(all, sleeps, now, show, k) {
   const today = startOfDay(now);
   const W = 360, LW = 58, CW = W - LW - 6, RH = 28, TOP = 20, H = TOP + all.length * RH + 2;
   const x = f => +(LW + f * CW).toFixed(1);
@@ -39,19 +62,20 @@ function routineChart(all, sleeps, now, show) {
     const f = t => (t - d.d0) / (d.d1 - d.d0);   // parte do dia, de 0 a 1
     s += `<g class="dayrow" data-day="${d.d0}" tabindex="0" role="button" aria-label="Abrir ${esc(dayTitle(d.d0))}"><rect class="hit" x="0" y="${y}" width="${W}" height="${RH}" rx="6"/>`;
     s += `<text class="dl" x="4" y="${mid + 4}">${d.d0 === today ? 'hoje' : shortDay(d.d0)}</text><line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
-    if (show.sleep) for (const [a, z] of sleeps) {
+    if (show.sleep !== false) for (const [a, z] of sleeps) {
       const A = Math.max(a, d.d0), Z = Math.min(z, end);
       if (Z > A) s += `<rect class="m-sleep" x="${x(f(A))}" y="${y + 7}" width="${Math.max(1.5, (f(Z) - f(A)) * CW).toFixed(1)}" height="${RH - 14}" rx="3"/>`;
     }
     for (const e of d.day) {
       const cx = x(f(e.t));
-      if (e.kind === 'feed' && show.feed) s += `<circle class="m-feed" cx="${cx}" cy="${mid}" r="3.6"/>`;
+      if (e.kind === 'feed' && show.feed !== false) s += `<circle class="m-feed" cx="${cx}" cy="${mid}" r="3.6"/>`;
       // Fralda: o mesmo ponto verde. Com cocô, ganha um miolo marrom.
-      if (e.kind === 'diaper' && show.diaper) {
+      if (e.kind === 'diaper' && show.diaper !== false) {
         s += `<circle class="m-diaper dot" cx="${cx}" cy="${y + RH - 4.3}" r="4"/>`;
         if (e.poo) s += `<circle class="m-poo dot" cx="${cx}" cy="${y + RH - 4.3}" r="2.4"/>`;
       }
-      if (e.kind === 'pump' && show.pump) s += `<rect class="m-pump" x="${(cx - 2.6).toFixed(1)}" y="${y + 1.2}" width="5.2" height="5.2" rx="1"/>`;
+      const t = topKind(e, k);
+      if (t && show[t] !== false) s += TOP_MARK[t](cx, y + 3.8, 2.6);
     }
     if (d.d0 === today) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
     s += '</g>';
@@ -60,9 +84,9 @@ function routineChart(all, sleeps, now, show) {
 }
 
 // "Como foi o dia": o dia aberto numa linha só, com as mesmas marcas do painel da semana, um pouco
-// maiores, e os sintomas (vômito junto) num losango âmbar no alto. A contagem vai embaixo. Tocar numa
-// marca abre o registro. pumpOn/symptomOn: se a família usa esses botões.
-export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
+// maiores. A contagem vai embaixo. Tocar numa marca abre o registro. on: se a família usa o botão.
+export function dayLine({ d0, evs, sleeps, now, on }) {
+  const k = shownKinds(on);
   const d1 = addDays(d0, 1), end = Math.min(d1, now), day = evs.filter(e => e.t >= d0 && e.t < d1);
   const K = 1.45, RH = 50, W = 360, LW = 8, CW = W - 2 * LW, TOP = 16, H = TOP + RH + 4, y = TOP, mid = y + RH / 2;
   const x = t => +(LW + (t - d0) / (d1 - d0) * CW).toFixed(1);
@@ -79,20 +103,17 @@ export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
     slept += Z - A;
     s += `<rect class="m-sleep" x="${x(A)}" y="${(y + 7 * K).toFixed(1)}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${(RH - 14 * K).toFixed(1)}" rx="3"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
   }
-  const dy = (y + RH - 4.3 * K).toFixed(1), top = y + 1.2;
+  const dy = (y + RH - 4.3 * K).toFixed(1), top = y + 3.8 * K;
   for (const e of day) {
     const cx = x(e.t);
     if (e.kind === 'feed') s += mark(e, `<circle class="m-feed" cx="${cx}" cy="${mid}" r="${(3.6 * K).toFixed(1)}"/>`);
     if (e.kind === 'diaper') s += mark(e, `<circle class="m-diaper dot" cx="${cx}" cy="${dy}" r="${(4 * K).toFixed(1)}"/>` + (e.poo ? `<circle class="m-poo dot" cx="${cx}" cy="${dy}" r="${(2.4 * K).toFixed(1)}"/>` : ''));
-    if (e.kind === 'pump') s += mark(e, `<rect class="m-pump" x="${(cx - 2.6 * K).toFixed(1)}" y="${top}" width="${(5.2 * K).toFixed(1)}" height="${(5.2 * K).toFixed(1)}" rx="1.5"/>`);
-    if (e.kind === 'symptom' || e.kind === 'vomit') {
-      const r = 4.2 * K, cy = top + r;
-      s += mark(e, `<path class="m-vomit dot" d="M${cx} ${(cy - r).toFixed(1)}L${(cx + r).toFixed(1)} ${cy.toFixed(1)}L${cx} ${(cy + r).toFixed(1)}L${(cx - r).toFixed(1)} ${cy.toFixed(1)}Z"/>`);
-    }
+    const t = topKind(e, k);
+    if (t) s += mark(e, TOP_MARK[t](cx, top, 2.6 * K));
   }
   if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
   s += '</svg>';
-  const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump'), sym = n(e => e.kind === 'symptom' || e.kind === 'vomit');
+  const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump');
   // Volume: só das mamadeiras (mamada no peito não tem ml).
   const ml = day.reduce((a, e) => a + (e.kind === 'feed' && e.ml || 0), 0);
   const key = shape => `<svg viewBox="0 0 12 12" aria-hidden="true">${shape}</svg>`;
@@ -102,8 +123,10 @@ export function dayLine({ d0, evs, sleeps, now, pumpOn, symptomOn }) {
     [key('<circle class="m-diaper" cx="6" cy="6" r="5"/>'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
     [key('<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
   ];
-  if (pumpOn || pump.length) items.push([key('<rect class="m-pump" x="1" y="1" width="10" height="10" rx="2"/>'), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
-  if (symptomOn || sym) items.push([key('<path class="m-vomit" d="M6 .5L11.5 6L6 11.5L.5 6Z"/>'), 'Sintomas', sym]);
+  if (k.pump) items.push([key(TOP_MARK.pump(6, 6, 5)), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
+  if (k.symptom) items.push([key(TOP_MARK.symptom(6, 6, 4.6)), 'Sintomas', n(e => topKind(e, k) === 'symptom')]);
+  if (k.med) items.push([key(TOP_MARK.med(6, 6, 5)), 'Remédio', n(e => topKind(e, k) === 'med')]);
+  if (k.care) items.push([key(TOP_MARK.care(6, 6, 4.6)), 'Cuidados', n(e => topKind(e, k) === 'care')]);
   return `<div class="svgbox">${s}</div><div class="lgd day">${items.map(([i, t, v]) => `<span>${i}<em>${t}</em> ${esc(String(v))}</span>`).join('')}</div>`;
 }
 
@@ -165,7 +188,9 @@ const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden=
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
-export function weekHtml({ end, evs, sleep, now, show, metric }) {
+export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
+  const k = shownKinds(on);
+  if (!k[metric]) metric = 'sleep';
   const today = startOfDay(now), a = addDays(end, -6), z = Math.min(addDays(end, 1), now);
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
   const all = []; for (let d = a; d <= end; d = addDays(d, 1)) all.push(dayStats(d, evs, sleeps, now));
@@ -196,17 +221,17 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
                    avg(d => d.ml) >= 1 ? Math.round(avg(d => d.ml)) + ' ml na mamadeira' : ''].filter(Boolean).join(' · ');
 
   let h = `<div class="card"><h3>Como foram os dias</h3><p class="cap">Cada linha é um dia, de 0h a 24h. Toque num dia para ver os registros.</p>
-    <div class="flts">${FILTERS.map(([k, t, c]) => `<button class="flt" data-flt="${k}" aria-pressed="${show[k]}" style="--sw:var(${c})"><i></i>${t}</button>`).join('')}</div>
-    <div class="svgbox">${routineChart(all, sleeps, now, show)}</div>${show.diaper ? LGD_DIAPER : ''}</div>`;
+    <div class="flts">${FILTERS.filter(([f]) => k[f]).map(([f, t, c]) => `<button class="flt" data-flt="${f}" aria-pressed="${show[f] !== false}" style="--sw:var(${c})"><i></i>${t}</button>`).join('')}</div>
+    <div class="svgbox">${routineChart(all, sleeps, now, show, k)}</div>${show.diaper !== false ? LGD_DIAPER : ''}</div>`;
 
   h += `<div class="card"><h3>Média por dia</h3>${cap ? `<p class="cap">${cap}</p>` : ''}<div class="tiles">
     ${tile('--c-sleep', 'Sono', dur(avg(d => d.slept)), 'maior sono seguido: ' + (longest ? dur(longest[1] - longest[0]) : '—'))}
     ${tile('--c-feed', 'Mamadas', nf(avg(d => d.feeds.length)), feedSub)}
     ${tile('--c-diaper', 'Fraldas', nf(avg(d => d.dia.length)), nf(avg(d => d.poo)) + ' com cocô')}
-    ${tile('--c-pump', 'Ordenhas', nf(avg(d => d.pumps.length)), Math.round(avg(d => d.pumpMl)) + ' ml por dia')}
+    ${k.pump ? tile('--c-pump', 'Ordenhas', nf(avg(d => d.pumps.length)), Math.round(avg(d => d.pumpMl)) + ' ml por dia') : ''}
   </div></div>`;
 
-  h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).map(([k, m]) => `<button class="met" data-met="${k}" aria-pressed="${metric === k}">${m.name}</button>`).join('')}</div>
+  h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).filter(([m]) => k[m]).map(([m, v]) => `<button class="met" data-met="${m}" aria-pressed="${metric === m}">${v.name}</button>`).join('')}</div>
     <div class="svgbox">${barChart(all, now, metric)}</div>
     ${METRICS[metric].sub ? '<div class="lgd"><span style="--sw:var(--c-poo)"><i></i>com cocô</span><span style="--sw:var(--c-diaper)"><i></i>só xixi</span></div>' : ''}${hasToday ? '<p class="foot">A barra mais clara é hoje, até agora.</p>' : ''}</div>`;
 
@@ -215,7 +240,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric }) {
     <div><b>Maior intervalo entre mamadas</b><span>${gap ? span(gap) : '—'}</span></div>
     <div><b>Maior intervalo entre cocôs</b><span>${pooGap ? spanLong(pooGap) : '—'}</span></div>
     <div><b>Peito nas mamadas</b><span>${sides.left + sides.right + sides.both ? `esquerdo ${sides.left}× · direito ${sides.right}× · os dois ${sides.both}×` : '—'}</span></div>
-    <div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>
+    ${k.pump ? `<div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>` : ''}
   </div><p class="foot">O painel só junta o que foi registrado. Não avalia nem compara com outros bebês.</p></div>`;
   h += longSleeps(sleep.out, evs, a, z);
   return h;

@@ -322,7 +322,7 @@ function render() {
     const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana' }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric })
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn })
         + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
   }
@@ -337,7 +337,7 @@ function render() {
   const sleeps = open === null ? intervals : [...intervals, [open, now]];
   const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
   $('summary').innerHTML = !b || (!day.length && !slept) ? ''
-    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, pumpOn: isOn('pump'), symptomOn: isOn('symptom') })}</div>`;
+    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, on: isOn })}</div>`;
 
   // Dose pulada não entra na linha do tempo; continua em "Remédios e horários", com Desfazer.
   const rows = day.filter(e => !(e.kind === 'med' && e.skipped));
@@ -1302,7 +1302,7 @@ function openDay(d0) {
 }
 $('weekView').addEventListener('click', e => {
   const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
-  const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = !st.show[f.dataset.flt]; return render(); }
+  const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = st.show[f.dataset.flt] === false; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
   const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
   const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
