@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE } from './util.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
@@ -347,7 +347,7 @@ function render() {
         const who = e.author_id ? st.names[e.author_id] : '';
         const noteIsName = e.kind === 'other' || (e.kind === 'symptom' && e.symptom === 'outro');
         const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
-        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
+        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
 
@@ -383,7 +383,7 @@ function renderGrid(last, open, now) {
     return `<button class="act ${BTN[k][1]}${span}" data-k="${k}">${ICON[k]}<b>${BTN[k][0]}</b><span>${esc(sub(k))}</span></button>`;
   }).join('')
     + `<button class="act k-other span2 row" data-k="other">${ICON.other}<b>Outros</b><span>anotação livre</span></button>`
-    + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.gear}<b>Editar</b><span>botões</span></button>`;
+    + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.edit}<b>Editar</b><span>botões</span></button>`;
 }
 
 // Editar: liga ou desliga os botões da família. Cada toque salva na hora, um de cada vez.
@@ -412,7 +412,8 @@ function toggleBtn(k) {
 }
 
 /* ---------- gravar registros ---------- */
-// As colunas do sintoma só vão no sintoma: assim, se o 008 ainda não rodou, o resto continua salvando.
+// As colunas do sintoma só vão no sintoma, e as do tamanho do cocô só quando há tamanho ou alerta:
+// assim, se o 008 ou o 009 ainda não rodou, o resto continua salvando.
 function fields(ev) {
   const f = { kind: ev.kind, at: new Date(ev.t).toISOString(), src: ev.src ?? null, ml: ev.ml ?? null,
            side: ev.side ?? null, left_min: ev.left_min ?? null, right_min: ev.right_min ?? null,
@@ -420,6 +421,7 @@ function fields(ev) {
            medicine_id: ev.medicine_id ?? null, med_name: ev.med_name ?? null, med_amount: ev.med_amount ?? null,
            dose_at: ev.dose_at ?? null, skipped: ev.skipped ?? null };
   if (ev.kind === 'symptom') Object.assign(f, { symptom: ev.symptom, temp_c: ev.temp_c ?? null, duration_min: ev.duration_min ?? null });
+  if ('poo_size' in ev) Object.assign(f, { poo_size: ev.poo_size ?? null, poo_alert: ev.poo_alert ?? null });
   return f;
 }
 async function addEntry(ev) {
@@ -449,6 +451,9 @@ const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper
 const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'], ['tosse', 'Tosse'],
                       ['assadura', 'Assadura'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
 const withDuration = sym => sym === 'colica' || sym === 'choro';
+// Atalhos embaixo do relógio: agora ou tantos minutos antes do horário que está nele.
+const QUICK_TIME = '<div class="time quick"><button class="small" data-act="now">Agora</button>'
+  + [5, 10, 30].map(m => `<button class="small" data-act="back" data-val="${m}">−${m} min</button>`).join('') + '</div>';
 function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
 function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
@@ -474,7 +479,7 @@ function openEntry(k, edit) {
         src: edit ? (edit.src || '') : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
-        pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false,
+        pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
         sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '',
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
   drawEntry();
@@ -495,6 +500,10 @@ function drawEntry() {
   if (k === 'pump') h += `<div><div class="lbl">Qual peito <small>(opcional, marque um ou os dois)</small></div><div class="seg ${c}" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div></div>` + mlBlock(k);
   if (k === 'sleep') h += `<div class="seg ${c}" style="background:none">${opt('Dormiu', S.sk === 'sleep', 'sk', 'sleep', 1)}${opt('Acordou', S.sk === 'wake', 'sk', 'wake', 1)}</div>`;
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
+  // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
+  if (k === 'diaper' && S.poo) h += `<div><div class="lbl">Tamanho do cocô <small>(opcional)</small></div><div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
+    <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>vazou da fralda</small></span></button></div>`;
+  S.wig = false;   // a sirene balança só no toque que liga o alerta, não a cada redesenho
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
   // Sintomas: o que aconteceu; a febre pode ter a temperatura, a cólica e o choro a duração.
@@ -504,7 +513,7 @@ function drawEntry() {
     if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
     if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
   }
-  h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}<div class="time"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
+  h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
@@ -512,6 +521,9 @@ function drawEntry() {
   if (S.edit) h += `<button class="del" data-act="del">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar registro'}</button>`;
   openPanel(h);
 }
+// Um pouco de humor só na fralda: o cocô gigante e o alerta marrom ganham mensagem própria.
+const savedText = ev => ev.poo_alert ? 'Alerta marrom às ' + hm(ev.t) + '. Coragem!'
+  : ev.poo_size === 'gigante' ? 'Salvo às ' + hm(ev.t) + '. Que fralda!' : 'Salvo às ' + hm(ev.t);
 function computeT() {
   const [H, M] = (S.time || hm(Date.now())).split(':').map(Number);
   let t = S.base + H * HOUR + M * MIN;
@@ -549,14 +561,20 @@ async function saveEntry(btn) {
     if (S.src === 'breast') { ev.side = side; if (S.l && +S.lmin) ev.left_min = +S.lmin; if (S.r && +S.rmin) ev.right_min = +S.rmin; }
   }
   if (k === 'pump') { ev.side = side; ev.ml = +S.ml; }
-  if (k === 'diaper') { ev.pee = !!S.pee; ev.poo = !!S.poo; }
+  if (k === 'diaper') {
+    ev.pee = !!S.pee; ev.poo = !!S.poo;
+    // Só manda o tamanho e o alerta quando há o que mandar (ou apagar): sem o 009, o resto continua salvando.
+    if ((S.poo && (S.psize || S.palert)) || S.edit?.poo_size || S.edit?.poo_alert) {
+      ev.poo_size = S.poo ? S.psize : null; ev.poo_alert = S.poo && S.palert ? true : null;
+    }
+  }
   if (k === 'med') for (const f of ['medicine_id', 'med_name', 'med_amount', 'dose_at', 'skipped']) ev[f] = S.edit[f];
   if (S.note.trim()) ev.note = S.note.trim().slice(0, 300);
   busy(btn, true);
-  if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast('Salvo às ' + hm(ev.t)); } else busy(btn, false); return; }
+  if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast(savedText(ev)); } else busy(btn, false); return; }
   const row = await addEntry(ev);
   if (!row) return busy(btn, false);
-  closeSheet(); toast('Salvo às ' + hm(ev.t), () => deleteEntry(row.id));
+  closeSheet(); toast(savedText(ev), () => deleteEntry(row.id));
 }
 
 /* ---------- calendário ---------- */
@@ -753,7 +771,7 @@ function drawDose() {
     if (!d.e.skipped) h += '<p class="dim">Desmarcar apaga o registro da linha do tempo. Use só se marcou por engano.</p>';
   } else {
     if (d.state === 'later') h += `<div class="soft">Ainda não é a hora: a dose é às ${d.hhmm}${when ? ' de ' + when : ''}. Se já deu, dá para marcar.</div>`;
-    h += `<div><div class="lbl">Horário que deu</div>${clockHtml('timeIn', S.time, 'med', 'Horário que deu')}<div class="time"><button class="small" data-act="now">Agora</button><button class="small" data-act="back" data-val="10">−10 min</button><button class="small" data-act="back" data-val="30">−30 min</button></div></div>`;
+    h += `<div><div class="lbl">Horário que deu</div>${clockHtml('timeIn', S.time, 'med', 'Horário que deu')}${QUICK_TIME}</div>`;
     h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
     h += '<button class="save" data-act="give">Marcar como dada</button><button class="del" data-act="skip">Pular esta dose</button>';
   }
@@ -1222,7 +1240,9 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'minstep') { const [key, d] = v.split(':'); S[key + 'min'] = Math.min(180, Math.max(0, (+S[key + 'min'] || 0) + (+d))) || ''; if (S[key + 'min']) S[key] = true; }
   else if (a === 'sk') S.sk = v;
   else if (a === 'sym') { S.sym = v; if (v !== 'febre') S.temp = ''; if (!withDuration(v)) S.dmin = ''; }
-  else if (a === 'pee' || a === 'poo') S[a] = !S[a];
+  else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
+  else if (a === 'psize') S.psize = S.psize === v ? null : v;
+  else if (a === 'palert') { S.palert = !S.palert; S.wig = S.palert; }
   else if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
   else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
   else if (a === 'del') {
