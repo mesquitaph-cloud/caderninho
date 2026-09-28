@@ -16,7 +16,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 ## Melhorias de 27/09: feito, falta publicar
 
-Pedidos da conversa de 27/09: remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
+Pedidos da conversa de 27/09 (e os ajustes de 28/09 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
 entrar com Google e, depois das prévias, botões da tela inicial, Sintomas e cuidados. Tudo no código;
 detalhes de cada um abaixo.
 
@@ -32,6 +32,21 @@ detalhes de cada um abaixo.
 
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
+
+### Dose pulada e gráficos que seguem os botões (28/09)
+
+Não muda o banco; basta publicar. Prévia aprovada (privada): https://claude.ai/artifact/KkWBsnhCpBFDLTsrzAxgNn
+
+- **Dose pulada** não aparece mais na linha do tempo do Dia nem vira marca nos gráficos. Continua em
+  "Remédios e horários", com Desfazer.
+- **Gráficos só com os botões da família** ("Como foi o dia" e o painel da semana): Mamada, Sono e
+  Fralda sempre; Ordenha, Sintomas (com vômito), Remédio (só dose dada) e Cuidados só com o botão
+  ligado, mesmo que haja registro antigo. Na semana, sem Ordenha ligada, some também o quadro da
+  média, a opção em "Dia a dia" e a linha em "Nestes 7 dias". Outros fica fora dos gráficos.
+- **Lugar de cada marca**, igual no dia e na semana: fralda embaixo, mamada no meio e em cima o resto
+  (ordenha quadrado, sintomas losango, remédio bolinha lilás, cuidados triângulo laranja).
+- **Conferir no celular:** pular uma dose e ver que ela não entra no Dia; desligar Ordenha em Editar e
+  ver sumir da semana; ligar Massagem, anotar uma e ver o triângulo no dia e na semana.
 
 ### Botões da tela inicial, Sintomas e cuidados
 
