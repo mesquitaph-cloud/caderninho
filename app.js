@@ -339,9 +339,11 @@ function render() {
   $('summary').innerHTML = !b || (!day.length && !slept) ? ''
     : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, pumpOn: isOn('pump'), symptomOn: isOn('symptom') })}</div>`;
 
+  // Dose pulada não entra na linha do tempo; continua em "Remédios e horários", com Desfazer.
+  const rows = day.filter(e => !(e.kind === 'med' && e.skipped));
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-    : !day.length ? '<div class="empty">Nada registrado neste dia.</div>'
-    : day.slice().reverse().map(e => {
+    : !rows.length ? '<div class="empty">Nada registrado neste dia.</div>'
+    : rows.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
         const noteIsName = e.kind === 'other' || (e.kind === 'symptom' && e.symptom === 'outro');
         const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
