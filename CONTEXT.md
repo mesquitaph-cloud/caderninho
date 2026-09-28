@@ -70,8 +70,14 @@ intervalo entre um dormiu e o acordou seguinte.
 _Evite_: soneca (como registro), cochilo
 
 **Fralda**:
-Registro de uma troca de fralda, com xixi, cocô ou os dois.
+Registro de uma troca de fralda, com xixi, cocô ou os dois. Com cocô, pode dizer o tamanho (pequeno,
+médio, grande, gigante) e marcar o alerta marrom.
 _Evite_: troca, evacuação, diurese
+
+**Alerta marrom**:
+Na fralda com cocô, a marca de que vazou da fralda. É o único toque de humor do Caderninho, junto com
+a mensagem de salvo do cocô gigante; não avalia o bebê.
+_Evite_: vazamento, acidente
 
 **Vômito**:
 Registro de um vômito. Anota-se pelo botão Sintomas, mas continua sendo o registro de vômito.
@@ -137,7 +143,7 @@ _Evite_: administração, aplicação
 
 **Remédios e horários**:
 A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
-Abre pelo botão Remédio (o do lápis) e por "Ver todas", no cartão de remédios da tela inicial, que
+Abre pelo botão Remédio e por "Ver todas", no cartão de remédios da tela inicial, que
 mostra só as doses a uma hora do horário ou atrasadas sem marcar.
 _Evite_: farmácia, receituário
 

@@ -25,13 +25,42 @@ detalhes de cada um abaixo.
 1. Rodar `supabase/007_peso_e_marcos.sql` no SQL Editor e conferir pelo conector (seção "Peso e marcos").
 2. Rodar `supabase/008_botoes_e_sintomas.sql` no SQL Editor e conferir pelo conector (seção "Botões da
    tela inicial, Sintomas e cuidados"). O app novo precisa dele para salvar sintoma e cuidado.
-3. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
-4. Conferir no celular o roteiro de cada seção abaixo.
-5. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
+3. Rodar `supabase/009_tamanho_do_coco.sql` no SQL Editor e conferir pelo conector (seção "Tamanho do
+   cocô, −5 min e ícones").
+4. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
+5. Conferir no celular o roteiro de cada seção abaixo.
+6. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
    `config.js` e publicar de novo.
 
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
+
+### Tamanho do cocô, −5 min e ícones (28/09)
+
+Prévia aprovada (privada): https://claude.ai/artifact/L7rc7Zx1LZnedfeYQcqoNQ
+
+**Para publicar:** rodar `supabase/009_tamanho_do_coco.sql` antes do app. Sem ele, a fralda salva
+normalmente, mas não salva quando se escolhe o tamanho ou o alerta marrom (avisa "Não foi possível
+salvar"). Conferir pelo conector: colunas `poo_size` e `poo_alert` em `entries` e nenhum erro nos logs.
+
+- **Ícones:** Editar ganhou o lápis (a engrenagem parecia o sol do modo noturno) e Outros ganhou o
+  mais, no botão e na linha do tempo.
+- **−5 min** no horário de todos os registros e em "Horário que deu" do remédio. Os quatro atalhos
+  dividem a linha por igual e cabem em 320 px.
+- **Tamanho do cocô:** ao marcar Cocô na fralda, pequeno, médio, grande ou gigante (opcional; tocar de
+  novo desmarca) e, em destaque marrom, o **alerta marrom** ("vazou da fralda"). Desmarcar Cocô limpa
+  os dois. Na linha do tempo: "Xixi + cocô gigante", e o alerta ganha uma etiqueta marrom. Não entra
+  nos gráficos, no painel da semana nem no resumo para mandar.
+- **Humor leve, só aí:** "Salvo às 14:32. Que fralda!" no gigante e "Alerta marrom às 14:32. Coragem!"
+  no alerta. O aviso de salvo agora quebra a linha em vez de sair da tela.
+- **Banco (009):** em `entries`, `poo_size` ('pequeno', 'medio', 'grande', 'gigante') e `poo_alert`
+  (só true ou vazio), os dois só na fralda com cocô. O app só manda essas colunas quando há tamanho ou
+  alerta (ou para apagar ao editar).
+- **Conferir no celular:** anotar uma fralda com cocô gigante e alerta marrom, ver a mensagem e a
+  etiqueta; editar e desmarcar Cocô; tocar em −5 min; ver o lápis no Editar no modo noturno.
+
+Testado em 28/09 no navegador com um Supabase de mentira (19 checagens, claro e escuro, 320 e 360 px,
+também sem o 009) e o 009 num Postgres local imitando o Supabase, depois do 001 ao 008 (10 casos).
 
 ### Dose pulada e gráficos que seguem os botões (28/09)
 
