@@ -3,7 +3,7 @@
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
   --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--care:#FBDCCB;--care-ink:#8C3B17;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
-  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B8801A;
+  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B8801A;--c-care:#D0703A;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -11,13 +11,13 @@
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;--care:#43271B;--care-ink:#F6C3A6;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;--c-care:#E89A6E;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#16131F;--surface:#211C2E;--surface2:#2A2439;--ink:#F2EBF6;--muted:#A99FB6;--line:#342C45;
   --feed:#4A2536;--feed-ink:#F8BCCB;--sleep:#302A59;--sleep-ink:#CBC3FA;--diaper:#1B3A30;--diaper-ink:#A7E3C9;
   --vomit:#40331A;--vomit-ink:#F3D38D;--other:#2B3240;--other-ink:#C9D3E3;--pump:#1E3148;--pump-ink:#B7D5F4;--med:#3E2244;--med-ink:#EDC3F2;--care:#43271B;--care-ink:#F6C3A6;
-  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;
+  --c-sleep:#8C80F0;--c-feed:#F08DA8;--c-diaper:#6FCFA5;--c-pump:#7FB6EE;--c-poo:#9A5A2A;--c-med:#D38BE0;--c-weight:#D86E8D;--c-vomit:#B3822C;--c-care:#E89A6E;
   --accent:#F08DA8;--on-accent:#2A1320;--danger:#F2B8B5;--scrim:rgba(0,0,0,.55);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
@@ -148,6 +148,8 @@ svg .dot{stroke:var(--surface);stroke-width:1}
 svg .m-poo{fill:var(--c-poo)}
 /* Como foi o dia: as marcas da semana, maiores; sintomas num losango âmbar; tocar abre o registro */
 svg .m-vomit{fill:var(--c-vomit)}
+svg .m-med{fill:var(--c-med)}
+svg .m-care{fill:var(--c-care)}
 svg .mk{cursor:pointer}
 svg .now,svg .gl,svg .base{pointer-events:none}
 .daycard h3{margin:0}
@@ -161,12 +163,13 @@ svg .vi{fill:#FFFFFF;font:700 10px var(--body);font-variant-numeric:tabular-nums
 svg .now{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:2 2}
 svg .part{opacity:.45}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tiles>:last-child:nth-child(odd){grid-column:1/-1}
 .tile{background:var(--surface2);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
 .tile .k{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
 .tile .k i{width:8px;height:8px;border-radius:50%;background:var(--sw)}
 .tile b{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12px;color:var(--muted)}
-.mets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mets{display:grid;grid-auto-columns:1fr;grid-auto-flow:column;gap:6px}
 .met{border:1.5px solid var(--line);border-radius:999px;padding:6px 4px;font-weight:700;font-size:13px;background:var(--surface)}
 .met[aria-pressed="true"]{background:var(--surface2);border-color:var(--ink)}
 .hl{display:flex;flex-direction:column;gap:8px}
