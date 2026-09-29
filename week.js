@@ -9,8 +9,7 @@ export const METRICS = {
   diaper: { name: 'Fraldas',  cls: 'm-diaper', val: s => s.dia.length,   fmt: String, sub: s => s.poo, subCls: 'm-poo' },
   pump:   { name: 'Ordenhas', cls: 'm-pump',   val: s => s.pumpMl,       fmt: v => v ? v + ' ml' : '0' },
 };
-const FILTERS = [['sleep', 'Sono', '--c-sleep'], ['feed', 'Mamada', '--c-feed'], ['diaper', 'Fralda', '--c-diaper'], ['pump', 'Ordenha', '--c-pump'],
-                 ['symptom', 'Sintomas', '--c-vomit'], ['med', 'Remédio', '--c-med'], ['care', 'Cuidados', '--c-care']];
+const FILTERS = [['sleep', 'Sono'], ['feed', 'Mamada'], ['diaper', 'Fralda'], ['pump', 'Ordenha'], ['symptom', 'Sintomas'], ['med', 'Remédio'], ['care', 'Cuidados']];
 
 // Os gráficos levam só os botões que a família escolheu (Mamada, Sono e Fralda são fixos). Lugar de
 // cada marca na linha: fralda embaixo, mamada no meio, todo o resto em cima.
@@ -29,10 +28,16 @@ function topKind(e, k) {
 const TOP_MARK = {
   pump: (x, y, r) => `<rect class="m-pump" x="${f1(x - r)}" y="${f1(y - r)}" width="${f1(2 * r)}" height="${f1(2 * r)}" rx="1.2"/>`,
   symptom: (x, y, r) => `<path class="m-vomit dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y)}L${x} ${f1(y + r * 1.2)}L${f1(x - r * 1.2)} ${f1(y)}Z"/>`,
-  med: (x, y, r) => `<circle class="m-med dot" cx="${x}" cy="${f1(y)}" r="${f1(r)}"/>`,
-  care: (x, y, r) => `<path class="m-care dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y + r)}L${f1(x - r * 1.2)} ${f1(y + r)}Z"/>`,
+  // Remédio e cuidados vazados: de perto do rosa da mamada e do âmbar dos sintomas, a cor sozinha não separa.
+  med: (x, y, r) => `<circle class="m-med" cx="${x}" cy="${f1(y)}" r="${f1(r * .8)}"/>`,
+  care: (x, y, r) => `<path class="m-care" d="M${x} ${f1(y - r)}L${f1(x + r * 1.05)} ${f1(y + r * .8)}L${f1(x - r * 1.05)} ${f1(y + r * .8)}Z"/>`,
 };
 const f1 = v => +v.toFixed(1);
+// A marca de cada tipo em miniatura, igual à do gráfico, para os filtros e as legendas.
+const KEY = { sleep: '<rect class="m-sleep" x="0" y="3" width="12" height="6" rx="2"/>', feed: '<circle class="m-feed" cx="6" cy="6" r="5"/>',
+  diaper: '<circle class="m-diaper" cx="6" cy="6" r="5"/>', poo: '<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>',
+  pump: TOP_MARK.pump(6, 6, 5), symptom: TOP_MARK.symptom(6, 6, 4.6), med: TOP_MARK.med(6, 6, 5), care: TOP_MARK.care(6, 6, 4.6) };
+const key = k => `<svg viewBox="0 0 12 12" aria-hidden="true">${KEY[k]}</svg>`;
 
 // Números de um dia. "sleeps" são os sonos [início, fim]; o sono em andamento termina agora.
 function dayStats(d0, evs, sleeps, now) {
@@ -75,7 +80,7 @@ function routineChart(all, sleeps, now, show, k) {
         if (e.poo) s += `<circle class="m-poo dot" cx="${cx}" cy="${y + RH - 4.3}" r="2.4"/>`;
       }
       const t = topKind(e, k);
-      if (t && show[t] !== false) s += TOP_MARK[t](cx, y + 3.8, 2.6);
+      if (t && show[t] !== false) s += TOP_MARK[t](cx, y + 4, 3);
     }
     if (d.d0 === today) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
     s += '</g>';
@@ -116,17 +121,16 @@ export function dayLine({ d0, evs, sleeps, now, on }) {
   const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump');
   // Volume: só das mamadeiras (mamada no peito não tem ml).
   const ml = day.reduce((a, e) => a + (e.kind === 'feed' && e.ml || 0), 0);
-  const key = shape => `<svg viewBox="0 0 12 12" aria-hidden="true">${shape}</svg>`;
   const items = [
-    [key('<rect class="m-sleep" x="0" y="3" width="12" height="6" rx="2"/>'), 'Sono', dur(slept)],
-    [key('<circle class="m-feed" cx="6" cy="6" r="5"/>'), 'Mamadas', n(e => e.kind === 'feed') + (ml ? ' · ' + ml + ' ml' : '')],
-    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/>'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
-    [key('<circle class="m-diaper" cx="6" cy="6" r="5"/><circle class="m-poo" cx="6" cy="6" r="3"/>'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
+    [key('sleep'), 'Sono', dur(slept)],
+    [key('feed'), 'Mamadas', n(e => e.kind === 'feed') + (ml ? ' · ' + ml + ' ml' : '')],
+    [key('diaper'), 'Xixi', n(e => e.kind === 'diaper' && e.pee)],
+    [key('poo'), 'Cocô', n(e => e.kind === 'diaper' && e.poo)],
   ];
-  if (k.pump) items.push([key(TOP_MARK.pump(6, 6, 5)), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
-  if (k.symptom) items.push([key(TOP_MARK.symptom(6, 6, 4.6)), 'Sintomas', n(e => topKind(e, k) === 'symptom')]);
-  if (k.med) items.push([key(TOP_MARK.med(6, 6, 5)), 'Remédio', n(e => topKind(e, k) === 'med')]);
-  if (k.care) items.push([key(TOP_MARK.care(6, 6, 4.6)), 'Cuidados', n(e => topKind(e, k) === 'care')]);
+  if (k.pump) items.push([key('pump'), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
+  if (k.symptom) items.push([key('symptom'), 'Sintomas', n(e => topKind(e, k) === 'symptom')]);
+  if (k.med) items.push([key('med'), 'Remédio', n(e => topKind(e, k) === 'med')]);
+  if (k.care) items.push([key('care'), 'Cuidados', n(e => topKind(e, k) === 'care')]);
   return `<div class="svgbox">${s}</div><div class="lgd day">${items.map(([i, t, v]) => `<span>${i}<em>${t}</em> ${esc(String(v))}</span>`).join('')}</div>`;
 }
 
@@ -184,8 +188,7 @@ function longSleeps(sleeps, evs, a, z) {
     <p class="foot">Mostra só o que foi registrado antes de cada sono. Não tira conclusão sobre o que fez dormir mais.</p></div>`;
 }
 
-const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/></svg>fralda só xixi</span>'
-  + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
+const LGD_DIAPER = `<div class="lgd"><span>${key('diaper')}fralda só xixi</span><span>${key('poo')}fralda com cocô</span></div>`;
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
 export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
@@ -221,7 +224,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
                    avg(d => d.ml) >= 1 ? Math.round(avg(d => d.ml)) + ' ml na mamadeira' : ''].filter(Boolean).join(' · ');
 
   let h = `<div class="card"><h3>Como foram os dias</h3><p class="cap">Cada linha é um dia, de 0h a 24h. Toque num dia para ver os registros.</p>
-    <div class="flts">${FILTERS.filter(([f]) => k[f]).map(([f, t, c]) => `<button class="flt" data-flt="${f}" aria-pressed="${show[f] !== false}" style="--sw:var(${c})"><i></i>${t}</button>`).join('')}</div>
+    <div class="flts">${FILTERS.filter(([f]) => k[f]).map(([f, t]) => `<button class="flt" data-flt="${f}" aria-pressed="${show[f] !== false}">${key(f)}${t}</button>`).join('')}</div>
     <div class="svgbox">${routineChart(all, sleeps, now, show, k)}</div>${show.diaper !== false ? LGD_DIAPER : ''}</div>`;
 
   h += `<div class="card"><h3>Média por dia</h3>${cap ? `<p class="cap">${cap}</p>` : ''}<div class="tiles">

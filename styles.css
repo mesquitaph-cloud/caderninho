@@ -3,7 +3,7 @@
   --feed:#F9D3DC;--feed-ink:#8E2F4E;--sleep:#DDD7F7;--sleep-ink:#4A3F99;
   --diaper:#CDEEDF;--diaper-ink:#1F6B4E;--vomit:#FCE6B6;--vomit-ink:#7A520A;
   --other:#E3E8F0;--other-ink:#45536A;--pump:#D6E8FA;--pump-ink:#235A8C;--med:#F4DDF6;--med-ink:#7A2C85;--care:#FBDCCB;--care-ink:#8C3B17;--accent:#D9607F;--on-accent:#FFFFFF;--danger:#B3261E;
-  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--poo-ink:#5E3412;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B8801A;--c-care:#D0703A;
+  --c-sleep:#8F84E6;--c-feed:#D9607F;--c-diaper:#3F9E78;--c-pump:#3B7DC4;--c-poo:#5E3412;--poo-ink:#5E3412;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#B04CC0;--c-weight:#D9607F;--c-vomit:#B08600;--c-care:#D0703A;
   --scrim:rgba(40,28,50,.38);
   --display:"Fredoka","Nunito",system-ui,sans-serif;--body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -128,9 +128,10 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .card .foot{margin:0}
 .flts{display:flex;flex-wrap:wrap;gap:6px}
 .flt{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:999px;padding:4px 9px;font-weight:700;font-size:12px;background:var(--surface)}
-.flt i{width:10px;height:10px;border-radius:3px;background:var(--sw);border:2px solid var(--sw)}
+/* O filtro leva a marca do gráfico; desligado, a marca fica cinza e apagada */
+.flt svg{width:12px;height:12px;flex:none;overflow:visible}
 .flt[aria-pressed="false"]{color:var(--muted)}
-.flt[aria-pressed="false"] i{background:transparent}
+.flt[aria-pressed="false"] svg{filter:grayscale(1);opacity:.4}
 svg.chart{display:block;width:100%;height:auto}
 svg .ax{fill:var(--muted);font:700 10px var(--body)}
 svg .dl{fill:var(--ink);font:700 11px var(--body)}
@@ -148,8 +149,8 @@ svg .dot{stroke:var(--surface);stroke-width:1}
 svg .m-poo{fill:var(--c-poo)}
 /* Como foi o dia: as marcas da semana, maiores; sintomas num losango âmbar; tocar abre o registro */
 svg .m-vomit{fill:var(--c-vomit)}
-svg .m-med{fill:var(--c-med)}
-svg .m-care{fill:var(--c-care)}
+svg .m-med{fill:var(--surface);stroke:var(--c-med);stroke-width:1.8}
+svg .m-care{fill:var(--surface);stroke:var(--c-care);stroke-width:1.8;stroke-linejoin:round}
 svg .mk{cursor:pointer}
 svg .now,svg .gl,svg .base{pointer-events:none}
 .daycard h3{margin:0}

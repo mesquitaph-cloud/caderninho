@@ -35,6 +35,23 @@ detalhes de cada um abaixo.
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
 
+### Legenda da semana igual ao gráfico (29/09)
+
+Não muda o banco; basta publicar. Prévia aprovada (privada): https://claude.ai/artifact/NoL85oPBtQhhLJiDUc15vs
+
+- **Filtros de "Como foram os dias"** (que são também a legenda) com a marca do gráfico, e não mais um
+  quadradinho: barra (sono), bolinha (mamada, fralda), quadrado (ordenha), losango (sintomas), bolinha
+  vazada (remédio) e triângulo vazado (cuidados). Desligado, a marca fica cinza e apagada.
+- **Remédio e cuidados vazados** nos gráficos da semana e de "Como foi o dia": em marca pequena, o laranja
+  dos cuidados se confundia com o âmbar dos sintomas, e o lilás do remédio com o rosa da mamada e o sono.
+  Conferido com um validador de cores: nenhuma troca de cor separa o laranja do rosa e do âmbar ao mesmo
+  tempo, então a diferença vem da forma. As marcas de cima da semana ficaram um pouco maiores.
+- **Sintomas um pouco mais amarelo** no modo claro (`--c-vomit`, só usado nos gráficos). Os botões da tela
+  inicial não mudam.
+- As miniaturas dos filtros e das legendas saem de um lugar só (`KEY` em `week.js`).
+- **Conferir no celular:** abrir a Semana com Remédio e Banho ligados, ver as marcas vazadas no gráfico e
+  nos filtros, desligar um filtro; ver "Como foi o dia" no modo claro e no escuro.
+
 ### Tamanho do cocô, −5 min e ícones (28/09)
 
 Prévia aprovada (privada): https://claude.ai/artifact/L7rc7Zx1LZnedfeYQcqoNQ
@@ -73,7 +90,7 @@ Não muda o banco; basta publicar. Prévia aprovada (privada): https://claude.ai
   ligado, mesmo que haja registro antigo. Na semana, sem Ordenha ligada, some também o quadro da
   média, a opção em "Dia a dia" e a linha em "Nestes 7 dias". Outros fica fora dos gráficos.
 - **Lugar de cada marca**, igual no dia e na semana: fralda embaixo, mamada no meio e em cima o resto
-  (ordenha quadrado, sintomas losango, remédio bolinha lilás, cuidados triângulo laranja).
+  (ordenha quadrado, sintomas losango, remédio bolinha lilás vazada, cuidados triângulo laranja vazado).
 - **Conferir no celular:** pular uma dose e ver que ela não entra no Dia; desligar Ordenha em Editar e
   ver sumir da semana; ligar Massagem, anotar uma e ver o triângulo no dia e na semana.
 
