@@ -27,13 +27,56 @@ detalhes de cada um abaixo.
    tela inicial, Sintomas e cuidados"). O app novo precisa dele para salvar sintoma e cuidado.
 3. Rodar `supabase/009_tamanho_do_coco.sql` no SQL Editor e conferir pelo conector (seção "Tamanho do
    cocô, −5 min e ícones").
-4. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
-5. Conferir no celular o roteiro de cada seção abaixo.
-6. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
+4. Rodar `supabase/010_duvidas.sql` no SQL Editor e conferir pelo conector (seção "Relatório para
+   pediatra e dúvidas para a consulta").
+5. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
+6. Conferir no celular o roteiro de cada seção abaixo.
+7. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
    `config.js` e publicar de novo.
 
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
+
+### Relatório para pediatra e dúvidas para a consulta (01/10)
+
+Pedido de 01/10: um relatório para mandar ao pediatra e as dúvidas para a consulta (que estavam em
+"Ideias para depois"). Prévias aprovadas (privadas): o relatório,
+https://claude.ai/artifact/3qWdFGRkZoLDHMsWNYWzcM, e as dúvidas,
+https://claude.ai/artifact/STD5JCa3238oLDUp2jYVfo
+
+**Para publicar:** rodar `supabase/010_duvidas.sql` antes do app. Sem ele, a aba do bebê avisa que
+não conseguiu carregar as dúvidas e não deixa anotar; o relatório sai sem a parte das dúvidas.
+Conferir pelo conector: tabela `questions`, as quatro regras de acesso e nenhum erro nos logs.
+
+- **Botão "Emitir relatório para pediatra"**, na aba do bebê, logo abaixo dos três números. Em 320 e
+  360 px o nome quebra em duas linhas; em 390 px cabe numa.
+- **Tela de emitir:** o período (7, 14 ou 30 dias até hoje; "desde" o último peso anotado numa
+  consulta, quando foi há mais de 7 dias e cabe nos 60 dias que o app carrega) e o que vai junto
+  (rotina, sintomas e vômitos, remédios, peso e marcos, dúvidas). "Emitir PDF" abre o imprimir do
+  celular, que salva em PDF ou compartilha; o nome do arquivo é "Relatório de Marina 01-10-2026".
+  "Ver antes" mostra a folha; "Copiar texto" leva o mesmo em texto.
+- **A folha (A4, sempre clara):** nome, nascimento e idade; o peso em gráfico, com o valor em cada
+  ponto, e os marcos com a idade, desde o nascimento; a média por dia da rotina (dias que terminaram
+  e têm registro, hoje não entra), com o maior sono seguido e o maior intervalo entre cocôs; os dias
+  lado a lado de 0h a 24h; sintomas e vômitos como foram anotados; doses dadas e puladas de cada
+  remédio, com como está programado; as dúvidas que faltam perguntar, com caixinha. Não mostra quem
+  anotou.
+- **Dúvidas para a consulta**, na aba do bebê, embaixo do botão do relatório: as que faltam
+  perguntar, da mais antiga para a mais nova, com o dia. O círculo marca "perguntei" (com Desfazer no
+  aviso). Tocar no texto abre para editar, desmarcar ou anotar "O que o pediatra disse" (opcional).
+  **Respostas do pediatra** lista as já perguntadas, da mais recente para a mais antiga.
+- **Banco (010):** tabela `questions` (bebê, texto até 300, dia em que perguntou, resposta até 500).
+  Quem anotou e quem marcou "perguntei" vêm do banco; só membros da família veem, anotam, editam e
+  apagam. Sem canal ao vivo (como os botões, para não derrubar a sincronização antes do 010):
+  recarrega ao voltar para o app.
+- **Conferir no celular:** anotar uma dúvida, marcar perguntei e desfazer; anotar o que o pediatra
+  disse e achar em Respostas do pediatra; emitir o PDF no iPhone (app instalado) e no Android, e ver
+  se sai em uma ou duas folhas A4 com as cores; copiar o texto e colar no WhatsApp.
+
+Testado em 01/10 no navegador com um Supabase de mentira (37 checagens): dúvidas (anotar, marcar e
+desfazer, editar, responder, apagar), relatório em 7 e 14 dias e "desde", com e sem dúvidas, sem o 010,
+claro e escuro, em 320, 360 e 390 px, sem rolagem para o lado, e o PDF gerado pelo Chromium. O 010
+num Postgres local imitando o Supabase (13 casos).
 
 ### Abas embaixo: Hoje, bebê, Família e Perfil (01/10)
 
@@ -59,8 +102,7 @@ Não muda o banco; basta publicar. Mudar o nome da família já era permitido ao
   famílias, indicar o Caderninho, Sugestões e problemas (agora abre numa tela própria; antes ocupava
   metade do menu) e desconectar.
 - **Saiu:** o menu e a tela "Botões da tela inicial" separada.
-- **Ficou para depois:** dúvidas para a consulta com o pediatra (em "Ideias para depois") e a jornada
-  de cada aba (o que aparece vazio, a primeira vez de quem entra por convite).
+- **Ficou para depois:** a jornada de cada aba (o que aparece vazio, a primeira vez de quem entra por convite).
 - **Conferir no celular:** tocar no nome do bebê no Hoje e, na aba, no nome de novo (rola até o fim);
   anotar um peso pela aba; programar um remédio pela aba com o botão Remédio desligado; mudar o nome
   da família; escolher Escuro e depois Do celular; ver se a barra não cobre o último registro do dia
@@ -395,8 +437,6 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
   o que vai no e-mail (talvez só os números, sem remédios).
 
-- **Dúvidas para a consulta**, na aba do bebê: anotar a pergunta quando lembrar e marcar "perguntei"
-  na consulta. O Caderninho só guarda; quem responde é o pediatra. Precisa de uma tabela nova no banco.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
