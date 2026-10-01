@@ -57,7 +57,7 @@ function lines(s) {
 // title: "Setembro de Marina, até 27 set" ("de", como no resto do app: o nome não diz se é da ou do).
 // span: "mês" ou "semana", para o parabéns do fim.
 export function reportText(s, { title, name, span }) {
-  return title + ', pelo Caderninho:\n' + lines(s).map(([, t]) => '• ' + t).join('\n')
+  return title + ', pelo Soneca:\n' + lines(s).map(([, t]) => '• ' + t).join('\n')
     + `\nParabéns a quem cuida de ${name} por mais ${span === 'mês' ? 'um mês' : 'uma semana'} de cuidado!`;
 }
 
@@ -86,5 +86,5 @@ export function monthHtml(s, { heading }) {
 export function shareHtml(text, { heading = 'Mandar para a família', note = '' } = {}) {
   return `<div class="card"><h3>${esc(heading)}</h3>${note ? `<p class="cap">${esc(note)}</p>` : ''}<div class="msgbox">${esc(text)}</div>
     <div class="row2">${typeof navigator !== 'undefined' && navigator.share ? '<button class="save" data-share="share">Compartilhar</button>' : ''}<button class="ghost" data-share="copy">Copiar texto</button></div>
-    <p class="foot">Só soma o que foi registrado no Caderninho.</p></div>`;
+    <p class="foot">Só soma o que foi registrado no Soneca.</p></div>`;
 }

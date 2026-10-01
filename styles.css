@@ -286,7 +286,7 @@ svg .wh{fill:transparent}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 8px 8px 18px;border-radius:999px;font-weight:500;font-size:14px;z-index:20;display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100vw - 24px);text-align:center}.toast button{white-space:nowrap}.toast:not(:has(button)){padding-right:18px}.toast button{color:inherit;text-decoration:underline;text-underline-offset:3px;padding:6px 12px;font-weight:500}
 @media (prefers-reduced-motion:no-preference){.views button,.flt,.met{transition:background .15s,color .15s}}
 @media (prefers-reduced-motion:reduce){.act{transition:none}}
-/* ---------- Caderninho: telas de entrada e configurações ---------- */
+/* ---------- Telas de entrada e configurações ---------- */
 .screen{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:14px;padding-top:12px}
 .screen h1{font-family:var(--display);font-weight:500;font-size:28px;margin:0}
 .screen p{margin:0;color:var(--muted)}
@@ -403,3 +403,6 @@ button.ptitle:active{background:var(--surface2)}
 .sleeping>div{flex:1;min-width:0}
 .capi{display:block;fill:none;stroke:var(--mascot);stroke-linecap:round;stroke-linejoin:round}
 .sleeping .capi{width:60px;height:auto;flex:none;stroke-width:1.75px}
+/* Entrada: o nome com a capivara ao lado */
+.screen h1.brand{display:flex;align-items:center;gap:12px;font-size:36px;letter-spacing:-.02em}
+.brand .capi{width:84px;height:auto;flex:none;stroke-width:2.25px}

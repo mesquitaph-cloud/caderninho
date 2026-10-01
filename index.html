@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://vrhgirpklyklhvzwdfiq.supabase.co wss://vrhgirpklyklhvzwdfiq.supabase.co; manifest-src 'self'; base-uri 'self'; object-src 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Caderninho</title>
+<title>Soneca</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Caderninho">
+<meta name="apple-mobile-web-app-title" content="Soneca">
 <meta name="theme-color" content="#FFF8EE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap">
@@ -18,12 +18,12 @@
 <body>
 
 <!-- Carregando -->
-<section class="screen" id="scrLoading"><p>Abrindo o Caderninho…</p></section>
+<section class="screen" id="scrLoading"><p>Abrindo o Soneca…</p></section>
 
 <!-- Login -->
 <section class="screen" id="scrLogin" hidden>
-  <h1>Caderninho</h1>
-  <div class="notice installTip" hidden><span class="tipText"></span><div class="row2" style="margin-top:8px"><button class="ghost tipInstall" hidden>Instalar o Caderninho</button><button class="ghost tipClose">Agora não</button></div></div>
+  <h1 class="brand"><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>Soneca</h1>
+  <div class="notice installTip" hidden><span class="tipText"></span><div class="row2" style="margin-top:8px"><button class="ghost tipInstall" hidden>Instalar o Soneca</button><button class="ghost tipClose">Agora não</button></div></div>
   <div class="sso" id="sso" hidden>
     <button type="button" class="google" id="googleBtn"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continuar com o Google</button>
     <p class="err" id="errGoogle" hidden></p>
@@ -88,7 +88,7 @@
       <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
     </button>
   </header>
-  <div class="notice installTip" hidden><span class="tipText"></span><div class="row2" style="margin-top:8px"><button class="ghost tipInstall" hidden>Instalar o Caderninho</button><button class="ghost tipClose">Agora não</button></div></div>
+  <div class="notice installTip" hidden><span class="tipText"></span><div class="row2" style="margin-top:8px"><button class="ghost tipInstall" hidden>Instalar o Soneca</button><button class="ghost tipClose">Agora não</button></div></div>
   <div class="babies" id="babyTabs" hidden></div>
 
   <div class="sleeping" id="sleepBanner" hidden>
@@ -123,7 +123,7 @@
 <div class="wrap pane" id="paneBaby" hidden></div>
 <div class="wrap pane" id="paneFamily" hidden></div>
 <div class="wrap pane" id="paneProfile" hidden></div>
-<nav class="tabbar" id="tabbar" aria-label="Seções do Caderninho">
+<nav class="tabbar" id="tabbar" aria-label="Seções do Soneca">
   <div class="in">
     <button data-tab="home"><span class="ic"><span data-i="today"></span></span>Hoje</button>
     <button data-tab="baby"><span class="ic"><span class="mini" id="tabBabyInitial">B</span></span><span class="nm" id="tabBabyName">Bebê</span></button>

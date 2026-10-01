@@ -1,6 +1,6 @@
-# Caderninho
+# Soneca
 
-App para famílias registrarem a rotina dos bebês (mamadas, sono, fraldas, vômitos, remédios) numa
+Antes Caderninho. App para famílias registrarem a rotina dos bebês (mamadas, sono, fraldas, vômitos, remédios) numa
 linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário em `CONTEXT.md`.
 
 - **Front:** HTML/CSS/JS puro, sem build. Publicado no Vercel.
@@ -41,8 +41,33 @@ instalar de novo (o celular pode guardar o antigo até reinstalar).
 Testado em 01/10 no navegador com um Supabase de mentira: 13 telas em claro e escuro, a 390 px, sem
 erros; contraste de todos os textos conferido nos dois modos.
 
-**Próxima etapa:** trocar o nome para Soneca (nome instalado, título, e-mails, indicação, entrada com a
-capivara, `CONTEXT.md`).
+### Troca do nome para Soneca (no código, falta publicar)
+
+No app: título e nome instalado (`index.html`, `manifest.webmanifest`), a entrada com a capivara ao
+lado do nome, a tela de abrir, a barra de baixo, Perfil (indicar, sugestões), avisos das telas de
+saúde, resumo do mês e as mensagens de convite e indicação. `CONTEXT.md` e `CLAUDE.md` também; o
+`CLAUDE.md` agora traz as regras da identidade, para as telas que ainda estão mudando já saírem certas.
+Não muda: os comentários dos arquivos em `supabase/` (histórico) e as chaves `cad-` guardadas no
+celular (trocar faria todo mundo perder a família aberta e o tema escolhido).
+
+**Antes de juntar com o `main`:** as telas que ainda estão sendo mudadas entram primeiro. Depois,
+trazer o `main` para este branch e conferir que não sobrou nenhum nome antigo em texto do app:
+`grep -rn "Caderninho" --include=*.js --include=*.html --include=*.webmanifest .` não pode achar nada.
+
+**Fora do código, com você:**
+
+1. **E-mails do login** (Supabase → Authentication → Emails): trocar "Caderninho" por "Soneca" no
+   assunto e no texto dos modelos "Confirm sign up" e "Magic link". Se o envio usa SMTP próprio, trocar
+   também o nome do remetente (Authentication → Emails → SMTP Settings → Sender name).
+2. **Endereço do app:** por enquanto continua o mesmo. Trocar de endereço quebra os apps já instalados,
+   os convites em aberto e o retorno do login (Site URL e Redirect URLs no Supabase, origens no Google);
+   se um dia mudar, é uma etapa à parte, com o endereço antigo redirecionando para o novo.
+3. **Google** (quando for ligar o "Entrar com Google"): nome do app "Soneca" na identidade visual.
+4. **Quem já instalou:** no iPhone, o nome e o ícone antigos ficam até remover da tela de início e
+   adicionar de novo; no Android, o Chrome atualiza sozinho em alguns dias.
+
+**Conferir no celular:** a entrada com a capivara e "Soneca", o título da aba, o nome ao instalar,
+"Indicar o Soneca" no Perfil e o texto que vai junto, e o aviso das telas de saúde.
 
 ## Melhorias de 27/09: feito, falta publicar
 
@@ -285,8 +310,8 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
 
 **Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
 
-1. **Google Cloud** (console.cloud.google.com): criar um projeto "Caderninho". Em Google Auth Platform:
-   - Identidade visual: nome "Caderninho", e-mail de suporte e, em domínios autorizados,
+1. **Google Cloud** (console.cloud.google.com): criar um projeto "Soneca". Em Google Auth Platform:
+   - Identidade visual: nome "Soneca", e-mail de suporte e, em domínios autorizados,
      `vrhgirpklyklhvzwdfiq.supabase.co` e o domínio do app.
    - Público: externo, e "Publicar app" (em teste, só entra quem estiver na lista de testadores). Só
      com e-mail e perfil, o Google não pede verificação.

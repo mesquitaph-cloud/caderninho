@@ -51,7 +51,7 @@ const ERR = {
 };
 function errMsg(e) { const m = e?.message || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return 'Não foi possível concluir. Confira a conexão e tente de novo.'; }
 // Indicação: link do app, sem convite. Quem abre cria a própria família.
-const REFER_TEXT = 'Conhece o Caderninho? É um app para anotar a rotina do bebê (mamadas, sono, fraldas) numa linha do tempo que toda a família vê junto. Não precisa baixar na loja: abra o link, entre com seu e-mail e crie a sua família.';
+const REFER_TEXT = 'Conhece o Soneca? É um app para anotar a rotina do bebê (mamadas, sono, fraldas) numa linha do tempo que toda a família vê junto. Não precisa baixar na loja: abra o link, entre com seu e-mail e crie a sua família.';
 
 /* ---------- início ---------- */
 async function boot() {
@@ -544,7 +544,7 @@ function drawEntry() {
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
-  if (k === 'symptom') h += '<p class="dim">O Caderninho só anota o que a família marcar; não avalia nem orienta.</p>';
+  if (k === 'symptom') h += '<p class="dim">O Soneca só anota o que a família marcar; não avalia nem orienta.</p>';
   if (S.edit) h += `<button class="del" data-act="del">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar registro'}</button>`;
   openPanel(h);
 }
@@ -626,7 +626,7 @@ function drawCal() {
     `<div class="mhead">${arrow(-1, cur > ym(min), 'Mês anterior', 'M15 5l-7 7 7 7')}<b>${MESES_L[S.m]} ${S.y}</b>${arrow(1, cur < ym(today), 'Próximo mês', 'M9 5l7 7-7 7')}</div>
     <div class="wdays" aria-hidden="true">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
     <div class="cal">${cells}</div>
-    <div class="calkey"><i></i>dia com registros · o Caderninho mostra os últimos ${KEEP_DAYS} dias</div>
+    <div class="calkey"><i></i>dia com registros · o Soneca mostra os últimos ${KEEP_DAYS} dias</div>
     ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : month ? '<p class="dim">O resumo mostra o mês atual e o anterior.</p>' : ''}
     <button class="ghost" data-act="pickDay" data-val="${today}">Ir para hoje</button>`);
 }
@@ -636,12 +636,12 @@ function calAction(a, v) {
 }
 
 /* ---------- remédios ---------- */
-// A família programa o remédio e os horários; o Caderninho só lembra. Cada horário do dia é uma dose,
+// A família programa o remédio e os horários; o Soneca só lembra. Cada horário do dia é uma dose,
 // identificada por "remédio@horário" (ms). Marcar ou pular a dose grava um registro de remédio.
 const SOON = HOUR;   // uma hora antes, a dose aparece na tela inicial com a caixinha
 const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
 const EVERY = [4, 6, 8, 12];
-const MED_RULE = '<p class="dim">Só a família programa. O Caderninho lembra os horários; não sugere remédio nem dose.</p>';
+const MED_RULE = '<p class="dim">Só a família programa. O Soneca lembra os horários; não sugere remédio nem dose.</p>';
 const localDate = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const dayOf = ymd => startOfDay(new Date(ymd + 'T00:00').getTime());
 const atTime = (d0, hhmm) => { const d = new Date(d0), [H, M] = hhmm.split(':').map(Number); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), H, M).getTime(); };
@@ -842,7 +842,7 @@ function drawMedForm() {
     h += '</div>';
   }
   h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Uma hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar e o “Pular”. Fica assim até alguém marcar ou pular.'}</span></div>`;
-  h += '<p class="dim">O Caderninho só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
+  h += '<p class="dim">O Soneca só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveMed">Salvar</button>';
   if (S.edit) h += `<button class="del" data-act="stopMed">${S.confirmStop ? 'Toque de novo para parar este remédio' : 'Parar este remédio'}</button>`;
@@ -985,7 +985,7 @@ function drawBabyPane() {
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }
   h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
-  h += '<p class="dim">O Caderninho só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
+  h += '<p class="dim">O Soneca só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
   el.innerHTML = h;
 }
 
@@ -1174,7 +1174,7 @@ async function saveFamName(btn) {
 
 /* ---------- Perfil ---------- */
 // O que é só da pessoa: o nome, a aparência neste celular, as famílias de que participa, indicar o
-// Caderninho, falar com quem cuida dele e desconectar.
+// Soneca, falar com quem cuida dele e desconectar.
 const THEMES = [['light', 'Claro'], ['dark', 'Escuro'], ['', 'Do celular']];
 function drawProfilePane() {
   const theme = lsGet('cad-theme') || '';
@@ -1186,11 +1186,11 @@ function drawProfilePane() {
       ? `<div class="li"><span>${esc(x.name)} <small>aberta</small></span></div>`
       : `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('')
     + '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
-  h += '<div class="sec"><h4>Indicar o Caderninho</h4>' +
+  h += '<div class="sec"><h4>Indicar o Soneca</h4>' +
     `<div class="invite">${esc(location.host)}</div>` +
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
-  h += '<div class="sec"><h4>Fale com quem cuida do Caderninho</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
+  h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
   h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
   $('paneProfile').innerHTML = h;
 }
@@ -1207,10 +1207,10 @@ const FB_TYPES = [['idea', 'Sugestão'], ['bug', 'Algo deu errado']];
 function feedbackSheet() { S = { mode: 'feedback' }; FB.sent = false; FB.err = ''; drawFeedback(); $('sheet').scrollTop = 0; }
 function drawFeedback() {
   const h = head('Sugestões e problemas') + (FB.sent
-    ? '<div class="thanks" role="status"><b>Recebido, obrigado!</b><span>Sua mensagem chegou para quem cuida do Caderninho.</span></div><button class="ghost" data-act="fbAgain">Enviar outra</button>'
+    ? '<div class="thanks" role="status"><b>Recebido, obrigado!</b><span>Sua mensagem chegou para quem cuida do Soneca.</span></div><button class="ghost" data-act="fbAgain">Enviar outra</button>'
     : `<div><div class="lbl">Sobre o quê? <small>(opcional)</small></div><div class="seg">${FB_TYPES.map(([k, t]) => `<button class="opt${FB.type === k ? ' on' : ''}" data-act="fbType" data-val="${k}" aria-pressed="${FB.type === k}">${t}</button>`).join('')}</div></div>
        <div><label class="lbl" for="fbText">Sua mensagem</label><textarea class="field" id="fbText" maxlength="${FB_MAX}" placeholder="Ex.: queria ver as mamadas da madrugada separadas">${esc(FB.text)}</textarea>
-       <div class="fbmeta"><span>Quem cuida do Caderninho lê todas.</span><span id="fbCount">${FB.text.length} de ${FB_MAX}</span></div></div>
+       <div class="fbmeta"><span>Quem cuida do Soneca lê todas.</span><span id="fbCount">${FB.text.length} de ${FB_MAX}</span></div></div>
        ${FB.err ? `<div class="err" id="fbErr">${esc(FB.err)}</div>` : ''}
        <div class="lbl">Vai junto: seu nome, a família aberta e o tipo de celular.</div>
        <button class="save" data-act="fbSend">Enviar</button>`);
@@ -1275,7 +1275,7 @@ async function paneAction(a, v, btn) {
     FP.invite = location.origin + '/?convite=' + data.token; return render();
   }
   if (a === 'copyInv') return navigator.clipboard.writeText(FP.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
-  if (a === 'shareInv') return navigator.share({ title: 'Caderninho', text: 'Entre na família ' + f.name + ' no Caderninho:', url: FP.invite }).catch(() => {});
+  if (a === 'shareInv') return navigator.share({ title: 'Soneca', text: 'Entre na família ' + f.name + ' no Soneca:', url: FP.invite }).catch(() => {});
   if (a === 'rm') {
     if (FP.confirm !== 'rm:' + v) { FP.confirm = 'rm:' + v; return render(); }
     const { error } = await sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', v);
@@ -1295,7 +1295,7 @@ async function paneAction(a, v, btn) {
   if (a === 'theme') return setTheme(v);
   if (a === 'switchFam') return openFamily(v);
   if (a === 'newFam') { $('cancelCreate').hidden = false; return show('scrCreate'); }
-  if (a === 'shareApp') return navigator.share({ title: 'Caderninho', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
+  if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
   if (a === 'logout') { await sb.auth.signOut(); location.href = '/'; }
@@ -1453,7 +1453,7 @@ setInterval(refresh, 30000);
 // Aparência escolhida em Perfil (claro ou escuro); sem escolha, segue o celular.
 const savedTheme = lsGet('cad-theme'); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 
-boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir o Caderninho. Confira a conexão e recarregue.'); });
+boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir o Soneca. Confira a conexão e recarregue.'); });
 
 /* ---------- dica de instalação ---------- */
 // O iPhone nunca oferece instalar sozinho; o Android às vezes oferece (beforeinstallprompt).
@@ -1467,7 +1467,7 @@ function paintInstallTip() {
     el.hidden = !on;
     el.querySelector('.tipText').textContent = isIOS
       ? 'Para usar como app: toque em Compartilhar (o quadrado com a seta) e depois em "Adicionar à Tela de Início".'
-      : installEvent ? 'Instale o Caderninho para abrir direto pelo ícone, como um app.'
+      : installEvent ? 'Instale o Soneca para abrir direto pelo ícone, como um app.'
       : 'Para usar como app: no menu do navegador (⋮), toque em "Instalar app" ou "Adicionar à tela inicial".';
     el.querySelector('.tipInstall').hidden = !installEvent;
   });
