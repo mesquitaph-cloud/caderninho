@@ -17,11 +17,14 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 ## Plano até as lojas (até 30/11)
 
 Ideias e pendências por impacto e esforço, e o calendário de 60 dias (privado):
-https://claude.ai/artifact/XJ9WgoF4DYKftixXP57Umc. Obrigatórios: app nativo (Capacitor), entrar com
-Google e com Apple, apagar a conta no app, privacidade (LGPD), revisão das regras de acesso, remetente
-de e-mail, e o teste fechado da Play Store (12 testadores por 14 dias, começar até ~25/10). Entram no
-lançamento: aviso do remédio com o app fechado e o cartão do dia sem IA. O resumo para a pediatra
-ainda não existe; entra se o resto estiver em dia, senão em dezembro.
+https://claude.ai/artifact/XJ9WgoF4DYKftixXP57Umc. Primeiro, para tirar atrito do login: ligar Entrar
+com o Google no site já na semana 1 (só configuração; passos em "Entrar com Google"). Depois os
+obrigatórios das lojas: app nativo (Capacitor) com Google nativo e, no iPhone, Entrar com a Apple
+(exigida quando há Google), apagar a conta no app, privacidade (LGPD), revisão das regras de acesso,
+remetente de e-mail e o teste fechado da Play Store (12 testadores por 14 dias, começar até ~25/10).
+Entram no lançamento: aviso do remédio com o app fechado e o cartão do dia sem IA. O resumo para a
+pediatra ainda não existe; entra se o resto estiver em dia, senão em dezembro. Não agora: saber quem
+indicou quem, registrar sem internet e resumo por e-mail. Saiu: remédios no painel da semana.
 
 ## Melhorias de 27/09: feito, falta publicar
 
@@ -455,7 +458,6 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   na consulta. O Caderninho só guarda; quem responde é o pediatra. Precisa de uma tabela nova no banco.
   Entram no resumo para a consulta.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
-- Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
