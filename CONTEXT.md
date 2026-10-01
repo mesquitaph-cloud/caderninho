@@ -159,8 +159,8 @@ o painel da semana e o resumo do mês. No alto, o nome e a idade do bebê levam 
 _Evite_: home, início, painel
 
 **Aba do bebê**:
-Leva o nome do bebê na barra de baixo. Nesta ordem: o peso, os remédios programados, os marcos e, no
-fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
+Leva o nome do bebê na barra de baixo. Nesta ordem: o botão do relatório para pediatra, as dúvidas
+para a consulta, o peso, os remédios programados, os marcos e, no fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
 para editar. Logo abaixo, três números (último peso, remédios, marcos) levam a cada parte. Só guarda
 o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
 _Evite_: perfil do bebê, ficha, prontuário, tela do bebê
@@ -192,6 +192,33 @@ _Evite_: pesagem (como nome do dado), curva, percentil
 Uma primeira vez do bebê, com o dia em que aconteceu: sorriu, rolou, primeiro dente. O nome é livre;
 o app sugere alguns, sem idade esperada, e mostra a idade do bebê naquele dia.
 _Evite_: marco esperado, atraso, desenvolvimento normal
+
+## Consulta com o pediatra
+
+**Relatório para pediatra**:
+A folha que a família leva à consulta, emitida pelo botão "Emitir relatório para pediatra", na aba do
+bebê. Junta o peso (em gráfico) e os marcos desde o nascimento e, do período escolhido (7, 14 ou 30
+dias, ou desde o último peso de consulta), a média por dia da rotina, os dias lado a lado, os
+sintomas e vômitos, as doses de remédio e as dúvidas que faltam perguntar. Sai em PDF pelo imprimir
+do celular ou em texto para copiar. É sempre clara, mesmo com o app no escuro. Só junta o que foi
+registrado; não avalia o bebê nem compara com outros bebês.
+_Evite_: laudo, prontuário, ficha, exame (e "relatório" para o painel da semana e os resumos)
+
+**Dúvida**:
+O que a família quer perguntar na próxima consulta, anotado na aba do bebê quando lembra. Não mostra
+quem anotou. Enquanto ninguém marca que perguntou, vai no relatório para pediatra.
+_Evite_: pergunta médica, consulta online, orientação
+
+**Perguntei**:
+A marca, no círculo da dúvida, de que ela foi perguntada na consulta, com o dia. Tira a dúvida da
+lista e do relatório; dá para desmarcar.
+_Evite_: respondida, resolvida
+
+**Respostas do pediatra**:
+As dúvidas já perguntadas, da mais recente para a mais antiga, para consultar depois. Cada uma pode
+guardar, se a família quiser, o que o pediatra disse, com as palavras da família. O Caderninho só
+guarda; não confere nem sugere resposta.
+_Evite_: orientação médica, recomendação, conduta
 
 ## Ver os registros
 
