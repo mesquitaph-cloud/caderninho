@@ -132,9 +132,9 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .card .foot{margin:0}
 .flts{display:flex;flex-wrap:wrap;gap:6px}
 .flt{display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--line);border-radius:999px;padding:4px 9px;font-weight:500;font-size:12px;background:var(--surface)}
-.flt i{width:10px;height:10px;border-radius:3px;background:var(--sw);border:2px solid var(--sw)}
+.flt svg{width:12px;height:12px;flex:none}
 .flt[aria-pressed="false"]{color:var(--muted)}
-.flt[aria-pressed="false"] i{background:transparent}
+.flt[aria-pressed="false"] svg{opacity:.35}
 svg.chart{display:block;width:100%;height:auto}
 svg .ax{fill:var(--muted);font:500 10px var(--body)}
 svg .dl{fill:var(--ink);font:500 11px var(--body)}
