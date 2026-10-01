@@ -1,7 +1,7 @@
 // Resumo para mandar à família: os totais de uma semana ou de um mês, em tela e em texto para
 // compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê. Segue os botões
 // da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
-import { MIN, HOUR, esc, dur, shortDate } from './util.js';
+import { MIN, HOUR, esc, dur, shortDate, ICON } from './util.js';
 import { kg } from './growth.js';
 
 const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -56,8 +56,10 @@ function lines(s) {
 
 // title: "Setembro de Marina, até 27 set" ("de", como no resto do app: o nome não diz se é da ou do).
 // span: "mês" ou "semana", para o parabéns do fim.
-export function reportText(s, { title, name, span }) {
+// div: o que division devolve; entra uma linha por título, só com quem ganhou.
+export function reportText(s, { title, name, span, div = null }) {
   return title + ', pelo Caderninho:\n' + lines(s).map(([, t]) => '• ' + t).join('\n')
+    + (div ? '\n\nDivisão de tarefas:\n' + divLines(div).join('\n') + '\n' : '')
     + `\nParabéns a quem cuida de ${name} por mais ${span === 'mês' ? 'um mês' : 'uma semana'} de cuidado!`;
 }
 
@@ -87,4 +89,57 @@ export function shareHtml(text, { heading = 'Mandar para a família', note = '' 
   return `<div class="card"><h3>${esc(heading)}</h3>${note ? `<p class="cap">${esc(note)}</p>` : ''}<div class="msgbox">${esc(text)}</div>
     <div class="row2">${typeof navigator !== 'undefined' && navigator.share ? '<button class="save" data-share="share">Compartilhar</button>' : ''}<button class="ghost" data-share="copy">Copiar texto</button></div>
     <p class="foot">Só soma o que foi registrado no Caderninho.</p></div>`;
+}
+
+// Como foi a divisão de tarefas: as mamadas no peito em destaque, sem nome (o app sabe quem anotou,
+// não quem amamentou), e três títulos de brincadeira para quem mais anotou cada cuidado. Só cuidados:
+// sintomas, vômito e remédio não entram. null quando só uma pessoa registrou no período.
+const TITLES = [
+  { k: 'diaper', title: 'Campeão do Cocô', unit: ['fralda', 'fraldas'], icon: 'diaper', is: e => e.kind === 'diaper' },
+  { k: 'sleep', title: 'Hipnotizador de Bebê', unit: ['soninho', 'soninhos'], icon: 'sleep', is: e => e.kind === 'sleep' },
+  { k: 'feed', title: 'Garçom de Leite', unit: ['mamadeira', 'mamadeiras'], icon: 'feed', is: e => e.kind === 'feed' && e.src === 'bottle' },
+];
+const MIN_COUNT = 3; // cada título precisa de pelo menos 3 registros de quem ganhou
+const names = l => l.length === 1 ? l[0] : l.slice(0, -1).join(', ') + ' e ' + l.at(-1);
+
+// name(author_id): o primeiro nome de quem anotou.
+export function division({ a, z, evs, now, name }) {
+  const end = Math.min(z, now), day = evs.filter(e => e.t >= a && e.t < end);
+  if (new Set(day.map(e => e.author_id).filter(Boolean)).size < 2) return null;
+  const breast = day.filter(e => e.kind === 'feed' && e.src === 'breast');
+  const titles = [];
+  for (const t of TITLES) {
+    const n = new Map();
+    for (const e of day) if (e.author_id && t.is(e)) n.set(e.author_id, (n.get(e.author_id) || 0) + 1);
+    const counts = [...new Set(n.values())].sort((x, y) => y - x);
+    if (!counts.length || counts[0] < MIN_COUNT) continue;
+    const who = c => [...n].filter(([, v]) => v === c).map(([id]) => name(id)).sort((x, y) => x.localeCompare(y, 'pt-BR'));
+    titles.push({ ...t, n: counts[0], winners: who(counts[0]), second: counts[1] ? who(counts[1]) : [] });
+  }
+  if (!breast.length && !titles.length) return null;
+  return {
+    breast: breast.length ? { n: breast.length, ms: breast.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0) * MIN } : null,
+    titles,
+  };
+}
+
+function divLines(d) {
+  const out = [];
+  if (d.breast) out.push('⭐ Chef Favorito: ' + plural(d.breast.n, 'mamada', 'mamadas') + ' no peito' + (d.breast.ms ? ' (' + hours(d.breast.ms) + ')' : ''));
+  for (const t of d.titles) out.push('🏆 ' + t.title + ': ' + names(t.winners) + ' (' + plural(t.n, ...t.unit) + ')');
+  return out;
+}
+
+export function divisionHtml(d, { name }) {
+  if (!d) return '';
+  const row = (cls, icon, title, who, also, big, small) => `<div class="award ${cls}"><span class="medal">${ICON[icon]}</span><div><div class="t">${esc(title)}</div><div class="w">${who}</div>${also ? `<div class="also">${esc(also)}</div>` : ''}</div><div class="n">${esc(big)}<small>${esc(small)}</small></div></div>`;
+  let h = `<div class="card"><h3>Como foi a divisão de tarefas de ${esc(name)}</h3><div class="aw">`;
+  if (d.breast) h += d.breast.ms
+    ? row('breast', 'massage', 'Chef Favorito', esc(plural(d.breast.n, 'mamada', 'mamadas') + ' no peito'), '', hours(d.breast.ms), 'no peito')
+    : row('breast', 'massage', 'Chef Favorito', 'Mamadas no peito', '', String(d.breast.n), d.breast.n === 1 ? 'mamada' : 'mamadas');
+  for (const t of d.titles) {
+    const who = t.winners.length > 1 ? `<b>${esc(names(t.winners))}</b> dividem` : `<b>${esc(t.winners[0])}</b>`;
+    h += row(t.k, t.icon, t.title, who, t.second.length ? '2º lugar: ' + names(t.second) : '', String(t.n), t.n === 1 ? t.unit[0] : t.unit[1]);
+  }
+  return h + '</div><p class="foot">Conta quem anotou cada registro.</p></div>';
 }

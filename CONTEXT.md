@@ -75,8 +75,8 @@ médio, grande, gigante) e marcar o alerta marrom.
 _Evite_: troca, evacuação, diurese
 
 **Alerta marrom**:
-Na fralda com cocô, a marca de que vazou da fralda. É o único toque de humor do Caderninho, junto com
-a mensagem de salvo do cocô gigante; não avalia o bebê.
+Na fralda com cocô, a marca de que vazou da fralda. É um dos poucos toques de humor do Caderninho,
+com a mensagem de salvo do cocô gigante e os títulos da divisão de tarefas; não avalia o bebê.
 _Evite_: vazamento, acidente
 
 **Vômito**:
@@ -257,9 +257,20 @@ _Evite_: relatório, balanço, desempenho
 **Resumo para mandar**:
 O texto com os totais da semana (no fim do painel da semana) ou do mês, que um membro compartilha
 pelo WhatsApp ou copia. Segue os botões da família: sem Ordenha ligada, não fala de ordenha; os
-cuidados ligados entram. Sintomas e vômito ficam de fora. Termina com um parabéns a quem cuida do
+cuidados ligados entram. Sintomas e vômito ficam de fora. Antes do fim, a divisão de tarefas, só com quem
+ganhou. Termina com um parabéns a quem cuida do
 bebê, sem avaliar o bebê. Só sai do Caderninho quando alguém compartilha.
 _Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Caderninho)
+
+**Divisão de tarefas**:
+O cartão "Como foi a divisão de tarefas", no resumo do mês e no fim do painel da semana. No alto, o
+Chef Favorito: as mamadas no peito do período, sem nome. Depois, três títulos de brincadeira para quem
+mais anotou cada cuidado: Campeão do Cocô (fraldas), Hipnotizador de Bebê (dormiu) e Garçom de Leite
+(mamadeiras), cada um com o 2º lugar, só o nome. Empate divide o título. Conta quem anotou, não quem
+fez. Cada título precisa de pelo menos 3 registros, e o cartão some quando só uma pessoa registrou. Só
+cuidados: sintomas, vômito e remédio ficam de fora, sem brincadeira. No resumo para mandar, vai só
+quem ganhou.
+_Evite_: ranking, placar, competição, quem mais cuidou
 
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia

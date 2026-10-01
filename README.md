@@ -37,6 +37,27 @@ detalhes de cada um abaixo.
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
 
+### Divisão de tarefas no resumo (01/10)
+
+Prévia aprovada (privada): https://claude.ai/artifact/QtrE78v57huTWv2A6ExBtY
+
+Não muda o banco; basta publicar.
+
+- **Cartão "Como foi a divisão de tarefas de Marina"** no resumo do mês, depois dos totais, e no fim
+  do painel da semana, antes de mandar.
+- **Chef Favorito** no alto, em rosa, quando houver mamada no peito: quantas e as horas no peito
+  (sem minutos anotados, só quantas). Sem nome, porque o app sabe quem anotou, não quem amamentou.
+- **Campeão do Cocô** (fraldas), **Hipnotizador de Bebê** (dormiu) e **Garçom de Leite** (mamadeiras):
+  quem mais anotou, o número e "2º lugar: nome". Empate divide ("Ana e João dividem"). Cada título
+  precisa de 3 registros; o cartão some quando só uma pessoa registrou no período.
+- **Resumo para mandar:** ganha "Divisão de tarefas:" com uma linha por título, só quem ganhou.
+- **Fora:** sintomas, vômito, remédio, ordenha, peso e marcos.
+- **Conferir no celular:** o mês e uma semana com registros de duas pessoas; uma semana só sua (o
+  cartão some); o texto de Copiar.
+
+Testado em 01/10 com registros de mentira: empate no 1º e no 2º, título abaixo de 3 registros, uma
+pessoa só, peito com e sem minutos; claro e escuro em 360 px, sem rolagem para o lado.
+
 ### Relatório para pediatra e dúvidas para a consulta (01/10)
 
 Pedido de 01/10: um relatório para mandar ao pediatra e as dúvidas para a consulta (que estavam em
