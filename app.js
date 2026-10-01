@@ -5,7 +5,7 @@ import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayT
 import { weekHtml, dayLine } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
-import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
+import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -335,9 +335,10 @@ function renderHome() {
     $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
     if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
     const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
+    const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
-    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês' }) : '';
-    $('monthView').innerHTML = monthHtml(s, { heading })
+    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês', div }) : '';
+    $('monthView').innerHTML = monthHtml(s, { heading }) + divisionHtml(div, { name: b.name })
       + (s.any ? shareHtml(st.shareText) : '');
     return;
   }
@@ -349,10 +350,13 @@ function renderHome() {
     $('nextDay').disabled = $('toToday').hidden = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
-    const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
-    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana' }) : '';
+    const wa = addDays(st.weekEnd, -6), wz = addDays(st.weekEnd, 1);
+    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs });
+    const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
+    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
       : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn })
+        + divisionHtml(div, { name: b.name })
         + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
   }
@@ -654,6 +658,8 @@ function everyTimes(every, first) {
   for (let k = (H * 60 + M) % step; k < 1440; k += step) out.push(pad(Math.floor(k / 60)) + ':' + pad(k % 60));
   return out;
 }
+// O primeiro nome de quem anotou, para a divisão de tarefas (vai no texto para mandar: nunca "você").
+const firstName = id => (st.names[id] || 'alguém').split(' ')[0];
 const whoGave = e => e.author_id === st.user.id ? 'você' : (st.names[e.author_id] || 'alguém').split(' ')[0];
 const whenText = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return (d0 === t0 ? 'hoje' : d0 === addDays(t0, -1) ? 'ontem' : shortDay(d0)) + ' às ' + hm(t); };
 const dayWord = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return d0 === t0 ? '' : d0 < t0 ? 'ontem' : 'amanhã'; };
