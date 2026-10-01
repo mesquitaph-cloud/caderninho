@@ -18,6 +18,8 @@ export const ICON = {
   siren: `<svg viewBox="0 0 24 24" ${P}><path d="M7 18v-5a5 5 0 0 1 10 0v5"/><path d="M4.5 21h15M5.5 18h13"/><path d="M12 3v2M5.5 6l1.4 1.4M18.5 6l-1.4 1.4"/></svg>`,
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
   sun: `<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  // Relatório para pediatra: a prancheta.
+  clip: `<svg viewBox="0 0 24 24" ${P}><path d="M8.5 3h7v3h-7z"/><path d="M15.5 4.5H18a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2.5"/><path d="M8 12h8M8 16h5"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" ${P}><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20a6 6 0 0 0-4-5.6"/></svg>`,
   // Barra de baixo: Hoje (o calendário), Família (o menu de pessoas) e Perfil (a pessoa com a engrenagem).
   today: `<svg viewBox="0 0 24 24" ${P}><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13.2v3.6"/></svg>`,

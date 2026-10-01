@@ -5,7 +5,8 @@ import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayT
 import { weekHtml, dayLine } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
-import { periodStats, reportText, monthHtml, shareHtml } from './report.js';
+import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
+import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -21,6 +22,8 @@ const st = {
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
   weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
   growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
+  questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
+  questionsOk: true,           // falso se não deu para carregar (por exemplo, antes do 010)
   settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
   settingsOk: true,            // falso se não deu para carregar (por exemplo, antes do 008)
   settingsCh: null,
@@ -184,7 +187,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadSettings(fid)]);
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions(), loadSettings(fid)]);
   st.tab = 'home'; FP.confirm = FP.invite = null;
   show('scrMain'); render();
 }
@@ -226,6 +229,14 @@ async function loadGrowth() {
                                     sb.from('milestones').select('*').eq('baby_id', st.baby.id)]);
   st.growthOk = !w.error && !m.error;
   st.weights = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
+}
+// Dúvidas para a consulta. Sem canal ao vivo: antes do 010 a tabela não existe. Recarrega ao voltar
+// para o app, como o resto.
+async function loadQuestions() {
+  st.questions = [];
+  if (!st.baby) return;
+  const { data, error } = await sb.from('questions').select('*').eq('baby_id', st.baby.id);
+  st.questionsOk = !error; st.questions = data || [];
 }
 // Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
 // dos registros poderia derrubar a sincronização de tudo.
@@ -335,9 +346,10 @@ function renderHome() {
     $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
     if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
     const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
+    const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
-    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês' }) : '';
-    $('monthView').innerHTML = monthHtml(s, { heading })
+    st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês', div }) : '';
+    $('monthView').innerHTML = monthHtml(s, { heading }) + divisionHtml(div, { name: b.name })
       + (s.any ? shareHtml(st.shareText) : '');
     return;
   }
@@ -349,10 +361,13 @@ function renderHome() {
     $('nextDay').disabled = $('toToday').hidden = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
-    const s = b && periodStats({ a: addDays(st.weekEnd, -6), z: addDays(st.weekEnd, 1), evs, sleep, now, ...logs });
-    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana' }) : '';
+    const wa = addDays(st.weekEnd, -6), wz = addDays(st.weekEnd, 1);
+    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs });
+    const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
+    st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
       : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn })
+        + divisionHtml(div, { name: b.name })
         + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
   }
@@ -654,6 +669,8 @@ function everyTimes(every, first) {
   for (let k = (H * 60 + M) % step; k < 1440; k += step) out.push(pad(Math.floor(k / 60)) + ':' + pad(k % 60));
   return out;
 }
+// O primeiro nome de quem anotou, para a divisão de tarefas (vai no texto para mandar: nunca "você").
+const firstName = id => (st.names[id] || 'alguém').split(' ')[0];
 const whoGave = e => e.author_id === st.user.id ? 'você' : (st.names[e.author_id] || 'alguém').split(' ')[0];
 const whenText = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return (d0 === t0 ? 'hoje' : d0 === addDays(t0, -1) ? 'ontem' : shortDay(d0)) + ' às ' + hm(t); };
 const dayWord = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return d0 === t0 ? '' : d0 < t0 ? 'ontem' : 'amanhã'; };
@@ -959,6 +976,9 @@ function drawBabyPane() {
   h += '<div class="jump">' + tile('babyWeight', '--c-weight', 'Peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
     + tile('babyMeds', '--c-med', 'Remédios', String(meds.length), medText)
     + tile('babyMilestones', '--accent', 'Marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
+  // Para a consulta: o relatório e, logo embaixo, as dúvidas.
+  h += `<button class="consult" data-act="report"><span class="ci" aria-hidden="true">${ICON.clip}</span><span><b>Emitir relatório para pediatra</b><small>Em PDF, com as últimas semanas</small></span><span class="go" aria-hidden="true">›</span></button>`;
+  h += questionsHtml();
   if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
   else {
     h += '<div class="sec" id="babyWeight"><h4>Peso</h4>';
@@ -987,6 +1007,164 @@ function drawBabyPane() {
   h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
   h += '<p class="dim">O Soneca só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
   el.innerHTML = h;
+}
+
+/* ---------- dúvidas para a consulta ---------- */
+// A família anota a dúvida quando lembra; na consulta, marca "perguntei" e, se quiser, o que o
+// pediatra disse. As que faltam perguntar vão no relatório. O Soneca só guarda.
+const Q_MAX = 300, A_MAX = 500;
+const byCreated = (a, b) => a.created_at < b.created_at ? -1 : 1;
+const openQuestions = () => st.questions.filter(q => !q.asked_on).sort(byCreated);
+const askedQuestions = () => st.questions.filter(q => q.asked_on).sort((a, b) => a.asked_on !== b.asked_on ? (a.asked_on < b.asked_on ? 1 : -1) : -byCreated(a, b));
+const putQuestion = q => { st.questions = [...st.questions.filter(x => x.id !== q.id), q]; };
+function questionsHtml() {
+  let h = '<div class="sec" id="babyQuestions"><h4>Dúvidas para a consulta</h4>';
+  if (!st.questionsOk) return h + '<div class="soft">Não foi possível carregar as dúvidas. Confira a conexão e abra de novo.</div></div>';
+  const open = openQuestions(), asked = askedQuestions();
+  h += open.length
+    ? `<div class="qs">${open.map(q => `<div class="qi"><button class="ck" data-act="askQ" data-val="${esc(q.id)}" aria-label="Marcar como perguntada: ${esc(q.body)}">${CHECK}</button><button class="qt" data-act="editQ" data-val="${esc(q.id)}"><b>${esc(q.body)}</b><small>${esc(shortDate(localDate(Date.parse(q.created_at))))}</small></button></div>`).join('')}</div>`
+    : `<div class="soft">Anote o que quiser perguntar na próxima consulta de ${esc(st.baby.name)}. As dúvidas vão junto no relatório para pediatra.</div>`;
+  h += '<button class="ghost" data-act="newQ">+ Anotar dúvida</button>';
+  if (asked.length) h += `<button class="li tg" data-act="answers"><span>Respostas do pediatra <small>${asked.length}</small></span><span class="go">Ver</span></button>`;
+  return h + '</div>';
+}
+async function setAsked(id, asked_on) {
+  const { data, error } = await sb.from('questions').update({ asked_on }).eq('id', id).select().single();
+  if (error) { toast('Não foi possível salvar. Confira a conexão.'); return null; }
+  putQuestion(data); render(); return data;
+}
+async function askQuestion(id) {
+  if (await setAsked(id, localDate(Date.now()))) toast('Foi para Respostas do pediatra', () => setAsked(id, null));
+}
+function questionForm(q) {
+  S = { mode: 'question', edit: q || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', confirmDel: false, err: '' };
+  drawQuestion(); $('sheet').scrollTop = 0;
+}
+function drawQuestion() {
+  const q = S.edit;
+  let h = head(q ? 'Dúvida' : 'Anotar dúvida')
+    + `<p class="dsub">${q ? 'Anotada em ' + esc(shortDate(localDate(Date.parse(q.created_at)))) : 'Para a próxima consulta de ' + esc(st.baby.name)}</p>`;
+  h += `<div><label class="lbl" for="qBody">A dúvida</label><textarea class="field" id="qBody" maxlength="${Q_MAX}" placeholder="Ex.: Ela pode tomar sol pela janela?">${esc(S.body)}</textarea>
+    <div class="fbmeta"><span></span><span id="qCount">${S.body.length} de ${Q_MAX}</span></div></div>`;
+  if (!q) h += '<p class="dim">Aparece para todos da família e vai no relatório para pediatra até alguém marcar que perguntou.</p>';
+  else {
+    h += S.asked
+      ? `<button class="given q" data-act="qAsked"><span class="ck">${CHECK}</span><span>Perguntei em ${esc(shortDate(S.asked))}<small>tocar para desmarcar</small></span></button>`
+      : `<button class="given q off" data-act="qAsked"><span class="ck"></span><span>Ainda não perguntei<small>tocar para marcar como perguntada</small></span></button>`;
+    if (S.asked) h += `<div><label class="lbl" for="qAnswer">O que o pediatra disse <small>(se quiser)</small></label><textarea class="field short" id="qAnswer" maxlength="${A_MAX}" placeholder="Com as palavras da família">${esc(S.answer)}</textarea></div>`;
+  }
+  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
+  h += '<button class="save" data-act="saveQ">Salvar</button>';
+  if (q) h += `<button class="del" data-act="delQ">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar dúvida'}</button>`;
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+function questionInput(el) {
+  if (el.id === 'qBody') { S.body = el.value; $('qCount').textContent = S.body.length + ' de ' + Q_MAX; }
+  else if (el.id === 'qAnswer') S.answer = el.value;
+  if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
+}
+async function saveQuestion(btn) {
+  const body = S.body.trim();
+  if (!body) { S.err = 'Escreva a dúvida.'; return drawQuestion(); }
+  busy(btn, true);
+  const q = S.edit
+    ? sb.from('questions').update({ body, asked_on: S.asked, answer: S.answer.trim() || null }).eq('id', S.edit.id)
+    : sb.from('questions').insert({ family_id: st.family.id, baby_id: st.baby.id, body });
+  const { data, error } = await q.select().single();
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawQuestion(); }
+  putQuestion(data); closeSheet(); toast('Salvo');
+}
+async function delQuestion(btn) {
+  const id = S.edit.id;
+  busy(btn, true);
+  const { error } = await sb.from('questions').delete().eq('id', id);
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawQuestion(); }
+  st.questions = st.questions.filter(x => x.id !== id);
+  closeSheet(); toast('Apagado');
+}
+// Respostas do pediatra: as já perguntadas, da mais recente para a mais antiga, para consultar depois.
+function answersSheet() {
+  S = { mode: 'answers' };
+  const asked = askedQuestions();
+  openPanel(head('Respostas do pediatra') + `<p class="dsub">${asked.length} ${asked.length === 1 ? 'dúvida perguntada' : 'dúvidas perguntadas'}</p>`
+    + (asked.length ? `<div class="recs">${asked.map(q => `<button class="rec" data-act="editQ" data-val="${esc(q.id)}"><span><b>${esc(q.body)}</b><small>Perguntada em ${esc(shortDate(q.asked_on))}</small>${q.answer ? `<small class="nt">${esc(q.answer)}</small>` : '<small>Sem resposta anotada</small>'}</span></button>`).join('')}</div>` : '<div class="soft">Nenhuma dúvida perguntada ainda.</div>')
+    + '<p class="dim">O Soneca só guarda o que a família anotou da consulta.</p>');
+  $('sheet').scrollTop = 0;
+}
+function questionAction(a, v, btn) {
+  if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v));
+  if (a === 'qAsked') { S.asked = S.asked ? null : S.edit.asked_on || localDate(Date.now()); return drawQuestion(); }
+  if (a === 'saveQ') return saveQuestion(btn);
+  if (a === 'delQ') { if (S.confirmDel) return delQuestion(btn); S.confirmDel = true; return drawQuestion(); }
+}
+
+/* ---------- relatório para pediatra ---------- */
+// Escolhe o período e o que entra; o PDF sai pelo imprimir do celular (salvar em PDF ou
+// compartilhar). As escolhas valem até fechar o app.
+const RP = { n: 14, parts: { routine: true, symptoms: true, meds: true, growth: true, questions: true } };
+const RP_PARTS = [['routine', 'Rotina: mamadas, sono e fraldas'], ['symptoms', 'Sintomas e vômitos'], ['meds', 'Remédios e doses'],
+                  ['growth', 'Peso e marcos'], ['questions', 'Dúvidas para a consulta']];
+// O último peso anotado numa consulta, para "desde a última consulta". Só aparece se o período fica
+// maior que 7 dias e cabe no que o app carrega (60 dias).
+function lastConsult() {
+  const c = st.weights.filter(w => /consulta|pediatr|m[ée]dic/i.test(w.note || '')).at(-1);
+  const d0 = c && dayOf(c.measured_on);
+  return c && d0 < addDays(startOfDay(Date.now()), -6) && d0 >= firstDay() ? c : null;
+}
+function reportStart() {
+  const c = RP.n === 'since' && lastConsult();
+  if (RP.n === 'since' && !c) RP.n = 14;
+  return c ? dayOf(c.measured_on) : addDays(startOfDay(Date.now()), -(RP.n - 1));
+}
+// Como o remédio está programado hoje, para ir junto das doses.
+function medPlan(id) {
+  const m = st.meds.find(x => x.id === id); if (!m) return null;
+  if (m.schedule === 'prn') return 'só quando precisar' + (m.every_hours ? `, de ${m.every_hours} em ${m.every_hours} horas` : '');
+  const t = m.schedule === 'every' ? '' : medTimes(m).join(', ');
+  return medWhen(m).replace('todo dia', 'todo dia' + (t ? ' às ' + t : '')).replace(' · ', ', ');
+}
+function reportArgs() {
+  const now = Date.now(), a = reportStart(), evs = sortedEntries(), { out, open } = sleepIntervals(evs);
+  const sleeps = open === null ? out : [...out, [open, now]];
+  return { baby: st.baby, a, now, evs, sleeps, stats: reportStats({ a, now, evs, sleeps, on: isOn }), weights: st.weights, milestones: st.milestones,
+           questions: st.questionsOk ? openQuestions() : [], parts: RP.parts, medPlan };
+}
+function reportSheet() { S = { mode: 'report' }; drawReport(); $('sheet').scrollTop = 0; }
+function drawReport() {
+  const R = reportArgs(), today = startOfDay(Date.now()), c = lastConsult(), nq = R.questions.length;
+  const per = n => periodShort(addDays(today, -(n - 1)), today);
+  const o = (val, txt, sub) => `<button class="opt${RP.n === val ? ' on' : ''}" data-act="rpN" data-val="${val}" aria-pressed="${RP.n === val}">${txt}<small>${esc(sub)}</small></button>`;
+  let h = head('Relatório para pediatra') + `<p class="dsub">De ${esc(st.baby.name)}, para levar à consulta</p>`;
+  h += `<div><div class="lbl">Período</div><div class="seg rpper">${[7, 14, 30].map(n => o(n, n + ' dias', per(n))).join('')}${c ? o('since', 'Desde ' + shortDate(c.measured_on), 'último peso de consulta') : ''}</div></div>`;
+  const n = R.stats.symptoms.length, nm = R.stats.meds.length;
+  const subs = { routine: 'média por dia e os dias lado a lado', symptoms: n ? n + ' no período' : 'nenhum no período',
+                 meds: nm ? (nm === 1 ? '1 remédio' : nm + ' remédios') + ' com doses no período' : 'nenhuma dose no período',
+                 growth: 'desde o nascimento', questions: nq + ' ainda sem perguntar' };
+  h += '<div><div class="lbl">O que vai junto</div><div class="tgl">' + RP_PARTS.filter(([k]) => k !== 'questions' || nq).map(([k, t]) =>
+    `<button class="li tg" role="switch" aria-checked="${RP.parts[k]}" data-act="rpPart" data-val="${k}"><span>${t}<small class="tsub">${esc(subs[k])}</small></span><span class="sw${RP.parts[k] ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`).join('') + '</div></div>';
+  h += '<button class="save" data-act="rpPdf">Emitir PDF</button><div class="row2"><button class="ghost" data-act="rpView">Ver antes</button><button class="ghost" data-act="rpCopy">Copiar texto</button></div>';
+  h += '<p class="dim">O PDF sai pelo imprimir do celular: escolha salvar em PDF ou compartilhar. Só junta o que foi registrado no Soneca; não avalia o bebê.</p>';
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+// A folha fica pronta em #rpView: aberta em "Ver antes"; escondida, só para imprimir, em "Emitir PDF".
+function paintReport() { $('rpPaper').innerHTML = reportHtml(reportArgs()); }
+function printReport() {
+  paintReport();
+  const t = document.title; document.title = pdfName(st.baby, Date.now());
+  const back = () => { document.title = t; };
+  window.addEventListener('afterprint', back, { once: true }); setTimeout(back, 60000);
+  window.print();
+}
+function openReportView() { paintReport(); S = null; $('scrim').hidden = true; $('sheet').hidden = true; $('rpView').hidden = false; $('rpView').scrollTop = 0; $('rpBack').focus(); }
+function closeReportView() { $('rpView').hidden = true; reportSheet(); }
+function reportAction(a, v) {
+  if (a === 'rpN') { RP.n = v === 'since' ? v : +v; return drawReport(); }
+  if (a === 'rpPart') { RP.parts[v] = !RP.parts[v]; return drawReport(); }
+  if (a === 'rpPdf') return printReport();
+  if (a === 'rpView') return openReportView();
+  if (a === 'rpCopy') return navigator.clipboard.writeText(reportPlain(reportArgs())).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
 }
 
 // Anotar ou editar um peso ou um marco.
@@ -1090,7 +1268,7 @@ async function delBaby(btn) {
   st.babies = st.babies.filter(x => x.id !== id);
   if (st.baby?.id === id) {
     if (st.babies.length) await selectBaby(st.babies[0].id);
-    else { st.baby = null; st.entries = new Map(); st.meds = []; st.weights = []; st.milestones = []; }
+    else { st.baby = null; st.entries = new Map(); st.meds = []; st.weights = []; st.milestones = []; st.questions = []; }
   }
   closeSheet(); toast('Apagado');
 }
@@ -1110,7 +1288,7 @@ async function saveBaby(btn) {
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
-  await Promise.all([loadEntries(), loadMeds(), loadGrowth()]); render();
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render();
 }
 function renameSheet() {
   S = { mode: 'rename' };
@@ -1259,6 +1437,11 @@ async function paneAction(a, v, btn) {
   if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
   if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
   if (a === 'allMeds') return medsSheet();
+  if (a === 'report') return reportSheet();
+  if (a === 'newQ') return questionForm(null);
+  if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v));
+  if (a === 'askQ') return askQuestion(v);
+  if (a === 'answers') return answersSheet();
   if (a === 'newMed') return medForm(null, 'pane');
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
   if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
@@ -1310,6 +1493,7 @@ $('sheetIn').addEventListener('input', e => {
   }
   if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
   if (S?.mode === 'weight' || S?.mode === 'milestone') return logInput(e.target);
+  if (S?.mode === 'question') return questionInput(e.target);
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
@@ -1339,6 +1523,8 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
+  if (S.mode === 'question' || S.mode === 'answers') return questionAction(a, v, b);
+  if (S.mode === 'report') return reportAction(a, v);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -1442,11 +1628,13 @@ $('weekView').addEventListener('keydown', e => {
   if (r && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDay(+r.dataset.day); }
 });
 $('scrim').onclick = closeSheet;
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && S) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (!$('rpView').hidden) closeReportView(); else if (S) closeSheet(); });
+$('rpBack').onclick = closeReportView;
+$('rpPrint').onclick = printReport;
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && st.baby && !$('scrMain').hidden && !S) Promise.all([loadEntries(), loadMeds(), loadGrowth()]).then(render);
+  if (!document.hidden && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
 setInterval(refresh, 30000);
 

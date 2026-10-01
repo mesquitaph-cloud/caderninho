@@ -75,8 +75,8 @@ médio, grande, gigante) e marcar o alerta marrom.
 _Evite_: troca, evacuação, diurese
 
 **Alerta marrom**:
-Na fralda com cocô, a marca de que vazou da fralda. É o único toque de humor do Soneca, junto com
-a mensagem de salvo do cocô gigante; não avalia o bebê.
+Na fralda com cocô, a marca de que vazou da fralda. É um dos poucos toques de humor do Soneca,
+com a mensagem de salvo do cocô gigante e os títulos da divisão de tarefas; não avalia o bebê.
 _Evite_: vazamento, acidente
 
 **Vômito**:
@@ -159,8 +159,8 @@ o painel da semana e o resumo do mês. No alto, o nome e a idade do bebê levam 
 _Evite_: home, início, painel
 
 **Aba do bebê**:
-Leva o nome do bebê na barra de baixo. Nesta ordem: o peso, os remédios programados, os marcos e, no
-fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
+Leva o nome do bebê na barra de baixo. Nesta ordem: o botão do relatório para pediatra, as dúvidas
+para a consulta, o peso, os remédios programados, os marcos e, no fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
 para editar. Logo abaixo, três números (último peso, remédios, marcos) levam a cada parte. Só guarda
 o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
 _Evite_: perfil do bebê, ficha, prontuário, tela do bebê
@@ -192,6 +192,33 @@ _Evite_: pesagem (como nome do dado), curva, percentil
 Uma primeira vez do bebê, com o dia em que aconteceu: sorriu, rolou, primeiro dente. O nome é livre;
 o app sugere alguns, sem idade esperada, e mostra a idade do bebê naquele dia.
 _Evite_: marco esperado, atraso, desenvolvimento normal
+
+## Consulta com o pediatra
+
+**Relatório para pediatra**:
+A folha que a família leva à consulta, emitida pelo botão "Emitir relatório para pediatra", na aba do
+bebê. Junta o peso (em gráfico) e os marcos desde o nascimento e, do período escolhido (7, 14 ou 30
+dias, ou desde o último peso de consulta), a média por dia da rotina, os dias lado a lado, os
+sintomas e vômitos, as doses de remédio e as dúvidas que faltam perguntar. Sai em PDF pelo imprimir
+do celular ou em texto para copiar. É sempre clara, mesmo com o app no escuro. Só junta o que foi
+registrado; não avalia o bebê nem compara com outros bebês.
+_Evite_: laudo, prontuário, ficha, exame (e "relatório" para o painel da semana e os resumos)
+
+**Dúvida**:
+O que a família quer perguntar na próxima consulta, anotado na aba do bebê quando lembra. Não mostra
+quem anotou. Enquanto ninguém marca que perguntou, vai no relatório para pediatra.
+_Evite_: pergunta médica, consulta online, orientação
+
+**Perguntei**:
+A marca, no círculo da dúvida, de que ela foi perguntada na consulta, com o dia. Tira a dúvida da
+lista e do relatório; dá para desmarcar.
+_Evite_: respondida, resolvida
+
+**Respostas do pediatra**:
+As dúvidas já perguntadas, da mais recente para a mais antiga, para consultar depois. Cada uma pode
+guardar, se a família quiser, o que o pediatra disse, com as palavras da família. O Soneca só
+guarda; não confere nem sugere resposta.
+_Evite_: orientação médica, recomendação, conduta
 
 ## Ver os registros
 
@@ -230,9 +257,20 @@ _Evite_: relatório, balanço, desempenho
 **Resumo para mandar**:
 O texto com os totais da semana (no fim do painel da semana) ou do mês, que um membro compartilha
 pelo WhatsApp ou copia. Segue os botões da família: sem Ordenha ligada, não fala de ordenha; os
-cuidados ligados entram. Sintomas e vômito ficam de fora. Termina com um parabéns a quem cuida do
+cuidados ligados entram. Sintomas e vômito ficam de fora. Antes do fim, a divisão de tarefas, só com quem
+ganhou. Termina com um parabéns a quem cuida do
 bebê, sem avaliar o bebê. Só sai do Soneca quando alguém compartilha.
 _Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Soneca)
+
+**Divisão de tarefas**:
+O cartão "Como foi a divisão de tarefas", no resumo do mês e no fim do painel da semana. No alto, o
+Chef Favorito: as mamadas no peito do período, sem nome. Depois, três títulos de brincadeira para quem
+mais anotou cada cuidado: Campeão do Cocô (fraldas), Hipnotizador de Bebê (dormiu) e Garçom de Leite
+(mamadeiras), cada um com o 2º lugar, só o nome. Empate divide o título. Conta quem anotou, não quem
+fez. Cada título precisa de pelo menos 3 registros, e o cartão some quando só uma pessoa registrou. Só
+cuidados: sintomas, vômito e remédio ficam de fora, sem brincadeira. No resumo para mandar, vai só
+quem ganhou.
+_Evite_: ranking, placar, competição, quem mais cuidou
 
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
