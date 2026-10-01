@@ -386,6 +386,53 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 
 ## Ideias para depois
 
+- **Cartão "como está o bebê", no alto do Hoje** (sugestão de 01/10, vinda de uma conversa no
+  ChatGPT). Exemplo: "Martin — 23 dias. Dormiu 12h48 nas últimas 24h, 42 min a menos que a média
+  dos últimos 7 dias. Última mamada: 2h17 atrás. Próxima janela provável de sono: 21:40–22:10.
+  Insight do dia: está ficando acordado uns 18 min a mais à noite do que há uma semana." A ideia é
+  transformar os registros em algo que os pais usem de relance. Os dados já estão no app, e boa parte
+  não precisa de IA:
+  - **Contas simples, sem IA:** sono nas últimas 24h, comparação com a média dos 7 dias (o painel
+    da semana já calcula a média) e tempo desde a última mamada. Dá para fazer só no app, sem mudar
+    o banco.
+  - **Previsão e "insight":** a janela provável de sono e a frase do dia interpretam os registros,
+    e hoje o Caderninho só junta o que foi anotado, sem avaliar nem sugerir (`CONTEXT.md`). Fazer
+    exige decidir antes se o app passa a interpretar e como dizer isso aos pais (ex.: "pelos
+    registros desta semana", nunca como orientação).
+  - **Com IA:** os registros do bebê (dado de saúde de criança) iriam para um serviço de fora
+    (Claude ou outro), com a chave guardada no servidor (função no Supabase), nunca no app. Decidir o
+    que vai (só números, sem observações nem sintomas), avisar as famílias e ver o custo por família.
+    Uma frase calculada pelo app ("acordado 18 min a mais à noite que na semana passada") talvez dê
+    o mesmo resultado sem IA.
+- **"Pergunte ao Caderninho"** (mesma conversa): perguntar em texto livre sobre o histórico do
+  bebê. Exemplos: "Quando foi a última vez que ficou mais de 6 horas sem cocô?", "Quanto está
+  mamando por dia?", "Faça um resumo da última semana para mandar para a pediatra" e "Por que está
+  dormindo pior hoje?". As três primeiras só buscam e somam registros; a última pede um porquê, e a
+  resposta da sugestão ("isso pode estar contribuindo para...") já é orientação, o que o Caderninho
+  hoje não faz. Precisa do mesmo que o cartão com IA (registros indo para fora, chave no servidor) e
+  de regra clara para a IA: responder só com o que está anotado, dizer de onde tirou cada número e,
+  diante de sintoma ou "por quê", mandar falar com o pediatra.
+- **Resumo para a consulta** (mesma conversa): uma tela com os últimos 14 dias para mostrar ao
+  pediatra: peso (de quanto para quanto), sono, mamadas, fraldas molhadas e evacuações por dia, o
+  que mudou em relação à semana anterior (ex.: intervalo entre mamadas 11% maior), sintomas
+  anotados (ex.: duas febres, com a temperatura) e as dúvidas para a consulta (item abaixo). Exportar
+  em PDF ou compartilhar. Não precisa de IA: quase tudo já está no resumo do Mês e no painel da
+  semana. Diferente do resumo para mandar, aqui os sintomas entram, porque é para o pediatra. As
+  "mudanças" devem ser números lado a lado, sem dizer se é bom ou ruim.
+- **Registro falando ou escrevendo** (mesma conversa): com o bebê no colo, dizer ou digitar "Martin
+  mamou 90 ml agora" ou "Martin dormiu" em vez de tocar em vários botões; depois, talvez pelo
+  WhatsApp. O Huckleberry já faz isso no plano pago. Com IA para entender a frase; o app mostra o
+  registro montado e a pessoa confirma antes de salvar, para não gravar errado. Pelo WhatsApp exige
+  a API do WhatsApp Business, um servidor e ligar o número de telefone à conta. Antes de IA, vale
+  ver se o ditado do teclado do celular num campo de texto, com o app separando "mamou", "90 ml",
+  "dormiu", já resolve os casos mais comuns.
+- **O Caderninho não termina aos 12 meses** (mesma conversa): hoje a família usa muito no começo e
+  larga quando o bebê pega rotina. A ideia é o app acompanhar cada fase: 0–6 meses (sono, mamadas,
+  fraldas, peso), 6–12 meses (introdução alimentar, sono, crescimento, dentes), 1–2 anos
+  (alimentação, marcos, fala) e 2–5 anos (crescimento, vacinas, saúde). Boa parte cabe no que já
+  existe: peso e marcos na aba do bebê e os botões que a família liga ou desliga (a grade de cada
+  fase). Novos seriam refeição (o que comeu, primeira vez de um alimento), dentes e vacinas (com a
+  data, como os marcos). Sem "idade esperada" para cada coisa, como já se decidiu nos marcos.
 - **Resumo por e-mail, todo mês ou toda semana.** O texto já existe no app (aba Mês); falta mandar
   sozinho. Precisa, nesta ordem: (1) o remetente dedicado da primeira pendência, com domínio próprio e
   um serviço de envio (Resend, Postmark ou parecido), com os registros de DNS; (2) uma função no
@@ -397,6 +444,7 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 
 - **Dúvidas para a consulta**, na aba do bebê: anotar a pergunta quando lembrar e marcar "perguntei"
   na consulta. O Caderninho só guarda; quem responde é o pediatra. Precisa de uma tabela nova no banco.
+  Entram no resumo para a consulta.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
