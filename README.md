@@ -14,6 +14,26 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
+## Identidade visual: Soneca (moodboard aprovado em 01/10, falta programar)
+
+O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
+Moodboard (privado): https://claude.ai/artifact/RBE6Qu4c4YFAJ7wnVwNsLj
+
+- **Fonte:** DM Sans, pesos 400 e 500, em tudo (logo, app e resumo).
+- **Cores:** creme e caramelo de dia, azul-noite à noite. Mamada e ordenha em menta, sono em azul-céu
+  (lavanda à noite), fralda em manteiga, sintomas e remédio em salmão, cuidados em caramelo claro, outros
+  em neutro. Botão caramelo com texto marrom; ícones e gráficos na versão escura de cada cor. Os
+  códigos de cada cor estão no moodboard.
+- **Modo noite:** segue o celular; quem quiser escolhe Dia ou Noite no app.
+- **Capivara:** um traço só, sem preenchimento. Só na rotina (sono, mamada, fralda), nunca em saúde nem
+  no resumo para a consulta. O desenho atual é esboço; a arte final vai para um ilustrador.
+- **Ícone do app:** azul-céu com a capivara marrom. **Fralda:** ícone com fitas no lugar da gota.
+  **Remédio nos gráficos:** cápsula salmão no lugar da bolinha lilás.
+- **Tom:** humor sutil e raro na rotina; saúde e resumo neutros ("evacuação", não "alerta marrom").
+
+**Próximos passos:** prévia das telas reais com a identidade nova; depois programar. A troca do nome
+(nome instalado, e-mails, indicação, `CONTEXT.md`) é uma etapa separada.
+
 ## Melhorias de 27/09: feito, falta publicar
 
 Pedidos da conversa de 27/09 (os ajustes de 28/09 e as abas de 01/10 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
