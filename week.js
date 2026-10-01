@@ -29,7 +29,8 @@ function topKind(e, k) {
 const TOP_MARK = {
   pump: (x, y, r) => `<rect class="m-pump" x="${f1(x - r)}" y="${f1(y - r)}" width="${f1(2 * r)}" height="${f1(2 * r)}" rx="1.2"/>`,
   symptom: (x, y, r) => `<path class="m-vomit dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y)}L${x} ${f1(y + r * 1.2)}L${f1(x - r * 1.2)} ${f1(y)}Z"/>`,
-  med: (x, y, r) => `<circle class="m-med dot" cx="${x}" cy="${f1(y)}" r="${f1(r)}"/>`,
+  // Remédio em cápsula: divide o salmão com os sintomas (losango) e não se confunde com a mamada (bolinha)
+  med: (x, y, r) => `<rect class="m-med dot" x="${f1(x - r * 1.3)}" y="${f1(y - r * 0.65)}" width="${f1(r * 2.6)}" height="${f1(r * 1.3)}" rx="${f1(r * 0.65)}"/>`,
   care: (x, y, r) => `<path class="m-care dot" d="M${x} ${f1(y - r * 1.2)}L${f1(x + r * 1.2)} ${f1(y + r)}L${f1(x - r * 1.2)} ${f1(y + r)}Z"/>`,
 };
 const f1 = v => +v.toFixed(1);

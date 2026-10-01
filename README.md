@@ -1,6 +1,6 @@
-# Caderninho
+# Soneca
 
-App para famílias registrarem a rotina dos bebês (mamadas, sono, fraldas, vômitos, remédios) numa
+Antes Caderninho. App para famílias registrarem a rotina dos bebês (mamadas, sono, fraldas, vômitos, remédios) numa
 linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário em `CONTEXT.md`.
 
 - **Front:** HTML/CSS/JS puro, sem build. Publicado no Vercel.
@@ -13,6 +13,66 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
+
+## Identidade visual: Soneca (no código, falta publicar)
+
+O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
+Moodboard (privado): https://claude.ai/artifact/RBE6Qu4c4YFAJ7wnVwNsLj
+Prévia aprovada das telas, antes e depois, de dia e de noite (privada): https://claude.ai/artifact/5ivtMLy5pNcHfVMPefEmz8
+
+- **Fonte:** DM Sans, pesos 400 e 500, em tudo.
+- **Cores:** creme e caramelo de dia, azul-noite à noite. Mamada e ordenha em menta, sono em azul-céu
+  (lavanda à noite), fralda em manteiga, sintomas e remédio em salmão (igual para qualquer remédio),
+  cuidados em caramelo claro, outros em neutro. À noite cada botão tem um tom escuro da própria cor,
+  para não ficarem todos parecidos. Botão caramelo com texto marrom; links em caramelo escuro; ícones e
+  gráficos na versão escura de cada cor.
+- **Modo noite:** segue o celular; no Perfil dá para escolher claro ou escuro.
+- **Capivara:** um traço só, sem preenchimento. Só no cartão do sono (e, com o nome, na entrada); nunca
+  em saúde nem no resumo para a consulta. Sem frase junto. O desenho é esboço; a arte final vai para um
+  ilustrador.
+- **Ícones:** app azul-céu com a capivara marrom (`icons/`); fralda com fitas no lugar da gota; remédio
+  em cápsula nos gráficos.
+- **Tom:** humor sutil e raro na rotina; saúde e resumo neutros.
+
+**Para publicar:** não muda o banco; basta publicar. **Conferir no celular:** claro e escuro (Perfil),
+os botões da tela inicial com cores diferentes à noite, a capivara no cartão do sono, o ícone novo ao
+instalar de novo (o celular pode guardar o antigo até reinstalar).
+
+Testado em 01/10 no navegador com um Supabase de mentira: 15 telas em claro e escuro, a 390 px, sem
+erros, já com as abas, o relatório para pediatra, as dúvidas para a consulta e a divisão de tarefas;
+contraste de todos os textos conferido nos dois modos. O relatório usa as cores do Soneca em versão
+sóbria e continua em papel claro; dúvida respondida passou para menta.
+
+**Daqui em diante:** toda atualização segue esta identidade. As regras e a lista de conferência estão
+no `CLAUDE.md` ("Identidade visual: obrigatória em toda atualização").
+
+### Troca do nome para Soneca (no código, falta publicar)
+
+No app: título e nome instalado (`index.html`, `manifest.webmanifest`), a entrada com a capivara ao
+lado do nome, a tela de abrir, a barra de baixo, Perfil (indicar, sugestões), avisos das telas de
+saúde, resumo do mês e as mensagens de convite e indicação. `CONTEXT.md` e `CLAUDE.md` também; o
+`CLAUDE.md` agora traz as regras da identidade, para as telas que ainda estão mudando já saírem certas.
+Não muda: os comentários dos arquivos em `supabase/` (histórico) e as chaves `cad-` guardadas no
+celular (trocar faria todo mundo perder a família aberta e o tema escolhido).
+
+As telas que entraram em 01/10 (relatório para pediatra, dúvidas, divisão de tarefas) já vieram para
+este branch com o nome novo. A conferência
+`grep -rn "Caderninho" --include=*.js --include=*.html --include=*.webmanifest .` não acha nada.
+
+**Fora do código, com você:**
+
+1. **E-mails do login** (Supabase → Authentication → Emails): trocar "Caderninho" por "Soneca" no
+   assunto e no texto dos modelos "Confirm sign up" e "Magic link". Se o envio usa SMTP próprio, trocar
+   também o nome do remetente (Authentication → Emails → SMTP Settings → Sender name).
+2. **Endereço do app:** por enquanto continua o mesmo. Trocar de endereço quebra os apps já instalados,
+   os convites em aberto e o retorno do login (Site URL e Redirect URLs no Supabase, origens no Google);
+   se um dia mudar, é uma etapa à parte, com o endereço antigo redirecionando para o novo.
+3. **Google** (quando for ligar o "Entrar com Google"): nome do app "Soneca" na identidade visual.
+4. **Quem já instalou:** no iPhone, o nome e o ícone antigos ficam até remover da tela de início e
+   adicionar de novo; no Android, o Chrome atualiza sozinho em alguns dias.
+
+**Conferir no celular:** a entrada com a capivara e "Soneca", o título da aba, o nome ao instalar,
+"Indicar o Soneca" no Perfil e o texto que vai junto, e o aviso das telas de saúde.
 
 ## Melhorias de 27/09: feito, falta publicar
 
@@ -318,8 +378,8 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
 
 **Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
 
-1. **Google Cloud** (console.cloud.google.com): criar um projeto "Caderninho". Em Google Auth Platform:
-   - Identidade visual: nome "Caderninho", e-mail de suporte e, em domínios autorizados,
+1. **Google Cloud** (console.cloud.google.com): criar um projeto "Soneca". Em Google Auth Platform:
+   - Identidade visual: nome "Soneca", e-mail de suporte e, em domínios autorizados,
      `vrhgirpklyklhvzwdfiq.supabase.co` e o domínio do app.
    - Público: externo, e "Publicar app" (em teste, só entra quem estiver na lista de testadores). Só
      com e-mail e perfil, o Google não pede verificação.

@@ -1,6 +1,6 @@
-# Caderninho
+# Soneca
 
-Aplicativo para famílias registrarem a rotina dos seus bebês — mamadas, sono, fraldas, vômitos,
+Antes chamado Soneca. Aplicativo para famílias registrarem a rotina dos seus bebês — mamadas, sono, fraldas, vômitos,
 remédios — e reverem o dia numa linha do tempo compartilhada. Serve à organização da própria família; não
 interpreta os registros nem sugere condutas.
 
@@ -29,7 +29,7 @@ Link que o criador gera para uma única pessoa entrar na família; vale 7 dias o
 _Evite_: compartilhamento, acesso
 
 **Indicação**:
-Mensagem com o link do Caderninho que qualquer membro manda para outra família começar a sua. Não
+Mensagem com o link do Soneca que qualquer membro manda para outra família começar a sua. Não
 dá acesso a nenhuma família: quem abre cria a própria.
 _Evite_: convite (convite é para entrar numa família), compartilhamento
 
@@ -75,7 +75,7 @@ médio, grande, gigante) e marcar o alerta marrom.
 _Evite_: troca, evacuação, diurese
 
 **Alerta marrom**:
-Na fralda com cocô, a marca de que vazou da fralda. É um dos poucos toques de humor do Caderninho,
+Na fralda com cocô, a marca de que vazou da fralda. É um dos poucos toques de humor do Soneca,
 com a mensagem de salvo do cocô gigante e os títulos da divisão de tarefas; não avalia o bebê.
 _Evite_: vazamento, acidente
 
@@ -86,7 +86,7 @@ _Evite_: golfada, regurgitação
 **Sintoma**:
 Registro do botão Sintomas: febre (com a temperatura, se quiser), cólica ou choro inconsolável (com
 quanto tempo durou, se quiser), tosse, assadura, reação à vacina, incômodo dos dentes ou outro, com o
-que aconteceu escrito. O Caderninho só anota; não avalia nem orienta. Fica fora do resumo para mandar.
+que aconteceu escrito. O Soneca só anota; não avalia nem orienta. Fica fora do resumo para mandar.
 _Evite_: doença, diagnóstico, mal-estar, intercorrência
 
 **Cuidado**:
@@ -119,7 +119,7 @@ _Evite_: resumo (resumo é o do mês e o para mandar), estatística, gráfico do
 **Remédio**:
 O que a família programa para dar a um bebê: o nome, quanto dar (se quiser) e quando — em horários
 fixos, de tantas em tantas horas ou só quando precisar — por alguns dias ou sem data para acabar. O
-Caderninho só lembra o que a família programou; não sugere remédio, dose nem horário. Parar um
+Soneca só lembra o que a família programou; não sugere remédio, dose nem horário. Parar um
 remédio tira ele da lista e das doses, mas não apaga os registros.
 _Evite_: medicamento, medicação, receita, prescrição
 
@@ -216,7 +216,7 @@ _Evite_: respondida, resolvida
 
 **Respostas do pediatra**:
 As dúvidas já perguntadas, da mais recente para a mais antiga, para consultar depois. Cada uma pode
-guardar, se a família quiser, o que o pediatra disse, com as palavras da família. O Caderninho só
+guardar, se a família quiser, o que o pediatra disse, com as palavras da família. O Soneca só
 guarda; não confere nem sugere resposta.
 _Evite_: orientação médica, recomendação, conduta
 
@@ -259,8 +259,8 @@ O texto com os totais da semana (no fim do painel da semana) ou do mês, que um 
 pelo WhatsApp ou copia. Segue os botões da família: sem Ordenha ligada, não fala de ordenha; os
 cuidados ligados entram. Sintomas e vômito ficam de fora. Antes do fim, a divisão de tarefas, só com quem
 ganhou. Termina com um parabéns a quem cuida do
-bebê, sem avaliar o bebê. Só sai do Caderninho quando alguém compartilha.
-_Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Caderninho)
+bebê, sem avaliar o bebê. Só sai do Soneca quando alguém compartilha.
+_Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Soneca)
 
 **Divisão de tarefas**:
 O cartão "Como foi a divisão de tarefas", no resumo do mês e no fim do painel da semana. No alto, o
@@ -285,6 +285,6 @@ ou só o texto. Vai junto o nome de quem mandou, a família aberta e o tipo de c
 para enviar: ninguém lê, nem quem mandou.
 _Evite_: feedback (na tela), ticket, chamado, reclamação
 
-**Quem cuida do Caderninho**:
+**Quem cuida do Soneca**:
 Quem mantém o app e lê as mensagens, pelo painel do Supabase.
 _Evite_: suporte, equipe, administrador, admin

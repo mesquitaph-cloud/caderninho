@@ -4,7 +4,8 @@ const P = 'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="
 export const ICON = {
   feed: `<svg viewBox="0 0 24 24" ${P}><path d="M9 3h6M10.5 3v3M13.5 3v3"/><path d="M9.5 6h5a1.5 1.5 0 0 1 1.5 1.5V19a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V7.5A1.5 1.5 0 0 1 9.5 6z"/><path d="M8 12h3M8 15.5h3"/></svg>`,
   sleep: `<svg viewBox="0 0 24 24" ${P}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>`,
-  diaper: `<svg viewBox="0 0 24 24" ${P}><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg>`,
+  // Fralda descartável vista de frente, com as fitas dos lados
+  diaper: `<svg viewBox="0 0 24 24" ${P}><path d="M4.5 6h15v3.6c-2.8.4-4.3 2.9-4.9 8.4H9.4c-.6-5.5-2.1-8-4.9-8.4z"/><path d="M4.5 9.6h15"/><path d="M2.5 7.4l2 .4M21.5 7.4l-2 .4"/></svg>`,
   vomit: `<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 15.5c1-1 2-1 3.5 0s2.5 1 3.5 0"/></svg>`,
   pump: `<svg viewBox="0 0 24 24" ${P}><path d="M5.5 3h13l-4 5.5h-5z"/><path d="M10 8.5v1.8a2 2 0 0 0-1.5 1.9V19a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-6.8a2 2 0 0 0-1.5-1.9V8.5"/><path d="M10.5 15h3M10.5 17.8h3"/></svg>`,
   other: `<svg viewBox="0 0 24 24" ${P}><path d="M12 5v14M5 12h14"/></svg>`,

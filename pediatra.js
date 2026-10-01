@@ -218,7 +218,7 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, miles
       + questions.map(q => `<li><span>${esc(q.body)} <small>· anotada em ${ddmm(Date.parse(q.created_at))}</small></span></li>`).join('') + '</ul></section>';
   }
 
-  h += `<footer class="rp-foot"><span>Feito pelo Caderninho com o que a família anotou. Só junta o que foi registrado: dia sem anotação não é dia sem mamada. Não avalia nem compara com outros bebês.</span>`
+  h += `<footer class="rp-foot"><span>Feito pelo Soneca com o que a família anotou. Só junta o que foi registrado: dia sem anotação não é dia sem mamada. Não avalia nem compara com outros bebês.</span>`
     + `<span>Gerado em ${ddmm(now)}/${new Date(now).getFullYear()} às ${hm(now)}</span></footer>`;
   return h + '</article>';
 }
@@ -226,7 +226,7 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, miles
 // O mesmo relatório em texto, para copiar e mandar por mensagem.
 export function reportPlain({ baby, a, now, stats: R, evs, weights, milestones, questions, parts, medPlan }) {
   const today = startOfDay(now), birth = baby.birth_date, out = [];
-  out.push(`Relatório de ${baby.name} para o pediatra, pelo Caderninho`);
+  out.push(`Relatório de ${baby.name} para o pediatra, pelo Soneca`);
   if (birth) out.push(`Nasceu em ${ymdFull(birth)} · ${ageText(birth)}`);
   out.push(`Período: ${periodTitle(a, today)} (${plural(R.days.length, 'dia', 'dias')})`);
   if (parts.growth) {
@@ -254,7 +254,7 @@ export function reportPlain({ baby, a, now, stats: R, evs, weights, milestones, 
     out.push(...R.meds.map(g => `• ${g.name}${g.amount ? ' ' + g.amount : ''}${medPlan(g.id) ? ', ' + medPlan(g.id) : ''}: ${plural(g.given.length, 'dose dada', 'doses dadas')}${g.skipped.length ? ', ' + plural(g.skipped.length, 'pulada', 'puladas') : ''}`));
   }
   if (parts.questions && questions.length) out.push('', 'Dúvidas da família:', ...questions.map(q => '• ' + q.body));
-  out.push('', 'Só junta o que a família anotou no Caderninho.');
+  out.push('', 'Só junta o que a família anotou no Soneca.');
   return out.join('\n');
 }
 
