@@ -29,11 +29,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .av{width:44px;height:44px;border-radius:50%;background:var(--feed);color:var(--feed-ink);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:20px}
 .bn{font-family:var(--display);font-weight:600;font-size:21px;line-height:1.1}
 .ba{font-size:13px;color:var(--muted)}
-/* O lápis ao lado do nome: tocar abre a tela do bebê (peso, marcos, nome e nascimento) */
-.bn .pen{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:6px;border-radius:50%;background:var(--surface2);color:var(--muted);vertical-align:2px}
-.bn .pen svg{width:12px;height:12px}
-.icon-btn{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center}
-.icon-btn svg{width:20px;height:20px}
+/* O lápis ao lado do nome, na aba do bebê: tocar rola até Nome e nascimento */
+.pen{display:inline-grid;place-items:center;width:22px;height:22px;margin-left:6px;border-radius:50%;background:var(--surface2);color:var(--muted);vertical-align:2px}
+.pen svg{width:12px;height:12px}
 .sleeping{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--sleep);color:var(--sleep-ink);border-radius:18px;padding:12px 16px}
 .sleeping .t{font-family:var(--display);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
 .sleeping small{display:block;font-size:13px}
@@ -304,7 +302,6 @@ svg .wh{fill:transparent}
 .babies{display:flex;gap:6px;flex-wrap:wrap}
 .babies button{padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);font-weight:700;font-size:14px;background:var(--surface)}
 .babies button.on{background:var(--feed);color:var(--feed-ink);border-color:currentColor}
-.hbtns{display:flex;gap:8px}
 .sec{display:flex;flex-direction:column;gap:8px}
 .sec h4{margin:0;font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.02em}
 .li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--surface2);font-weight:600}
@@ -357,3 +354,43 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 .given .ck svg{width:16px;height:16px}
 .given.skip{background:var(--surface2);color:var(--muted)}
 .given.skip .ck{background:var(--muted);color:var(--surface2)}
+/* ---------- Barra de baixo: Hoje, o bebê, Família e Perfil ---------- */
+#scrMain{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:14px;font-size:12px;font-weight:700;color:var(--muted);min-width:0}
+.tabbar .ic{width:52px;height:30px;border-radius:999px;display:grid;place-items:center}
+.tabbar .ic svg{width:22px;height:22px}
+.tabbar .mini{width:24px;height:24px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:13px}
+.tabbar .nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tabbar [aria-current="page"]{color:var(--ink)}
+.tabbar [aria-current="page"] .ic{background:var(--feed);color:var(--feed-ink)}
+.tabbar [aria-current="page"] .mini{background:var(--feed-ink);color:var(--feed)}
+@media (prefers-reduced-motion:no-preference){.tabbar .ic{transition:background .15s}}
+/* O aviso de salvo fica acima da barra */
+body:has(#scrMain:not([hidden])) .toast{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+/* Título das abas; na do bebê, é um botão que rola até Nome e nascimento */
+.ptitle{display:flex;flex-direction:column;gap:2px}
+.ptitle h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0;line-height:1.15;overflow-wrap:anywhere}
+.ptitle small{font-size:13px;color:var(--muted);font-weight:600}
+button.ptitle{text-align:left;border-radius:14px;padding:4px 6px;margin:-4px -6px 0}
+button.ptitle:active{background:var(--surface2)}
+.ptitle .pen{width:24px;height:24px;margin-left:8px;vertical-align:3px}
+/* Aba do bebê: os três números do alto levam à seção */
+.jump{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.jump button{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:clamp(8px,2.5vw,10px);text-align:left;display:flex;flex-direction:column;gap:1px;min-width:0}
+.jump .k{display:flex;align-items:center;gap:5px;font-size:clamp(11px,3.4vw,12.5px);font-weight:700;color:var(--muted)}
+.jump .k i{width:8px;height:8px;border-radius:50%;background:var(--sw);flex:none}
+.jump b{font-family:var(--display);font-weight:600;font-size:clamp(16px,4.8vw,20px);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+.jump span:last-child{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow{background:var(--surface2);border-radius:16px;padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;text-align:left;width:100%}
+.mrow b{font-family:var(--display);font-weight:600;font-size:17px;line-height:1.2;display:block}
+.mrow small{display:block;font-size:13px;color:var(--muted);font-weight:700}
+.mrow .mtimes{justify-content:flex-end;flex:none;max-width:45%}
+/* Perfil: claro, escuro ou do celular */
+.seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:14px;background:var(--surface2)}
+.seg3 button{padding:9px 4px;border-radius:10px;font-weight:700;font-size:14px;color:var(--muted)}
+.seg3 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(58,47,69,.12)}
+/* A seção para onde o toque levou fica em destaque por um instante */
+.spot{outline:3px solid var(--accent);outline-offset:4px;border-radius:14px}
+@media (prefers-reduced-motion:no-preference){.spot{animation:spot 1s ease-in-out 2}@keyframes spot{50%{outline-offset:8px}}}

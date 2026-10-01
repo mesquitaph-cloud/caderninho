@@ -99,9 +99,9 @@ Registro de texto livre para o que não cabe nas demais categorias.
 _Evite_: nota, observação (observação é o comentário opcional dentro de qualquer registro)
 
 **Botões da tela inicial**:
-Os botões de registro, três por linha. Mamada, Sono e Fralda aparecem sempre, e Outros também. Os
-outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) cada família liga ou desliga em
-Editar, e vale para todos da família.
+Os botões de registro, três por linha, na aba Hoje. Mamada, Sono e Fralda aparecem sempre, e Outros
+também. Os outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) cada família liga ou
+desliga na aba Família (o botão Editar, ao lado de Outros, leva até lá), e vale para todos da família.
 _Evite_: atalhos, menu, configurações
 
 **Linha do tempo**:
@@ -143,17 +143,44 @@ _Evite_: administração, aplicação
 
 **Remédios e horários**:
 A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
-Abre pelo botão Remédio e por "Ver todas", no cartão de remédios da tela inicial, que
-mostra só as doses a uma hora do horário ou atrasadas sem marcar.
+Abre pelo botão Remédio, por "Ver todas", no cartão de remédios da tela inicial (que mostra só as
+doses a uma hora do horário ou atrasadas sem marcar), e por "Ver doses", na aba do bebê.
 _Evite_: farmácia, receituário
 
-## Peso e marcos
+## Abas
 
-**Tela do bebê**:
-Abre ao tocar no nome do bebê, no alto (o lápis ao lado mostra que dá para mexer): o peso, os marcos
-e o nome e nascimento. Só guarda o que a
-família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
-_Evite_: perfil do bebê, ficha, prontuário
+**Barra de baixo**:
+As quatro abas do app, sempre à mostra: Hoje, a aba do bebê (com o nome dele), Família e Perfil.
+_Evite_: menu, navegação, rodapé
+
+**Hoje**:
+A aba dos registros do dia a dia: os botões da tela inicial, o cartão de remédios, a linha do tempo,
+o painel da semana e o resumo do mês. No alto, o nome e a idade do bebê levam à aba do bebê.
+_Evite_: home, início, painel
+
+**Aba do bebê**:
+Leva o nome do bebê na barra de baixo. Nesta ordem: o peso, os remédios programados, os marcos e, no
+fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
+para editar. Logo abaixo, três números (último peso, remédios, marcos) levam a cada parte. Só guarda
+o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
+_Evite_: perfil do bebê, ficha, prontuário, tela do bebê
+
+**Aba Família**:
+O que vale para todos da família aberta: o nome da família (só o criador muda), os membros e o
+convite, os bebês, os botões da tela inicial e, no fim, sair da família ou apagá-la.
+_Evite_: configurações, grupo
+
+**Perfil**:
+A aba do que é só da pessoa: o nome de exibição, a aparência, as famílias de que participa (abrir
+outra ou criar uma nova), a indicação, as sugestões e problemas e desconectar do celular.
+_Evite_: conta, configurações, você
+
+**Aparência**:
+Claro, escuro ou do celular, em Perfil. "Do celular" segue o modo noturno do aparelho. Vale só no
+celular onde foi escolhida.
+_Evite_: tema, modo noturno (como nome da escolha)
+
+## Peso e marcos
 
 **Peso**:
 O peso do bebê no dia da pesagem, anotado pela família (da consulta, da farmácia, da balança de casa),
@@ -215,7 +242,7 @@ _Evite_: agenda
 ## Conversa com quem cuida do app
 
 **Mensagem**:
-O que um membro manda pela seção "Sugestões e problemas" do menu: uma sugestão, algo que deu errado
+O que um membro manda por "Sugestões e problemas", no Perfil: uma sugestão, algo que deu errado
 ou só o texto. Vai junto o nome de quem mandou, a família aberta e o tipo de celular. Pelo app, só dá
 para enviar: ninguém lê, nem quem mandou.
 _Evite_: feedback (na tela), ticket, chamado, reclamação

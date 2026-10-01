@@ -79,16 +79,14 @@
 </section>
 
 <!-- App -->
-<div class="wrap" id="scrMain" hidden>
+<div id="scrMain" hidden>
+<!-- Hoje: os registros do dia a dia -->
+<div class="wrap" id="paneHome">
   <header>
-    <button class="baby" id="babyBtn" aria-label="Bebê: peso, marcos, nome e nascimento">
+    <button class="baby" id="babyBtn" aria-label="Abrir a aba do bebê: peso, remédios e marcos">
       <div class="av" id="babyInitial">B</div>
-      <div><div class="bn"><span id="babyName">Bebê</span><span class="pen" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></div><div class="ba" id="babyAge"></div></div>
+      <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
     </button>
-    <div class="hbtns">
-      <button class="icon-btn" id="themeBtn" aria-label="Alternar modo noturno"></button>
-      <button class="icon-btn" id="menuBtn" aria-label="Família e configurações"></button>
-    </div>
   </header>
   <div class="notice installTip" hidden><span class="tipText"></span><div class="row2" style="margin-top:8px"><button class="ghost tipInstall" hidden>Instalar o Caderninho</button><button class="ghost tipClose">Agora não</button></div></div>
   <div class="babies" id="babyTabs" hidden></div>
@@ -118,6 +116,19 @@
   </div>
   <div class="view" id="weekView" role="tabpanel" aria-labelledby="tabWeek" hidden></div>
   <div class="view" id="monthView" role="tabpanel" aria-labelledby="tabMonth" hidden></div>
+</div>
+<!-- Aba do bebê, Família e Perfil: desenhadas pelo app.js -->
+<div class="wrap pane" id="paneBaby" hidden></div>
+<div class="wrap pane" id="paneFamily" hidden></div>
+<div class="wrap pane" id="paneProfile" hidden></div>
+<nav class="tabbar" id="tabbar" aria-label="Seções do Caderninho">
+  <div class="in">
+    <button data-tab="home"><span class="ic"><span data-i="today"></span></span>Hoje</button>
+    <button data-tab="baby"><span class="ic"><span class="mini" id="tabBabyInitial">B</span></span><span class="nm" id="tabBabyName">Bebê</span></button>
+    <button data-tab="family"><span class="ic"><span data-i="menu"></span></span>Família</button>
+    <button data-tab="profile"><span class="ic"><span data-i="profile"></span></span>Perfil</button>
+  </div>
+</nav>
 </div>
 
 <div class="scrim" id="scrim" hidden></div>

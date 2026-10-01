@@ -16,7 +16,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 ## Melhorias de 27/09: feito, falta publicar
 
-Pedidos da conversa de 27/09 (e os ajustes de 28/09 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
+Pedidos da conversa de 27/09 (os ajustes de 28/09 e as abas de 01/10 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
 entrar com Google e, depois das prévias, botões da tela inicial, Sintomas e cuidados. Tudo no código;
 detalhes de cada um abaixo.
 
@@ -34,6 +34,41 @@ detalhes de cada um abaixo.
 
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e
 390 px, e o 007 e o 008 num Postgres local imitando o Supabase (32 e 36 casos).
+
+### Abas embaixo: Hoje, bebê, Família e Perfil (01/10)
+
+Pedido de 29/09: não estava claro onde ficava cada coisa (o que é do bebê estava escondido no nome, e
+o menu misturava família, pessoa e app). Prévia aprovada (privada), com o mapa de qual botão leva aonde
+e as tarefas antes e agora: https://claude.ai/artifact/NVbCtNeTWgdp9eqrzvQNip
+
+Não muda o banco; basta publicar. Mudar o nome da família já era permitido ao criador pelo
+`003_endurece_colunas.sql`; faltava a tela.
+
+- **Barra embaixo**, fixa: Hoje, o nome do bebê, Família e Perfil (ícone da pessoa com engrenagem).
+  Tocar na aba aberta volta para o alto dela. Abrir outra família volta para Hoje.
+- **Hoje:** igual, menos o alto. Saem o lápis do nome, a lua/sol e o botão de pessoas. Tocar no nome
+  ou na foto abre a aba do bebê. O Editar da grade leva a Família › Botões da tela inicial.
+- **Aba do bebê** (era a tela que abria no nome): peso, remédios programados, marcos e, no fim, nome
+  e nascimento. Tocar no nome e na idade, no alto, rola até Nome e nascimento e destaca. Os três
+  números do alto (peso, remédios, marcos) levam a cada parte. Os remédios aparecem aqui também, com
+  Ver doses e Programar: dá para programar mesmo com o botão Remédio desligado (antes, não dava).
+  Com dois bebês, a escolha fica no alto da aba e no Hoje.
+- **Família:** nome da família (novo: o criador muda; os outros veem o aviso), membros e convite,
+  bebês (abrem a aba do bebê), botões da tela inicial com os interruptores e, no fim, apagar ou sair.
+- **Perfil:** seu nome, aparência (novo: claro, escuro ou do celular; vale só neste aparelho), suas
+  famílias, indicar o Caderninho, Sugestões e problemas (agora abre numa tela própria; antes ocupava
+  metade do menu) e desconectar.
+- **Saiu:** o menu e a tela "Botões da tela inicial" separada.
+- **Ficou para depois:** dúvidas para a consulta com o pediatra (em "Ideias para depois") e a jornada
+  de cada aba (o que aparece vazio, a primeira vez de quem entra por convite).
+- **Conferir no celular:** tocar no nome do bebê no Hoje e, na aba, no nome de novo (rola até o fim);
+  anotar um peso pela aba; programar um remédio pela aba com o botão Remédio desligado; mudar o nome
+  da família; escolher Escuro e depois Do celular; ver se a barra não cobre o último registro do dia
+  e se fica certa com o app instalado no iPhone (a faixa de baixo da tela).
+
+Testado em 01/10 no navegador com um Supabase de mentira (76 checagens): as quatro abas, os caminhos
+do mapa da prévia, quem criou e quem não criou a família, dois bebês, sem bebê e sem remédios, claro e
+escuro, em 320, 360 e 390 px, sem rolagem para o lado.
 
 ### Tamanho do cocô, −5 min e ícones (28/09)
 
@@ -360,6 +395,8 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
   o que vai no e-mail (talvez só os números, sem remédios).
 
+- **Dúvidas para a consulta**, na aba do bebê: anotar a pergunta quando lembrar e marcar "perguntei"
+  na consulta. O Caderninho só guarda; quem responde é o pediatra. Precisa de uma tabela nova no banco.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.

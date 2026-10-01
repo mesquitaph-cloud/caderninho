@@ -18,6 +18,9 @@ export const ICON = {
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
   sun: `<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" ${P}><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20a6 6 0 0 0-4-5.6"/></svg>`,
+  // Barra de baixo: Hoje (o calendário), Família (o menu de pessoas) e Perfil (a pessoa com a engrenagem).
+  today: `<svg viewBox="0 0 24 24" ${P}><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13.2v3.6"/></svg>`,
+  profile: `<svg viewBox="0 0 24 24" ${P}><circle cx="10" cy="7.5" r="3.5"/><path d="M3 20a7 7 0 0 1 9.6-6.5"/><circle cx="17.5" cy="17.5" r="2.4"/><path d="M19.9 17.5h1.5M18.7 19.6l.75 1.3M16.3 19.6l-.75 1.3M15.1 17.5h-1.5M16.3 15.4l-.75-1.3M18.7 15.4l.75-1.3"/></svg>`,
 };
 ICON.wake = ICON.sleep;
 
