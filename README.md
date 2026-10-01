@@ -14,6 +14,15 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
+## Plano até as lojas (até 30/11)
+
+Ideias e pendências por impacto e esforço, e o calendário de 60 dias (privado):
+https://claude.ai/artifact/XJ9WgoF4DYKftixXP57Umc. Obrigatórios: app nativo (Capacitor), entrar com
+Google e com Apple, apagar a conta no app, privacidade (LGPD), revisão das regras de acesso, remetente
+de e-mail, e o teste fechado da Play Store (12 testadores por 14 dias, começar até ~25/10). Entram no
+lançamento: aviso do remédio com o app fechado e o cartão do dia sem IA. O resumo para a pediatra
+ainda não existe; entra se o resto estiver em dia, senão em dezembro.
+
 ## Melhorias de 27/09: feito, falta publicar
 
 Pedidos da conversa de 27/09 (os ajustes de 28/09 e as abas de 01/10 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
