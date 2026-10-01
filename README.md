@@ -14,25 +14,35 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 
-## Identidade visual: Soneca (moodboard aprovado em 01/10, falta programar)
+## Identidade visual: Soneca (no código, falta publicar)
 
 O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
 Moodboard (privado): https://claude.ai/artifact/RBE6Qu4c4YFAJ7wnVwNsLj
+Prévia aprovada das telas, antes e depois, de dia e de noite (privada): https://claude.ai/artifact/5ivtMLy5pNcHfVMPefEmz8
 
-- **Fonte:** DM Sans, pesos 400 e 500, em tudo (logo, app e resumo).
+- **Fonte:** DM Sans, pesos 400 e 500, em tudo.
 - **Cores:** creme e caramelo de dia, azul-noite à noite. Mamada e ordenha em menta, sono em azul-céu
-  (lavanda à noite), fralda em manteiga, sintomas e remédio em salmão, cuidados em caramelo claro, outros
-  em neutro. Botão caramelo com texto marrom; ícones e gráficos na versão escura de cada cor. Os
-  códigos de cada cor estão no moodboard.
-- **Modo noite:** segue o celular; quem quiser escolhe Dia ou Noite no app.
-- **Capivara:** um traço só, sem preenchimento. Só na rotina (sono, mamada, fralda), nunca em saúde nem
-  no resumo para a consulta. O desenho atual é esboço; a arte final vai para um ilustrador.
-- **Ícone do app:** azul-céu com a capivara marrom. **Fralda:** ícone com fitas no lugar da gota.
-  **Remédio nos gráficos:** cápsula salmão no lugar da bolinha lilás.
-- **Tom:** humor sutil e raro na rotina; saúde e resumo neutros ("evacuação", não "alerta marrom").
+  (lavanda à noite), fralda em manteiga, sintomas e remédio em salmão (igual para qualquer remédio),
+  cuidados em caramelo claro, outros em neutro. À noite cada botão tem um tom escuro da própria cor,
+  para não ficarem todos parecidos. Botão caramelo com texto marrom; links em caramelo escuro; ícones e
+  gráficos na versão escura de cada cor.
+- **Modo noite:** segue o celular; no Perfil dá para escolher claro ou escuro.
+- **Capivara:** um traço só, sem preenchimento. Só no cartão do sono (e, com o nome, na entrada); nunca
+  em saúde nem no resumo para a consulta. Sem frase junto. O desenho é esboço; a arte final vai para um
+  ilustrador.
+- **Ícones:** app azul-céu com a capivara marrom (`icons/`); fralda com fitas no lugar da gota; remédio
+  em cápsula nos gráficos.
+- **Tom:** humor sutil e raro na rotina; saúde e resumo neutros.
 
-**Próximos passos:** prévia das telas reais com a identidade nova; depois programar. A troca do nome
-(nome instalado, e-mails, indicação, `CONTEXT.md`) é uma etapa separada.
+**Para publicar:** não muda o banco; basta publicar. **Conferir no celular:** claro e escuro (Perfil),
+os botões da tela inicial com cores diferentes à noite, a capivara no cartão do sono, o ícone novo ao
+instalar de novo (o celular pode guardar o antigo até reinstalar).
+
+Testado em 01/10 no navegador com um Supabase de mentira: 13 telas em claro e escuro, a 390 px, sem
+erros; contraste de todos os textos conferido nos dois modos.
+
+**Próxima etapa:** trocar o nome para Soneca (nome instalado, título, e-mails, indicação, entrada com a
+capivara, `CONTEXT.md`).
 
 ## Melhorias de 27/09: feito, falta publicar
 

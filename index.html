@@ -9,9 +9,9 @@
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Caderninho">
-<meta name="theme-color" content="#F9D3DC">
+<meta name="theme-color" content="#FFF8EE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap">
 <link rel="stylesheet" href="/styles.css">
 <style>:root{padding-top:env(safe-area-inset-top,0px)}</style>
 </head>
@@ -92,6 +92,8 @@
   <div class="babies" id="babyTabs" hidden></div>
 
   <div class="sleeping" id="sleepBanner" hidden>
+    <!-- A capivara dormindo: só aqui e nas telas de rotina, nunca nas de saúde -->
+    <svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>
     <div><small>Dormindo há</small><span class="t" id="sleepFor">0 min</span></div>
     <button class="pill" id="wakeBtn">Acordou</button>
   </div>
