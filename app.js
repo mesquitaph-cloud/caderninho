@@ -24,6 +24,7 @@ const st = {
   settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
   settingsOk: true,            // falso se não deu para carregar (por exemplo, antes do 008)
   settingsCh: null,
+  tab: 'home',                 // aba aberta na barra de baixo: 'home' (Hoje), 'baby', 'family' ou 'profile'
   view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
@@ -184,6 +185,7 @@ async function openFamily(fid) {
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadSettings(fid)]);
+  st.tab = 'home'; FP.confirm = FP.invite = null;
   show('scrMain'); render();
 }
 
@@ -241,7 +243,7 @@ async function loadSettings(fid) {
     .subscribe();
 }
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
-function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } else if (S.mode === 'buttons') { render(); drawButtons(); } }
+function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
 
 function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
@@ -271,17 +273,45 @@ const clampMonth = t => Math.min(curMonth(), Math.max(monthStart(t), prevMonth()
 // Última mamada em que marcaram o peito (no banco, só a mamada no peito tem peito marcado).
 const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
+// Redesenha a aba aberta e a barra de baixo. Hoje é redesenhada sempre, mesmo escondida: é leve e
+// fica pronta para quando a pessoa voltar.
+const PANES = { home: 'paneHome', baby: 'paneBaby', family: 'paneFamily', profile: 'paneProfile' };
 function render() {
   if ($('scrMain').hidden) return;
+  for (const k in PANES) $(PANES[k]).hidden = k !== st.tab;
+  document.querySelectorAll('#tabbar [data-tab]').forEach(x => x.dataset.tab === st.tab ? x.setAttribute('aria-current', 'page') : x.removeAttribute('aria-current'));
+  $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
+  $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
+  if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
+  renderHome();
+}
+// Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
+function goTab(t, anchor) {
+  if (t === st.tab && !anchor) return window.scrollTo({ top: 0, behavior: smooth() });
+  if (t !== st.tab) { if (st.tab === 'family') FP.confirm = FP.invite = null; st.tab = t; window.scrollTo(0, 0); }
+  render();
+  if (anchor) spotlight(anchor);
+}
+const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+// Rola até a seção e deixa ela em destaque por um instante.
+function spotlight(id) {
+  const el = $(id); if (!el) return;
+  el.scrollIntoView({ block: 'center', behavior: smooth() });
+  el.classList.remove('spot'); void el.offsetWidth; el.classList.add('spot');
+  clearTimeout(spotlight.t); spotlight.t = setTimeout(() => el.classList.remove('spot'), 2200);
+}
+const babyChips = () => st.babies.map(x => `<button data-baby="${esc(x.id)}" class="${x.id === st.baby?.id ? 'on' : ''}">${esc(x.name)}</button>`).join('');
+
+function renderHome() {
   const evs = sortedEntries(), now = Date.now(), b = st.baby;
   $('babyName').textContent = b ? b.name : 'Sem bebê';
   $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
   $('babyAge').textContent = !b ? 'toque para cadastrar'
-    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso e marcos';
+    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso, remédios e marcos';
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
-  tabs.innerHTML = st.babies.map(x => `<button data-baby="${esc(x.id)}" class="${x.id === b?.id ? 'on' : ''}">${esc(x.name)}</button>`).join('');
+  tabs.innerHTML = babyChips();
 
   const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
   const { out: intervals, open } = sleepIntervals(evs);
@@ -386,28 +416,25 @@ function renderGrid(last, open, now) {
     + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.edit}<b>Editar</b><span>botões</span></button>`;
 }
 
-// Editar: liga ou desliga os botões da família. Cada toque salva na hora, um de cada vez.
-function buttonsSheet() { S = { mode: 'buttons' }; drawButtons(); $('sheet').scrollTop = 0; }
-function drawButtons() {
-  let h = head('Botões da tela inicial') + '<p class="dim">Valem para toda a família.</p>';
+// Família › Botões da tela inicial: liga ou desliga os botões. Cada toque salva na hora, um de cada vez.
+function buttonsHtml() {
+  let h = '<div class="sec" id="famButtons"><h4>Botões da tela inicial</h4><p class="dim">Mamada, Sono, Fralda e Outros aparecem sempre. Os outros valem para toda a família.</p>';
   if (!st.settingsOk) h += '<div class="soft">Não foi possível carregar os botões da família. Confira a conexão e abra de novo.</div>';
-  h += '<div class="sec"><h4>Sempre aparecem</h4><div class="li"><span>Mamada, Sono, Fralda <small>· e Outros</small></span></div></div>';
-  h += '<div class="sec"><h4>Escolha os outros</h4>' + OPTIONAL.map(k => { const on = isOn(k);
+  h += OPTIONAL.map(k => { const on = isOn(k);
     return `<button class="li tg" role="switch" aria-checked="${on}" data-act="tgBtn" data-val="${k}"${st.settingsOk ? '' : ' disabled'}><span>${BTN[k][0]}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`; }).join('');
-  if (!isOn('med') && st.meds.length) h += '<p class="dim">Os remédios programados continuam: o cartão aparece na hora da dose.</p>';
+  if (!isOn('med') && st.meds.length) h += '<p class="dim">Os remédios programados continuam: o cartão aparece na hora da dose, e a lista fica na aba do bebê.</p>';
   if (!isOn('symptom')) h += '<p class="dim">Sem Sintomas, o vômito também sai da tela inicial; os registros antigos continuam na linha do tempo.</p>';
-  h += '</div><button class="save" data-act="close">Pronto</button>';
-  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+  return h + '</div>';
 }
 let btnSave = Promise.resolve();
 function toggleBtn(k) {
   const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => x !== k);
-  st.settings = { hidden }; render(); if (S?.mode === 'buttons') drawButtons();
+  st.settings = { hidden }; render();
   btnSave = btnSave.then(async () => {
     const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, hidden_kinds: st.settings.hidden }, { onConflict: 'family_id' });
     if (!error) return;
     toast('Não foi possível salvar. Confira a conexão.');
-    await loadSettings(st.family.id); render(); if (S?.mode === 'buttons') drawButtons();
+    await loadSettings(st.family.id); render();
   });
 }
 
@@ -709,6 +736,8 @@ function drawMeds() {
 const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && e.medicine_id === m.id && !e.skipped).reduce((b, e) => !b || e.t > b.t ? e : b, null);
 // "Só quando precisar" com intervalo: quando pode dar de novo (nulo se já pode).
 const prnNext = (m, last = lastGiven(m)) => last && m.every_hours && last.t + m.every_hours * HOUR > Date.now() ? last.t + m.every_hours * HOUR : null;
+const medWhen = m => (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
+  + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
 function medCard(m) {
   let times, sub, sub2 = '';
   if (m.schedule === 'prn') {
@@ -723,8 +752,7 @@ function medCard(m) {
     const nd = nowDose(m), ask = nd && S.nowAsk === m.id;
     times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')
       + (nd ? `<button class="pillbtn" data-act="giveNow" data-val="${esc(m.id)}">${ask ? 'Marcar a das ' + nd.hhmm : 'Dei agora'}</button>` : '');
-    sub = (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
-      + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
+    sub = medWhen(m);
     if (ask) sub2 = `A próxima dose é às ${nd.hhmm}${dayWord(nd.due) ? ' de ' + dayWord(nd.due) : ''}. Toque de novo para marcar como dada agora.`;
   }
   return `<div class="mcard"><div class="mtop"><div><b>${esc(m.name)}</b>${m.amount ? `<span class="mq">${esc(m.amount)}</span>` : ''}</div>
@@ -779,14 +807,14 @@ function drawDose() {
 }
 const leaveDose = () => S.back === 'meds' ? medsSheet() : closeSheet();
 
-// Programar ou editar um remédio.
-function medForm(m) {
+// Programar ou editar um remédio. "back" é 'pane' quando veio da aba do bebê: ao salvar, volta para ela.
+function medForm(m, back) {
   const sched = m?.schedule || 'fixed', times = m && sched !== 'prn' ? medTimes(m) : ['09:00'];
   S = { mode: 'medform', edit: m || null, name: m?.name || '', amount: m?.amount || '', sched, times,
         every: m?.every_hours || (sched === 'prn' ? 6 : 8), first: sched === 'every' ? times[0] : '08:00',
         gap: sched === 'prn' && m?.every_hours ? 'every' : 'none',
         dur: m?.days ? 'days' : 'none', days: m?.days || 7, start: m ? dayOf(m.start_date) : startOfDay(Date.now()),
-        err: '', confirmStop: false };
+        err: '', confirmStop: false, back };
   drawMedForm(); $('sheet').scrollTop = 0;
 }
 const everyHint = () => 'Horários: ' + everyTimes(S.every, S.first).join(', ');
@@ -829,6 +857,7 @@ async function saveMed(btn) {
   const row = { name, amount: amount || null, schedule: S.sched, times,
                 every_hours: S.sched === 'every' || (S.sched === 'prn' && S.gap === 'every') ? S.every : null,
                 days: S.sched !== 'prn' && S.dur === 'days' ? S.days : null };
+  const back = S.back;
   busy(btn, true);
   const q = S.edit ? sb.from('medicines').update(row).eq('id', S.edit.id)
                    : sb.from('medicines').insert({ family_id: st.family.id, baby_id: st.baby.id, start_date: localDate(Date.now()), ...row });
@@ -836,17 +865,19 @@ async function saveMed(btn) {
   busy(btn, false);
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
-  render(); medsSheet(); toast('Salvo');
+  leaveMedForm(back); toast('Salvo');
 }
 // Parar não apaga: o remédio some da lista e das doses, e os registros continuam na linha do tempo.
 async function stopMed(btn) {
+  const back = S.back;
   busy(btn, true);
   const { error } = await sb.from('medicines').update({ stopped_at: new Date().toISOString() }).eq('id', S.edit.id);
   busy(btn, false);
   if (error) { S.err = 'Não foi possível parar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = st.meds.filter(x => x.id !== S.edit.id);
-  render(); medsSheet(); toast('Remédio parado');
+  leaveMedForm(back); toast('Remédio parado');
 }
+const leaveMedForm = back => { if (back === 'pane') closeSheet(); else { render(); medsSheet(); } };
 
 function medInput(el) {
   const id = el.id, v = el.value;
@@ -904,35 +935,58 @@ async function medAction(a, v, btn) {
   S.err = ''; drawMedForm();
 }
 
-/* ---------- peso e marcos ---------- */
-// A tela do bebê (toque no nome, no alto): peso, marcos e nome e nascimento. Só guarda o que a família
-// anota; não compara com curva de crescimento nem com a idade de outros bebês.
+/* ---------- aba do bebê ---------- */
+// Peso, remédios programados, marcos e, no fim, nome e nascimento. Só guarda o que a família anota;
+// não compara com curva de crescimento nem com a idade de outros bebês.
 const LOG = {
   weight:    { table: 'weights',    list: 'weights',    day: 'measured_on', sort: sortWeights },
   milestone: { table: 'milestones', list: 'milestones', day: 'happened_on', sort: sortMilestones },
 };
-function babyHub() { S = { mode: 'hub' }; drawHub(); $('sheet').scrollTop = 0; }
-function drawHub() {
-  const b = st.baby, ws = st.weights, ms = st.milestones;
+function drawBabyPane() {
+  const b = st.baby, el = $('paneBaby');
+  if (!b) {
+    el.innerHTML = '<div class="ptitle"><h2>Bebê</h2></div><div class="soft">Cadastre o bebê da família para anotar o peso, os remédios e os marcos.</div><button class="save" data-act="addBaby">Adicionar bebê</button>';
+    return;
+  }
+  const ws = st.weights, ms = st.milestones, now = Date.now(), meds = st.meds.filter(m => medEnd(m) > startOfDay(now));
   const sub = [ageText(b.birth_date), b.birth_date ? 'nasceu em ' + fullDate(b.birth_date) : ''].filter(Boolean).join(' · ');
-  let h = `<div class="grab"></div><div class="shead"><h3>${esc(b.name)}${sub ? `<span class="ps">${esc(sub)}</span>` : ''}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  let h = st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '';
+  h += `<button class="ptitle" data-act="jump" data-val="babyData" aria-label="${esc(b.name)}: editar nome e nascimento"><h2>${esc(b.name)}<span class="pen" aria-hidden="true">${ICON.pencil}</span></h2>${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
+  // Os três números do alto: cada um leva à sua seção.
+  const lw = ws.at(-1), lm = ms.at(-1), next = dosesFrom(now, now + DAY).find(d => !d.e);
+  const medText = !meds.length ? 'nenhum' : next ? (dayWord(next.due) || 'hoje') + ' ' + next.hhmm : 'quando precisar';
+  const tile = (sec, color, k, v, t) => `<button data-act="jump" data-val="${sec}" style="--sw:var(${color})"><span class="k"><i></i>${k}</span><b>${esc(v)}</b><span>${esc(t)}</span></button>`;
+  h += '<div class="jump">' + tile('babyWeight', '--c-weight', 'Peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
+    + tile('babyMeds', '--c-med', 'Remédios', String(meds.length), medText)
+    + tile('babyMilestones', '--accent', 'Marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
   if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
   else {
-    h += '<div class="sec"><h4>Peso</h4>';
+    h += '<div class="sec" id="babyWeight"><h4>Peso</h4>';
     if (ws.length >= 2) h += `<div class="svgbox">${weightChart(ws)}</div>`;
     h += ws.length
       ? `<div class="recs">${ws.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(kg(w.grams))}</span></button>`).join('')}</div>`
       : '<div class="soft">Anote o peso de cada consulta ou pesagem. Com dois ou mais, aparece o gráfico.</div>';
     h += '<button class="ghost" data-act="newWeight">+ Anotar peso</button></div>';
-    h += '<div class="sec"><h4>Marcos</h4>';
+  }
+  h += '<div class="sec" id="babyMeds"><h4>Remédios programados</h4>';
+  h += meds.length
+    ? meds.map(m => {
+        const when = m.schedule === 'prn' ? 'só quando precisar' + (m.every_hours ? ` · de ${m.every_hours} em ${m.every_hours} horas` : '') : medWhen(m);
+        const times = m.schedule !== 'prn' && medTimes(m).length <= 4 ? `<span class="mtimes">${medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')}</span>` : '';
+        return `<button class="mrow" data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}"><span><b>${esc(m.name)}</b><small>${esc([m.amount, when].filter(Boolean).join(' · '))}</small></span>${times}</button>`;
+      }).join('') + '<div class="row2"><button class="ghost" data-act="allMeds">Ver doses</button><button class="ghost" data-act="newMed">+ Programar</button></div>'
+    : `<div class="soft">Nenhum remédio programado. Programe os remédios de ${esc(b.name)} para as doses aparecerem na hora, no alto da tela Hoje.</div><button class="ghost" data-act="newMed">+ Programar remédio</button>`;
+  h += '</div>';
+  if (st.growthOk) {
+    h += '<div class="sec" id="babyMilestones"><h4>Marcos</h4>';
     h += ms.length
       ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
       : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }
-  h += `<div class="sec"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBabyHub">Editar</button></div></div>`;
+  h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
   h += '<p class="dim">O Caderninho só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
-  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+  el.innerHTML = h;
 }
 
 // Anotar ou editar um peso ou um marco.
@@ -991,7 +1045,7 @@ async function saveLog(btn) {
   busy(btn, false);
   if (error) return fail('Não foi possível salvar. Confira a conexão e tente de novo.');
   st[L.list] = L.sort([...st[L.list].filter(x => x.id !== data.id), data]);
-  render(); babyHub(); toast('Salvo');
+  closeSheet(); toast('Salvo');
 }
 async function delLog(btn) {
   const L = LOG[S.mode], id = S.edit.id;
@@ -1000,25 +1054,17 @@ async function delLog(btn) {
   busy(btn, false);
   if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawLog(); }
   st[L.list] = st[L.list].filter(x => x.id !== id);
-  render(); babyHub(); toast('Apagado');
+  closeSheet(); toast('Apagado');
 }
 function growthAction(a, v, btn) {
-  if (S.mode === 'hub') {
-    if (a === 'newWeight') return logForm('weight');
-    if (a === 'newMilestone') return logForm('milestone');
-    if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
-    if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
-    if (a === 'editBabyHub') return babySheet(st.baby, 'hub');
-    return;
-  }
   if (a === 'sug') { S.title = v; S.err = ''; return drawLog(); }
   if (a === 'saveLog') return saveLog(btn);
   if (a === 'delLog') { if (S.confirmDel) return delLog(btn); S.confirmDel = true; return drawLog(); }
 }
 
 /* ---------- bebê e nome ---------- */
-function babySheet(b, back) {
-  S = { mode: 'baby', b, back, name: b?.name || '', birth: b?.birth_date || '', confirmDel: false };
+function babySheet(b) {
+  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', confirmDel: false };
   drawBaby();
 }
 // Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
@@ -1059,10 +1105,8 @@ async function saveBaby(btn) {
   if (error) return err('bErr', errMsg(error));
   const i = st.babies.findIndex(x => x.id === data.id);
   if (i >= 0) st.babies[i] = data; else st.babies.push(data);
-  const back = S.back;
   if (!S.b || st.baby?.id === data.id) await selectBaby(data.id);
-  if (back === 'hub') babyHub(); else closeSheet();
-  toast('Salvo');
+  closeSheet(); toast('Salvo');
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
@@ -1084,60 +1128,109 @@ async function saveName(btn) {
   closeSheet(); toast('Salvo');
 }
 
-/* ---------- família e configurações ---------- */
-function menuSheet() { S = { mode: 'menu', confirm: null, invite: null }; FB.sent = false; FB.err = ''; drawMenu(); $('sheet').scrollTop = 0; }
-function drawMenu() {
-  const f = st.family, creator = f.creator_id === st.user.id;
-  let h = head(f.name) + '<div class="sec"><h4>Membros</h4>';
-  h += st.members.map(m => {
+/* ---------- Família ---------- */
+// O que vale para todos: nome da família, membros e convite, bebês, botões da tela inicial e sair.
+const FP = { confirm: null, invite: null };   // a confirmação aberta e o link de convite gerado
+function drawFamilyPane() {
+  const f = st.family, creator = f.creator_id === st.user.id, n = st.members.length, nb = st.babies.length;
+  let h = `<div class="ptitle"><h2>${esc(f.name)}</h2><small>${n} ${n === 1 ? 'membro' : 'membros'} · ${nb} ${nb === 1 ? 'bebê' : 'bebês'}</small></div>`;
+  h += `<div class="sec"><h4>Nome da família</h4><div class="li"><span>${esc(f.name)}</span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`
+    + (creator ? '' : '<p class="dim">Só quem criou a família muda o nome.</p>') + '</div>';
+  h += '<div class="sec"><h4>Membros</h4>' + st.members.map(m => {
     const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
     const rm = creator && m.user_id !== st.user.id
-      ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">${S.confirm === 'rm:' + m.user_id ? 'Confirmar' : 'Remover'}</button>` : '';
+      ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">${FP.confirm === 'rm:' + m.user_id ? 'Confirmar' : 'Remover'}</button>` : '';
     return `<div class="li"><span>${esc(st.names[m.user_id] || 'Alguém')}${tags}</span>${rm}</div>`;
   }).join('');
-  if (creator) h += S.invite
-    ? `<div class="invite">${esc(S.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
+  if (creator) h += FP.invite
+    ? `<div class="invite">${esc(FP.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
     : '<button class="ghost" data-act="invite">Convidar para esta família</button>';
   h += '</div><div class="sec"><h4>Bebês</h4>' +
-    st.babies.map(b => `<button class="li tg" data-act="editBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}</span><span class="go">Editar</span></button>`).join('') +
-    '<button class="ghost" data-act="addBaby">Adicionar bebê</button></div>';
-  h += `<div class="sec"><h4>Você</h4><div class="li"><span>${esc(st.profile.display_name)}</span><button data-act="rename">Mudar nome</button></div></div>`;
-  h += '<div class="sec"><h4>Outras famílias</h4>' +
-    st.families.filter(x => x.id !== f.id).map(x => `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('') +
-    '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
+    st.babies.map(b => `<button class="li tg" data-act="openBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(ageText(b.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
+    '<button class="ghost" data-act="addBaby">+ Adicionar bebê</button></div>';
+  h += buttonsHtml();
+  h += creator
+    ? `<button class="danger-btn" data-act="delFam">${FP.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
+    : `<button class="danger-btn" data-act="leave">${FP.confirm === 'leave' ? 'Toque de novo para sair da família' : 'Sair da família'}</button>`;
+  $('paneFamily').innerHTML = h;
+}
+// Mudar o nome da família: só quem criou (é a regra do banco).
+function famNameSheet() {
+  S = { mode: 'famname' };
+  openPanel(head('Nome da família') + `<div><label class="lbl" for="famName">Como a família aparece para todos os membros</label><input class="field" id="famName" maxlength="60" value="${esc(st.family.name)}"></div>
+    <div class="err" id="fnErr" hidden></div><button class="save" data-act="saveFamName">Salvar</button>`);
+}
+async function saveFamName(btn) {
+  const name = $('famName').value.trim();
+  if (!name) return err('fnErr', 'Escreva o nome da família.');
+  busy(btn, true);
+  // Sem permissão, o banco não dá erro: só não muda nada. Por isso confere o que voltou.
+  const { data, error } = await sb.from('families').update({ name }).eq('id', st.family.id).select('id');
+  busy(btn, false);
+  if (error || !data?.length) return err('fnErr', error ? errMsg(error) : 'Só quem criou a família muda o nome.');
+  st.family.name = name;
+  closeSheet(); toast('Salvo');
+}
+
+/* ---------- Perfil ---------- */
+// O que é só da pessoa: o nome, a aparência neste celular, as famílias de que participa, indicar o
+// Caderninho, falar com quem cuida dele e desconectar.
+const THEMES = [['light', 'Claro'], ['dark', 'Escuro'], ['', 'Do celular']];
+function drawProfilePane() {
+  const theme = lsGet('cad-theme') || '';
+  let h = `<div class="ptitle"><h2>${esc(st.profile.display_name)}</h2><small>Seu nome e os ajustes que valem só para você</small></div>`;
+  h += `<div class="sec"><h4>Seu nome</h4><div class="li"><span>${esc(st.profile.display_name)}</span><button data-act="rename">Mudar</button></div></div>`;
+  h += `<div class="sec"><h4>Aparência</h4><div class="seg3" role="group" aria-label="Aparência">${THEMES.map(([v, t]) => `<button data-act="theme" data-val="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div>`
+    + '<p class="dim">"Do celular" segue o modo noturno do celular. Vale só neste aparelho.</p></div>';
+  h += '<div class="sec"><h4>Suas famílias</h4>' + st.families.map(x => x.id === st.family.id
+      ? `<div class="li"><span>${esc(x.name)} <small>aberta</small></span></div>`
+      : `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('')
+    + '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
   h += '<div class="sec"><h4>Indicar o Caderninho</h4>' +
     `<div class="invite">${esc(location.host)}</div>` +
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
-  h += '<div class="sec"><h4>Sugestões e problemas</h4>' + (FB.sent
+  h += '<div class="sec"><h4>Fale com quem cuida do Caderninho</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
+  h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
+  $('paneProfile').innerHTML = h;
+}
+// "Do celular" apaga a escolha: o app volta a seguir o modo noturno do aparelho.
+function setTheme(v) {
+  if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme;
+  lsSet('cad-theme', v || null); render();
+}
+
+/* ---------- sugestões e problemas ---------- */
+// O rascunho sobrevive a fechar a tela sem querer. Pelo app, só dá para enviar: ninguém lê.
+const FB = { type: '', text: '', sent: false, err: '' }, FB_MAX = 1000;
+const FB_TYPES = [['idea', 'Sugestão'], ['bug', 'Algo deu errado']];
+function feedbackSheet() { S = { mode: 'feedback' }; FB.sent = false; FB.err = ''; drawFeedback(); $('sheet').scrollTop = 0; }
+function drawFeedback() {
+  const h = head('Sugestões e problemas') + (FB.sent
     ? '<div class="thanks" role="status"><b>Recebido, obrigado!</b><span>Sua mensagem chegou para quem cuida do Caderninho.</span></div><button class="ghost" data-act="fbAgain">Enviar outra</button>'
     : `<div><div class="lbl">Sobre o quê? <small>(opcional)</small></div><div class="seg">${FB_TYPES.map(([k, t]) => `<button class="opt${FB.type === k ? ' on' : ''}" data-act="fbType" data-val="${k}" aria-pressed="${FB.type === k}">${t}</button>`).join('')}</div></div>
        <div><label class="lbl" for="fbText">Sua mensagem</label><textarea class="field" id="fbText" maxlength="${FB_MAX}" placeholder="Ex.: queria ver as mamadas da madrugada separadas">${esc(FB.text)}</textarea>
        <div class="fbmeta"><span>Quem cuida do Caderninho lê todas.</span><span id="fbCount">${FB.text.length} de ${FB_MAX}</span></div></div>
        ${FB.err ? `<div class="err" id="fbErr">${esc(FB.err)}</div>` : ''}
        <div class="lbl">Vai junto: seu nome, a família aberta e o tipo de celular.</div>
-       <button class="save" data-act="fbSend">Enviar</button>`) + '</div>';
-  h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
-  h += creator
-    ? `<button class="danger-btn" data-act="delFam">${S.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
-    : `<button class="danger-btn" data-act="leave">${S.confirm === 'leave' ? 'Toque de novo para sair da família' : 'Sair da família'}</button>`;
+       <button class="save" data-act="fbSend">Enviar</button>`);
   const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
 }
-
-/* ---------- sugestões e problemas ---------- */
-// O rascunho sobrevive a fechar o menu sem querer. Pelo app, só dá para enviar: ninguém lê.
-const FB = { type: '', text: '', sent: false, err: '' }, FB_MAX = 1000;
-const FB_TYPES = [['idea', 'Sugestão'], ['bug', 'Algo deu errado']];
 async function sendFeedback(btn) {
   const message = FB.text.trim();
-  if (!message) { FB.err = 'Escreva sua mensagem antes de enviar.'; return drawMenu(); }
+  if (!message) { FB.err = 'Escreva sua mensagem antes de enviar.'; return drawFeedback(); }
   busy(btn, true);
   const { error } = await sb.from('feedback').insert({ family_id: st.family.id, kind: FB.type || null, message, device: deviceText() });
   if (error) FB.err = error.message?.includes('feedback_limit') ? 'Você já mandou muitas mensagens hoje. Tente de novo amanhã.'
                                                                  : 'Não foi possível enviar. Confira a conexão e tente de novo.';
   else Object.assign(FB, { type: '', text: '', sent: true, err: '' });
-  // Se o menu foi fechado enquanto enviava, avisa pelo toast.
-  if (S?.mode === 'menu') drawMenu(); else toast(error ? FB.err : 'Mensagem enviada. Obrigado!');
+  // Se a tela foi fechada enquanto enviava, avisa pelo toast.
+  if (S?.mode === 'feedback') drawFeedback(); else toast(error ? FB.err : 'Mensagem enviada. Obrigado!');
+}
+function feedbackAction(a, v, btn) {
+  if (a === 'fbType') { FB.type = FB.type === v ? '' : v; return drawFeedback(); }
+  if (a === 'fbSend') return sendFeedback(btn);
+  if (a === 'fbAgain') { FB.sent = false; return drawFeedback(); }
 }
 // O tipo de celular que vai junto: aparelho, sistema, navegador e se o app está instalado.
 function deviceText() {
@@ -1156,41 +1249,55 @@ async function afterLeavingFamily() {
   if (st.families.length) openFamily(st.families[0].id);
   else { $('cancelCreate').hidden = true; show('scrCreate'); }
 }
-async function menuAction(a, v, btn) {
+// Os toques nas abas do bebê, Família e Perfil.
+async function paneAction(a, v, btn) {
   const f = st.family;
+  // Aba do bebê
+  if (a === 'jump') return spotlight(v);
+  if (a === 'newWeight') return logForm('weight');
+  if (a === 'newMilestone') return logForm('milestone');
+  if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
+  if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
+  if (a === 'allMeds') return medsSheet();
+  if (a === 'newMed') return medForm(null, 'pane');
+  if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
+  if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
+  if (a === 'addBaby') return babySheet(null);
+  // Família
+  if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
+  if (a === 'famName') return famNameSheet();
+  if (a === 'tgBtn') return toggleBtn(v);
   if (a === 'invite') {
     busy(btn, true);
     const { data, error } = await sb.from('invites').insert({ family_id: f.id }).select('token').single();
     busy(btn, false);
     if (error) return toast('Não foi possível criar o convite.');
-    S.invite = location.origin + '/?convite=' + data.token; return drawMenu();
+    FP.invite = location.origin + '/?convite=' + data.token; return render();
   }
-  if (a === 'copyInv') return navigator.clipboard.writeText(S.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
-  if (a === 'shareInv') return navigator.share({ title: 'Caderninho', text: 'Entre na família ' + f.name + ' no Caderninho:', url: S.invite }).catch(() => {});
-  if (a === 'shareApp') return navigator.share({ title: 'Caderninho', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
-  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
+  if (a === 'copyInv') return navigator.clipboard.writeText(FP.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
+  if (a === 'shareInv') return navigator.share({ title: 'Caderninho', text: 'Entre na família ' + f.name + ' no Caderninho:', url: FP.invite }).catch(() => {});
   if (a === 'rm') {
-    if (S.confirm !== 'rm:' + v) { S.confirm = 'rm:' + v; return drawMenu(); }
+    if (FP.confirm !== 'rm:' + v) { FP.confirm = 'rm:' + v; return render(); }
     const { error } = await sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', v);
     if (error) return toast('Não foi possível remover.');
-    st.members = st.members.filter(m => m.user_id !== v); S.confirm = null; return drawMenu();
+    st.members = st.members.filter(m => m.user_id !== v); FP.confirm = null; return render();
   }
   if (a === 'delFam' || a === 'leave') {
-    if (S.confirm !== a) { S.confirm = a; return drawMenu(); }
+    if (FP.confirm !== a) { FP.confirm = a; return render(); }
     const q = a === 'delFam' ? sb.from('families').delete().eq('id', f.id)
                              : sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', st.user.id);
     const { error } = await q;
     if (error) return toast('Não foi possível concluir.');
     return afterLeavingFamily();
   }
-  if (a === 'fbType') { FB.type = FB.type === v ? '' : v; return drawMenu(); }
-  if (a === 'fbSend') return sendFeedback(btn);
-  if (a === 'fbAgain') { FB.sent = false; return drawMenu(); }
-  if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
-  if (a === 'addBaby') return babySheet(null);
+  // Perfil
   if (a === 'rename') return renameSheet();
-  if (a === 'switchFam') { closeSheet(); return openFamily(v); }
-  if (a === 'newFam') { closeSheet(); $('cancelCreate').hidden = false; return show('scrCreate'); }
+  if (a === 'theme') return setTheme(v);
+  if (a === 'switchFam') return openFamily(v);
+  if (a === 'newFam') { $('cancelCreate').hidden = false; return show('scrCreate'); }
+  if (a === 'shareApp') return navigator.share({ title: 'Caderninho', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
+  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
+  if (a === 'feedback') return feedbackSheet();
   if (a === 'logout') { await sb.auth.signOut(); location.href = '/'; }
 }
 
@@ -1227,11 +1334,11 @@ $('sheetIn').addEventListener('click', async e => {
   }
   if (a === 'delBaby') return delBaby(b);
   if (a === 'saveName') return saveName(b);
-  if (S.mode === 'menu') return menuAction(a, v, b);
+  if (S.mode === 'feedback') return feedbackAction(a, v, b);
+  if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
-  if (S.mode === 'hub' || S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
-  if (S.mode === 'buttons') { if (a === 'tgBtn') toggleBtn(v); return; }
+  if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -1254,10 +1361,9 @@ $('sheetIn').addEventListener('click', async e => {
 });
 
 document.querySelectorAll('[data-i]').forEach(el => el.outerHTML = ICON[el.dataset.i]);
-$('menuBtn').innerHTML = ICON.menu;
 $('grid').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b) return;
-  if (b.dataset.k === 'edit') return buttonsSheet();
+  if (b.dataset.k === 'edit') return goTab('family', 'famButtons');
   openEntry(b.dataset.k);
 });
 $('wakeBtn').onclick = async () => {
@@ -1271,9 +1377,13 @@ $('meds').addEventListener('click', e => {
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
 });
-$('babyBtn').onclick = () => st.baby ? babyHub() : babySheet(null);
-$('menuBtn').onclick = menuSheet;
+$('babyBtn').onclick = () => st.baby ? goTab('baby') : babySheet(null);
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
+$('tabbar').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) goTab(b.dataset.tab); });
+for (const id of ['paneBaby', 'paneFamily', 'paneProfile']) $(id).addEventListener('click', e => {
+  const c = e.target.closest('[data-baby]'); if (c) return selectBaby(c.dataset.baby);
+  const b = e.target.closest('[data-act]'); if (b) paneAction(b.dataset.act, b.dataset.val, b);
+});
 // Tocar numa marca do gráfico do dia abre o registro, como na linha do tempo.
 $('summary').addEventListener('click', e => {
   const m = e.target.closest('[data-id]'); if (!m) return;
@@ -1340,11 +1450,8 @@ document.addEventListener('visibilitychange', () => {
 });
 setInterval(refresh, 30000);
 
-function isDark() { const a = document.documentElement.dataset.theme; return a ? a === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
-function paintTheme() { $('themeBtn').innerHTML = isDark() ? ICON.sun : ICON.sleep; }
+// Aparência escolhida em Perfil (claro ou escuro); sem escolha, segue o celular.
 const savedTheme = lsGet('cad-theme'); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
-$('themeBtn').onclick = () => { const th = isDark() ? 'light' : 'dark'; document.documentElement.dataset.theme = th; lsSet('cad-theme', th); paintTheme(); };
-paintTheme();
 
 boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir o Caderninho. Confira a conexão e recarregue.'); });
 
