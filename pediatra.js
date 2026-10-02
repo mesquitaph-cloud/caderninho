@@ -2,7 +2,7 @@
 // do celular, e o mesmo em texto para copiar. Só junta o que foi registrado; não avalia o bebê nem
 // compara com outros bebês. A folha é sempre clara, mesmo com o app no escuro.
 import { MIN, HOUR, DAY, startOfDay, addDays, hm, dur, esc, ageText, label } from './util.js';
-import { kg } from './growth.js';
+import { kg, cmText, growthChart, growthWindow } from './growth.js';
 
 const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -143,7 +143,7 @@ function daysSvg(days, evs, sleeps, now) {
 /* ---------- a folha ---------- */
 // parts: { routine, symptoms, meds, growth, questions }. medPlan(id): como o remédio está programado
 // hoje (nulo se não está mais).
-export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, milestones, questions, parts, medPlan }) {
+export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, lengths = [], milestones, questions, parts, medPlan }) {
   const today = startOfDay(now), birth = baby.birth_date;
   const td = (v, cls = '') => `<td${cls ? ` class="${cls}"` : ''}>${v}</td>`;
   let h = '<article class="rp-paper">';
@@ -152,7 +152,13 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, miles
 
   if (parts.growth) {
     let w = '<section class="rp-sec"><h2>Peso <small>desde o nascimento</small></h2>';
-    if (weights.length >= 2) {
+    // Com nascimento e menina ou menino: peso e comprimento sobre as curvas da OMS, lado a lado.
+    if (birth && baby.sex && (weights.length || lengths.length)) {
+      const all = [...weights, ...lengths].sort((x, y) => x.measured_on < y.measured_on ? -1 : 1), [w0, w1] = growthWindow(all, birth);
+      const ch = (rows, kind, t) => rows.length ? `<div><h3 class="rp-gt">${t}</h3>${growthChart({ rows, kind, sex: baby.sex, birth, a: w0, b: w1, W: 300, H: 200, id: 'rp-' + kind, cls: 'rp-g' })}</div>` : '';
+      w = `<section class="rp-sec"><h2>Peso e comprimento <small>curvas da OMS, ${baby.sex === 'F' ? 'meninas' : 'meninos'}</small></h2><div class="rp-curves">${ch(weights, 'weight', 'Peso')}${ch(lengths, 'length', 'Comprimento')}</div>`;
+      w += `<p class="rp-src">Percentis 3, 15, 50, 85 e 97. ${all.map(x => esc(ymdDdmm(x.measured_on) + ': ' + [x.grams != null ? kg(x.grams) : '', x.cm != null ? cmText(x.cm) : ''].filter(Boolean).join(', ') + (x.note ? ' (' + x.note + ')' : ''))).filter((v, i, arr) => arr.indexOf(v) === i).join(' · ')}</p>`;
+    } else if (weights.length >= 2) {
       w += weightSvg(weights);
       w += `<p class="rp-src">${weights.map(x => esc(ymdDdmm(x.measured_on) + (x.note ? ' ' + x.note : ''))).join(' · ')}</p>`;
     } else if (weights.length) w += `<p>${esc(kg(weights[0].grams))} em ${ymdFull(weights[0].measured_on)}${weights[0].note ? ' · ' + esc(weights[0].note) : ''}</p>`;
@@ -162,7 +168,8 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, miles
     m += milestones.length
       ? `<table><thead><tr><th>Marco</th><th>Dia</th><th class="n">Idade</th></tr></thead><tbody>${milestones.map(x => `<tr>${td(esc(x.title))}${td(ymdDdmm(x.happened_on))}${td(esc(ageAt(birth, x.happened_on)), 'n')}</tr>`).join('')}</tbody></table>`
       : '<p class="rp-none">Nenhum marco anotado.</p>';
-    h += `<div class="rp-cols">${w}${m}</section></div>`;
+    // Com as curvas, os dois gráficos ocupam a largura toda e os marcos vêm embaixo.
+    h += w.includes('rp-curves') ? `${w}${m}</section>` : `<div class="rp-cols">${w}${m}</section></div>`;
   }
 
   if (parts.routine) {
@@ -224,7 +231,7 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, miles
 }
 
 // O mesmo relatório em texto, para copiar e mandar por mensagem.
-export function reportPlain({ baby, a, now, stats: R, evs, weights, milestones, questions, parts, medPlan }) {
+export function reportPlain({ baby, a, now, stats: R, evs, weights, lengths = [], milestones, questions, parts, medPlan }) {
   const today = startOfDay(now), birth = baby.birth_date, out = [];
   out.push(`Relatório de ${baby.name} para o pediatra, pelo Soneca`);
   if (birth) out.push(`Nasceu em ${ymdFull(birth)} · ${ageText(birth)}`);
@@ -232,6 +239,7 @@ export function reportPlain({ baby, a, now, stats: R, evs, weights, milestones, 
   if (parts.growth) {
     out.push('', 'Peso:');
     out.push(...(weights.length ? weights.map(w => `• ${ymdDdmm(w.measured_on)}: ${kg(w.grams)}${w.note ? ' (' + w.note + ')' : ''}`) : ['• nenhum anotado']));
+    if (lengths.length) out.push('', 'Comprimento:', ...lengths.map(w => `• ${ymdDdmm(w.measured_on)}: ${cmText(w.cm)}${w.note ? ' (' + w.note + ')' : ''}`));
     if (milestones.length) out.push('', 'Marcos:', ...milestones.map(m => `• ${m.title}: ${ymdDdmm(m.happened_on)}${birth ? ' (' + ageAt(birth, m.happened_on) + ')' : ''}`));
   }
   if (parts.routine && R.avg) {

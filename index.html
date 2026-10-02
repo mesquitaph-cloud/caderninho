@@ -72,6 +72,9 @@
     <div><div class="lbl">Nome da família</div><input class="field" id="famIn" maxlength="60" placeholder="Família Mesquita" required></div>
     <div><div class="lbl">Nome do bebê</div><input class="field" id="babyIn" maxlength="40" placeholder="Marina" required></div>
     <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="birthIn" type="date"></div>
+    <div><div class="lbl" id="sexLbl">Menina ou menino (opcional)</div>
+      <div class="sexpick" role="radiogroup" aria-labelledby="sexLbl"><label><input type="radio" name="sexIn" value="F"><span>Menina</span></label><label><input type="radio" name="sexIn" value="M"><span>Menino</span></label></div>
+      <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.</p></div>
     <p class="err" id="errCreate" hidden></p>
     <button class="save" type="submit">Criar família</button>
   </form>

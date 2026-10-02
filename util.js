@@ -14,6 +14,10 @@ export const ICON = {
   massage: `<svg viewBox="0 0 24 24" ${P}><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`,
   bath: `<svg viewBox="0 0 24 24" ${P}><path d="M4 12h16v2a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M6 12V6a2 2 0 0 1 3.5-1.3"/><path d="M8 21l1-2M16 21l-1-2"/></svg>`,
   nasal: `<svg viewBox="0 0 24 24" ${P}><path d="M14.5 3.5l6 6"/><path d="M17.5 6.5l-8.8 8.8a3 3 0 0 1-4.2-4.2l8.8-8.8"/><path d="M6 20.5c-1.2 0-2-.8-2-1.8 0-1.2 2-3.2 2-3.2s2 2 2 3.2c0 1-.8 1.8-2 1.8z"/></svg>`,
+  // Cuidados: a mão aberta (o botão e o outro cuidado). Tummy time: o bebê de bruços erguendo a cabeça.
+  care: `<svg viewBox="0 0 24 24" ${P}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M8 11.5 6.6 10a1.6 1.6 0 0 0-2.4 2.1l3.3 4.6A6 6 0 0 0 12.4 19H13a4 4 0 0 0 4-4v-2"/></svg>`,
+  tummy: `<svg viewBox="0 0 24 24" ${P}><circle cx="17" cy="8.5" r="2.6"/><path d="M14.6 10.4c-2.6.6-5.6 2.2-8.6 3.4"/><path d="M15.4 11.2 16 14.6"/><path d="M6 13.8c-1 .4-1.9.8-2.6 1.4"/><path d="M2.5 18.5h19"/></svg>`,
+  sunbath: `<svg viewBox="0 0 24 24" ${P}><path d="M7 15a5 5 0 0 1 10 0"/><path d="M12 4v3M4.9 7.9l2.1 2.1M19.1 7.9 17 10M2.5 15h3M18.5 15h3"/><path d="M3 19h18"/></svg>`,
   edit: `<svg viewBox="0 0 24 24" ${P}><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
   siren: `<svg viewBox="0 0 24 24" ${P}><path d="M7 18v-5a5 5 0 0 1 10 0v5"/><path d="M4.5 21h15M5.5 18h13"/><path d="M12 3v2M5.5 6l1.4 1.4M18.5 6l-1.4 1.4"/></svg>`,
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
@@ -96,7 +100,10 @@ export const SYMPTOM = { febre: 'Febre', colica: 'Cólica', choro: 'Choro incons
                          vacina: 'Reação à vacina', dentes: 'Incômodo dos dentes', outro: 'Outro' };
 // Tamanho do cocô, opcional, na fralda com cocô. O alerta marrom (vazou da fralda) é à parte.
 export const POO_SIZE = { pequeno: 'pequeno', medio: 'médio', grande: 'grande', gigante: 'gigante' };
-export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal' };
+// Cuidados: o que a família escolhe no botão Cuidados, na ordem da tela. Tummy time e banho de sol
+// podem ter os minutos; "Outro cuidado" leva o que foi feito na observação.
+export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal', tummy: 'Tummy time', sunbath: 'Banho de sol', care: 'Outro cuidado' };
+export const CARE_MIN = ['tummy', 'sunbath'];
 const temp = c => Number(c).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' °C';
 // Qual peito: na mamada no peito e na ordenha.
 const SIDE = { left: 'peito esquerdo', right: 'peito direito', both: 'os dois peitos' };
@@ -121,7 +128,8 @@ export function label(e, evs) {
   if (e.kind === 'med') return e.med_name + (e.med_amount ? ' · ' + e.med_amount : '');
   if (e.kind === 'symptom') return e.symptom === 'outro' ? e.note || 'Sintoma'
     : (SYMPTOM[e.symptom] || 'Sintoma') + (e.temp_c != null ? ' · ' + temp(e.temp_c) : '') + (e.duration_min ? ' · durou ' + dur(e.duration_min * MIN) : '');
-  if (CARE[e.kind]) return CARE[e.kind];
+  if (e.kind === 'care') return e.note || CARE.care;
+  if (CARE[e.kind]) return CARE[e.kind] + (e.duration_min ? ' · ' + dur(e.duration_min * MIN) : '');
   return e.note || 'Outros';
 }
 // Linha de baixo do registro: minutos de cada peito, de qual peito saiu a ordenha ou qual dose do remédio.

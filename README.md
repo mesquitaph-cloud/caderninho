@@ -13,6 +13,50 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
+- Privacidade (LGPD), decidido em 02/10 para logo mais: Política de Privacidade e Termos de Uso, com
+  aceite destacado de quem cadastra o bebê na entrada e uma tela de aceite para quem já usa (guardado no
+  banco, com a data); "Apagar minha conta" no Perfil (hoje só dá para apagar a família). Falta definir
+  quem é o responsável pelos dados (pessoa física ou empresa) e revisar com advogado. Um termo não isenta
+  de tudo: a LGPD e o Código de Defesa do Consumidor não deixam.
+
+## Cuidados, botão +, noite cinza-azulada e curvas da OMS (02/10, no código, falta publicar)
+
+Pedidos de 02/10 (Patrick, Carol e Fabi). Prévia aprovada (privada): https://claude.ai/artifact/TR5E1huU9uh2zqnS6wLPT3
+Comparações que levaram às escolhas: cores e temas https://claude.ai/artifact/LQmfEU7PSHUzw6G1SboFTg,
+crescimento, noite e botão + https://claude.ai/artifact/V32VWJQhf1tDE4zHcQywyS
+
+**Para publicar:** rodar `supabase/011_cuidados_e_curvas.sql` no SQL Editor antes do app. Sem ele, o app
+não salva tummy time, banho de sol, outro cuidado, comprimento nem menina/menino, e não deixa desligar
+Cuidados; o resto funciona. Conferir pelo conector: as regras `entries_kind_check`, `entries_symptom_dur`,
+`entries_care_note`, `weights_some_measure` e as colunas `weights.cm` e `babies.sex`.
+
+- **Botão Cuidados:** um só, como Remédio, no lugar de Massagem, Banho e Lavagem nasal. O + abre a
+  escolha: Massagem, Banho, Lavagem nasal, Tummy time, Banho de sol e Outro (texto livre, obrigatório).
+  Tummy time e banho de sol podem ter os minutos (atalhos de 3, 5, 10 e 15). Na linha do tempo, cada um
+  com o nome próprio; no resumo, "Cuidados: 2 tummy times (22 min), 1 banho". Em Família › Botões, um
+  interruptor só; quem tinha os três antigos desligados continua sem o botão.
+- **Botão +:** em cada botão de registro, no alto, ao lado do ícone. O + anota; o resto do botão abre
+  **os últimos 3 dias** daquele registro (hoje, ontem e anteontem, com hora, detalhe e quem anotou;
+  tocar numa linha edita; embaixo, "+ Anotar"). Outros e Editar continuam como eram.
+- **Noite cinza-azulada**, como o WhatsApp (fundo `#111B21`), no lugar do azul-noite. As cores dos
+  botões não mudam. Contraste conferido: textos de 4,9 a 14,8 : 1.
+- **Menina ou menino:** opcional, ao criar a família, ao adicionar e ao editar o bebê. Serve só para a
+  curva da OMS; mudar troca a curva na hora.
+- **Peso e comprimento:** "Anotar peso" vira "Anotar medida" (peso, comprimento ou os dois). Na aba do
+  bebê, as abas Peso e Comprimento, sobre as curvas da OMS (percentis 3, 15, 50, 85 e 97, as mesmas das
+  folhas da OMS, conferidas valor a valor), com 6 meses, 1 ano, 2 anos e 5 anos, pinça e rodinha para
+  zoom e arrastar para os lados. Sem nascimento ou sem menina/menino, só os pontos, com o aviso de onde
+  anotar. As tabelas da OMS vão no app (`who.js`).
+- **Relatório para pediatra:** com nascimento e menina/menino, peso e comprimento lado a lado sobre as
+  curvas, na folha clara; o texto para copiar ganha o comprimento.
+- **Conferir no celular:** o + e o toque no resto do botão em cada registro; Cuidados com tummy time e
+  minutos, banho de sol e Outro; desligar e ligar Cuidados em Família; menina/menino ao criar, adicionar
+  e editar; o gráfico com pinça no iPhone e no Android; o relatório em PDF com as duas curvas; a noite
+  nova (Perfil › Escuro).
+
+Testado em 02/10 no navegador com um Supabase de mentira (29 checagens, claro e escuro, 390 px, sem
+rolagem para o lado) e o 011 num Postgres local imitando o Supabase, rodado sobre dados antigos (19
+casos). Pelo conector, nenhum registro do banco fica fora da regra de minutos, que ficou mais rígida.
 
 ## Identidade visual: Soneca (no código, falta publicar)
 
@@ -21,7 +65,7 @@ Moodboard (privado): https://claude.ai/artifact/RBE6Qu4c4YFAJ7wnVwNsLj
 Prévia aprovada das telas, antes e depois, de dia e de noite (privada): https://claude.ai/artifact/5ivtMLy5pNcHfVMPefEmz8
 
 - **Fonte:** DM Sans, pesos 400 e 500, em tudo.
-- **Cores:** creme e caramelo de dia, azul-noite à noite. Mamada e ordenha em menta, sono em azul-céu
+- **Cores:** creme e caramelo de dia, cinza-azulado à noite (era azul-noite até 02/10). Mamada e ordenha em menta, sono em azul-céu
   (lavanda à noite), fralda em manteiga, sintomas e remédio em salmão (igual para qualquer remédio),
   cuidados em caramelo claro, outros em neutro. À noite cada botão tem um tom escuro da própria cor,
   para não ficarem todos parecidos. Botão caramelo com texto marrom; links em caramelo escuro; ícones e
@@ -89,9 +133,11 @@ detalhes de cada um abaixo.
    cocô, −5 min e ícones").
 4. Rodar `supabase/010_duvidas.sql` no SQL Editor e conferir pelo conector (seção "Relatório para
    pediatra e dúvidas para a consulta").
-5. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
-6. Conferir no celular o roteiro de cada seção abaixo.
-7. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
+5. Rodar `supabase/011_cuidados_e_curvas.sql` no SQL Editor e conferir pelo conector (seção "Cuidados,
+   botão +, noite cinza-azulada e curvas da OMS").
+6. Publicar o app. Tudo vai junto; o botão do Google continua escondido.
+7. Conferir no celular o roteiro de cada seção abaixo.
+8. Quando quiser ligar o Google: os passos da seção "Entrar com Google", `GOOGLE_LOGIN = true` em
    `config.js` e publicar de novo.
 
 Testado em 27/09 no navegador com um Supabase de mentira (152 checagens), claro e escuro, em 360 e

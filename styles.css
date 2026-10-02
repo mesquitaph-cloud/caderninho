@@ -5,26 +5,30 @@
   --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;
   --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;
   --c-sleep:#5E97CF;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
+  /* Curvas da OMS no gráfico de crescimento */
+  --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
   --scrim:rgba(74,53,34,.38);
   /* Relatório para pediatra: a folha é sempre clara, mesmo com o app no escuro (vira PDF). Sóbria: as cores do Soneca, sem capivara */
   --paper:#FFFFFF;--paper-ink:#4A3522;--paper-muted:#826449;--paper-line:#EFE2D2;--paper-soft:#FBF5EC;
-  --rp-sleep:#5E97CF;--rp-feed:#2E7350;--rp-diaper:#B8860B;--rp-poo:#5E3A1E;--rp-pump:#2E7350;--rp-sym:#A8423C;--rp-weight:#B8693A;
+  --rp-sleep:#5E97CF;--rp-feed:#2E7350;--rp-diaper:#B8860B;--rp-poo:#5E3A1E;--rp-pump:#2E7350;--rp-sym:#A8423C;--rp-weight:#B8693A;--rp-curve:#CBBBA8;--rp-curve-mid:#9C846C;--rp-band:#F7F0E6;
   --display:"DM Sans",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  color-scheme:dark;--bg:#1E2240;--surface:#2A2F55;--surface2:#333968;--ink:#EDE9FF;--muted:#A9A3CC;--line:#3A4070;
+  color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
-  --vomit:#703540;--vomit-ink:#F4BEBA;--other:#444D61;--other-ink:#D6D2EE;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
+  --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
-  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#1E2240;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
-  --accent:#C98B62;--on-accent:#1E2240;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(8,10,25,.6);}}
+  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
+  --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}}
 :root[data-theme="dark"]{
-  color-scheme:dark;--bg:#1E2240;--surface:#2A2F55;--surface2:#333968;--ink:#EDE9FF;--muted:#A9A3CC;--line:#3A4070;
+  color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
-  --vomit:#703540;--vomit-ink:#F4BEBA;--other:#444D61;--other-ink:#D6D2EE;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
+  --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
-  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#1E2240;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
-  --accent:#C98B62;--on-accent:#1E2240;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(8,10,25,.6);}
+  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
+  --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
@@ -50,6 +54,13 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .act b{font-family:var(--display);font-weight:500;font-size:16px;line-height:1.05;overflow-wrap:break-word;hyphens:auto}
 .act span{font-size:12.5px;opacity:.85;line-height:1.25}
 .act.span2{grid-column:span 2}.act.span3{grid-column:span 3}
+/* Cada botão de registro numa célula: o botão abre os últimos 3 dias, o + no alto, ao lado do ícone, anota */
+.cell{position:relative;display:grid}.cell.span2{grid-column:span 2}.cell.span3{grid-column:span 3}
+.cell>.act{width:100%}.cell>.act svg{margin-bottom:6px}
+.pl{position:absolute;top:7px;right:7px;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink);display:grid;place-items:center}
+.pl svg{width:16px;height:16px}
+button.pl::before{content:"";position:absolute;inset:-6px;border-radius:50%}
+.cell.rowc>.act{padding-right:52px}.cell.rowc>.act svg{margin:0}.cell.rowc .pl{top:50%;transform:translateY(-50%)}
 /* Outros (e um botão que sobre sozinho na linha): deitado, com o texto à direita */
 .act.row{grid-template-columns:auto auto 1fr;column-gap:9px;align-items:center;align-content:center;min-height:56px;padding-inline:14px}
 .act.row svg{margin:0;width:22px;height:22px}.act.row span{justify-self:end;text-align:right}
@@ -58,7 +69,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit,.k-symptom{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
 .k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}
 .k-med{--kbg:var(--med);background:var(--med);color:var(--med-ink)}
-.k-care,.k-massage,.k-bath,.k-nasal{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
+.k-care,.k-massage,.k-bath,.k-nasal,.k-tummy,.k-sunbath{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
 /* Editar: liga e desliga os botões da família */
 .li.tg{width:100%;text-align:left}
 .li.tg:disabled{opacity:.5;cursor:default}
@@ -519,3 +530,56 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 /* Entrada: o nome com a capivara ao lado */
 .screen h1.brand{display:flex;align-items:center;gap:12px;font-size:36px;letter-spacing:-.02em}
 .brand .capi{width:84px;height:auto;flex:none;stroke-width:2.25px}
+
+/* Cuidados: as opções em duas colunas, com o ícone */
+.copts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.copt{border:1.5px solid var(--line);border-radius:14px;padding:11px 12px;font-weight:500;font-size:15px;background:var(--surface);display:flex;align-items:center;gap:8px;text-align:left}
+.copt svg{width:20px;height:20px;color:var(--c-care);flex:none}
+.copt.on{border-color:var(--c-care);background:var(--care);color:var(--care-ink)}.copt.on svg{color:var(--care-ink)}
+.small.on{background:var(--care);color:var(--care-ink)}
+/* Últimos 3 dias de um botão */
+.htitle{display:flex;align-items:center;gap:10px}
+.htitle .d{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none}.htitle .d svg{width:20px;height:20px}
+.htitle h3 small{display:block;font-family:var(--body);font-size:13px;color:var(--muted);font-weight:400}
+.hday{display:flex;flex-direction:column;gap:6px}
+.hday h4{margin:0;font-size:13px;color:var(--muted);font-weight:500}
+.hday .empty{padding:10px 0;text-align:left;font-size:14px}
+/* Menina ou menino: ao criar a família e ao editar o bebê */
+.sexpick{display:flex;gap:8px}.sexpick label{flex:1;position:relative}
+.sexpick input{position:absolute;opacity:0;width:1px;height:1px}
+.sexpick span{display:block;text-align:center;border:1.5px solid var(--line);border-radius:14px;padding:12px;font-weight:500;background:var(--surface);cursor:pointer}
+.sexpick input:checked+span{border-color:var(--c-weight);background:var(--surface2)}
+.sexpick input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+/* Peso e comprimento: abas, períodos e o gráfico com as curvas da OMS */
+.seg2{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:3px}
+.seg2 button{flex:1;padding:8px 0;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted)}
+.seg2 button.on{background:var(--surface);color:var(--ink)}
+.gpre{display:flex;gap:6px}
+.gpre button{flex:1;font-size:13px;font-weight:500;border-radius:999px;padding:6px 0;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.gpre button.on{background:var(--surface2);border-color:var(--surface2);color:var(--ink)}
+.gzoom{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
+.lnk.inl{padding:0;font-size:inherit;text-decoration:underline;text-underline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two .ml input{width:100%;min-width:0}
+svg.g-chart{display:block;width:100%;height:auto}
+svg .g-ax{fill:var(--muted);font:500 10px var(--body)}
+svg .g-zl{fill:var(--muted);font:400 9.5px var(--body)}
+svg .g-vl{fill:var(--ink);font:500 11px var(--body);font-variant-numeric:tabular-nums}
+svg .g-gl{stroke:var(--line);stroke-width:1}
+svg .g-band{fill:var(--band)}
+svg .g-cv{fill:none;stroke:var(--curve);stroke-width:1.2}
+svg .g-cv.g-mid{stroke:var(--curve-mid);stroke-width:1.4;stroke-dasharray:4 3}
+svg .g-wl{fill:none;stroke:var(--c-weight);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg .g-wp{fill:var(--c-weight);stroke:var(--surface);stroke-width:2}
+/* No relatório: as mesmas curvas, com as cores da folha */
+.rp-paper svg .rp-g-ax,.rp-paper svg .rp-g-zl{fill:var(--paper-muted);font:500 9.5px var(--body)}
+.rp-paper svg .rp-g-vl{fill:var(--paper-ink);font:500 10.5px var(--body);font-variant-numeric:tabular-nums}
+.rp-paper svg .rp-g-gl{stroke:var(--paper-line);stroke-width:1}
+.rp-paper svg .rp-g-band{fill:var(--rp-band)}
+.rp-paper svg .rp-g-cv{fill:none;stroke:var(--rp-curve);stroke-width:1.1}
+.rp-paper svg .rp-g-cv.rp-g-mid{stroke:var(--rp-curve-mid);stroke-dasharray:4 3}
+.rp-paper svg .rp-g-wl{fill:none;stroke:var(--rp-weight);stroke-width:2;stroke-linejoin:round}
+.rp-paper svg .rp-g-wp{fill:var(--rp-weight);stroke:var(--paper);stroke-width:1.5}
+svg.rp-g-chart{display:block;width:100%;height:auto}
+.rp-curves{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rp-paper .rp-gt{margin:0 0 2px;font-size:12px;font-weight:500;color:var(--paper-muted)}

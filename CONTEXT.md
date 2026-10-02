@@ -42,7 +42,8 @@ _Evite_: filho, criança, paciente
 
 **Registro**:
 Uma anotação de algo que aconteceu com um bebê num horário: uma mamada, uma ordenha, um dormiu,
-um acordou, uma troca de fralda, um vômito, um sintoma, um cuidado (massagem, banho, lavagem nasal),
+um acordou, uma troca de fralda, um vômito, um sintoma, um cuidado (massagem, banho, lavagem nasal,
+tummy time, banho de sol ou outro),
 um remédio dado ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
@@ -90,9 +91,19 @@ que aconteceu escrito. O Soneca só anota; não avalia nem orienta. Fica fora do
 _Evite_: doença, diagnóstico, mal-estar, intercorrência
 
 **Cuidado**:
-Massagem, banho ou lavagem nasal: registros prontos, iguais para todas as famílias, com o horário e
-uma observação, se quiser.
+O que a família escolhe no botão Cuidados: massagem, banho, lavagem nasal, tummy time, banho de sol ou
+outro. Todos com o horário e uma observação, se quiser. Tummy time e banho de sol podem ter quantos
+minutos duraram; no outro, o que foi feito é escrito à mão e é obrigatório.
 _Evite_: atividade, procedimento, atalho
+
+**Tummy time**:
+O tempo do bebê de bruços, acordado. Fica com o nome em inglês, como as famílias falam.
+_Evite_: barriguinha, bruços (como nome do registro)
+
+**Últimos 3 dias**:
+O que aparece ao tocar num botão de registro fora do +: hoje, ontem e anteontem daquele registro, do
+mais recente para o mais antigo. O + anota.
+_Evite_: histórico completo, relatório
 
 **Outros**:
 Registro de texto livre para o que não cabe nas demais categorias.
@@ -180,13 +191,24 @@ Claro, escuro ou do celular, em Perfil. "Do celular" segue o modo noturno do apa
 celular onde foi escolhida.
 _Evite_: tema, modo noturno (como nome da escolha)
 
-## Peso e marcos
+## Peso, comprimento e marcos
 
-**Peso**:
-O peso do bebê no dia da pesagem, anotado pela família (da consulta, da farmácia, da balança de casa),
-com uma observação opcional de onde pesou. O dia da pesagem pode ser outro que não hoje. Com dois ou mais, aparece um gráfico; o último vai no alto da tela.
-Não é registro: não entra na linha do tempo nem no painel da semana.
-_Evite_: pesagem (como nome do dado), curva, percentil
+**Medida**:
+O peso, o comprimento ou os dois, anotados pela família num dia (da consulta, da farmácia, da balança
+de casa), com uma observação opcional de onde mediu. O dia pode ser outro que não hoje. O último peso
+vai no alto da tela. Não é registro: não entra na linha do tempo nem no painel da semana.
+_Evite_: pesagem (como nome do dado), antropometria
+
+**Curvas da OMS**:
+As linhas dos percentis 3, 15, 50, 85 e 97 de peso e de comprimento para a idade, dos padrões da OMS
+adotados pela SBP na Caderneta da Criança. O gráfico mostra as medidas sobre elas quando o bebê tem
+nascimento e menina ou menino anotados. O Soneca não diz se o bebê está acima ou abaixo de nada; quem
+avalia o crescimento é o pediatra.
+_Evite_: normal, abaixo do esperado, atraso, ideal
+
+**Menina ou menino**:
+Opcional no cadastro do bebê; serve só para escolher a curva da OMS, que é diferente para cada um.
+_Evite_: gênero, sexo (na tela)
 
 **Marco**:
 Uma primeira vez do bebê, com o dia em que aconteceu: sorriu, rolou, primeiro dente. O nome é livre;

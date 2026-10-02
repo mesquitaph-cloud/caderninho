@@ -10,7 +10,8 @@ const hours = ms => ms >= 10 * HOUR ? Math.round(ms / HOUR) + ' h' : dur(ms);
 const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 const ymd = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
-const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos'], nasal: ['lavagem nasal', 'lavagens nasais'] };
+const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos'], nasal: ['lavagem nasal', 'lavagens nasais'],
+                     tummy: ['tummy time', 'tummy times'], sunbath: ['banho de sol', 'banhos de sol'], care: ['outro cuidado', 'outros cuidados'] };
 
 // Totais de [a, z). sleep: o que sleepIntervals devolve; o sono em andamento conta até agora.
 // on(k): se a família usa o botão k (Ordenha, Remédio e os cuidados só entram se usar).
@@ -29,7 +30,9 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     diapers: day.filter(e => e.kind === 'diaper').length, poos: day.filter(e => e.kind === 'diaper' && e.poo).length,
     pumpMl: on('pump') ? day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0) : 0,
     doses: on('med') ? day.filter(e => e.kind === 'med' && !e.skipped).length : 0,
-    care: Object.keys(CARE_WORDS).filter(on).map(k => [k, day.filter(e => e.kind === k).length]).filter(([, n]) => n),
+    // Cada cuidado com quantas vezes e, no tummy time e no banho de sol, os minutos anotados.
+    care: on('care') ? Object.keys(CARE_WORDS).map(k => { const es = day.filter(e => e.kind === k);
+      return [k, es.length, es.reduce((t, e) => t + (e.duration_min || 0), 0)]; }).filter(([, n]) => n) : [],
     // Peso: o último antes do período e o último dentro dele, para dizer de quanto para quanto.
     wFrom: weights.filter(w => w.measured_on < A).at(-1) || null,
     wTo: weights.filter(w => w.measured_on >= A && w.measured_on <= Z).at(-1) || null,
@@ -37,7 +40,7 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
   };
 }
 
-const careText = s => s.care.map(([k, n]) => plural(n, ...CARE_WORDS[k])).join(', ');
+const careText = s => s.care.map(([k, n, m]) => plural(n, ...CARE_WORDS[k]) + (m ? ' (' + dur(m * MIN) + ')' : '')).join(', ');
 
 // As linhas do resumo, iguais na tela e no texto.
 function lines(s) {

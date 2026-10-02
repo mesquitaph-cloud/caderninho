@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia nem compara com outros bebês.
-import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail } from './util.js';
+import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 export const METRICS = {
@@ -14,15 +14,14 @@ const FILTERS = [['sleep', 'Sono', '--c-sleep'], ['feed', 'Mamada', '--c-feed'],
 
 // Os gráficos levam só os botões que a família escolheu (Mamada, Sono e Fralda são fixos). Lugar de
 // cada marca na linha: fralda embaixo, mamada no meio, todo o resto em cima.
-const CARE_KINDS = ['massage', 'bath', 'nasal'];
 export const shownKinds = on => ({ sleep: true, feed: true, diaper: true, pump: on('pump'), symptom: on('symptom'),
-  med: on('med'), care: CARE_KINDS.some(on), massage: on('massage'), bath: on('bath'), nasal: on('nasal') });
+  med: on('med'), care: on('care') });
 // Grupo da marca de cima (ou null): sintomas levam o vômito junto; dose pulada não vira marca.
 function topKind(e, k) {
   if (e.kind === 'pump') return k.pump ? 'pump' : null;
   if (e.kind === 'symptom' || e.kind === 'vomit') return k.symptom ? 'symptom' : null;
   if (e.kind === 'med') return k.med && !e.skipped ? 'med' : null;
-  if (CARE_KINDS.includes(e.kind)) return k[e.kind] ? 'care' : null;
+  if (CARE[e.kind]) return k.care ? 'care' : null;
   return null;
 }
 // Marcas de cima, centradas em (x, y), com meia largura r.
