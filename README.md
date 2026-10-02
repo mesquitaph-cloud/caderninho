@@ -59,6 +59,39 @@ Testado em 02/10 no navegador com um Supabase de mentira (29 checagens, claro e 
 rolagem para o lado) e o 011 num Postgres local imitando o Supabase, rodado sobre dados antigos (19
 casos). Pelo conector, nenhum registro do banco fica fora da regra de minutos, que ficou mais rígida.
 
+## LGPD: o que falta no app para a política valer
+
+Modelo da política de privacidade (privado, para revisão de advogado):
+https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 — o Anexo B tem esta lista com os
+detalhes. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
+
+**Antes de publicar a política:**
+
+- Tabela `consents` (conta, tipo de aceite, versão, data e hora), só acrescenta. Hoje não há registro de aceite.
+- Aceite no primeiro acesso, antes do nome de exibição; quem já usa vê na próxima abertura.
+- Consentimento de pai, mãe ou responsável antes do primeiro bebê; nas famílias que já existem, pedido a quem
+  criou. Caixinha opcional para amamentação e ordenha: sem ela, esconder esses botões (o mesmo ajuste que
+  já esconde botões da tela inicial).
+- Aceite de quem entra por convite, na tela do convite.
+- Pedir o aceite de novo quando a versão da política mudar.
+- **Apagar a conta** (não existe): botão no Perfil e função no banco que apaga o usuário do login; as ligações
+  do banco já apagam perfil e famílias criadas e deixam os registros nas outras famílias sem o autor.
+- Sugestões (`feedback`) apagadas junto com a conta, em vez de ficarem sem autor.
+- **Baixar meus dados**: JSON completo e CSV dos registros de todas as famílias, montado no celular.
+- Seção "Privacidade" no Perfil: política, termos, contato do encarregado, baixar dados, apagar conta.
+- Política e termos em páginas públicas, sem login, com link na tela de entrada.
+- DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
+- Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
+- Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
+  guardam no plano atual; se for menos, guardar à parte.
+- Conferir quantos dias o Supabase guarda as cópias de segurança e pôr o número na política.
+- Tarefa agendada que avisa e apaga contas paradas há 24 meses.
+- Revisão das regras de acesso (RLS) (já acima).
+
+**Quando chegarem:** estatísticas de uso desligadas por padrão, sem cookies de publicidade e sem nada do que
+foi anotado; cobrança por empresa de pagamentos, sem guardar cartão, com dados fiscais guardados 5 anos.
+
 ## Identidade visual: Soneca (no código, falta publicar)
 
 O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
