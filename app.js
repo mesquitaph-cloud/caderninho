@@ -1,10 +1,10 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, POO_SIZE } from './util.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
 import { clockHtml } from './clock.js';
-import { MILESTONES, kg, parseKg, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
+import { MILESTONES, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
@@ -20,7 +20,7 @@ const st = {
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
-  weights: [], milestones: [], // peso e marcos do bebê aberto, do mais antigo ao mais recente
+  measures: [], weights: [], lengths: [], milestones: [], // medidas (com peso, comprimento ou os dois) e marcos do bebê aberto, do mais antigo ao mais recente
   growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
   questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
   questionsOk: true,           // falso se não deu para carregar (por exemplo, antes do 010)
@@ -169,6 +169,9 @@ $('fCreate').addEventListener('submit', async e => {
   });
   busy(btn, false);
   if (error) return err('errCreate', errMsg(error));
+  // Menina ou menino vai à parte (a função do banco não recebe); sem o 011, só não salva.
+  const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
+  if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
   $('fCreate').reset(); await loadFamilies(); openFamily(fid);
 });
 $('cancelCreate').onclick = () => { show('scrMain'); };
@@ -179,7 +182,7 @@ async function openFamily(fid) {
   st.family = st.families.find(f => f.id === fid);
   lsSet('cad-family', fid);
   const [{ data: babies }, { data: mem }] = await Promise.all([
-    sb.from('babies').select('id,name,birth_date').eq('family_id', fid).order('created_at'),
+    sb.from('babies').select('*').eq('family_id', fid).order('created_at'),
     sb.from('family_members').select('user_id,joined_at').eq('family_id', fid).order('joined_at'),
   ]);
   st.babies = babies || []; st.members = mem || [];
@@ -223,12 +226,18 @@ async function loadMeds() {
   st.meds = data;
 }
 async function loadGrowth() {
-  st.weights = []; st.milestones = [];
+  st.measures = st.weights = st.lengths = []; st.milestones = [];
   if (!st.baby) return;
   const [w, m] = await Promise.all([sb.from('weights').select('*').eq('baby_id', st.baby.id),
                                     sb.from('milestones').select('*').eq('baby_id', st.baby.id)]);
   st.growthOk = !w.error && !m.error;
-  st.weights = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
+  st.measures = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
+  splitMeasures();
+}
+// Cada medida pode ter peso, comprimento ou os dois. O resto do app usa só os pesos.
+function splitMeasures() {
+  st.weights = st.measures.filter(r => r.grams != null);
+  st.lengths = st.measures.filter(r => r.cm != null);
 }
 // Dúvidas para a consulta. Sem canal ao vivo: antes do 010 a tabela não existe. Recarrega ao voltar
 // para o app, como o resto.
@@ -337,7 +346,7 @@ function renderHome() {
   $('prevDay').setAttribute('aria-label', week ? 'Semana anterior' : month ? 'Mês anterior' : 'Dia anterior');
   $('nextDay').setAttribute('aria-label', week ? 'Próxima semana' : month ? 'Próximo mês' : 'Próximo dia');
   // O resumo segue os botões da família (sem Ordenha ligada, não fala de ordenha).
-  const sleep = { out: intervals, open }, logs = { weights: st.weights, milestones: st.milestones, on: isOn };
+  const sleep = { out: intervals, open }, logs = { weights: st.weights, lengths: st.lengths, milestones: st.milestones, on: isOn };
   if (month) {
     st.month = clampMonth(st.month || now);
     const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
@@ -390,7 +399,7 @@ function renderHome() {
     : !rows.length ? '<div class="empty">Nada registrado neste dia.</div>'
     : rows.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
-        const noteIsName = e.kind === 'other' || (e.kind === 'symptom' && e.symptom === 'outro');
+        const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
         const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
         return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
@@ -399,13 +408,18 @@ function renderHome() {
 /* ---------- botões da tela inicial ---------- */
 // Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
 // família. Três por linha; na última, Outros de um lado e Editar do outro. Sem nada salvo, todos aparecem.
+// Em cada botão, o + anota; o resto do botão abre os últimos 3 dias daquele registro.
 const BTN = {
   feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
-  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'],
-  massage: ['Massagem', 'k-care'], bath: ['Banho', 'k-care'], nasal: ['Lavagem nasal', 'k-care'],
+  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'], care: ['Cuidados', 'k-care'],
 };
-const FIXED = ['feed', 'sleep', 'diaper'], OPTIONAL = ['med', 'symptom', 'pump', 'massage', 'bath', 'nasal'];
-const isOn = k => !st.settings.hidden.includes(k);
+const FIXED = ['feed', 'sleep', 'diaper'], OPTIONAL = ['med', 'symptom', 'pump', 'care'];
+// Cuidados era três botões (Massagem, Banho, Lavagem nasal): fica desligado só se a família desligou
+// Cuidados ou, antes, os três.
+const OLD_CARE = ['massage', 'bath', 'nasal'];
+const isOn = k => k === 'care'
+  ? !st.settings.hidden.includes('care') && !OLD_CARE.every(x => st.settings.hidden.includes(x))
+  : !st.settings.hidden.includes(k);
 // O último sintoma de hoje, para o botão: "febre há 2h". Vômito conta como sintoma.
 function symptomSub(last, now) {
   const e = last(['symptom', 'vomit']);
@@ -419,19 +433,23 @@ function renderGrid(last, open, now) {
     if (k === 'diaper') return e ? 'troca ' + ago(e.t) : 'sem registro';
     if (k === 'med') return medSub();
     if (k === 'symptom') return symptomSub(last, now);
+    if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outro cuidado' : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
     return e ? ago(e.t) : 'sem registro';
   };
   // Sobra no fim: o último ocupa o espaço que falta na linha.
   const ks = [...FIXED, ...OPTIONAL.filter(isOn)], r = ks.length % 3;
   $('grid').innerHTML = ks.map((k, i) => {
-    const span = r && i === ks.length - 1 ? (r === 1 ? ' span3 row' : ' span2') : '';
-    return `<button class="act ${BTN[k][1]}${span}" data-k="${k}">${ICON[k]}<b>${BTN[k][0]}</b><span>${esc(sub(k))}</span></button>`;
+    const span = r && i === ks.length - 1 ? (r === 1 ? ' span3 rowc' : ' span2') : '', name = BTN[k][0];
+    return `<div class="cell${span}"><button class="act ${BTN[k][1]}${r === 1 && i === ks.length - 1 ? ' row' : ''}" data-hist="${k}" aria-label="${esc(name)}, ${esc(sub(k))}: ver os últimos 3 dias">${ICON[k]}<b>${name}</b><span>${esc(sub(k))}</span></button>`
+      + `<button class="pl" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}">${ICON.other}</button></div>`;
   }).join('')
     + `<button class="act k-other span2 row" data-k="other">${ICON.other}<b>Outros</b><span>anotação livre</span></button>`
     + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.edit}<b>Editar</b><span>botões</span></button>`;
 }
 
 // Família › Botões da tela inicial: liga ou desliga os botões. Cada toque salva na hora, um de cada vez.
+// O nome de cada botão no "Anotar…" e no título dos últimos 3 dias.
+const ADD = { feed: 'mamada', sleep: 'sono', diaper: 'fralda', med: 'remédio', symptom: 'sintoma', pump: 'ordenha', care: 'cuidado' };
 function buttonsHtml() {
   let h = '<div class="sec" id="famButtons"><h4>Botões da tela inicial</h4><p class="dim">Mamada, Sono, Fralda e Outros aparecem sempre. Os outros valem para toda a família.</p>';
   if (!st.settingsOk) h += '<div class="soft">Não foi possível carregar os botões da família. Confira a conexão e abra de novo.</div>';
@@ -443,7 +461,8 @@ function buttonsHtml() {
 }
 let btnSave = Promise.resolve();
 function toggleBtn(k) {
-  const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => x !== k);
+  const off = k === 'care' ? ['care', ...OLD_CARE] : [k];
+  const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => !off.includes(x));
   st.settings = { hidden }; render();
   btnSave = btnSave.then(async () => {
     const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, hidden_kinds: st.settings.hidden }, { onConflict: 'family_id' });
@@ -464,6 +483,7 @@ function fields(ev) {
            dose_at: ev.dose_at ?? null, skipped: ev.skipped ?? null };
   if (ev.kind === 'symptom') Object.assign(f, { symptom: ev.symptom, temp_c: ev.temp_c ?? null, duration_min: ev.duration_min ?? null });
   if ('poo_size' in ev) Object.assign(f, { poo_size: ev.poo_size ?? null, poo_alert: ev.poo_alert ?? null });
+  if (CARE[ev.kind]) f.duration_min = ev.duration_min ?? null;
   return f;
 }
 async function addEntry(ev) {
@@ -488,11 +508,13 @@ async function deleteEntry(id) {
 /* ---------- painel de registro ---------- */
 let S = null;   // estado do painel aberto (null = fechado)
 const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio',
-                symptom:'Sintomas', massage:'Massagem', bath:'Banho', nasal:'Lavagem nasal' };
+                symptom:'Sintomas', care:'Cuidados' };
 // As opções do botão Sintomas, na ordem da tela. Vômito grava o registro de vômito de sempre.
 const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'], ['tosse', 'Tosse'],
                       ['assadura', 'Assadura'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
 const withDuration = sym => sym === 'colica' || sym === 'choro';
+// Atalhos de minutos no tummy time e no banho de sol.
+const CARE_CHIPS = [3, 5, 10, 15];
 // Atalhos embaixo do relógio: agora ou tantos minutos antes do horário que está nele.
 const QUICK_TIME = '<div class="time quick"><button class="small" data-act="now">Agora</button>'
   + [5, 10, 30].map(m => `<button class="small" data-act="back" data-val="${m}">−${m} min</button>`).join('') + '</div>';
@@ -517,7 +539,7 @@ function openEntry(k, edit) {
   if (k === 'med' && !edit) return medsSheet();
   const { open } = sleepIntervals(sortedEntries());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
-  S = { mode: 'entry', k: k === 'wake' ? 'sleep' : k, edit, base: startOfDay(t), time: hm(t),
+  S = { mode: 'entry', k: k === 'wake' ? 'sleep' : CARE[k] ? 'care' : k, edit, ck: CARE[k] && k !== 'care' || edit?.kind === 'care' ? k : null, base: startOfDay(t), time: hm(t),
         src: edit ? (edit.src || '') : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
@@ -527,10 +549,10 @@ function openEntry(k, edit) {
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
-const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit', massage: 'care', bath: 'care', nasal: 'care' };
+const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
-  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
+  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar cuidado' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
     if (S.src === 'breast') {
@@ -555,8 +577,14 @@ function drawEntry() {
     if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
     if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
   }
+  // Cuidados: qual foi; tummy time e banho de sol podem ter os minutos; o outro cuidado, o que foi feito.
+  if (k === 'care') {
+    h += `<div><div class="lbl">Qual cuidado</div><div class="copts">${Object.entries(CARE).map(([id, n]) => `<button class="copt${S.ck === id ? ' on' : ''}" data-act="ck" data-val="${id}" aria-pressed="${S.ck === id}">${ICON[id]}<span>${id === 'care' ? 'Outro' : n}</span></button>`).join('')}</div></div>`;
+    if (CARE_MIN.includes(S.ck)) h += `<div><div class="lbl">Quanto tempo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="10" aria-label="Minutos"><em>min</em></div>
+      <div class="seg" style="margin-top:8px">${CARE_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m} min</button>`).join('')}</div></div>`;
+  }
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
-  if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${k === 'symptom' && S.sym === 'outro' ? 'O que aconteceu' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
+  if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
   if (k === 'symptom') h += '<p class="dim">O Soneca só anota o que a família marcar; não avalia nem orienta.</p>';
@@ -589,8 +617,14 @@ async function saveEntry(btn) {
     if (S.sym === 'febre' && S.temp !== '' && !(temp >= 34 && temp <= 43)) { S.err = 'A temperatura vai de 34 a 43 °C. Ex.: 37,8'; return drawEntry(); }
     if (withDuration(S.sym) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'A duração vai de 1 a 600 minutos.'; return drawEntry(); }
   }
-  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre.
-  const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k, t: computeT() };
+  if (k === 'care') {
+    if (!S.ck) { S.err = 'Escolha o cuidado.'; return drawEntry(); }
+    if (S.ck === 'care' && !S.note.trim()) { S.err = 'Escreva o que foi feito.'; return drawEntry(); }
+    if (CARE_MIN.includes(S.ck) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo vai de 1 a 600 minutos.'; return drawEntry(); }
+  }
+  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. Cuidados grava o cuidado escolhido.
+  const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
+  if (k === 'care') ev.duration_min = CARE_MIN.includes(S.ck) && S.dmin !== '' ? dmin : null;
   if (ev.kind === 'symptom') {
     ev.symptom = S.sym;
     if (S.sym === 'febre' && S.temp !== '') ev.temp_c = Math.round(temp * 10) / 10;
@@ -617,6 +651,36 @@ async function saveEntry(btn) {
   const row = await addEntry(ev);
   if (!row) return busy(btn, false);
   closeSheet(); toast(savedText(ev), () => deleteEntry(row.id));
+}
+
+/* ---------- últimos 3 dias de um botão ---------- */
+// Tocar no botão (fora do +) mostra hoje, ontem e anteontem daquele registro, do mais novo para o
+// mais antigo, com a hora, o detalhe e quem anotou. Tocar numa linha abre para editar.
+const HIST = { feed: ['Mamadas', ['feed']], sleep: ['Sono', ['sleep', 'wake']], diaper: ['Fraldas', ['diaper']], med: ['Remédios', ['med']],
+               symptom: ['Sintomas', ['symptom', 'vomit']], pump: ['Ordenhas', ['pump']], care: ['Cuidados', Object.keys(CARE)] };
+function histSheet(k) {
+  if (!st.baby) return babySheet(null);
+  S = { mode: 'hist', k }; drawHist(); $('sheet').scrollTop = 0;
+}
+function drawHist() {
+  const [title, kinds] = HIST[S.k], evs = sortedEntries(), today = startOfDay(Date.now());
+  let h = `<div class="grab"></div><div class="shead"><div class="htitle"><span class="d k-${S.k}">${ICON[S.k]}</span><h3>${esc(title)}<small>últimos 3 dias</small></h3></div><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  for (let i = 0; i < 3; i++) {
+    const d0 = addDays(today, -i), d1 = addDays(d0, 1);
+    const rows = evs.filter(e => kinds.includes(e.kind) && e.t >= d0 && e.t < d1).reverse();
+    h += `<div class="hday"><h4>${esc(dayTitle(d0))}</h4>` + (!rows.length ? '<div class="empty">Nada anotado.</div>' : '<div class="tl">' + rows.map(e => {
+      const who = e.author_id ? st.names[e.author_id] : '';
+      const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
+      const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
+      return `<button class="row" data-act="histRow" data-val="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
+    }).join('') + '</div>') + '</div>';
+  }
+  h += `<button class="save" data-act="histAdd">+ Anotar ${esc(ADD[S.k])}</button>`;
+  openPanel(h);
+}
+function histAction(a, v) {
+  if (a === 'histAdd') return openEntry(S.k);
+  if (a === 'histRow') { const ev = st.entries.get(v); if (ev) openEntry(ev.kind, ev); }
 }
 
 /* ---------- calendário ---------- */
@@ -953,12 +1017,71 @@ async function medAction(a, v, btn) {
 }
 
 /* ---------- aba do bebê ---------- */
-// Peso, remédios programados, marcos e, no fim, nome e nascimento. Só guarda o que a família anota;
-// não compara com curva de crescimento nem com a idade de outros bebês.
+// Peso e comprimento (sobre as curvas da OMS), remédios programados, marcos e, no fim, nome e
+// nascimento. Só guarda o que a família anota; as curvas mostram as linhas, sem avaliar o bebê.
 const LOG = {
-  weight:    { table: 'weights',    list: 'weights',    day: 'measured_on', sort: sortWeights },
+  weight:    { table: 'weights',    list: 'measures',   day: 'measured_on', sort: sortWeights },
   milestone: { table: 'milestones', list: 'milestones', day: 'happened_on', sort: sortMilestones },
 };
+/* ---------- peso e comprimento ---------- */
+// Peso ou comprimento, sobre as curvas da OMS quando há nascimento e menina ou menino; senão, só os
+// pontos no tempo. G.win: o pedaço visível em meses (nulo: o padrão, até um pouco depois da última medida).
+const G = { kind: 'weight', win: null, baby: null };
+const G_PRESETS = [['6 meses', 6], ['1 ano', 12], ['2 anos', 24], ['5 anos', 60]];
+const gRows = () => G.kind === 'weight' ? st.weights : st.lengths;
+const gCurves = () => !!(st.baby.birth_date && st.baby.sex);
+function gWin() {
+  if (G.baby !== st.baby.id) { G.baby = st.baby.id; G.win = null; }
+  return G.win || growthWindow(gRows(), st.baby.birth_date);
+}
+function growthSvg() {
+  const b = st.baby, rows = gRows(), [a, z] = gWin();
+  if (gCurves()) return growthChart({ rows, kind: G.kind, sex: b.sex, birth: b.birth_date, a, b: z, id: 'gch' });
+  return rows.length >= 2 ? weightChart(rows, G.kind) : '';
+}
+function growthHtml() {
+  const b = st.baby, curves = gCurves(), [a, z] = gWin(), w = G.kind === 'weight';
+  let h = `<div class="seg2" role="tablist">${[['weight', 'Peso'], ['length', 'Comprimento']].map(([k, n]) => `<button role="tab" aria-selected="${G.kind === k}" class="${G.kind === k ? 'on' : ''}" data-act="gKind" data-val="${k}">${n}</button>`).join('')}</div>`;
+  if (curves) h += `<div class="gpre">${G_PRESETS.filter(([, m]) => w || m <= MAX_MONTHS).map(([n, m]) => `<button class="${a === 0 && z === m ? 'on' : ''}" data-act="gWin" data-val="${m}">${n}</button>`).join('')}</div>`;
+  const svg = growthSvg();
+  if (svg) h += `<div class="svgbox${curves ? ' gzoom' : ''}" id="gBox">${svg}</div>`;
+  if (curves) h += `<p class="dim">Curvas da OMS adotadas pela SBP · ${b.sex === 'F' ? 'meninas' : 'meninos'} · percentis 3, 15, 50, 85 e 97. Pinça ou rodinha para zoom; arraste para os lados.</p>`;
+  else h += `<p class="dim">${!gRows().length ? (w ? 'Nenhum peso anotado. ' : 'Nenhum comprimento anotado. ') : ''}Para ver as curvas da OMS, anote ${!b.birth_date && !b.sex ? 'o nascimento e se é menina ou menino' : !b.birth_date ? 'o nascimento' : 'se é menina ou menino'} em <button class="lnk inl" data-act="editBaby" data-val="${esc(b.id)}">Nome e nascimento</button>.</p>`;
+  return h;
+}
+// Zoom no gráfico: rodinha do mouse, pinça com dois dedos e arrastar para os lados.
+function bindZoom() {
+  const box = $('gBox'); if (!box || !box.classList.contains('gzoom')) return;
+  const set = (a, z) => {
+    let sp = Math.min(MAX_MONTHS, Math.max(3, z - a));
+    a = Math.min(Math.max(0, a), MAX_MONTHS - sp); G.win = [a, a + sp];
+    box.innerHTML = growthSvg();
+    box.parentElement.querySelectorAll('.gpre button').forEach(e => e.classList.toggle('on', G.win[0] === 0 && G.win[1] === +e.dataset.val));
+  };
+  const frac = cx => { const r = box.getBoundingClientRect(); return Math.min(1, Math.max(0, (cx - r.left - r.width * 30 / 340) / (r.width * 280 / 340))); };
+  box.addEventListener('wheel', e => {
+    e.preventDefault();
+    const [a, z] = gWin(), f = frac(e.clientX), m = a + (z - a) * f, sp = (z - a) * Math.exp(e.deltaY * .0015);
+    set(m - sp * f, m - sp * f + sp);
+  }, { passive: false });
+  const pts = new Map(); let s0 = null;
+  const start = () => { s0 = pts.size ? { win: gWin(), p: new Map(pts) } : null; };
+  box.addEventListener('pointerdown', e => { box.setPointerCapture(e.pointerId); pts.set(e.pointerId, e.clientX); start(); });
+  box.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId) || !s0) return;
+    pts.set(e.pointerId, e.clientX);
+    const [a, z] = s0.win, sp0 = z - a, w = box.getBoundingClientRect().width * 280 / 340;
+    if (pts.size === 1 && s0.p.size === 1) { const dx = e.clientX - [...s0.p.values()][0]; set(a - dx / w * sp0, z - dx / w * sp0); }
+    else if (pts.size >= 2 && s0.p.size >= 2) {
+      const [p1, p2] = [...pts.values()], [q1, q2] = [...s0.p.values()], fc = frac((q1 + q2) / 2), mc = a + sp0 * fc;
+      const sp = sp0 * (Math.abs(q2 - q1) || 1) / (Math.abs(p2 - p1) || 1);
+      set(mc - sp * fc, mc - sp * fc + sp);
+    }
+  });
+  const up = e => { pts.delete(e.pointerId); start(); };
+  box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+}
+
 function drawBabyPane() {
   const b = st.baby, el = $('paneBaby');
   if (!b) {
@@ -981,12 +1104,12 @@ function drawBabyPane() {
   h += questionsHtml();
   if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
   else {
-    h += '<div class="sec" id="babyWeight"><h4>Peso</h4>';
-    if (ws.length >= 2) h += `<div class="svgbox">${weightChart(ws)}</div>`;
-    h += ws.length
-      ? `<div class="recs">${ws.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(kg(w.grams))}</span></button>`).join('')}</div>`
-      : '<div class="soft">Anote o peso de cada consulta ou pesagem. Com dois ou mais, aparece o gráfico.</div>';
-    h += '<button class="ghost" data-act="newWeight">+ Anotar peso</button></div>';
+    h += '<div class="sec" id="babyWeight"><h4>Peso e comprimento</h4>' + growthHtml();
+    const all = st.measures;
+    h += all.length
+      ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
+      : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>';
+    h += '<button class="ghost" data-act="newWeight">+ Anotar medida</button></div>';
   }
   h += '<div class="sec" id="babyMeds"><h4>Remédios programados</h4>';
   h += meds.length
@@ -1004,9 +1127,10 @@ function drawBabyPane() {
       : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }
-  h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(fullDate(b.birth_date)) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
-  h += '<p class="dim">O Soneca só guarda o que a família anota. Não compara com curvas de crescimento nem com a idade de outros bebês.</p>';
+  h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date || b.sex ? ' <small>' + esc([b.birth_date && fullDate(b.birth_date), { F: 'menina', M: 'menino' }[b.sex]].filter(Boolean).join(' · ')) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
+  h += '<p class="dim">O Soneca só guarda o que a família anota. As curvas são as da OMS, adotadas pela SBP; quem avalia o crescimento é o pediatra.</p>';
   el.innerHTML = h;
+  bindZoom();
 }
 
 /* ---------- dúvidas para a consulta ---------- */
@@ -1167,33 +1291,36 @@ function reportAction(a, v) {
   if (a === 'rpCopy') return navigator.clipboard.writeText(reportPlain(reportArgs())).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
 }
 
-// Anotar ou editar um peso ou um marco.
+// Anotar ou editar uma medida (peso, comprimento ou os dois) ou um marco.
 function logForm(kind, row) {
   const today = localDate(Date.now());
   S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '', confirmDel: false,
-        kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '', title: row?.title || '' };
+        kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '',
+        cm: row?.cm != null ? Number(row.cm).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '', title: row?.title || '' };
   drawLog(); $('sheet').scrollTop = 0;
 }
 function drawLog() {
   const w = S.mode === 'weight', b = st.baby, today = localDate(Date.now());
-  let h = head(S.edit ? (w ? 'Editar peso' : 'Editar marco') : (w ? 'Anotar peso' : 'Anotar marco'));
-  if (w) h += `<div><label class="lbl" for="lgKg">Peso</label><div class="ml"><input id="lgKg" inputmode="decimal" value="${esc(S.kg)}" placeholder="0,000" autocomplete="off"><em>kg</em></div></div>`;
+  let h = head(S.edit ? (w ? 'Editar medida' : 'Editar marco') : (w ? 'Anotar medida' : 'Anotar marco'));
+  if (w) h += `<div class="two"><div><label class="lbl" for="lgKg">Peso</label><div class="ml"><input id="lgKg" inputmode="decimal" value="${esc(S.kg)}" placeholder="0,000" autocomplete="off"><em>kg</em></div></div>
+    <div><label class="lbl" for="lgCm">Comprimento <small>(opcional)</small></label><div class="ml"><input id="lgCm" inputmode="decimal" value="${esc(S.cm)}" placeholder="0,0" autocomplete="off"><em>cm</em></div></div></div>`;
   else {
     const sugs = MILESTONES.filter(t => t !== S.title && !st.milestones.some(m => m.title === t && m.id !== S.edit?.id));
     h += `<div><label class="lbl" for="lgTitle">O que aconteceu</label><input class="field" id="lgTitle" maxlength="60" placeholder="Ex.: Sorriu pela primeira vez" value="${esc(S.title)}">
       ${sugs.length ? `<div class="sugs">${sugs.map(t => `<button class="small" data-act="sug" data-val="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</div>`;
   }
-  h += `<div><label class="lbl" for="lgDate">${w ? 'Dia da pesagem' : 'Dia'}</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
+  h += `<div><label class="lbl" for="lgDate">${w ? 'Dia da medida' : 'Dia'}</label><input class="field" id="lgDate" type="date" value="${esc(S.date)}" max="${today}"${b.birth_date ? ` min="${esc(b.birth_date)}"` : ''}>
     <div class="hint" id="lgAge" style="margin:6px 0 0">${esc(ageOn(b.birth_date, S.date))}</div></div>`;
-  h += w ? `<input class="field" id="lgNote" maxlength="100" placeholder="Onde pesou (opcional). Ex.: pediatra" value="${esc(S.note)}">`
+  h += w ? `<input class="field" id="lgNote" maxlength="100" placeholder="Onde mediu (opcional). Ex.: pediatra" value="${esc(S.note)}">`
          : `<input class="field" id="lgNote" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveLog">Salvar</button>';
-  if (S.edit) h += `<button class="del" data-act="delLog">${S.confirmDel ? 'Toque de novo para apagar' : w ? 'Apagar este peso' : 'Apagar este marco'}</button>`;
+  if (S.edit) h += `<button class="del" data-act="delLog">${S.confirmDel ? 'Toque de novo para apagar' : w ? 'Apagar esta medida' : 'Apagar este marco'}</button>`;
   openPanel(h);
 }
 function logInput(el) {
   if (el.id === 'lgKg') S.kg = el.value;
+  else if (el.id === 'lgCm') S.cm = el.value;
   else if (el.id === 'lgTitle') S.title = el.value;
   else if (el.id === 'lgNote') S.note = el.value;
   else if (el.id === 'lgDate') { S.date = el.value; $('lgAge').textContent = ageOn(st.baby.birth_date, S.date); }
@@ -1204,16 +1331,19 @@ async function saveLog(btn) {
   const fail = msg => { S.err = msg; drawLog(); };
   const row = { [L.day]: S.date, note: S.note.trim() || null };
   if (kind === 'weight') {
-    const g = parseKg(S.kg);
-    if (!S.kg.trim()) return fail('Escreva o peso.');
-    if (!g || g < 500 || g > 30000) return fail('Confira o peso: de 0,5 a 30 kg. Ex.: 5,2');
-    row.grams = g;
+    const g = parseKg(S.kg), c = parseCm(S.cm);
+    if (!S.kg.trim() && !S.cm.trim()) return fail('Escreva o peso, o comprimento ou os dois.');
+    if (S.kg.trim() && (!g || g < 500 || g > 30000)) return fail('Confira o peso: de 0,5 a 30 kg. Ex.: 5,2');
+    if (S.cm.trim() && (!c || c < 30 || c > 130)) return fail('Confira o comprimento: de 30 a 130 cm. Ex.: 62,5');
+    row.grams = S.kg.trim() ? g : null;
+    // O comprimento só vai quando há o que salvar: sem o 011, o peso continua salvando.
+    if (S.cm.trim() || S.edit?.cm != null) row.cm = S.cm.trim() ? c : null;
   } else {
     if (!S.title.trim()) return fail('Escreva o que aconteceu.');
     row.title = S.title.trim().slice(0, 60);
   }
-  const o = kind === 'weight' ? 'O dia da pesagem' : 'O dia';
-  if (!S.date) return fail(kind === 'weight' ? 'Escolha o dia da pesagem.' : 'Escolha o dia.');
+  const o = kind === 'weight' ? 'O dia da medida' : 'O dia';
+  if (!S.date) return fail(kind === 'weight' ? 'Escolha o dia da medida.' : 'Escolha o dia.');
   if (S.date > today) return fail(o + ' não pode ser depois de hoje.');
   if (b.birth_date && S.date < b.birth_date) return fail(o + ' não pode ser antes do nascimento.');
   busy(btn, true);
@@ -1223,6 +1353,7 @@ async function saveLog(btn) {
   busy(btn, false);
   if (error) return fail('Não foi possível salvar. Confira a conexão e tente de novo.');
   st[L.list] = L.sort([...st[L.list].filter(x => x.id !== data.id), data]);
+  if (kind === 'weight') splitMeasures();
   closeSheet(); toast('Salvo');
 }
 async function delLog(btn) {
@@ -1232,6 +1363,7 @@ async function delLog(btn) {
   busy(btn, false);
   if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawLog(); }
   st[L.list] = st[L.list].filter(x => x.id !== id);
+  if (S.mode === 'weight') splitMeasures();
   closeSheet(); toast('Apagado');
 }
 function growthAction(a, v, btn) {
@@ -1242,7 +1374,7 @@ function growthAction(a, v, btn) {
 
 /* ---------- bebê e nome ---------- */
 function babySheet(b) {
-  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', confirmDel: false };
+  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', confirmDel: false };
   drawBaby();
 }
 // Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
@@ -1251,6 +1383,9 @@ function drawBaby() {
   let h = head(b ? 'Editar bebê' : 'Adicionar bebê') +
     `<div><div class="lbl">Nome do bebê</div><input class="field" id="bName" maxlength="40" value="${esc(S.name)}" placeholder="Marina"></div>
      <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="bBirth" type="date" value="${esc(S.birth)}"></div>
+     <div><div class="lbl" id="bSexLbl">Menina ou menino (opcional)</div>
+       <div class="sexpick" role="radiogroup" aria-labelledby="bSexLbl">${[['F', 'Menina'], ['M', 'Menino']].map(([v, n]) => `<label><input type="radio" name="bSex" value="${v}"${S.sex === v ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div>
+       <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.${b ? ' Mudar aqui muda a curva.' : ''}</p></div>
      <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
   if (del) h += S.confirmDel
     ? `<div class="warn" role="alert"><b>Tem certeza?</b><span>Essa ação não poderá ser desfeita. ${esc(b.name)} e todos os seus registros serão apagados.</span></div>
@@ -1268,17 +1403,20 @@ async function delBaby(btn) {
   st.babies = st.babies.filter(x => x.id !== id);
   if (st.baby?.id === id) {
     if (st.babies.length) await selectBaby(st.babies[0].id);
-    else { st.baby = null; st.entries = new Map(); st.meds = []; st.weights = []; st.milestones = []; st.questions = []; }
+    else { st.baby = null; st.entries = new Map(); st.meds = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = []; }
   }
   closeSheet(); toast('Apagado');
 }
+const bSex = () => document.querySelector('input[name="bSex"]:checked')?.value || null;
 async function saveBaby(btn) {
-  const name = $('bName').value.trim(), birth_date = $('bBirth').value || null;
+  const name = $('bName').value.trim(), birth_date = $('bBirth').value || null, sex = bSex();
   if (!name) return err('bErr', 'Escreva o nome do bebê.');
   busy(btn, true);
-  const q = S.b ? sb.from('babies').update({ name, birth_date }).eq('id', S.b.id)
-                : sb.from('babies').insert({ family_id: st.family.id, name, birth_date });
-  const { data, error } = await q.select('id,name,birth_date').single();
+  // Menina ou menino só vai quando há o que salvar: sem o 011, o resto continua salvando.
+  const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}) };
+  const q = S.b ? sb.from('babies').update(row).eq('id', S.b.id)
+                : sb.from('babies').insert({ family_id: st.family.id, ...row });
+  const { data, error } = await q.select('*').single();
   busy(btn, false);
   if (error) return err('bErr', errMsg(error));
   const i = st.babies.findIndex(x => x.id === data.id);
@@ -1432,9 +1570,11 @@ async function paneAction(a, v, btn) {
   const f = st.family;
   // Aba do bebê
   if (a === 'jump') return spotlight(v);
+  if (a === 'gKind') { G.kind = v; G.win = null; return render(); }
+  if (a === 'gWin') { G.win = [0, +v]; return render(); }
   if (a === 'newWeight') return logForm('weight');
   if (a === 'newMilestone') return logForm('milestone');
-  if (a === 'editWeight') return logForm('weight', st.weights.find(w => w.id === v));
+  if (a === 'editWeight') return logForm('weight', st.measures.find(w => w.id === v));
   if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
   if (a === 'allMeds') return medsSheet();
   if (a === 'report') return reportSheet();
@@ -1514,7 +1654,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (a === 'close') return closeSheet();
   if (a === 'saveBaby') return saveBaby(b);
   if (a === 'askDelBaby' || a === 'keepBaby') {
-    S.name = $('bName').value; S.birth = $('bBirth').value; S.confirmDel = a === 'askDelBaby'; return drawBaby();
+    S.name = $('bName').value; S.birth = $('bBirth').value; S.sex = bSex() || ''; S.confirmDel = a === 'askDelBaby'; return drawBaby();
   }
   if (a === 'delBaby') return delBaby(b);
   if (a === 'saveName') return saveName(b);
@@ -1525,6 +1665,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
   if (S.mode === 'question' || S.mode === 'answers') return questionAction(a, v, b);
   if (S.mode === 'report') return reportAction(a, v);
+  if (S.mode === 'hist') return histAction(a, v);
   if (S.mode !== 'entry') return;
   if (a === 'src') S.src = v;
   else if (a === 'ml') S.ml = +v;
@@ -1533,6 +1674,8 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'minstep') { const [key, d] = v.split(':'); S[key + 'min'] = Math.min(180, Math.max(0, (+S[key + 'min'] || 0) + (+d))) || ''; if (S[key + 'min']) S[key] = true; }
   else if (a === 'sk') S.sk = v;
   else if (a === 'sym') { S.sym = v; if (v !== 'febre') S.temp = ''; if (!withDuration(v)) S.dmin = ''; }
+  else if (a === 'ck') { S.ck = v; if (!CARE_MIN.includes(v)) S.dmin = ''; }
+  else if (a === 'dchip') S.dmin = +S.dmin === +v ? '' : v;
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
   else if (a === 'psize') S.psize = S.psize === v ? null : v;
   else if (a === 'palert') { S.palert = !S.palert; S.wig = S.palert; }
@@ -1548,6 +1691,7 @@ $('sheetIn').addEventListener('click', async e => {
 
 document.querySelectorAll('[data-i]').forEach(el => el.outerHTML = ICON[el.dataset.i]);
 $('grid').addEventListener('click', e => {
+  const h = e.target.closest('[data-hist]'); if (h) return histSheet(h.dataset.hist);
   const b = e.target.closest('[data-k]'); if (!b) return;
   if (b.dataset.k === 'edit') return goTab('family', 'famButtons');
   openEntry(b.dataset.k);

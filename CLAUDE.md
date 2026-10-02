@@ -23,7 +23,8 @@ https://claude.ai/artifact/5ivtMLy5pNcHfVMPefEmz8.
   para o modo escuro funcionar. Cor nova só como variável nova, com valor de dia e de noite. Texto dos
   botões de registro em `--ink`; ícone e marcas de gráfico na cor do registro (`--c-*`). Mamada e
   ordenha em menta, sono em azul-céu (lavanda à noite), fralda em manteiga, remédio e sintomas em
-  salmão, cuidados em caramelo claro. "Feito" e "enviado" em menta. Links em `--link`, nunca em
+  salmão, cuidados em caramelo claro. Noite em cinza-azulado, como o WhatsApp (`--bg` `#111B21`), não
+  azul-noite. "Feito" e "enviado" em menta. Links em `--link`, nunca em
   `--accent` (o caramelo não dá leitura como texto).
 - **Relatório para pediatra:** papel sempre claro, só com `--paper*` e `--rp-*`; sóbrio, sem capivara.
 - **Fonte:** DM Sans, só pesos 400 e 500 (nada de 600 ou 700).
