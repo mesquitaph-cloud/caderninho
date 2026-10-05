@@ -408,7 +408,7 @@ function renderHome() {
 /* ---------- botões da tela inicial ---------- */
 // Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
 // família. Três por linha; na última, Outros de um lado e Editar do outro. Sem nada salvo, todos aparecem.
-// Em cada botão, o + anota; o resto do botão abre os últimos 3 dias daquele registro.
+// Em cada botão, o toque anota; a listinha no alto abre os últimos 3 dias daquele registro.
 const BTN = {
   feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
   med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'], care: ['Cuidados', 'k-care'],
@@ -440,8 +440,8 @@ function renderGrid(last, open, now) {
   const ks = [...FIXED, ...OPTIONAL.filter(isOn)], r = ks.length % 3;
   $('grid').innerHTML = ks.map((k, i) => {
     const span = r && i === ks.length - 1 ? (r === 1 ? ' span3 rowc' : ' span2') : '', name = BTN[k][0];
-    return `<div class="cell${span}"><button class="act ${BTN[k][1]}${r === 1 && i === ks.length - 1 ? ' row' : ''}" data-hist="${k}" aria-label="${esc(name)}, ${esc(sub(k))}: ver os últimos 3 dias">${ICON[k]}<b>${name}</b><span>${esc(sub(k))}</span></button>`
-      + `<button class="pl" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}">${ICON.other}</button></div>`;
+    return `<div class="cell${span}"><button class="act ${BTN[k][1]}${r === 1 && i === ks.length - 1 ? ' row' : ''}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])} (${esc(sub(k))})">${ICON[k]}<b>${name}</b><span>${esc(sub(k))}</span></button>`
+      + `<button class="pl" data-hist="${k}" aria-label="${esc(name)}: ver os últimos 3 dias">${ICON.hist}</button></div>`;
   }).join('')
     + `<button class="act k-other span2 row" data-k="other">${ICON.other}<b>Outros</b><span>anotação livre</span></button>`
     + `<button class="act k-edit" data-k="edit" aria-label="Editar os botões da tela inicial">${ICON.edit}<b>Editar</b><span>botões</span></button>`;

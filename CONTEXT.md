@@ -101,8 +101,8 @@ O tempo do bebê de bruços, acordado. Fica com o nome em inglês, como as famí
 _Evite_: barriguinha, bruços (como nome do registro)
 
 **Últimos 3 dias**:
-O que aparece ao tocar num botão de registro fora do +: hoje, ontem e anteontem daquele registro, do
-mais recente para o mais antigo. O + anota.
+O que aparece ao tocar na listinha no alto de um botão de registro: hoje, ontem e anteontem daquele
+registro, do mais recente para o mais antigo. Tocar no resto do botão anota.
 _Evite_: histórico completo, relatório
 
 **Outros**:

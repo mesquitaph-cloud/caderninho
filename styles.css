@@ -54,7 +54,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .act b{font-family:var(--display);font-weight:500;font-size:16px;line-height:1.05;overflow-wrap:break-word;hyphens:auto}
 .act span{font-size:12.5px;opacity:.85;line-height:1.25}
 .act.span2{grid-column:span 2}.act.span3{grid-column:span 3}
-/* Cada botão de registro numa célula: o botão abre os últimos 3 dias, o + no alto, ao lado do ícone, anota */
+/* Cada botão de registro numa célula: o botão anota, a listinha no alto, ao lado do ícone, abre os últimos 3 dias */
 .cell{position:relative;display:grid}.cell.span2{grid-column:span 2}.cell.span3{grid-column:span 3}
 .cell>.act{width:100%}.cell>.act svg{margin-bottom:6px}
 .pl{position:absolute;top:7px;right:7px;width:32px;height:32px;border-radius:50%;background:var(--surface);color:var(--ink);display:grid;place-items:center}

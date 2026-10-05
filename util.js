@@ -18,6 +18,8 @@ export const ICON = {
   care: `<svg viewBox="0 0 24 24" ${P}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M8 11.5 6.6 10a1.6 1.6 0 0 0-2.4 2.1l3.3 4.6A6 6 0 0 0 12.4 19H13a4 4 0 0 0 4-4v-2"/></svg>`,
   tummy: `<svg viewBox="0 0 24 24" ${P}><circle cx="17" cy="8.5" r="2.6"/><path d="M14.6 10.4c-2.6.6-5.6 2.2-8.6 3.4"/><path d="M15.4 11.2 16 14.6"/><path d="M6 13.8c-1 .4-1.9.8-2.6 1.4"/><path d="M2.5 18.5h19"/></svg>`,
   sunbath: `<svg viewBox="0 0 24 24" ${P}><path d="M7 15a5 5 0 0 1 10 0"/><path d="M12 4v3M4.9 7.9l2.1 2.1M19.1 7.9 17 10M2.5 15h3M18.5 15h3"/><path d="M3 19h18"/></svg>`,
+  // Últimos 3 dias: a listinha, três linhas com pontos, como a linha do tempo.
+  hist: `<svg viewBox="0 0 24 24" ${P}><path d="M9.5 6.5h10M9.5 12h10M9.5 17.5h10"/><path d="M5 6.5h.01M5 12h.01M5 17.5h.01" stroke-width="2.8"/></svg>`,
   edit: `<svg viewBox="0 0 24 24" ${P}><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
   siren: `<svg viewBox="0 0 24 24" ${P}><path d="M7 18v-5a5 5 0 0 1 10 0v5"/><path d="M4.5 21h15M5.5 18h13"/><path d="M12 3v2M5.5 6l1.4 1.4M18.5 6l-1.4 1.4"/></svg>`,
   pencil: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
