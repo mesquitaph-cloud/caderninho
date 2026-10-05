@@ -192,11 +192,15 @@ svg .part{opacity:.45}
 .award{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface2)}
 .award .medal{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--mb);color:var(--mi)}
 .award .medal svg{width:22px;height:22px}
-.award.diaper{--mb:var(--diaper);--mi:var(--diaper-ink)}.award.sleep{--mb:var(--sleep);--mi:var(--sleep-ink)}.award.feed{--mb:var(--feed);--mi:var(--feed-ink)}
+.award.diaper{--mb:var(--diaper);--mi:var(--diaper-ink);--mc:var(--c-diaper)}.award.sleep{--mb:var(--sleep);--mi:var(--sleep-ink);--mc:var(--c-sleep)}.award.feed{--mb:var(--feed);--mi:var(--feed-ink);--mc:var(--c-feed)}
 .award.breast{background:var(--feed);border:1.5px solid var(--c-feed);--mb:var(--surface);--mi:var(--c-feed)}
 .award .t{font-family:var(--display);font-weight:500;font-size:16px;line-height:1.2}
 .award .w{font-size:14px;overflow-wrap:anywhere}
 .award .w b{font-weight:500}
+/* A coroinha antes de quem ganhou cada título, na cor do registro, e o nome um pouco maior */
+.award .crown{display:inline-block;width:16px;height:16px;margin-right:4px;color:var(--mc);vertical-align:-2px}
+.award .crown svg{display:block;width:100%;height:100%}
+.award .crown~b{font-size:16px}
 .award.breast .w,.award.breast .n small{color:var(--feed-ink)}
 .award .also{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .award .n{font-family:var(--display);font-weight:500;font-size:22px;font-variant-numeric:tabular-nums;text-align:right;line-height:1}

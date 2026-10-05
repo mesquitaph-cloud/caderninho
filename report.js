@@ -117,7 +117,7 @@ export function division({ a, z, evs, now, name }) {
     const counts = [...new Set(n.values())].sort((x, y) => y - x);
     if (!counts.length || counts[0] < MIN_COUNT) continue;
     const who = c => [...n].filter(([, v]) => v === c).map(([id]) => name(id)).sort((x, y) => x.localeCompare(y, 'pt-BR'));
-    titles.push({ ...t, n: counts[0], winners: who(counts[0]), second: counts[1] ? who(counts[1]) : [] });
+    titles.push({ ...t, n: counts[0], winners: who(counts[0]), second: counts[1] ? who(counts[1]) : [], n2: counts[1] || 0 });
   }
   if (!breast.length && !titles.length) return null;
   return {
@@ -141,8 +141,9 @@ export function divisionHtml(d, { name }) {
     ? row('breast', 'massage', 'Chef Favorito', esc(plural(d.breast.n, 'mamada', 'mamadas') + ' no peito'), '', hours(d.breast.ms), 'no peito')
     : row('breast', 'massage', 'Chef Favorito', 'Mamadas no peito', '', String(d.breast.n), d.breast.n === 1 ? 'mamada' : 'mamadas');
   for (const t of d.titles) {
-    const who = t.winners.length > 1 ? `<b>${esc(names(t.winners))}</b> dividem` : `<b>${esc(t.winners[0])}</b>`;
-    h += row(t.k, t.icon, t.title, who, t.second.length ? '2º lugar: ' + names(t.second) : '', String(t.n), t.n === 1 ? t.unit[0] : t.unit[1]);
+    const who = `<span class="crown">${ICON.crown}</span>` + (t.winners.length > 1 ? `<b>${esc(names(t.winners))}</b> dividem` : `<b>${esc(t.winners[0])}</b>`);
+    const also = t.second.length ? '2º lugar: ' + names(t.second) + ' (' + plural(t.n2, ...t.unit) + (t.second.length > 1 ? ' cada' : '') + ')' : '';
+    h += row(t.k, t.icon, t.title, who, also, String(t.n), t.n === 1 ? t.unit[0] : t.unit[1]);
   }
   return h + '</div><p class="foot">Conta quem anotou cada registro.</p></div>';
 }
