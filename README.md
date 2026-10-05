@@ -35,9 +35,10 @@ Cuidados; o resto funciona. Conferir pelo conector: as regras `entries_kind_chec
   Tummy time e banho de sol podem ter os minutos (atalhos de 3, 5, 10 e 15). Na linha do tempo, cada um
   com o nome próprio; no resumo, "Cuidados: 2 tummy times (22 min), 1 banho". Em Família › Botões, um
   interruptor só; quem tinha os três antigos desligados continua sem o botão.
-- **Botão +:** em cada botão de registro, no alto, ao lado do ícone. O + anota; o resto do botão abre
-  **os últimos 3 dias** daquele registro (hoje, ontem e anteontem, com hora, detalhe e quem anotou;
-  tocar numa linha edita; embaixo, "+ Anotar"). Outros e Editar continuam como eram.
+- **Tocar anota, a listinha mostra:** tocar no botão de registro anota; a listinha (três linhas com
+  pontos) no alto, ao lado do ícone, abre **os últimos 3 dias** daquele registro (hoje, ontem e
+  anteontem, com hora, detalhe e quem anotou; tocar numa linha edita; embaixo, "+ Anotar"). Antes era
+  o contrário, com um + no canto. Outros e Editar continuam como eram.
 - **Noite cinza-azulada**, como o WhatsApp (fundo `#111B21`), no lugar do azul-noite. As cores dos
   botões não mudam. Contraste conferido: textos de 4,9 a 14,8 : 1.
 - **Menina ou menino:** opcional, ao criar a família, ao adicionar e ao editar o bebê. Serve só para a
@@ -49,7 +50,7 @@ Cuidados; o resto funciona. Conferir pelo conector: as regras `entries_kind_chec
   anotar. As tabelas da OMS vão no app (`who.js`).
 - **Relatório para pediatra:** com nascimento e menina/menino, peso e comprimento lado a lado sobre as
   curvas, na folha clara; o texto para copiar ganha o comprimento.
-- **Conferir no celular:** o + e o toque no resto do botão em cada registro; Cuidados com tummy time e
+- **Conferir no celular:** o toque no botão (anota) e na listinha (últimos 3 dias) em cada registro; Cuidados com tummy time e
   minutos, banho de sol e Outro; desligar e ligar Cuidados em Família; menina/menino ao criar, adicionar
   e editar; o gráfico com pinça no iPhone e no Android; o relatório em PDF com as duas curvas; a noite
   nova (Perfil › Escuro).
