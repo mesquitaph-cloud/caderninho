@@ -3,9 +3,11 @@
 import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
+// Mamadeira é o leite dado na mamadeira, em ml; só aparece se a semana tiver alguma com ml.
 export const METRICS = {
   sleep:  { name: 'Sono',     cls: 'm-sleep',  val: s => s.slept,        fmt: v => dur(v) },
   feed:   { name: 'Mamadas',  cls: 'm-feed',   val: s => s.feeds.length, fmt: String },
+  bottle: { name: 'Mamadeira', cls: 'm-feed',  val: s => s.ml,           fmt: v => v ? v + ' ml' : '0' },
   diaper: { name: 'Fraldas',  cls: 'm-diaper', val: s => s.dia.length,   fmt: String, sub: s => s.poo, subCls: 'm-poo' },
   pump:   { name: 'Ordenhas', cls: 'm-pump',   val: s => s.pumpMl,       fmt: v => v ? v + ' ml' : '0' },
 };
@@ -200,11 +202,12 @@ const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden=
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
 export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
   const k = shownKinds(on);
-  if (!k[metric]) metric = 'sleep';
   const today = startOfDay(now), a = addDays(end, -6), z = Math.min(addDays(end, 1), now);
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
   const all = []; for (let d = a; d <= end; d = addDays(d, 1)) all.push(dayStats(d, evs, sleeps, now));
   if (all.every(d => !d.day.length && !d.slept)) return '<div class="card"><div class="empty">Nada registrado nestes 7 dias.</div></div>';
+  const mets = { ...k, bottle: all.some(d => d.ml) };
+  if (!mets[metric]) metric = 'sleep';
 
   // Média: só dias que já terminaram e têm algum registro (dia sem nada anotado não é dia sem mamada).
   const done = all.filter(d => d.d0 < today), full = done.filter(d => d.day.length), n = full.length, hasToday = done.length < all.length;
@@ -241,7 +244,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
     ${k.pump ? tile('--c-pump', 'Ordenhas', nf(avg(d => d.pumps.length)), Math.round(avg(d => d.pumpMl)) + ' ml por dia') : ''}
   </div></div>`;
 
-  h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).filter(([m]) => k[m]).map(([m, v]) => `<button class="met" data-met="${m}" aria-pressed="${metric === m}">${v.name}</button>`).join('')}</div>
+  h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).filter(([m]) => mets[m]).map(([m, v]) => `<button class="met" data-met="${m}" aria-pressed="${metric === m}">${v.name}</button>`).join('')}</div>
     <div class="svgbox">${barChart(all, now, metric)}</div>
     ${METRICS[metric].sub ? '<div class="lgd"><span style="--sw:var(--c-poo)"><i></i>com cocô</span><span style="--sw:var(--c-diaper)"><i></i>só xixi</span></div>' : ''}${hasToday ? '<p class="foot">A barra mais clara é hoje, até agora.</p>' : ''}</div>`;
 
