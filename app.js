@@ -1128,6 +1128,8 @@ function drawBabyPane() {
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }
   h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date || b.sex ? ' <small>' + esc([b.birth_date && fullDate(b.birth_date), { F: 'menina', M: 'menino' }[b.sex]].filter(Boolean).join(' · ')) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
+  // Só o criador apaga um bebê: o botão abre a edição já na confirmação.
+  if (st.family.creator_id === st.user.id) h += `<button class="danger-btn" data-act="delBabyAsk" data-val="${esc(b.id)}">Apagar bebê</button>`;
   h += '<p class="dim">O Soneca só guarda o que a família anota. As curvas são as da OMS, adotadas pela SBP; quem avalia o crescimento é o pediatra.</p>';
   el.innerHTML = h;
   bindZoom();
@@ -1586,6 +1588,7 @@ async function paneAction(a, v, btn) {
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
   if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
   if (a === 'addBaby') return babySheet(null);
+  if (a === 'delBabyAsk') { babySheet(st.babies.find(b => b.id === v)); S.confirmDel = true; drawBaby(); $('sheet').scrollTop = $('sheet').scrollHeight; return; }
   // Família
   if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
   if (a === 'famName') return famNameSheet();
