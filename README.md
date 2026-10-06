@@ -19,6 +19,19 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   quem é o responsável pelos dados (pessoa física ou empresa) e revisar com advogado. Um termo não isenta
   de tudo: a LGPD e o Código de Defesa do Consumidor não deixam.
 
+## Apagar bebê de volta à vista (06/10, no código, falta publicar)
+
+Com as abas de 01/10, a linha do bebê em Família passou a abrir a aba do bebê, e o "Apagar bebê" ficou
+escondido em Nome e nascimento › Editar. Agora fica também no fim da aba do bebê, só para quem criou a
+família (é a regra do banco); o toque abre a edição já na confirmação de sempre. Prévia aprovada
+(privada): https://claude.ai/artifact/RqQw9t9eXQchY5Dp2uBvkX
+
+Não muda o banco; basta publicar. **Conferir no celular:** com quem criou a família, o botão no fim da
+aba do bebê, Cancelar e Apagar; com outro membro, o botão não aparece.
+
+Testado em 06/10 no navegador com um Supabase de mentira: claro e escuro, 390 px, criador e não
+criador, cancelar e apagar o único bebê (a aba volta para "Adicionar bebê").
+
 ## Cuidados, botão +, noite cinza-azulada e curvas da OMS (02/10, no código, falta publicar)
 
 Pedidos de 02/10 (Patrick, Carol e Fabi). Prévia aprovada (privada): https://claude.ai/artifact/TR5E1huU9uh2zqnS6wLPT3
@@ -58,6 +71,52 @@ Cuidados; o resto funciona. Conferir pelo conector: as regras `entries_kind_chec
 Testado em 02/10 no navegador com um Supabase de mentira (29 checagens, claro e escuro, 390 px, sem
 rolagem para o lado) e o 011 num Postgres local imitando o Supabase, rodado sobre dados antigos (19
 casos). Pelo conector, nenhum registro do banco fica fora da regra de minutos, que ficou mais rígida.
+
+## Plano até as lojas (até 30/11)
+
+Ideias e pendências por impacto e esforço, e o calendário de 60 dias (privado):
+https://claude.ai/artifact/XJ9WgoF4DYKftixXP57Umc. Primeiro, para tirar atrito do login: ligar Entrar
+com o Google no site já na semana 1 (só configuração; passos em "Entrar com Google"). Depois os
+obrigatórios das lojas: app nativo (Capacitor) com Google nativo e, no iPhone, Entrar com a Apple
+(exigida quando há Google), apagar a conta no app, privacidade (LGPD, abaixo), revisão das regras de
+acesso, remetente de e-mail e o teste fechado da Play Store (12 testadores por 14 dias, começar até
+~25/10). Entram no lançamento: aviso do remédio com o app fechado e o cartão do dia sem IA. O
+relatório para pediatra, que no plano entrava só se o resto estivesse em dia, já está no código
+(01/10). Não agora: saber quem indicou quem, registrar sem internet e resumo por e-mail. Saiu:
+remédios no painel da semana.
+
+## LGPD: o que falta no app para a política valer
+
+Modelo da política de privacidade (privado, para revisão de advogado):
+https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 — o Anexo B tem esta lista com os
+detalhes. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
+
+**Antes de publicar a política:**
+
+- Tabela `consents` (conta, tipo de aceite, versão, data e hora), só acrescenta. Hoje não há registro de aceite.
+- Aceite no primeiro acesso, antes do nome de exibição; quem já usa vê na próxima abertura.
+- Consentimento de pai, mãe ou responsável antes do primeiro bebê; nas famílias que já existem, pedido a quem
+  criou. Caixinha opcional para amamentação e ordenha: sem ela, esconder esses botões (o mesmo ajuste que
+  já esconde botões da tela inicial).
+- Aceite de quem entra por convite, na tela do convite.
+- Pedir o aceite de novo quando a versão da política mudar.
+- **Apagar a conta** (não existe): botão no Perfil e função no banco que apaga o usuário do login; as ligações
+  do banco já apagam perfil e famílias criadas e deixam os registros nas outras famílias sem o autor.
+- Sugestões (`feedback`) apagadas junto com a conta, em vez de ficarem sem autor.
+- **Baixar meus dados**: JSON completo e CSV dos registros de todas as famílias, montado no celular.
+- Seção "Privacidade" no Perfil: política, termos, contato do encarregado, baixar dados, apagar conta.
+- Política e termos em páginas públicas, sem login, com link na tela de entrada.
+- DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
+- Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
+- Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
+  guardam no plano atual; se for menos, guardar à parte.
+- Conferir quantos dias o Supabase guarda as cópias de segurança e pôr o número na política.
+- Tarefa agendada que avisa e apaga contas paradas há 24 meses.
+- Revisão das regras de acesso (RLS) (já acima).
+
+**Quando chegarem:** estatísticas de uso desligadas por padrão, sem cookies de publicidade e sem nada do que
+foi anotado; cobrança por empresa de pagamentos, sem guardar cartão, com dados fiscais guardados 5 anos.
 
 ## Identidade visual: Soneca (no código, falta publicar)
 
@@ -556,6 +615,46 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 
 ## Ideias para depois
 
+- **Cartão "como está o bebê", no alto do Hoje** (sugestão de 01/10, vinda de uma conversa no
+  ChatGPT). Exemplo: "Martin — 23 dias. Dormiu 12h48 nas últimas 24h, 42 min a menos que a média
+  dos últimos 7 dias. Última mamada: 2h17 atrás. Próxima janela provável de sono: 21:40–22:10.
+  Insight do dia: está ficando acordado uns 18 min a mais à noite do que há uma semana." A ideia é
+  transformar os registros em algo que os pais usem de relance. Os dados já estão no app, e boa parte
+  não precisa de IA:
+  - **Contas simples, sem IA:** sono nas últimas 24h, comparação com a média dos 7 dias (o painel
+    da semana já calcula a média) e tempo desde a última mamada. Dá para fazer só no app, sem mudar
+    o banco.
+  - **Previsão e "insight":** a janela provável de sono e a frase do dia interpretam os registros,
+    e hoje o Soneca só junta o que foi anotado, sem avaliar nem sugerir (`CONTEXT.md`). Fazer
+    exige decidir antes se o app passa a interpretar e como dizer isso aos pais (ex.: "pelos
+    registros desta semana", nunca como orientação).
+  - **Com IA:** os registros do bebê (dado de saúde de criança) iriam para um serviço de fora
+    (Claude ou outro), com a chave guardada no servidor (função no Supabase), nunca no app. Decidir o
+    que vai (só números, sem observações nem sintomas), avisar as famílias e ver o custo por família.
+    Uma frase calculada pelo app ("acordado 18 min a mais à noite que na semana passada") talvez dê
+    o mesmo resultado sem IA.
+- **"Pergunte ao Soneca"** (mesma conversa): perguntar em texto livre sobre o histórico do
+  bebê. Exemplos: "Quando foi a última vez que ficou mais de 6 horas sem cocô?", "Quanto está
+  mamando por dia?", "Faça um resumo da última semana para mandar para a pediatra" e "Por que está
+  dormindo pior hoje?". As três primeiras só buscam e somam registros; a última pede um porquê, e a
+  resposta da sugestão ("isso pode estar contribuindo para...") já é orientação, o que o Soneca
+  hoje não faz. Precisa do mesmo que o cartão com IA (registros indo para fora, chave no servidor) e
+  de regra clara para a IA: responder só com o que está anotado, dizer de onde tirou cada número e,
+  diante de sintoma ou "por quê", mandar falar com o pediatra.
+- **Registro falando ou escrevendo** (mesma conversa): com o bebê no colo, dizer ou digitar "Martin
+  mamou 90 ml agora" ou "Martin dormiu" em vez de tocar em vários botões; depois, talvez pelo
+  WhatsApp. O Huckleberry já faz isso no plano pago. Com IA para entender a frase; o app mostra o
+  registro montado e a pessoa confirma antes de salvar, para não gravar errado. Pelo WhatsApp exige
+  a API do WhatsApp Business, um servidor e ligar o número de telefone à conta. Antes de IA, vale
+  ver se o ditado do teclado do celular num campo de texto, com o app separando "mamou", "90 ml",
+  "dormiu", já resolve os casos mais comuns.
+- **O Soneca não termina aos 12 meses** (mesma conversa): hoje a família usa muito no começo e
+  larga quando o bebê pega rotina. A ideia é o app acompanhar cada fase: 0–6 meses (sono, mamadas,
+  fraldas, peso), 6–12 meses (introdução alimentar, sono, crescimento, dentes), 1–2 anos
+  (alimentação, marcos, fala) e 2–5 anos (crescimento, vacinas, saúde). Boa parte cabe no que já
+  existe: peso e marcos na aba do bebê e os botões que a família liga ou desliga (a grade de cada
+  fase). Novos seriam refeição (o que comeu, primeira vez de um alimento), dentes e vacinas (com a
+  data, como os marcos). Sem "idade esperada" para cada coisa, como já se decidiu nos marcos.
 - **Resumo por e-mail, todo mês ou toda semana.** O texto já existe no app (aba Mês); falta mandar
   sozinho. Precisa, nesta ordem: (1) o remetente dedicado da primeira pendência, com domínio próprio e
   um serviço de envio (Resend, Postmark ou parecido), com os registros de DNS; (2) uma função no
@@ -566,7 +665,6 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   o que vai no e-mail (talvez só os números, sem remédios).
 
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
-- Remédios no painel da semana ("Como foram os dias").
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
