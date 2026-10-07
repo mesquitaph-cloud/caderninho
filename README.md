@@ -19,12 +19,36 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   quem é o responsável pelos dados (pessoa física ou empresa) e revisar com advogado. Um termo não isenta
   de tudo: a LGPD e o Código de Defesa do Consumidor não deixam.
 
-## Apagar a conta (07/10, no código, falta publicar)
+## Conta de demonstração para a revisão da Apple (07/10, no código, falta publicar)
+
+O revisor da Apple não recebe o código no e-mail, então entra com senha. Prévia aprovada (privada):
+https://claude.ai/artifact/Di5shtYzm6ZieXcAHLXfJY
+
+- **Para as famílias, nada muda.** Só com o e-mail da revisão (o apelido `+revisao` do Gmail do
+  Patrick), "Receber código" vira o pedido de senha, e nenhum e-mail sai. O endereço não fica no site:
+  `config.js` guarda só o SHA-256 dele (`DEMO_EMAIL_SHA256`).
+- **Criar a conta:** Supabase › Authentication › Users › Add user › Create new user, com o e-mail da
+  revisão, uma senha forte e "Auto Confirm User". A senha vai só no formulário da Apple (App Review
+  Information), nunca no código.
+- **Dados de exemplo:** logo antes de mandar para a revisão, rodar `supabase/013_conta_da_revisao.sql`.
+  Apaga e monta de novo a "Família Revisão" (Theo, 4 meses, 3 semanas de mamadas, sono, fraldas,
+  vitamina D, duas medidas e um marco), com as datas contadas a partir do dia em que roda.
+- **Se o revisor apagar a conta:** criar de novo no painel e rodar o 013 outra vez.
+
+Testado em 07/10: o 013 rodado duas vezes num Postgres local com todos os arquivos de `supabase/`
+(fica uma família só); a entrada no navegador com um Supabase de mentira (e-mail comum recebe código,
+o da revisão pede senha, senha errada, senha certa), claro e escuro, 390 px.
+
+## Apagar a conta (07/10, no ar; falta rodar o 014)
 
 Exigência da Apple (regra 5.1.1) e da LGPD. Prévia aprovada (privada): https://claude.ai/artifact/Qpu3Mpad93wJ4GQ9hwGcMc
 
-**Para publicar:** rodar `supabase/012_apagar_conta.sql` no SQL Editor antes do app. Sem ele, o botão avisa
-que não conseguiu e nada é apagado. Conferir pelo conector que a função `delete_my_account` existe.
+`supabase/012_apagar_conta.sql` rodado em 07/10. **Rodar já o `supabase/014_apagar_conta_travas.sql`:**
+sem ele, apagar a conta falha para quem anotou algo numa família que continua (as travas de edição
+devolviam o autor que a ligação do banco tentava esvaziar). Encontrado em 07/10 num Postgres local com
+todos os arquivos de `supabase/`; com o 014, a família compartilhada passa para quem entrou antes, os
+registros, remédios, medidas, dúvidas e botões ficam sem o autor, e a trava continua impedindo mudar
+o autor pelo app.
 
 - **Perfil:** "Apagar minha conta" no fim, embaixo de "Desconectar deste celular". Abre uma folha com o que
   acontece com cada família e pede um segundo toque. Depois, volta para a entrada com o aviso "Conta apagada".
