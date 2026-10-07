@@ -323,6 +323,8 @@ svg .wh{fill:transparent}
 .screen h1{font-family:var(--display);font-weight:500;font-size:28px;margin:0}
 .screen p{margin:0;color:var(--muted)}
 .screen .err{color:var(--danger)}
+/* E-mail longo na mensagem do código e da senha: quebra em vez de passar da tela */
+#sentTo,#passTo{overflow-wrap:anywhere}
 .screen form{display:flex;flex-direction:column;gap:12px}
 .screen .field{font-size:18px}
 #codeIn{letter-spacing:.25em;text-align:center;font-size:24px}

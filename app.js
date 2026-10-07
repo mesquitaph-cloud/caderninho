@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
-import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
@@ -103,6 +103,12 @@ $('fEmail').addEventListener('submit', async e => {
   e.preventDefault(); err('errEmail');
   const btn = e.submitter; busy(btn, true);
   loginEmail = $('emailIn').value.trim().toLowerCase();
+  if (await isDemoEmail(loginEmail)) {
+    busy(btn, false);
+    $('passTo').textContent = 'Conta de demonstração (' + loginEmail + '). Digite a senha.';
+    $('passIn').value = ''; $('fEmail').hidden = true; $('fPass').hidden = false; $('passIn').focus();
+    return;
+  }
   const { error } = await sb.auth.signInWithOtp({ email: loginEmail, options: { shouldCreateUser: true } });
   busy(btn, false);
   if (error) return err('errEmail', 'Não foi possível enviar o código. Confira o e-mail e tente de novo em alguns minutos.');
@@ -121,6 +127,23 @@ $('fCode').addEventListener('submit', async e => {
   show('scrLoading'); boot();
 });
 $('backEmail').onclick = () => { $('fCode').hidden = true; $('fEmail').hidden = false; };
+// Conta de demonstração da revisão da Apple: o revisor não recebe o código, então entra com senha.
+async function isDemoEmail(email) {
+  if (!DEMO_EMAIL_SHA256 || !crypto.subtle) return false;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('') === DEMO_EMAIL_SHA256;
+}
+$('fPass').addEventListener('submit', async e => {
+  e.preventDefault(); err('errPass');
+  const btn = e.submitter; busy(btn, true);
+  const { error } = await sb.auth.signInWithPassword({ email: loginEmail, password: $('passIn').value });
+  busy(btn, false);
+  if (error) return err('errPass', /invalid/i.test(error.message || '') ? 'Senha errada. Confira e tente de novo.'
+                                                                      : 'Não foi possível entrar. Confira a conexão e tente de novo.');
+  $('fPass').hidden = true; $('fEmail').hidden = false;
+  show('scrLoading'); boot();
+});
+$('backPass').onclick = () => { $('fPass').hidden = true; $('fEmail').hidden = false; };
 // Entrar com Google: sai do app para o Google e volta para cá já com a sessão (o convite, se houver,
 // ficou guardado no celular). A mesma pessoa, com o mesmo e-mail, cai na mesma conta do código.
 $('sso').hidden = !GOOGLE_LOGIN;
