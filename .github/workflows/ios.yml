@@ -1,0 +1,39 @@
+# Compila o app de iPhone num Mac da nuvem, para o simulador e sem assinatura: confere que o projeto
+# do Capacitor monta, mesmo antes da conta da Apple. Roda quando muda algo do app ou pelo botão "Run workflow".
+# Mac no GitHub gasta 10 vezes mais minutos do plano que Linux; por isso não roda a cada mudança do site.
+name: App de iPhone
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/app.mjs'
+      - '.github/workflows/ios.yml'
+
+jobs:
+  simulador:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Copiar o site para o app
+        run: npm run app
+      - name: Compilar para o simulador
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Soneca-simulador
+          path: build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 7

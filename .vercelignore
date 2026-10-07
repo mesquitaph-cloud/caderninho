@@ -1,0 +1,8 @@
+# O site continua sem build: a Vercel publica os arquivos como estão.
+# O que é só do app de iPhone fica fora (sem package.json, a Vercel não instala nem monta nada).
+ios/
+scripts/
+package.json
+package-lock.json
+capacitor.config.json
+_privado/

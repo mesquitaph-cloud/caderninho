@@ -1,3 +1,7 @@
+// Endereço público do site. No app de iPhone, os arquivos rodam de dentro do aparelho, então convites,
+// indicação e as páginas da Política e dos Termos usam este endereço. Trocar aqui ao mudar de domínio.
+export const SITE_URL = 'https://caderninho-bay.vercel.app';
+
 // Chaves públicas do Supabase. A publishable key é feita para ir dentro do app;
 // quem protege os dados são as regras de acesso do banco (RLS), não o segredo desta chave.
 // Nunca coloque aqui a chave "secret" / "service_role".

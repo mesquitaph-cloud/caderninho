@@ -1,5 +1,5 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
-import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, DEMO_EMAIL_SHA256 } from './config.js';
+import { createClient } from './vendor/supabase.js';
+import { SITE_URL, SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
@@ -9,6 +9,9 @@ import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml }
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+// App das lojas (Capacitor): os arquivos vêm de dentro do aparelho, não do site. Links para fora usam o site.
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+const SITE = NATIVE ? SITE_URL : location.origin;
 const $ = id => document.getElementById(id);
 const SCREENS = ['scrLoading','scrLogin','scrName','scrTerms','scrBabyOk','scrInvite','scrCreate','scrMain'];
 const KEEP_DAYS = 60;
@@ -1599,7 +1602,7 @@ function drawProfilePane() {
       : `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('')
     + '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
   h += '<div class="sec"><h4>Indicar o Soneca</h4>' +
-    `<div class="invite">${esc(location.host)}</div>` +
+    `<div class="invite">${esc(new URL(SITE).host)}</div>` +
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
@@ -1717,6 +1720,7 @@ function deviceText() {
   const sys = /iPhone|iPad|iPod/.test(u) && ios ? 'iOS ' + ios[1] + '.' + ios[2] : '';
   const nav = /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Edg(A|iOS)?\//.test(u) ? 'Edge' : /CriOS|Chrome\//.test(u) ? 'Chrome'
     : /FxiOS|Firefox\//.test(u) ? 'Firefox' : /Safari\//.test(u) ? 'Safari' : 'outro navegador';
+  if (NATIVE) return [dev, sys, 'app da loja'].filter(Boolean).join(' · ');
   return [dev, sys, nav, standalone ? 'app instalado' : 'no navegador'].filter(Boolean).join(' · ');
 }
 
@@ -1757,7 +1761,7 @@ async function paneAction(a, v, btn) {
     const { data, error } = await sb.from('invites').insert({ family_id: f.id }).select('token').single();
     busy(btn, false);
     if (error) return toast('Não foi possível criar o convite.');
-    FP.invite = location.origin + '/?convite=' + data.token; return render();
+    FP.invite = SITE + '/?convite=' + data.token; return render();
   }
   if (a === 'copyInv') return navigator.clipboard.writeText(FP.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
   if (a === 'shareInv') return navigator.share({ title: 'Soneca', text: 'Entre na família ' + f.name + ' no Soneca:', url: FP.invite }).catch(() => {});
@@ -1780,8 +1784,8 @@ async function paneAction(a, v, btn) {
   if (a === 'theme') return setTheme(v);
   if (a === 'switchFam') return openFamily(v);
   if (a === 'newFam') { $('cancelCreate').hidden = false; return show('scrCreate'); }
-  if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
-  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
+  if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: SITE + '/' }).catch(() => {});
+  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + SITE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
   if (a === 'logout') { await sb.auth.signOut(); location.href = '/'; }
   if (a === 'delAccount') return accountSheet();
@@ -1951,9 +1955,16 @@ const savedTheme = lsGet('cad-theme'); if (savedTheme) document.documentElement.
 
 boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir o Soneca. Confira a conexão e recarregue.'); });
 
+/* ---------- links para fora, no app ---------- */
+// No app, "/privacidade" e "/termos" abrem o site no Safari, como qualquer endereço de fora.
+if (NATIVE) document.addEventListener('click', e => {
+  const a = e.target.closest('a[href^="/"]');
+  if (a) a.href = SITE + a.getAttribute('href');
+}, true);
+
 /* ---------- dica de instalação ---------- */
 // O iPhone nunca oferece instalar sozinho; o Android às vezes oferece (beforeinstallprompt).
-const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const standalone = NATIVE || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isMobile = isIOS || /Android/.test(navigator.userAgent);
 let installEvent = null;

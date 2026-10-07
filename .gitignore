@@ -1,1 +1,4 @@
 _privado/
+# App de iPhone: dependências e a cópia do site feita por scripts/app.mjs
+node_modules/
+www/
