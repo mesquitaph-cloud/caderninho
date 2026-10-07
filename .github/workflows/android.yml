@@ -1,0 +1,42 @@
+# Compila o app de Android (APK de teste, sem assinatura da loja) num Linux da nuvem. O APK fica
+# nos "Artifacts" da execução por 7 dias e instala em qualquer Android, sem a Play Store.
+# Roda quando muda algo do app ou pelo botão "Run workflow".
+name: App de Android
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/app.mjs'
+      - '.github/workflows/android.yml'
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - name: Copiar o site para o app
+        run: node scripts/app.mjs && npx cap sync android
+      - name: Compilar o APK de teste
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Soneca-android-teste
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7

@@ -4,11 +4,12 @@
   "description": "Soneca: o site (arquivos da raiz, sem build) e o app de iPhone (Capacitor), feito a partir dos mesmos arquivos.",
   "type": "module",
   "scripts": {
-    "app": "node scripts/app.mjs && cap sync ios",
+    "app": "node scripts/app.mjs && cap sync",
     "app:files": "node scripts/app.mjs",
     "vendor": "node scripts/vendor.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.2",
     "@capacitor/core": "8.5.2",
     "@capacitor/ios": "8.5.2"
   },

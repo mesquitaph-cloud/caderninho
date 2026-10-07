@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Soneca</string>
+    <string name="title_activity_main">Soneca</string>
+    <string name="package_name">app.soneca</string>
+    <string name="custom_url_scheme">app.soneca</string>
+</resources>

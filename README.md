@@ -16,31 +16,37 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
-## App de iPhone: o Soneca dentro de um app (07/10, no código)
+## Apps de iPhone e Android: o Soneca dentro de um app (07/10, no código)
 
-Primeiro passo do "Virar app": o projeto do Capacitor em `ios/`, com os arquivos do site dentro do app
-(a Apple recusa app que só abre o site). O site continua sendo a única fonte: o app é uma cópia montada
+Primeiro passo do "Virar app": os projetos do Capacitor em `ios/` e `android/`, com os arquivos do site
+dentro do app (a Apple recusa app que só abre o site). Os dois apps usam a mesma cópia do site. O site continua sendo a única fonte: o app é uma cópia montada
 na hora de compilar, e nada em `www/` se edita à mão.
 
 - **Montar:** `npm install` uma vez; depois `npm run app` copia o site para `www/` (`scripts/app.mjs`) e
-  sincroniza com o projeto do iPhone. Mudou HTML, CSS ou JS: rodar de novo antes de compilar.
+  sincroniza com os projetos do iPhone e do Android. Mudou HTML, CSS ou JS: rodar de novo antes de compilar.
 - **Compilar sem Mac:** a ação "App de iPhone" (`.github/workflows/ios.yml`) compila para o simulador,
   sem assinatura, num Mac do GitHub. Roda quando muda algo do app ou pelo botão "Run workflow"; Mac gasta
   10 vezes mais minutos do plano, então não roda a cada mudança do site. Com a conta da Apple, entra a
   assinatura e o envio para o TestFlight.
+- **Android sem a loja:** a ação "App de Android" (`.github/workflows/android.yml`) monta um APK de teste
+  num Linux do GitHub (barato). O APK fica em Actions › a execução › Artifacts por 7 dias e instala em
+  qualquer Android ("instalar apps desconhecidos"). Para a Play Store, entra a assinatura e o pacote AAB.
 - **Supabase e DM Sans servidos pelo próprio site**, também no navegador: `vendor/supabase.js` (montado
   por `npm run vendor`, só ao trocar a versão no `package.json`) e `fonts/` (os mesmos arquivos do Google
   Fonts, conferidos pixel a pixel). A política de segurança das páginas não libera mais jsdelivr nem Google.
 - **No app**, `config.js` › `SITE_URL` vale para o que sai dele: convite, indicação e os links da Política
   e dos Termos, que abrem o site no Safari. A dica de instalar some, e "Sugestões e problemas" manda
   "app da loja" no lugar do navegador.
-- **Projeto:** só iPhone, só em pé, português, `app.soneca` (identificador provisório: fica fixo depois de
+- **Projetos:** iPhone e Android só em pé (o iPhone sem iPad), português, `app.soneca` (identificador provisório: fica fixo depois de
   registrado na App Store Connect), criptografia declarada isenta (só HTTPS), ícone de 1024 desenhado da
-  capivara do site e abertura no creme do fundo.
-- **A Vercel não muda:** `.vercelignore` deixa de fora `ios/`, `package.json` e o resto do app, então o
+  capivara do site (no Android, também o ícone adaptável e o redondo) e abertura no creme do fundo. No
+  Android, sem cópia do app no Google Drive (`allowBackup` desligado), para a sessão de login não sair do
+  aparelho.
+- **A Vercel não muda:** `.vercelignore` deixa de fora `ios/`, `android/`, `package.json` e o resto do app, então o
   site sai como sempre, sem build.
 - **Falta no "Virar app":** PDF do relatório pelo compartilhar (o imprimir não funciona dentro do app),
-  aviso do remédio com o app fechado, barra de status e teclado do iPhone. Telas novas passam pela prévia.
+  aviso do remédio com o app fechado, barra de status e teclado; no Android, o botão voltar (hoje
+  fecha o app em vez de fechar a folha aberta). Telas novas passam pela prévia.
 
 Testado em 07/10 no navegador (390 px, claro e escuro): o site sem nenhum pedido para fora além do
 Supabase, a fonte idêntica à de antes, a biblioteca do Supabase montada respondendo; imitando o app, sem a
