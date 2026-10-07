@@ -25,7 +25,7 @@ Fralda continuam sempre completos, e a autorização da amamentação está na c
 `supabase/015_aceites.sql` rodado em 07/10 e conferido pelo conector (tabela `consents` vazia, gatilhos
 `consents_guard` e `member_left`, trava dos registros nova). Falta só publicar o app.
 
-- **Páginas públicas:** `/privacidade` e `/termos` (pastas com `index.html`, os estilos do app e `legal.js`
+- **Páginas públicas:** https://caderninho-bay.vercel.app/privacidade e https://caderninho-bay.vercel.app/termos (pastas com `index.html`, os estilos do app e `legal.js`
   para seguir o claro ou escuro escolhido no Perfil). Texto da versão 1.0, revisado pelo advogado. Links na
   entrada. Ao mudar o texto: subir `TERMS_VERSION` no `app.js`, guardar a versão antiga em
   `privacidade/1.0.html` e listar no rodapé.
@@ -182,7 +182,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 **Ainda falta:**
 
 - **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
-- Com o domínio próprio, redirecionar `caderninho.vercel.app/privacidade` e `/termos` e trocar o link na
+- Com o domínio próprio, redirecionar `caderninho-bay.vercel.app/privacidade` e `/termos` e trocar o link na
   política e nas lojas.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
@@ -572,7 +572,7 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
    - Público: externo, e "Publicar app" (em teste, só entra quem estiver na lista de testadores). Só
      com e-mail e perfil, o Google não pede verificação.
    - Clientes → Criar cliente → Aplicativo da Web. Origens JavaScript: o endereço do app (ex.:
-     `https://caderninho.vercel.app`). URI de redirecionamento:
+     `https://caderninho-bay.vercel.app`). URI de redirecionamento:
      `https://vrhgirpklyklhvzwdfiq.supabase.co/auth/v1/callback`. Copiar o ID e a chave secreta.
 2. **Supabase:** Authentication → Sign In / Providers → Google: ligar, colar o ID e a chave, salvar.
    Em Authentication → URL Configuration, conferir o Site URL e pôr o endereço do app com `/` no fim
