@@ -348,6 +348,11 @@ svg .wh{fill:transparent}
 .row2{display:flex;gap:8px}.row2>*{flex:1}
 .ghost{border:1.5px solid var(--line);border-radius:14px;padding:12px;font-weight:500;background:var(--surface)}
 .danger-btn{color:var(--danger);font-weight:500;padding:12px;border-radius:14px;border:1.5px solid var(--line)}
+/* Apagar a conta: o que acontece com cada família */
+.lead{margin:0}
+.fate{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--surface2)}
+.fate b{font-weight:500}
+.fate span{font-size:13.5px;color:var(--muted)}
 .save:disabled{opacity:.6}
 /* Sugestões e problemas */
 label.lbl{display:block}

@@ -60,13 +60,16 @@ const REFER_TEXT = 'Conhece o Soneca? É um app para anotar a rotina do bebê (m
 async function boot() {
   const tok = new URLSearchParams(location.search).get('convite');
   if (tok) { lsSet('cad-invite', tok); history.replaceState(null, '', '/'); }
+  // Acabou de apagar a conta: volta para a entrada com o aviso.
+  const gone = new URLSearchParams(location.search).get('conta') === 'apagada';
+  if (gone) history.replaceState(null, '', '/');
 
   // Voltou do Google sem entrar (cancelou ou deu erro): o endereço traz "#error=...".
   const googleFailed = /[#&]error/.test(location.hash);
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
     if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errGoogle', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
-    show('scrLogin'); return;
+    show('scrLogin'); if (gone) toast('Conta apagada'); return;
   }
   st.user = session.user;
 
@@ -1510,12 +1513,68 @@ function drawProfilePane() {
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
   h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
+  h += '<button class="danger-btn" data-act="delAccount">Apagar minha conta</button>';
   $('paneProfile').innerHTML = h;
 }
 // "Do celular" apaga a escolha: o app volta a seguir o modo noturno do aparelho.
 function setTheme(v) {
   if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme;
   lsSet('cad-theme', v || null); render();
+}
+
+/* ---------- apagar a conta ---------- */
+// Mostra antes o que acontece com cada família. Quem criou uma família com outras pessoas passa a
+// família para o membro mais antigo depois dela; o resto é a função delete_my_account (012).
+async function accountSheet() {
+  S = { mode: 'account', rows: null, confirm: false, err: '' }; drawAccount();
+  const ids = st.families.map(f => f.id);
+  const [{ data: mem, error: e1 }, { data: bab, error: e2 }] = await Promise.all([
+    sb.from('family_members').select('family_id,user_id,joined_at').in('family_id', ids),
+    sb.from('babies').select('family_id,name').in('family_id', ids).order('created_at')]);
+  if (S?.mode !== 'account') return;
+  if (e1 || e2) { S.err = 'Não foi possível carregar suas famílias. Confira a conexão e tente de novo.'; return drawAccount(); }
+  const me = st.user.id, older = (a, b) => Date.parse(a.joined_at) - Date.parse(b.joined_at) || (a.user_id < b.user_id ? -1 : 1);
+  const heirs = {};
+  for (const f of st.families) if (f.creator_id === me) {
+    const others = mem.filter(m => m.family_id === f.id && m.user_id !== me).sort(older);
+    if (others.length) heirs[f.id] = others;
+  }
+  await loadNames(Object.values(heirs).map(o => o[0].user_id));
+  if (S?.mode !== 'account') return;
+  S.rows = st.families.map(f => {
+    if (f.creator_id !== me) return [f.name, 'Você entrou por convite. Você sai, e o que anotou fica, sem o seu nome.'];
+    const o = heirs[f.id];
+    if (!o) {
+      const names = bab.filter(b => b.family_id === f.id).map(b => b.name);
+      return [f.name, 'Só você está nela. É apagada, com ' + (names.length ? names.join(', ') + ' e ' : '') + 'todos os registros.'];
+    }
+    const heir = st.names[o[0].user_id] || 'outra pessoa';
+    return [f.name, (o.length === 1 ? 'Você criou, e ' + heir + ' também está.' : 'Você criou, e mais ' + o.length + ' pessoas também estão.')
+      + ' A família continua, e ' + heir + ' passa a cuidar dela.'];
+  });
+  drawAccount();
+}
+function drawAccount() {
+  const mail = st.user.email ? ' (' + esc(st.user.email) + ')' : '';
+  let h = head('Apagar sua conta') + `<p class="lead">Seu login${mail} e seu nome são apagados. Não dá para desfazer.</p>`;
+  h += '<div class="sec"><h4>Suas famílias</h4>' + (S.rows
+    ? S.rows.map(([n, t]) => `<div class="fate"><b>${esc(n)}</b><span>${esc(t)}</span></div>`).join('')
+    : S.err ? '' : '<p class="dim">Carregando…</p>') + '</div>';
+  h += '<p class="dim">As sugestões que você mandou também são apagadas.</p>';
+  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
+  if (S.rows) h += `<button class="danger-btn" data-act="accDel">${S.confirm ? 'Toque de novo para apagar a conta' : 'Apagar minha conta'}</button>`;
+  openPanel(h);
+}
+async function accountAction(a, btn) {
+  if (a !== 'accDel') return;
+  if (!S.confirm) { S.confirm = true; return drawAccount(); }
+  busy(btn, true);
+  const { error } = await sb.rpc('delete_my_account');
+  if (error) { S.err = 'Não foi possível apagar a conta. Confira a conexão e tente de novo.'; S.confirm = false; return drawAccount(); }
+  // O login já não existe no banco: basta esquecer a sessão neste celular.
+  await sb.auth.signOut({ scope: 'local' }).catch(() => {});
+  lsSet('cad-family', null); lsSet('cad-invite', null);
+  location.href = '/?conta=apagada';
 }
 
 /* ---------- sugestões e problemas ---------- */
@@ -1625,6 +1684,7 @@ async function paneAction(a, v, btn) {
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
   if (a === 'logout') { await sb.auth.signOut(); location.href = '/'; }
+  if (a === 'delAccount') return accountSheet();
 }
 
 /* ---------- eventos ---------- */
@@ -1662,6 +1722,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (a === 'delBaby') return delBaby(b);
   if (a === 'saveName') return saveName(b);
   if (S.mode === 'feedback') return feedbackAction(a, v, b);
+  if (S.mode === 'account') return accountAction(a, b);
   if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
