@@ -10,11 +10,16 @@ import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pe
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
-const SCREENS = ['scrLoading','scrLogin','scrName','scrInvite','scrCreate','scrMain'];
+const SCREENS = ['scrLoading','scrLogin','scrName','scrTerms','scrBabyOk','scrInvite','scrCreate','scrMain'];
 const KEEP_DAYS = 60;
+// Política de Privacidade e Termos de Uso (/privacidade e /termos). Ao mudar o texto, sobe a versão:
+// todos veem a tela de aceite de novo na próxima abertura.
+const TERMS_VERSION = '1.0', TERMS_SINCE = '06/10/2026';
+const PRIVACY_EMAIL = 'drpatrickharrisdemesquita@gmail.com';
 
 const st = {
   user: null, profile: null,
+  consents: [],                // aceites da pessoa (Política e Termos, dados do bebê, convite), do 015
   families: [], family: null,
   babies: [], baby: null,
   members: [], names: {},
@@ -81,6 +86,9 @@ async function boot() {
     show('scrName'); $('nameIn').focus(); return;
   }
   st.profile = prof; st.names[prof.id] = prof.display_name;
+
+  await loadConsents();
+  if (!hasConsent('terms')) return showTerms();
 
   const inv = lsGet('cad-invite');
   if (inv) return showInvite(inv);
@@ -158,27 +166,78 @@ $('fName').addEventListener('submit', async e => {
   e.preventDefault(); err('errName');
   const name = $('nameIn').value.trim();
   if (!name) return err('errName', 'Escreva como você quer aparecer.');
+  if (!$('okName').checked) return err('errName', 'Para continuar, marque que leu a Política e os Termos.');
   const btn = e.submitter; busy(btn, true);
+  if (!await addConsent('terms')) { busy(btn, false); return err('errName', 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.'); }
   const { error } = await sb.from('profiles').insert({ id: st.user.id, display_name: name });
   busy(btn, false);
   if (error) return err('errName', errMsg(error));
   show('scrLoading'); boot();
 });
 
+/* ---------- aceites (015) ---------- */
+// A prova de cada aceite fica no banco (conta, tipo, versão, data e hora); ninguém edita nem apaga.
+async function loadConsents() {
+  const { data } = await sb.from('consents').select('kind,version,family_id,created_at').order('created_at');
+  st.consents = data || [];
+}
+function hasConsent(kind, fid) {
+  return st.consents.some(c => c.kind === kind && (kind === 'terms' ? c.version === TERMS_VERSION : c.family_id === fid));
+}
+async function addConsent(kind, extra = {}) {
+  const { data, error } = await sb.from('consents').insert({ kind, version: TERMS_VERSION, ...extra })
+    .select('kind,version,family_id,created_at').single();
+  if (error) return false;
+  st.consents.push(data); return true;
+}
+// Quem já usava (ou numa versão nova): a mesma tela, dizendo o que mudou.
+function showTerms() {
+  const before = st.consents.some(c => c.kind === 'terms');
+  $('termsText').textContent = before
+    ? `A Política de Privacidade e os Termos de Uso mudaram (versão ${TERMS_VERSION}, em vigor desde ${TERMS_SINCE}). Leia e confirme para continuar.`
+    : 'O Soneca agora tem uma Política de Privacidade e Termos de Uso. Eles explicam o que guardamos, quem vê e como você apaga tudo. Leia e confirme para continuar.';
+  document.querySelectorAll('#scrTerms .tv').forEach(el => el.textContent = 'versão ' + TERMS_VERSION);
+  $('okTerms').checked = false; err('errTerms'); show('scrTerms');
+}
+$('acceptTerms').onclick = async () => {
+  if (!$('okTerms').checked) return err('errTerms', 'Para continuar, marque que leu os dois.');
+  busy($('acceptTerms'), true);
+  const ok = await addConsent('terms');
+  busy($('acceptTerms'), false);
+  if (!ok) return err('errTerms', 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.');
+  show('scrLoading'); boot();
+};
+function showBabyOk(fid) {
+  const fam = st.families.find(f => f.id === fid);
+  $('babyOkTitle').textContent = fam.name;
+  $('okBaby2').checked = false; err('errBabyOk'); show('scrBabyOk');
+  $('acceptBaby').onclick = async () => {
+    if (!$('okBaby2').checked) return err('errBabyOk', 'Para continuar, marque a autorização dos dados do bebê.');
+    busy($('acceptBaby'), true);
+    const ok = await addConsent('baby', { family_id: fid });
+    busy($('acceptBaby'), false);
+    if (!ok) return err('errBabyOk', 'Não foi possível registrar a autorização. Confira a conexão e tente de novo.');
+    openFamily(fid);
+  };
+}
+
 /* ---------- convite ---------- */
 async function showInvite(tok) {
-  show('scrInvite'); err('errInvite'); $('acceptInvite').hidden = false;
+  show('scrInvite'); err('errInvite'); $('acceptInvite').hidden = false; $('inviteOk').hidden = false; $('okInvite').checked = false;
   const { data, error } = await sb.rpc('invite_info', { tok });
   const row = data && data[0];
   if (error || !row || !row.is_valid) {
     $('inviteText').textContent = '';
     err('errInvite', row && !row.is_valid ? 'Este convite não vale mais. Peça um novo a quem te convidou.' : ERR.invite_not_found);
-    $('acceptInvite').hidden = true; return;
+    $('acceptInvite').hidden = true; $('inviteOk').hidden = true; return;
   }
   $('inviteText').textContent = row.creator_name + ' convidou você para a família ' + row.family_name + '.';
+  $('inviteBaby').textContent = 'Você vai ver e anotar os registros dos bebês da família, que incluem dados de saúde.';
   $('acceptInvite').onclick = async () => {
-    busy($('acceptInvite'), true);
+    if (!$('okInvite').checked) return err('errInvite', 'Para entrar, marque o compromisso acima.');
+    err('errInvite'); busy($('acceptInvite'), true);
     const { data: fid, error } = await sb.rpc('accept_invite', { tok });
+    if (!error) await addConsent('invite', { family_id: fid });
     busy($('acceptInvite'), false);
     if (error) return err('errInvite', errMsg(error));
     lsSet('cad-invite', null); await loadFamilies(); openFamily(fid);
@@ -189,6 +248,7 @@ $('skipInvite').onclick = () => { lsSet('cad-invite', null); show('scrLoading');
 /* ---------- criar família ---------- */
 $('fCreate').addEventListener('submit', async e => {
   e.preventDefault(); err('errCreate');
+  if (!$('okBaby').checked) return err('errCreate', 'Para criar a família, marque a autorização dos dados do bebê.');
   const btn = e.submitter; busy(btn, true);
   const { data: fid, error } = await sb.rpc('create_family', {
     family_name: $('famIn').value.trim(), baby_name: $('babyIn').value.trim(), baby_birth: $('birthIn').value || null,
@@ -198,14 +258,18 @@ $('fCreate').addEventListener('submit', async e => {
   // Menina ou menino vai à parte (a função do banco não recebe); sem o 011, só não salva.
   const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
   if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
+  await addConsent('baby', { family_id: fid });
   $('fCreate').reset(); await loadFamilies(); openFamily(fid);
 });
 $('cancelCreate').onclick = () => { show('scrMain'); };
 
 /* ---------- abrir família ---------- */
 async function openFamily(fid) {
+  const fam = st.families.find(f => f.id === fid);
+  // Quem criou a família autoriza os dados do bebê antes de abrir (famílias de antes do 015).
+  if (fam.creator_id === st.user.id && !hasConsent('baby', fid)) return showBabyOk(fid);
   show('scrLoading');
-  st.family = st.families.find(f => f.id === fid);
+  st.family = fam;
   lsSet('cad-family', fid);
   const [{ data: babies }, { data: mem }] = await Promise.all([
     sb.from('babies').select('*').eq('family_id', fid).order('created_at'),
@@ -1401,6 +1465,7 @@ function growthAction(a, v, btn) {
 }
 
 /* ---------- bebê e nome ---------- */
+const CHECK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 function babySheet(b) {
   S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', confirmDel: false };
   drawBaby();
@@ -1414,6 +1479,7 @@ function drawBaby() {
      <div><div class="lbl" id="bSexLbl">Menina ou menino (opcional)</div>
        <div class="sexpick" role="radiogroup" aria-labelledby="bSexLbl">${[['F', 'Menina'], ['M', 'Menino']].map(([v, n]) => `<label><input type="radio" name="bSex" value="${v}"${S.sex === v ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div>
        <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.${b ? ' Mudar aqui muda a curva.' : ''}</p></div>
+     ${b ? '' : `<label class="chk"><input type="checkbox" id="bOk">${CHECK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar os dados dele, inclusive de saúde e amamentação, para o uso da minha família.</span></label>`}
      <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
   if (del) h += S.confirmDel
     ? `<div class="warn" role="alert"><b>Tem certeza?</b><span>Essa ação não poderá ser desfeita. ${esc(b.name)} e todos os seus registros serão apagados.</span></div>
@@ -1439,6 +1505,7 @@ const bSex = () => document.querySelector('input[name="bSex"]:checked')?.value |
 async function saveBaby(btn) {
   const name = $('bName').value.trim(), birth_date = $('bBirth').value || null, sex = bSex();
   if (!name) return err('bErr', 'Escreva o nome do bebê.');
+  if (!S.b && !$('bOk').checked) return err('bErr', 'Para adicionar, marque a autorização dos dados do bebê.');
   busy(btn, true);
   // Menina ou menino só vai quando há o que salvar: sem o 011, o resto continua salvando.
   const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}) };
@@ -1447,6 +1514,7 @@ async function saveBaby(btn) {
   const { data, error } = await q.select('*').single();
   busy(btn, false);
   if (error) return err('bErr', errMsg(error));
+  if (!S.b) await addConsent('baby', { family_id: st.family.id, baby_id: data.id });
   const i = st.babies.findIndex(x => x.id === data.id);
   if (i >= 0) st.babies[i] = data; else st.babies.push(data);
   if (!S.b || st.baby?.id === data.id) await selectBaby(data.id);
@@ -1495,7 +1563,7 @@ function drawFamilyPane() {
   h += buttonsHtml();
   h += creator
     ? `<button class="danger-btn" data-act="delFam">${FP.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
-    : `<button class="danger-btn" data-act="leave">${FP.confirm === 'leave' ? 'Toque de novo para sair da família' : 'Sair da família'}</button>`;
+    : `<button class="danger-btn" data-act="leave">${FP.confirm === 'leave' ? 'Toque de novo: você sai, e o que anotou fica na família sem seu nome' : 'Sair da família'}</button>`;
   $('paneFamily').innerHTML = h;
 }
 // Mudar o nome da família: só quem criou (é a regra do banco).
@@ -1535,6 +1603,15 @@ function drawProfilePane() {
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
+  const mail = subject => `mailto:${PRIVACY_EMAIL}?subject=${encodeURIComponent(subject)}`;
+  const ok = st.consents.filter(c => c.kind === 'terms').pop();
+  h += '<div class="sec"><h4>Privacidade</h4>' +
+    '<a class="li" href="/privacidade" target="_blank" rel="noopener"><span>Política de Privacidade</span><span class="go">Ler</span></a>' +
+    '<a class="li" href="/termos" target="_blank" rel="noopener"><span>Termos de Uso</span><span class="go">Ler</span></a>' +
+    `<a class="li" href="${mail('Cópia dos meus dados no Soneca')}"><span>Cópia dos seus dados</span><span class="go">Pedir</span></a>` +
+    `<a class="li" href="${mail('Privacidade no Soneca')}"><span>Falar com o encarregado</span><span class="go">Escrever</span></a>` +
+    `<p class="dim">Pedidos sobre seus dados: ${esc(PRIVACY_EMAIL)}. Respondemos em até 15 dias.` +
+    (ok ? ` Você aceitou a versão ${esc(ok.version)} em ${new Date(ok.created_at).toLocaleDateString('pt-BR')}.` : '') + '</p></div>';
   h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
   h += '<button class="danger-btn" data-act="delAccount">Apagar minha conta</button>';
   $('paneProfile').innerHTML = h;
