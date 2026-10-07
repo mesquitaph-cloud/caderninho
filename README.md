@@ -125,7 +125,7 @@ dias depois de criar a família são grátis, sem assinar nem cadastrar cartão;
 Cópia dos dados por e-mail em até 15 dias, sem botão por enquanto. Supabase no plano Free, sem cópias de
 segurança: para cobrar, vale passar ao Pro. Preço R$ 9,90 por mês, uma assinatura para a família toda.
 Sem assinatura, depois do teste, a família só vê o que já anotou (e gera o relatório), sem registros novos.
-Quem já usa de graça passa a pagar, com aviso de 30 dias antes. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+Sem regra de transição: o app das lojas começa sem usuários, e hoje só a família do Patrick usa o site. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 **Antes de publicar a política:**
