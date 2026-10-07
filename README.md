@@ -14,7 +14,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
-  aceites no código, falta publicar (rodar o 015 antes). O que ainda falta está na seção "LGPD" abaixo.
+  aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
 ## Política, Termos e aceites (07/10, no código, falta publicar)
 
@@ -22,9 +22,8 @@ Prévias aprovadas (privadas): páginas https://claude.ai/artifact/LgiAW4qTtok63
 https://claude.ai/artifact/1xKVtsyNF485sSZGwpsfMr (sem a caixinha separada de amamentação: Mamada, Sono e
 Fralda continuam sempre completos, e a autorização da amamentação está na caixinha do bebê).
 
-**Para publicar:** rodar `supabase/015_aceites.sql` no SQL Editor antes do app. Sem ele, o app para na tela
-de aceite ("Não foi possível registrar o aceite"). Conferir pelo conector: a tabela `consents` e os gatilhos
-`consents_guard` e `member_left`.
+`supabase/015_aceites.sql` rodado em 07/10 e conferido pelo conector (tabela `consents` vazia, gatilhos
+`consents_guard` e `member_left`, trava dos registros nova). Falta só publicar o app.
 
 - **Páginas públicas:** `/privacidade` e `/termos` (pastas com `index.html`, os estilos do app e `legal.js`
   para seguir o claro ou escuro escolhido no Perfil). Texto da versão 1.0, revisado pelo advogado. Links na
