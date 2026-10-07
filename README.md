@@ -14,16 +14,17 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
-  aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
+  aceites no ar desde 07/10. O que ainda falta está na seção "LGPD" abaixo.
 
-## Política, Termos e aceites (07/10, no código, falta publicar)
+## Política, Termos e aceites (07/10, no ar)
 
 Prévias aprovadas (privadas): páginas https://claude.ai/artifact/LgiAW4qTtok63X8T5yw641 e aceites
 https://claude.ai/artifact/1xKVtsyNF485sSZGwpsfMr (sem a caixinha separada de amamentação: Mamada, Sono e
 Fralda continuam sempre completos, e a autorização da amamentação está na caixinha do bebê).
 
 `supabase/015_aceites.sql` rodado em 07/10 e conferido pelo conector (tabela `consents` vazia, gatilhos
-`consents_guard` e `member_left`, trava dos registros nova). Falta só publicar o app.
+`consents_guard` e `member_left`, trava dos registros nova). No ar em 07/10: no celular, os aceites da Política e dos dados do bebê
+chegaram ao banco (conferido pelo conector, só a contagem).
 
 - **Páginas públicas:** https://caderninho-bay.vercel.app/privacidade e https://caderninho-bay.vercel.app/termos (pastas com `index.html`, os estilos do app e `legal.js`
   para seguir o claro ou escuro escolhido no Perfil). Texto da versão 1.0, revisado pelo advogado. Links na
@@ -197,7 +198,7 @@ assinatura de todos os membros. Estatísticas de uso saíram da versão 1.0; se 
 antes, desligadas por padrão e sem nada do que foi anotado.
 
 **Já resolvido:** aceites, páginas públicas, Perfil › Privacidade e sair da família sem deixar o nome (no
-código em 07/10, seção "Política, Termos e aceites"); apagar a conta no Perfil, com as sugestões apagadas junto (012 e 014, no ar em 07/10);
+ar em 07/10, seção "Política, Termos e aceites"); apagar a conta no Perfil, com as sugestões apagadas junto (012 e 014, no ar em 07/10);
 controlador, encarregado, preço, prazos e plano do Supabase definidos; revisão do advogado (07/10).
 
 ## Identidade visual: Soneca (no ar)
