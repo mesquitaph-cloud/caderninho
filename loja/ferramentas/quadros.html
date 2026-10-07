@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Soneca nas lojas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap">
+<style>
+/* Quadros das lojas: título no alto, o celular com a tela real saindo pela borda de baixo, um círculo na cor do registro atrás. */
+:root{--bg:#FFF8EE;--surface:#FFFFFF;--surface2:#F8EEE0;--ink:#4A3522;--muted:#826449;--line:#EFE2D2;
+  --feed:#9ED9B8;--sleep:#9CC8F0;--diaper:#FFD98A;--care:#F5CDB0;--accent:#E8A87C;--mascot:#7A5A3C;
+  --bezel:#4A3522;--glow:rgba(74,53,34,.18);
+  --body:"DM Sans",system-ui,sans-serif}
+.night{--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
+  --sleep:#4E477C;--mascot:#E6CDB5;--bezel:#2F3E47;--glow:rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#888;font-family:var(--body);display:flex;flex-wrap:wrap;gap:40px;padding:40px}
+.f{width:var(--w);height:var(--h);container-type:size;position:relative;overflow:hidden;background:var(--bg);color:var(--ink)}
+.f .blob{position:absolute;width:118cqw;aspect-ratio:1;border-radius:50%;background:var(--c,var(--surface2));left:-9cqw;top:calc(var(--top) + 18cqw)}
+.f .txt{position:absolute;left:8cqw;right:8cqw;top:var(--ttop);display:flex;flex-direction:column;gap:2.6cqw}
+.f h1{margin:0;font-weight:500;font-size:var(--hs);line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.f p{margin:0;font-size:var(--ps);line-height:1.35;color:var(--muted);text-wrap:balance;max-width:80cqw}
+.lock{display:flex;align-items:center;gap:2.4cqw;font-weight:500;font-size:5.4cqw;margin-bottom:1.2cqw}
+.capi{width:13cqw;height:auto;fill:none;stroke:var(--mascot);stroke-width:2.4px;stroke-linecap:round;stroke-linejoin:round}
+.phone{position:absolute;left:50%;transform:translateX(-50%);top:var(--top);width:var(--pw);aspect-ratio:430/932;border-radius:calc(var(--pw) * .13);
+  background:var(--bezel);padding:calc(var(--pw) * .022);box-shadow:0 3cqw 8cqw var(--glow)}
+.phone img{display:block;width:100%;height:100%;border-radius:calc(var(--pw) * .105);object-fit:cover;object-position:top}
+/* iPhone 6,9" (1290 x 2796) e Android (1080 x 1920) */
+.ios{--w:1290px;--h:2796px;--top:24cqh;--ttop:9cqw;--pw:78cqw;--hs:9.2cqw;--ps:4.3cqw}
+.and{--w:1080px;--h:1920px;--top:31cqh;--ttop:7cqw;--pw:72cqw;--hs:8.4cqw;--ps:4cqw}
+.ios.l1{--top:28cqh}.and.l1{--top:37cqh}
+/* Destaque do Google Play (1024 x 500) */
+.feat{--w:1024px;--h:500px}
+.feat .blob{width:70cqw;left:auto;right:-14cqw;top:-20cqh}
+.feat .lk{position:absolute;left:7cqw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3cqh;max-width:46cqw}
+.feat .lock{font-size:6.4cqw;gap:2cqw;margin:0}.feat .capi{width:11cqw}
+.feat p{font-size:2.5cqw;max-width:42cqw}
+.feat .phone{--pw:21cqw;left:auto;transform:none;top:14cqh;box-shadow:0 1.4cqw 3cqw var(--glow)}
+.feat .p1{right:27cqw}.feat .p2{right:4cqw;top:24cqh}
+</style></head><body>
+<script>
+const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+// Capivara só nos quadros de rotina; crescimento e relatório ficam sóbrios.
+const F = [
+  ['01-rotina', 'home-light', '--sleep', 'A rotina do bebê, num toque', 'Mamada, sono, fralda e remédio anotados na hora, por toda a família.', 'lock'],
+  ['02-linha-do-tempo', 'day-light', '--feed', 'O dia inteiro numa linha do tempo', 'Cada mamada, soneca e fralda, com a hora e quem anotou.'],
+  ['03-familia', 'hist-light', '--diaper', 'Toda a família na mesma página', 'Mãe, pai, avó: cada um anota no próprio celular e todos veem na hora.'],
+  ['04-semana', 'week-light', '--sleep', 'A semana num relance', 'Sono, mamadas e fraldas de cada dia, lado a lado.'],
+  ['05-divisao', 'division-light', '--care', 'Quem trocou mais fraldas? O Soneca sabe.', 'A divisão de tarefas do mês, com troféu e tudo.', 'capi'],
+  ['06-crescimento', 'growth-light', '', 'Peso e comprimento nas curvas da OMS', 'Percentis de 3 a 97, para menina ou menino.'],
+  ['07-relatorio', 'report-light', '', 'Tudo pronto para a consulta', 'Relatório em PDF para o pediatra, com as últimas semanas.'],
+  ['08-noite', 'home-dark', '--sleep', 'De madrugada, a tela não ofusca', 'Modo escuro para as mamadas da noite.', 'capi', 'night'],
+];
+const kind = new URLSearchParams(location.search).get('k') || 'ios';
+let h = '';
+if (kind === 'feat') {
+  h = `<div class="f feat" id="feature-graphic" style="--c:var(--sleep)"><div class="blob"></div>
+    <div class="lk"><div class="lock">${CAPI}Soneca</div><p>A rotina do bebê anotada por toda a família, numa linha do tempo só.</p></div>
+    <div class="phone p1"><img src="telas/home-light.png" alt=""></div><div class="phone p2"><img src="telas/day-light.png" alt=""></div></div>`;
+} else for (const [id, img, c, t, s, extra, cls] of F) {
+  const top = extra === 'lock' ? `<div class="lock">${CAPI}Soneca</div>` : extra === 'capi' ? `<div class="lock">${CAPI}</div>` : '';
+    h += `<div class="f ${kind} ${extra ? 'l1' : ''} ${cls || ''}" id="${id}" style="${c ? `--c:var(${c})` : ''}">
+    <div class="blob"></div>
+    <div class="txt">${top}<h1>${t}</h1><p>${s}</p></div>
+    <div class="phone"><img src="telas/${img}.png" alt=""></div></div>`;
+}
+document.body.innerHTML = h;
+</script>
+</body></html>
