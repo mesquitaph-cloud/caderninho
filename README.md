@@ -123,8 +123,9 @@ Decidido em 07/10: controlador é o Patrick, pessoa física (CPF e endereço no 
 pelas lojas (compra dentro do app da Apple e do Google), teste grátis de 7 dias, sem anúncios nem
 parcerias. Dados ficam 6 meses depois do fim da assinatura, com aviso 30 dias antes de apagar.
 Cópia dos dados por e-mail em até 15 dias, sem botão por enquanto. Supabase no plano Free, sem cópias de
-segurança: para cobrar, vale passar ao Pro. Faltam preço, se a assinatura é por conta ou por família, o
-que fica liberado sem assinatura e o que acontece com quem já usa de graça. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+segurança: para cobrar, vale passar ao Pro. Preço R$ 10,00 por mês, uma assinatura para a família toda.
+Sem assinatura, depois do teste, a família só vê o que já anotou (e gera o relatório), sem registros novos.
+Quem já usa de graça passa a pagar, com aviso de 30 dias antes. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 **Antes de publicar a política:**
