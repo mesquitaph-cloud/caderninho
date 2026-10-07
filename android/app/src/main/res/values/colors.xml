@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Abertura do app no creme do fundo do Soneca (--bg) -->
+    <!-- Abertura do app no creme do fundo do Soneca (a cor bg do styles.css) -->
     <color name="splash_background">#FFF8EE</color>
 </resources>
