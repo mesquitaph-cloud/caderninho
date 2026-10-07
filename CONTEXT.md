@@ -38,6 +38,12 @@ Uma criança acompanhada por uma família. Uma família pode ter mais de um beb�
 um único bebê.
 _Evite_: filho, criança, paciente
 
+**Aceite**:
+A confirmação, guardada no banco com a data e a versão, de que a pessoa leu a Política de Privacidade
+e os Termos de Uso; de que é pai, mãe ou responsável pelo bebê (quem cria a família ou adiciona um
+bebê); ou de que vai usar os dados só para cuidar do bebê (quem entra por convite).
+_Evite_: consentimento (no texto que a pessoa vê, é "autorizo"), concordância, termo
+
 ## Registros
 
 **Registro**:
@@ -48,7 +54,8 @@ um remédio dado ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
-O membro que fez o registro. Todo registro mostra seu autor, mesmo depois que ele deixa a família.
+O membro que fez o registro. Quando ele sai da família, é removido ou apaga a conta, o registro fica
+na família sem autor.
 _Evite_: responsável, criador (criador é da família, não do registro)
 
 **Mamada**:

@@ -13,8 +13,39 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Revisão de segurança das regras de acesso do banco (RLS).
-- Privacidade (LGPD): Política de Privacidade e Termos de Uso escritos e revisados pelo advogado (07/10);
-  falta o app cumprir o que eles prometem (seção "LGPD" abaixo).
+- Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
+  aceites no código, falta publicar (rodar o 015 antes). O que ainda falta está na seção "LGPD" abaixo.
+
+## Política, Termos e aceites (07/10, no código, falta publicar)
+
+Prévias aprovadas (privadas): páginas https://claude.ai/artifact/LgiAW4qTtok63X8T5yw641 e aceites
+https://claude.ai/artifact/1xKVtsyNF485sSZGwpsfMr (sem a caixinha separada de amamentação: Mamada, Sono e
+Fralda continuam sempre completos, e a autorização da amamentação está na caixinha do bebê).
+
+**Para publicar:** rodar `supabase/015_aceites.sql` no SQL Editor antes do app. Sem ele, o app para na tela
+de aceite ("Não foi possível registrar o aceite"). Conferir pelo conector: a tabela `consents` e os gatilhos
+`consents_guard` e `member_left`.
+
+- **Páginas públicas:** `/privacidade` e `/termos` (pastas com `index.html`, os estilos do app e `legal.js`
+  para seguir o claro ou escuro escolhido no Perfil). Texto da versão 1.0, revisado pelo advogado. Links na
+  entrada. Ao mudar o texto: subir `TERMS_VERSION` no `app.js`, guardar a versão antiga em
+  `privacidade/1.0.html` e listar no rodapé.
+- **Aceites:** caixinha na tela do nome (primeiro acesso); tela "Política e Termos do Soneca" para quem já
+  usa e a cada versão nova; cartão "Dados do bebê e de saúde" ao criar a família, ao adicionar bebê e, nas
+  famílias que já existem, para quem criou, antes de abrir; compromisso de quem entra por convite. Cada um
+  vai para `consents` (só acrescenta; a prova fica mesmo depois de apagar a conta).
+- **Perfil › Privacidade:** política, termos, "Cópia dos seus dados" e "Falar com o encarregado" (abrem um
+  e-mail endereçado), e a versão aceita com a data.
+- **Sair da família sem deixar o nome:** quem sai ou é removido deixa registros, remédios, medidas, marcos e
+  dúvidas na família sem autor (gatilho `member_left` do 015). O segundo toque de "Sair da família" avisa.
+- **Conferir no celular:** a tela de aceite e a dos dados do bebê na sua família; Perfil › Privacidade (os
+  links abrem as páginas e o e-mail); sair da família com uma conta de teste e ver o registro dela sem nome.
+
+Testado em 07/10: o 015 num Postgres local com todos os arquivos de `supabase/` (aceite não se edita nem se
+apaga pelo app, a conta e a hora vêm do banco; sair e ser removido tiram o autor de registros, medidas e
+dúvidas; apagar a conta e apagar a família continuam funcionando); o app no navegador com um Supabase de
+mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
+tela do bebê, páginas sem rolagem para o lado).
 
 ## Conta de demonstração para a revisão da Apple (07/10, no código, falta publicar)
 
@@ -149,22 +180,12 @@ Sem assinatura, depois do teste, a família só vê o que já anotou (e gera o r
 Sem regra de transição: o app das lojas começa sem usuários, e hoje só a família do Patrick usa o site. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
-**Antes de publicar a política:**
+**Ainda falta:**
 
-- Tabela `consents` (conta, tipo de aceite, versão, data e hora), só acrescenta. Hoje não há registro de aceite.
-- Aceite no primeiro acesso, antes do nome de exibição; quem já usa vê na próxima abertura.
-- Consentimento de pai, mãe ou responsável antes do primeiro bebê; nas famílias que já existem, pedido a quem
-  criou. Caixinha opcional para amamentação e ordenha: sem ela, esconder esses botões (o mesmo ajuste que
-  já esconde botões da tela inicial).
-- Aceite de quem entra por convite, na tela do convite.
-- Pedir o aceite de novo quando a versão da política mudar.
 - **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
-- **Sair da família sem deixar o nome**: hoje quem sai continua como autor dos registros; decidido em 07/10
-  que os registros ficam sem autor, como ao apagar a conta. Muda o banco, o app e o `CONTEXT.md`.
-- Seção "Privacidade" no Perfil: política, termos, contato do encarregado, pedir cópia dos dados e apagar conta.
-- Política e termos em páginas públicas, sem login, com link na tela de entrada: `caderninho.vercel.app/privacidade`
-  (e as versões anteriores). Com o domínio próprio, redirecionar o endereço antigo e trocar o link na política
-  e nas lojas.
+- Com o domínio próprio, redirecionar `caderninho.vercel.app/privacidade` e `/termos` e trocar o link na
+  política e nas lojas.
+- Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
 - Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
@@ -176,7 +197,8 @@ assinatura guardados 5 anos, e a tarefa agendada que avisa e apaga famílias 6 m
 assinatura de todos os membros. Estatísticas de uso saíram da versão 1.0; se vierem, voltam à política
 antes, desligadas por padrão e sem nada do que foi anotado.
 
-**Já resolvido:** apagar a conta no Perfil, com as sugestões apagadas junto (012 e 014, no ar em 07/10);
+**Já resolvido:** aceites, páginas públicas, Perfil › Privacidade e sair da família sem deixar o nome (no
+código em 07/10, seção "Política, Termos e aceites"); apagar a conta no Perfil, com as sugestões apagadas junto (012 e 014, no ar em 07/10);
 controlador, encarregado, preço, prazos e plano do Supabase definidos; revisão do advogado (07/10).
 
 ## Identidade visual: Soneca (no ar)
