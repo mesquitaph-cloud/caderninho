@@ -142,7 +142,9 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 - **Sair da família sem deixar o nome**: hoje quem sai continua como autor dos registros; decidido em 07/10
   que os registros ficam sem autor, como ao apagar a conta. Muda o banco, o app e o `CONTEXT.md`.
 - Seção "Privacidade" no Perfil: política, termos, contato do encarregado, baixar dados, apagar conta.
-- Política e termos em páginas públicas, sem login, com link na tela de entrada.
+- Política e termos em páginas públicas, sem login, com link na tela de entrada: `caderninho.vercel.app/privacidade`
+  (e as versões anteriores). Com o domínio próprio, redirecionar o endereço antigo e trocar o link na política
+  e nas lojas.
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
 - Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
