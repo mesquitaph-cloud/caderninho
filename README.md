@@ -39,12 +39,12 @@ Testado em 07/10: o 013 rodado duas vezes num Postgres local com todos os arquiv
 (fica uma família só); a entrada no navegador com um Supabase de mentira (e-mail comum recebe código,
 o da revisão pede senha, senha errada, senha certa), claro e escuro, 390 px.
 
-## Apagar a conta (07/10, no ar; falta rodar o 014)
+## Apagar a conta (07/10, no ar)
 
 Exigência da Apple (regra 5.1.1) e da LGPD. Prévia aprovada (privada): https://claude.ai/artifact/Qpu3Mpad93wJ4GQ9hwGcMc
 
-`supabase/012_apagar_conta.sql` rodado em 07/10. **Rodar já o `supabase/014_apagar_conta_travas.sql`:**
-sem ele, apagar a conta falha para quem anotou algo numa família que continua (as travas de edição
+`supabase/012_apagar_conta.sql` e `supabase/014_apagar_conta_travas.sql` rodados em 07/10 (o 014 em duas
+partes, porque o editor cortava o texto; as cinco travas conferidas pelo conector). Sem o 014, apagar a conta falhava para quem anotou algo numa família que continua (as travas de edição
 devolviam o autor que a ligação do banco tentava esvaziar). Encontrado em 07/10 num Postgres local com
 todos os arquivos de `supabase/`; com o 014, a família compartilhada passa para quem entrou antes, os
 registros, remédios, medidas, dúvidas e botões ficam sem o autor, e a trava continua impedindo mudar
