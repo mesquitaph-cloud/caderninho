@@ -114,9 +114,17 @@ não recebe o código por e-mail.
 
 ## LGPD: o que falta no app para a política valer
 
-Modelo da política de privacidade (privado, para revisão de advogado):
+Modelo da política de privacidade e dos Termos de Uso, em abas (privado, para revisão de advogado):
 https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 — o Anexo B tem esta lista com os
-detalhes. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+detalhes.
+
+Decidido em 07/10: controlador é o Patrick, pessoa física (CPF e endereço no texto, pelo Decreto
+7.962/2013), com empresa mais adiante; ele mesmo é o encarregado, pelo e-mail do Soneca. Assinatura
+pelas lojas (compra dentro do app da Apple e do Google), teste grátis de 7 dias, sem anúncios nem
+parcerias. Dados ficam 6 meses depois do fim da assinatura, com aviso 30 dias antes de apagar.
+Cópia dos dados por e-mail em até 15 dias, sem botão por enquanto. Supabase no plano Free, sem cópias de
+segurança: para cobrar, vale passar ao Pro. Faltam preço, se a assinatura é por conta ou por família, o
+que fica liberado sem assinatura e o que acontece com quem já usa de graça. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 **Antes de publicar a política:**
@@ -129,7 +137,9 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 - Aceite de quem entra por convite, na tela do convite.
 - Pedir o aceite de novo quando a versão da política mudar.
 - ~~Apagar a conta~~ e sugestões apagadas junto: no código em 07/10 (seção acima), falta publicar.
-- **Baixar meus dados**: JSON completo e CSV dos registros de todas as famílias, montado no celular.
+- **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
+- **Sair da família sem deixar o nome**: hoje quem sai continua como autor dos registros; decidido em 07/10
+  que os registros ficam sem autor, como ao apagar a conta. Muda o banco, o app e o `CONTEXT.md`.
 - Seção "Privacidade" no Perfil: política, termos, contato do encarregado, baixar dados, apagar conta.
 - Política e termos em páginas públicas, sem login, com link na tela de entrada.
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
@@ -137,11 +147,11 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
   guardam no plano atual; se for menos, guardar à parte.
 - Conferir quantos dias o Supabase guarda as cópias de segurança e pôr o número na política.
-- Tarefa agendada que avisa e apaga contas paradas há 24 meses.
+- Tarefa agendada que avisa e apaga famílias 6 meses depois do fim da assinatura de todos os membros.
 - Revisão das regras de acesso (RLS) (já acima).
 
 **Quando chegarem:** estatísticas de uso desligadas por padrão, sem cookies de publicidade e sem nada do que
-foi anotado; cobrança por empresa de pagamentos, sem guardar cartão, com dados fiscais guardados 5 anos.
+foi anotado; cobrança pelas lojas, com plano e datas da assinatura guardados 5 anos.
 
 ## Identidade visual: Soneca (no ar)
 
