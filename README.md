@@ -19,7 +19,26 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
   quem é o responsável pelos dados (pessoa física ou empresa) e revisar com advogado. Um termo não isenta
   de tudo: a LGPD e o Código de Defesa do Consumidor não deixam.
 
-## Apagar bebê de volta à vista (06/10, no código, falta publicar)
+## Apagar a conta (07/10, no código, falta publicar)
+
+Exigência da Apple (regra 5.1.1) e da LGPD. Prévia aprovada (privada): https://claude.ai/artifact/Qpu3Mpad93wJ4GQ9hwGcMc
+
+**Para publicar:** rodar `supabase/012_apagar_conta.sql` no SQL Editor antes do app. Sem ele, o botão avisa
+que não conseguiu e nada é apagado. Conferir pelo conector que a função `delete_my_account` existe.
+
+- **Perfil:** "Apagar minha conta" no fim, embaixo de "Desconectar deste celular". Abre uma folha com o que
+  acontece com cada família e pede um segundo toque. Depois, volta para a entrada com o aviso "Conta apagada".
+- **Família com outras pessoas:** passa para o membro mais antigo depois de quem saiu (decidido em 07/10;
+  antes, a família era apagada junto com o criador). Família só com a pessoa: apagada, com bebês e
+  registros. Família em que entrou por convite: ela sai, e o que anotou fica sem o autor. As sugestões
+  que mandou são apagadas.
+- **Conferir no celular:** com uma conta de teste que criou uma família e convidou outra conta, apagar a
+  primeira e ver, na segunda, a família continuar com ela como criadora.
+
+Testado em 07/10 no navegador com um Supabase de mentira: claro e escuro, 390 px, as três situações de
+família (a herdeira é quem entrou antes, mesmo fora de ordem na lista), os dois toques e o aviso na entrada.
+
+## Apagar bebê de volta à vista (06/10, no ar)
 
 Com as abas de 01/10, a linha do bebê em Família passou a abrir a aba do bebê, e o "Apagar bebê" ficou
 escondido em Nome e nascimento › Editar. Agora fica também no fim da aba do bebê, só para quem criou a
@@ -32,7 +51,7 @@ aba do bebê, Cancelar e Apagar; com outro membro, o botão não aparece.
 Testado em 06/10 no navegador com um Supabase de mentira: claro e escuro, 390 px, criador e não
 criador, cancelar e apagar o único bebê (a aba volta para "Adicionar bebê").
 
-## Cuidados, botão +, noite cinza-azulada e curvas da OMS (02/10, no código, falta publicar)
+## Cuidados, botão +, noite cinza-azulada e curvas da OMS (02/10, no ar; SQL 011 conferido no banco em 07/10)
 
 Pedidos de 02/10 (Patrick, Carol e Fabi). Prévia aprovada (privada): https://claude.ai/artifact/TR5E1huU9uh2zqnS6wLPT3
 Comparações que levaram às escolhas: cores e temas https://claude.ai/artifact/LQmfEU7PSHUzw6G1SboFTg,
@@ -85,6 +104,14 @@ relatório para pediatra, que no plano entrava só se o resto estivesse em dia, 
 (01/10). Não agora: saber quem indicou quem, registrar sem internet e resumo por e-mail. Saiu:
 remédios no painel da semana.
 
+**Rumo à App Store (07/10).** Trilha com caixinhas, pontos e níveis (privada; o que se marca fica salvo
+na página): https://claude.ai/artifact/W5WUjezWR1dyASWTb9u9Wv. Decidido: conta de desenvolvedor da Apple
+como pessoa física, feita pelo iPad (dá para trocar para empresa depois, pelo suporte da Apple); no
+iPhone, lançar só com o código por e-mail, sem Google, para não precisar de Entrar com a Apple na
+primeira versão; categoria Saúde e fitness (não Infantil), só Brasil e só iPhone. Sem Mac, compilar na
+nuvem (Codemagic ou GitHub Actions). Falta ainda uma conta de demonstração para o revisor da Apple, que
+não recebe o código por e-mail.
+
 ## LGPD: o que falta no app para a política valer
 
 Modelo da política de privacidade (privado, para revisão de advogado):
@@ -101,9 +128,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
   já esconde botões da tela inicial).
 - Aceite de quem entra por convite, na tela do convite.
 - Pedir o aceite de novo quando a versão da política mudar.
-- **Apagar a conta** (não existe): botão no Perfil e função no banco que apaga o usuário do login; as ligações
-  do banco já apagam perfil e famílias criadas e deixam os registros nas outras famílias sem o autor.
-- Sugestões (`feedback`) apagadas junto com a conta, em vez de ficarem sem autor.
+- ~~Apagar a conta~~ e sugestões apagadas junto: no código em 07/10 (seção acima), falta publicar.
 - **Baixar meus dados**: JSON completo e CSV dos registros de todas as famílias, montado no celular.
 - Seção "Privacidade" no Perfil: política, termos, contato do encarregado, baixar dados, apagar conta.
 - Política e termos em páginas públicas, sem login, com link na tela de entrada.
@@ -118,7 +143,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 **Quando chegarem:** estatísticas de uso desligadas por padrão, sem cookies de publicidade e sem nada do que
 foi anotado; cobrança por empresa de pagamentos, sem guardar cartão, com dados fiscais guardados 5 anos.
 
-## Identidade visual: Soneca (no código, falta publicar)
+## Identidade visual: Soneca (no ar)
 
 O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
 Moodboard (privado): https://claude.ai/artifact/RBE6Qu4c4YFAJ7wnVwNsLj
@@ -150,7 +175,7 @@ sóbria e continua em papel claro; dúvida respondida passou para menta.
 **Daqui em diante:** toda atualização segue esta identidade. As regras e a lista de conferência estão
 no `CLAUDE.md` ("Identidade visual: obrigatória em toda atualização").
 
-### Troca do nome para Soneca (no código, falta publicar)
+### Troca do nome para Soneca (no ar)
 
 No app: título e nome instalado (`index.html`, `manifest.webmanifest`), a entrada com a capivara ao
 lado do nome, a tela de abrir, a barra de baixo, Perfil (indicar, sugestões), avisos das telas de
@@ -178,7 +203,7 @@ este branch com o nome novo. A conferência
 **Conferir no celular:** a entrada com a capivara e "Soneca", o título da aba, o nome ao instalar,
 "Indicar o Soneca" no Perfil e o texto que vai junto, e o aviso das telas de saúde.
 
-## Melhorias de 27/09: feito, falta publicar
+## Melhorias de 27/09: no ar
 
 Pedidos da conversa de 27/09 (os ajustes de 28/09 e as abas de 01/10 logo abaixo): remédios, sono x mamada e cocô, peso e marcos, resumo para os pais,
 entrar com Google e, depois das prévias, botões da tela inicial, Sintomas e cuidados. Tudo no código;
@@ -571,7 +596,7 @@ intervalo do só quando precisar, programar e editar remédio, linha do tempo e 
 - **25/09, `supabase/003_endurece_colunas.sql` rodado:** quem está logado só grava nas colunas que o
   app usa (antes, gravava em qualquer uma). Conferido pelo conector, sem erro de permissão nos logs.
 
-## Painel da semana, calendário e sugestões: feito, falta publicar
+## Painel da semana, calendário e sugestões: no ar
 
 Prévia interativa usada para decidir (privada): https://claude.ai/artifact/AsJs7ewJnFY3Jfhn3yoTUP
 
