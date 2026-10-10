@@ -5,12 +5,33 @@ A Política e os Termos andam juntos: uma versão vale para os dois, e é o `TER
 
 | Versão | Em vigor | Revisão do advogado | Aceite de novo? |
 |---|---|---|---|
-| 1.1 | desde 10/10/2026 | pendente | Sim, pela tela "mudaram" |
+| 1.2 | desde 10/10/2026 | pendente | Sim, pela tela "mudaram" |
+| 1.1 | só em 10/10/2026 | pendente | Sim, pela tela "mudaram" |
 | 1.0 | 06/10/2026 a 09/10/2026 | 07/10/2026, sem mudanças | Primeira versão |
+
+## 1.2 (10/10/2026): sem idade mínima, para a App Store dar 4+
+
+Arquivos: `termos/index.html` e `privacidade/index.html`. A 1.1 ficou em `termos/1.1.html` e
+`privacidade/1.1.html`. Só amplia quem pode usar, por isso vale já.
+
+- **Por quê:** a Apple pede que a classificação etária combine com a idade mínima dos termos. Com
+  "18 anos ou mais", o app teria de ser 18+. Decidido em 10/10: 4+ na loja e termos sem idade mínima.
+- **Quem pode usar (Termos, seção 3; Política, seção 2):** quem cuida de um bebê (pais, responsáveis
+  legais e quem eles convidam). Quem tem menos de 18 anos, como mãe ou pai adolescente, usa com
+  autorização dos próprios pais ou responsável legal, que respondem pelo uso junto com a pessoa.
+- **Dados de quem tem menos de 18 anos:** tratados no melhor interesse dela (art. 14 da LGPD), com a
+  mesma proteção dos dados do bebê.
+- **Caixinhas do aceite no app:** saiu "Tenho 18 anos ou mais". Primeiro acesso: "Li a Política de
+  Privacidade e os Termos de Uso do Soneca. Se tenho menos de 18 anos, uso com autorização do meu
+  responsável." Tela "mudaram": "Li os dois. Se tenho menos de 18 anos, uso com autorização do meu
+  responsável."
+- **Pontos em aberto, mantidos como estão (decisão de 10/10):** se a autorização basta para quem tem
+  menos de 16 anos (que, pelo Código Civil, precisa ser representado, não só assistido) e o que o ECA
+  Digital (Lei 15.211/2025) pede de um app que admite adolescentes. Nada a mais no app por enquanto.
 
 ## 1.1 (10/10/2026): grátis agora, assinatura depois
 
-Arquivos: `termos/index.html` e `privacidade/index.html`. Só amplia direitos, por isso vale já, sem os
+Arquivos: `termos/1.1.html` e `privacidade/1.1.html`. Só amplia direitos, por isso vale já, sem os
 30 dias de aviso (Termos, seção 9).
 
 - **Pagamento no futuro.** O Soneca é grátis hoje, sem assinatura nem cartão. A assinatura pelas lojas vem
