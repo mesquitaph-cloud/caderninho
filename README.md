@@ -163,6 +163,10 @@ primeira versão; categoria Saúde e fitness (não Infantil), só Brasil e só i
 nuvem (Codemagic ou GitHub Actions). Falta ainda uma conta de demonstração para o revisor da Apple, que
 não recebe o código por e-mail.
 
+**App Store Connect (10/10):** conta de desenvolvedor aprovada (pessoa física, Team ID `JVL75DAS3X`).
+App criado como **"Soneca: rotina do bebê"** ("Soneca" sozinho já era de outro app), Bundle ID
+`br.app.soneca`, SKU `soneca-ios`. Embaixo do ícone, no iPhone, o nome continua "Soneca". Versão 1.0 grátis.
+
 ## LGPD: o que falta no app para a política valer
 
 **Versão 1.1 (10/10, no código, falta publicar e mandar ao advogado):** muda só a seção 6 dos Termos
