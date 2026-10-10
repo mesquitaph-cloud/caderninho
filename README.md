@@ -170,6 +170,7 @@ não recebe o código por e-mail.
 aviso) e, na Política, a seção 6 e a frase do fim da assinatura na 10. A 1.0 ficou em `termos/1.0.html` e
 `privacidade/1.0.html`, com link no rodapé. `TERMS_VERSION` subiu para 1.1: ao publicar, quem já aceitou a
 1.0 vê a tela "mudaram" e aceita de novo. A mudança só amplia direitos, por isso vale já, sem os 30 dias.
+O que cada versão tem e o passo a passo de uma versão nova: `VERSOES-TERMOS.md`.
 
 Política de Privacidade e Termos de Uso, versão 1.0 de 06/10/2026, em abas (privado; revisados pelo
 advogado em 07/10, sem mudanças): https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 —
