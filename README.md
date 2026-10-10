@@ -12,7 +12,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
-- Revisão de segurança das regras de acesso do banco (RLS).
+- Regras de acesso do banco (RLS): revisadas em 10/10 (abaixo); falta rodar o `supabase/016_revisao_acessos.sql`.
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
@@ -45,6 +45,21 @@ apaga pelo app, a conta e a hora vêm do banco; sair e ser removido tiram o auto
 dúvidas; apagar a conta e apagar a família continuam funcionando); o app no navegador com um Supabase de
 mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
 tela do bebê, páginas sem rolagem para o lado).
+
+## Revisão das regras de acesso (10/10, falta rodar o 016)
+
+Feita pelo conector, só lendo regras, funções, permissões e ligações (nenhum dado de família). Tudo certo:
+as 13 tabelas com RLS; quem não entrou não alcança tabela nem função; cada regra pede ser membro (ou quem
+criou, para convidar, remover e apagar); famílias e membros só nascem pelas funções `create_family` e
+`accept_invite`; as travas fixam autor, família e bebê ao editar; as ligações de bebê com família
+impedem um registro de apontar para o bebê de outra família; convites com 64 caracteres aleatórios e
+7 dias; o tempo real (registros, remédios e botões) segue as mesmas regras; nenhum arquivo guardado.
+
+- **Corrigir:** as seis primeiras tabelas ainda davam TRUNCATE, REFERENCES e TRIGGER a quem entrou.
+  Pela API do app não dá para usar, mas saem: `supabase/016_revisao_acessos.sql`, no SQL Editor,
+  quando quiser (não muda o app). Testado num Postgres local: tira só essas três, a leitura continua.
+- **Avisos do Supabase que ficam:** as 7 funções chamadas pelo app (é de propósito; todas conferem quem
+  chama) e "senhas vazadas" desligado, que só vale para a conta da revisão (a das famílias é por código).
 
 ## Conta de demonstração para a revisão da Apple (07/10, no código, falta publicar)
 
