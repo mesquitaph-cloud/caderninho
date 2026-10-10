@@ -12,7 +12,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
-- Revisão de segurança das regras de acesso do banco (RLS).
+- Regras de acesso do banco (RLS): revisadas em 10/10 (abaixo); falta rodar o `supabase/016_revisao_acessos.sql`.
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
@@ -45,6 +45,21 @@ apaga pelo app, a conta e a hora vêm do banco; sair e ser removido tiram o auto
 dúvidas; apagar a conta e apagar a família continuam funcionando); o app no navegador com um Supabase de
 mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
 tela do bebê, páginas sem rolagem para o lado).
+
+## Revisão das regras de acesso (10/10, falta rodar o 016)
+
+Feita pelo conector, só lendo regras, funções, permissões e ligações (nenhum dado de família). Tudo certo:
+as 13 tabelas com RLS; quem não entrou não alcança tabela nem função; cada regra pede ser membro (ou quem
+criou, para convidar, remover e apagar); famílias e membros só nascem pelas funções `create_family` e
+`accept_invite`; as travas fixam autor, família e bebê ao editar; as ligações de bebê com família
+impedem um registro de apontar para o bebê de outra família; convites com 64 caracteres aleatórios e
+7 dias; o tempo real (registros, remédios e botões) segue as mesmas regras; nenhum arquivo guardado.
+
+- **Corrigir:** as seis primeiras tabelas ainda davam TRUNCATE, REFERENCES e TRIGGER a quem entrou.
+  Pela API do app não dá para usar, mas saem: `supabase/016_revisao_acessos.sql`, no SQL Editor,
+  quando quiser (não muda o app). Testado num Postgres local: tira só essas três, a leitura continua.
+- **Avisos do Supabase que ficam:** as 7 funções chamadas pelo app (é de propósito; todas conferem quem
+  chama) e "senhas vazadas" desligado, que só vale para a conta da revisão (a das famílias é por código).
 
 ## Conta de demonstração para a revisão da Apple (07/10, no código, falta publicar)
 
@@ -163,7 +178,18 @@ primeira versão; categoria Saúde e fitness (não Infantil), só Brasil e só i
 nuvem (Codemagic ou GitHub Actions). Falta ainda uma conta de demonstração para o revisor da Apple, que
 não recebe o código por e-mail.
 
+**App Store Connect (10/10):** conta de desenvolvedor aprovada (pessoa física, Team ID `JVL75DAS3X`).
+App criado como **"Soneca: rotina do bebê"** ("Soneca" sozinho já era de outro app), Bundle ID
+`br.app.soneca`, SKU `soneca-ios`. Embaixo do ícone, no iPhone, o nome continua "Soneca". Versão 1.0 grátis.
+
 ## LGPD: o que falta no app para a política valer
+
+**Versão 1.1 (10/10, no código, falta publicar e mandar ao advogado):** muda só a seção 6 dos Termos
+("Grátis agora, assinatura depois": grátis hoje, aviso de 30 dias, famílias pioneiras grátis, preço só no
+aviso) e, na Política, a seção 6 e a frase do fim da assinatura na 10. A 1.0 ficou em `termos/1.0.html` e
+`privacidade/1.0.html`, com link no rodapé. `TERMS_VERSION` subiu para 1.1: ao publicar, quem já aceitou a
+1.0 vê a tela "mudaram" e aceita de novo. A mudança só amplia direitos, por isso vale já, sem os 30 dias.
+O que cada versão tem e o passo a passo de uma versão nova: `VERSOES-TERMOS.md`.
 
 Política de Privacidade e Termos de Uso, versão 1.0 de 06/10/2026, em abas (privado; revisados pelo
 advogado em 07/10, sem mudanças): https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 —
@@ -176,7 +202,7 @@ dias depois de criar a família são grátis, sem assinar nem cadastrar cartão;
 Cópia dos dados por e-mail em até 15 dias, sem botão por enquanto. Supabase no plano Free, sem cópias de
 segurança (a política diz isso): para cobrar, vale passar ao Pro e trocar a frase da seção 10. Preço R$ 9,90 por mês, uma assinatura para a família toda.
 Sem assinatura, depois do teste, a família só vê o que já anotou (e gera o relatório), sem registros novos.
-Sem regra de transição: o app das lojas começa sem usuários, e hoje só a família do Patrick usa o site. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+Decidido em 10/10: a versão 1.0 da App Store sai **grátis**, sem assinatura; a cobrança vem numa versão seguinte, com aviso no app e por e-mail 30 dias antes. **Famílias pioneiras** (criadas antes do início da cobrança) ficam grátis para sempre, com todos os membros, inclusive os que entrarem depois. O site sai do ar quando o app entrar na loja; só `/privacidade` e `/termos` continuam públicos (a Apple exige o endereço da política). O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 **Ainda falta:**
