@@ -14,7 +14,7 @@ const SCREENS = ['scrLoading','scrLogin','scrName','scrTerms','scrBabyOk','scrIn
 const KEEP_DAYS = 60;
 // Política de Privacidade e Termos de Uso (/privacidade e /termos). Ao mudar o texto, sobe a versão:
 // todos veem a tela de aceite de novo na próxima abertura.
-const TERMS_VERSION = '1.0', TERMS_SINCE = '06/10/2026';
+const TERMS_VERSION = '1.1', TERMS_SINCE = '10/10/2026';
 const PRIVACY_EMAIL = 'drpatrickharrisdemesquita@gmail.com';
 
 const st = {

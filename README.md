@@ -165,6 +165,12 @@ não recebe o código por e-mail.
 
 ## LGPD: o que falta no app para a política valer
 
+**Versão 1.1 (10/10, no código, falta publicar e mandar ao advogado):** muda só a seção 6 dos Termos
+("Grátis agora, assinatura depois": grátis hoje, aviso de 30 dias, famílias pioneiras grátis, preço só no
+aviso) e, na Política, a seção 6 e a frase do fim da assinatura na 10. A 1.0 ficou em `termos/1.0.html` e
+`privacidade/1.0.html`, com link no rodapé. `TERMS_VERSION` subiu para 1.1: ao publicar, quem já aceitou a
+1.0 vê a tela "mudaram" e aceita de novo. A mudança só amplia direitos, por isso vale já, sem os 30 dias.
+
 Política de Privacidade e Termos de Uso, versão 1.0 de 06/10/2026, em abas (privado; revisados pelo
 advogado em 07/10, sem mudanças): https://claude.ai/code/artifact/c14d4862-321a-4361-83ec-ac7e34696e24 —
 o Anexo B tem esta lista com os detalhes.
@@ -176,7 +182,7 @@ dias depois de criar a família são grátis, sem assinar nem cadastrar cartão;
 Cópia dos dados por e-mail em até 15 dias, sem botão por enquanto. Supabase no plano Free, sem cópias de
 segurança (a política diz isso): para cobrar, vale passar ao Pro e trocar a frase da seção 10. Preço R$ 9,90 por mês, uma assinatura para a família toda.
 Sem assinatura, depois do teste, a família só vê o que já anotou (e gera o relatório), sem registros novos.
-Sem regra de transição: o app das lojas começa sem usuários, e hoje só a família do Patrick usa o site. O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
+Decidido em 10/10: a versão 1.0 da App Store sai **grátis**, sem assinatura; a cobrança vem numa versão seguinte, com aviso no app e por e-mail 30 dias antes. **Famílias pioneiras** (criadas antes do início da cobrança) ficam grátis para sempre, com todos os membros, inclusive os que entrarem depois. O site sai do ar quando o app entrar na loja; só `/privacidade` e `/termos` continuam públicos (a Apple exige o endereço da política). O Soneca não envia nada a pediatras: a família gera o PDF e manda ela mesma. Telas novas passam
 antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 **Ainda falta:**
