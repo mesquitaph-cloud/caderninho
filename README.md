@@ -46,6 +46,26 @@ dúvidas; apagar a conta e apagar a família continuam funcionando); o app no na
 mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
 tela do bebê, páginas sem rolagem para o lado).
 
+## App do iPhone (Capacitor), começo (11/10, no código)
+
+O mesmo código do site, dentro de um app nativo, com os arquivos no próprio app (a Apple recusa app que
+só abre um site). Bundle ID `br.app.soneca`, só iPhone, só em pé, região pt-BR, criptografia isenta já
+declarada no `Info.plist`.
+
+- **Sem nada de fora:** a biblioteca do Supabase (`vendor/supabase-js-2.117.1.js`, a mesma versão, num
+  arquivo só) e a DM Sans (`fonts/`, variável, licença OFL) passam a vir do próprio site, no site também.
+  Saem o jsDelivr e o Google Fonts da política de segurança das páginas. Testado em 11/10 no navegador:
+  claro e escuro, a fonte carrega e nenhuma chamada sai para fora.
+- **Montar o app:** `npm install` uma vez; depois `npm run ios` (copia o site para `www/` e atualiza
+  `ios/`). O projeto do Xcode fica em `ios/App` (pacotes pelo Swift Package Manager, sem CocoaPods).
+  Compilar e enviar à Apple será na nuvem (Codemagic), porque não há Mac.
+- **Site:** continua sem build. O `.vercelignore` deixa fora da Vercel o que não é do site (`ios/`,
+  `scripts/`, `supabase/`, os `.md` e o `package.json`, para a Vercel não tentar instalar nada).
+
+**Ainda falta no app:** ícone de 1024 px e tela de abertura; links de convite e de indicação (hoje usam
+o endereço do site, que sai do ar); o PDF do relatório pelo compartilhar (o imprimir não funciona no
+app); o aviso do remédio com o app fechado; a compilação no Codemagic.
+
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
 Feita pelo conector, só lendo regras, funções, permissões e ligações (nenhum dado de família). Tudo certo:

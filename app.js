@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
+import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
