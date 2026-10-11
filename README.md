@@ -12,7 +12,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
-- Regras de acesso do banco (RLS): revisadas em 10/10 (abaixo); falta rodar o `supabase/016_revisao_acessos.sql`.
+- Regras de acesso do banco (RLS): revisadas em 10/10 e 016 rodado em 11/10 (abaixo).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
@@ -46,7 +46,7 @@ dúvidas; apagar a conta e apagar a família continuam funcionando); o app no na
 mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
 tela do bebê, páginas sem rolagem para o lado).
 
-## Revisão das regras de acesso (10/10, falta rodar o 016)
+## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
 Feita pelo conector, só lendo regras, funções, permissões e ligações (nenhum dado de família). Tudo certo:
 as 13 tabelas com RLS; quem não entrou não alcança tabela nem função; cada regra pede ser membro (ou quem
@@ -57,7 +57,7 @@ impedem um registro de apontar para o bebê de outra família; convites com 64 c
 
 - **Corrigir:** as seis primeiras tabelas ainda davam TRUNCATE, REFERENCES e TRIGGER a quem entrou.
   Pela API do app não dá para usar, mas saem: `supabase/016_revisao_acessos.sql`, no SQL Editor,
-  quando quiser (não muda o app). Testado num Postgres local: tira só essas três, a leitura continua.
+  rodado em 11/10 e conferido pelo conector (nenhuma tabela dá mais TRUNCATE; a leitura continua).
 - **Avisos do Supabase que ficam:** as 7 funções chamadas pelo app (é de propósito; todas conferem quem
   chama) e "senhas vazadas" desligado, que só vale para a conta da revisão (a das famílias é por código).
 
