@@ -16,6 +16,34 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
+## Ajustes de 11/10 (no código, falta publicar)
+
+Pedidos do Patrick antes da App Store. Prévia aprovada (privada): https://claude.ai/artifact/RxKax5wEmB2WgcXSJDgi8r
+
+Não muda o banco; basta publicar.
+
+- **Média diária de sono no mês:** o cartão Sono do resumo do mês vira "Sono por dia" (média dos dias que
+  terminaram e têm registro, como no painel da semana), com o total do mês e o maior sono seguido embaixo.
+  O texto para mandar ganha "(13h20 por dia)".
+- **Para a idade do bebê:** cartão novo no painel da semana (depois de "Média por dia") e no resumo do mês,
+  com a faixa de referência e o ponto da média. Sono por dia, com as sonecas (National Sleep Foundation,
+  2015): 14 a 17 h até 3 meses, 12 a 15 h de 4 a 11 meses, 11 a 14 h de 1 a 2 anos. Fraldas com xixi:
+  6 ou mais por dia a partir do 6º dia (Academia Americana de Pediatria). Cocô fica de fora (varia
+  demais). Só com o nascimento anotado; some depois dos 2 anos. Não diz acima nem abaixo.
+- **Marcos em faixa:** na aba do bebê › Marcos, as faixas da OMS dos seis marcos motores (WHO Motor
+  Development Study, 2006, percentis 1 a 99), de 0 a 18 meses, com a linha de hoje e o ponto do marco
+  anotado; a lista mostra a faixa ao lado. Sem nascimento, só as faixas, com o aviso de onde anotar.
+  As sugestões passam a usar os nomes da OMS ("Ficou em pé com apoio", "Andou com apoio", "Ficou em pé
+  sozinho", "Andou sozinho"); marcos antigos "Ficou em pé" e "Primeiros passos" ficam sem faixa.
+- **Alerta marrom:** "vazou da fralda" virou "aperte em caso de emergência".
+- **Fora:** o relatório para pediatra não muda. Avisos nos outros celulares ficaram para depois
+  (decidido em 11/10).
+- **Conferir no celular:** o mês e a semana com o cartão "Para a idade"; a aba do bebê com e sem
+  nascimento; a fralda com cocô.
+
+Testado em 11/10 no navegador com um Supabase de mentira: claro e escuro, 390 px, com e sem nascimento,
+mês atual e anterior, sem rolagem para o lado e sem erros; a conferência de identidade do `CLAUDE.md` passa.
+
 ## Política, Termos e aceites (07/10, no código, falta publicar)
 
 Prévias aprovadas (privadas): páginas https://claude.ai/artifact/LgiAW4qTtok63X8T5yw641 e aceites

@@ -1,5 +1,5 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
-// Só junta o que foi registrado: não avalia nem compara com outros bebês.
+// Só junta o que foi registrado: não avalia o bebê. A referência para a idade vem pronta em "ref".
 import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
@@ -200,7 +200,7 @@ const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden=
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
-export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
+export function weekHtml({ end, evs, sleep, now, show, metric, on, ref = '' }) {
   const k = shownKinds(on);
   const today = startOfDay(now), a = addDays(end, -6), z = Math.min(addDays(end, 1), now);
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
@@ -242,7 +242,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
     ${tile('--c-feed', 'Mamadas', nf(avg(d => d.feeds.length)), feedSub)}
     ${tile('--c-diaper', 'Fraldas', nf(avg(d => d.dia.length)), nf(avg(d => d.poo)) + ' com cocô')}
     ${k.pump ? tile('--c-pump', 'Ordenhas', nf(avg(d => d.pumps.length)), Math.round(avg(d => d.pumpMl)) + ' ml por dia') : ''}
-  </div></div>`;
+  </div></div>` + ref;
 
   h += `<div class="card"><h3>Dia a dia</h3><div class="mets">${Object.entries(METRICS).filter(([m]) => mets[m]).map(([m, v]) => `<button class="met" data-met="${m}" aria-pressed="${metric === m}">${v.name}</button>`).join('')}</div>
     <div class="svgbox">${barChart(all, now, metric)}</div>
@@ -254,7 +254,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on }) {
     <div><b>Maior intervalo entre cocôs</b><span>${pooGap ? spanLong(pooGap) : '—'}</span></div>
     <div><b>Peito nas mamadas</b><span>${sides.left + sides.right + sides.both ? `esquerdo ${sides.left}× · direito ${sides.right}× · os dois ${sides.both}×` : '—'}</span></div>
     ${k.pump ? `<div><b>Ordenhas</b><span>${pumps ? `${pumps} ${pumps === 1 ? 'ordenha' : 'ordenhas'} · ${pumpMl} ml no total` : '—'}</span></div>` : ''}
-  </div><p class="foot">O painel só junta o que foi registrado. Não avalia nem compara com outros bebês.</p></div>`;
+  </div><p class="foot">O painel só junta o que foi registrado. Não avalia o bebê.</p></div>`;
   h += longSleeps(sleep.out, evs, a, z);
   return h;
 }
