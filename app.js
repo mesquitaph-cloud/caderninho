@@ -4,7 +4,7 @@ import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayT
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
 import { clockHtml } from './clock.js';
-import { MILESTONES, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
+import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
@@ -448,7 +448,9 @@ function renderHome() {
     const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
     st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês', div }) : '';
-    $('monthView').innerHTML = monthHtml(s, { heading }) + divisionHtml(div, { name: b.name })
+    const ref = refHtml({ birth: b.birth_date, at: localDate(Math.min(end - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
+                          cap: 'Médias de ' + MESES_L[d.getMonth()].toLowerCase() + ', nos dias com registros.' });
+    $('monthView').innerHTML = monthHtml(s, { heading }) + ref + divisionHtml(div, { name: b.name })
       + (s.any ? shareHtml(st.shareText) : '');
     return;
   }
@@ -465,7 +467,9 @@ function renderHome() {
     const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn })
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn,
+                   ref: refHtml({ birth: b.birth_date, at: localDate(Math.min(wz - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
+                                  cap: 'Médias destes 7 dias, nos dias com registros.' }) })
         + divisionHtml(div, { name: b.name })
         + (st.shareText ? shareHtml(st.shareText, { heading: 'Mandar a semana para a família', note: 'Os totais destes 7 dias, para mandar no WhatsApp ou por mensagem.' }) : '');
     return;
@@ -656,7 +660,7 @@ function drawEntry() {
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
   if (k === 'diaper' && S.poo) h += `<div><div class="lbl">Tamanho do cocô <small>(opcional)</small></div><div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
-    <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>vazou da fralda</small></span></button></div>`;
+    <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>aperte em caso de emergência</small></span></button></div>`;
   S.wig = false;   // a sirene balança só no toque que liga o alerta, não a cada redesenho
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
@@ -1212,8 +1216,10 @@ function drawBabyPane() {
   h += '</div>';
   if (st.growthOk) {
     h += '<div class="sec" id="babyMilestones"><h4>Marcos</h4>';
+    h += `<div class="card"><h3>Marcos motores</h3><p class="cap">Faixa de idade em que bebês saudáveis chegam a cada marco, pela OMS.</p>${motorChart(b.birth_date, ms)}
+      <p class="foot">${b.birth_date ? '' : 'Anote o nascimento em Nome e nascimento para ver a idade de hoje e os marcos de ' + esc(b.name) + ' nas faixas. '}Cada bebê tem seu tempo. Quem avalia o desenvolvimento é o pediatra.</p></div>`;
     h += ms.length
-      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
+      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on), motorRange(m.title)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
       : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }

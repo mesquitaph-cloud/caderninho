@@ -1,13 +1,77 @@
 // Peso, comprimento e marcos: o que a família anota do bebê fora da rotina.
 // Peso e comprimento aparecem sobre as curvas da OMS (as da Caderneta da Criança, adotadas pela SBP)
 // quando o bebê tem nascimento e menina ou menino anotados. Só mostra as linhas e os pontos: não diz
-// se o bebê está acima ou abaixo de nada. Marcos não têm idade esperada.
-import { esc, ageText, fullDate, shortDate } from './util.js';
+// se o bebê está acima ou abaixo de nada. Os seis marcos motores da OMS e a média de sono e de fraldas
+// ganham a faixa de referência para a idade, do mesmo jeito: a faixa e o ponto, sem avaliar.
+import { DAY, esc, dur, ageText, fullDate, shortDate } from './util.js';
 import { WHO } from './who.js';
 
-// Sugestões para anotar um marco. Sem idade: cada bebê tem o seu tempo.
+// Sugestões para anotar um marco. Os motores levam os nomes dos marcos da OMS, para cair na faixa.
 export const MILESTONES = ['Sorriu', 'Firmou a cabeça', 'Rolou', 'Sentou sem apoio', 'Engatinhou', 'Primeiro dente',
-  'Primeira papinha', 'Ficou em pé', 'Primeiros passos', 'Primeira palavra'];
+  'Primeira papinha', 'Ficou em pé com apoio', 'Andou com apoio', 'Ficou em pé sozinho', 'Andou sozinho', 'Primeira palavra'];
+
+// Janelas da OMS para os seis marcos motores, do percentil 1 ao 99, em meses (WHO Motor Development
+// Study, 2006: as mesmas crianças das curvas de crescimento). Na ordem do começo da faixa.
+export const MOTOR = [['Sentou sem apoio', 3.8, 9.2], ['Ficou em pé com apoio', 4.8, 11.4], ['Engatinhou', 5.2, 13.5],
+  ['Andou com apoio', 5.9, 13.7], ['Ficou em pé sozinho', 6.9, 16.9], ['Andou sozinho', 8.2, 17.6]];
+const n1 = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+export const motorRange = title => { const m = MOTOR.find(([t]) => t === title); return m ? `faixa da OMS: ${n1(m[1])} a ${n1(m[2])} meses` : ''; };
+// Idade em meses (com fração) num dia "aaaa-mm-dd", ou hoje.
+const monthsOn = (birth, ymd) => ((ymd ? new Date(ymd + 'T00:00') : new Date()) - new Date(birth + 'T00:00')) / DAY / 30.4375;
+
+// As faixas de 0 a 18 meses, o nome em cima de cada uma. Com o nascimento, a linha de hoje e um ponto
+// no dia em que cada marco foi anotado.
+export function motorChart(birth, milestones) {
+  const W = 340, L = 6, R = 12, T = 6, rowH = 36, H = T + MOTOR.length * rowH + 26, x = m => +(L + Math.min(18, m) / 18 * (W - L - R)).toFixed(1);
+  const now = birth ? monthsOn(birth) : null;
+  let s = `<svg class="chart mchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Faixas da OMS para seis marcos motores, de 0 a 18 meses' + (now != null && now <= 18 ? '; hoje, ' + ageText(birth) : ''))}">`;
+  const ticks = [0, 3, 6, 9, 12, 15, 18];
+  for (const m of ticks) s += `<text class="ax" x="${x(m)}" y="${H - 8}" text-anchor="${m ? m === 18 ? 'end' : 'middle' : 'start'}">${m ? m + 'm' : '0'}</text>`;
+  MOTOR.forEach(([t, lo, hi], i) => {
+    const y = T + i * rowH, done = birth && milestones.find(m => m.title === t && m.happened_on >= birth);
+    // A grade só na altura da faixa, para não cortar o nome do marco.
+    s += ticks.map(m => `<line class="gl" x1="${x(m)}" x2="${x(m)}" y1="${y + 16}" y2="${y + 30}"/>`).join('');
+    s += `<text class="mn" x="${L}" y="${y + 12}">${esc(t)}</text><rect class="mb" x="${x(lo)}" y="${y + 18}" width="${(x(hi) - x(lo)).toFixed(1)}" height="10" rx="5"/>`;
+    if (done && monthsOn(birth, done.happened_on) <= 18) s += `<circle class="wp" cx="${x(monthsOn(birth, done.happened_on))}" cy="${y + 23}" r="6"><title>${esc(t + ': ' + fullDate(done.happened_on))}</title></circle>`;
+  });
+  if (now != null && now <= 18) s += MOTOR.map((_, i) => `<line class="today" x1="${x(now)}" x2="${x(now)}" y1="${T + i * rowH + 15}" y2="${T + i * rowH + 31 + (i === MOTOR.length - 1 ? 5 : 0)}"/>`).join('')
+    + `<text class="mn" x="${x(now) + (now > 15 ? -4 : 4)}" y="${H - 24}" text-anchor="${now > 15 ? 'end' : 'start'}">hoje</text>`;
+  return s + '</svg>';
+}
+
+// Sono por dia, contando as sonecas (National Sleep Foundation, 2015), pela idade em meses.
+const SLEEP_REF = [[4, 14, 17, '0 a 3 meses'], [12, 12, 15, '4 a 11 meses'], [24, 11, 14, '1 a 2 anos']];
+// Uma faixa de referência com o ponto da média. open: a faixa segue até o fim do eixo ("6 ou mais").
+function refBar(min, max, lo, hi, v, cls, ticks, unit, aria) {
+  const W = 300, x = t => +(8 + (Math.min(max, Math.max(min, t)) - min) / (max - min) * (W - 16)).toFixed(1);
+  return `<svg class="chart" viewBox="0 0 ${W} 34" role="img" aria-label="${esc(aria)}"><line class="rl" x1="8" x2="${W - 8}" y1="13" y2="13"/>`
+    + `<rect class="mb" x="${x(lo)}" y="7" width="${(x(hi) - x(lo)).toFixed(1)}" height="12" rx="6"/><circle class="${cls}" cx="${x(v)}" cy="13" r="6"/>`
+    + ticks.map((t, i) => `<text class="ax" x="${x(t)}" y="32" text-anchor="${i ? i === ticks.length - 1 ? 'end' : 'middle' : 'start'}">${t}${t === ticks.at(-1) ? unit : ''}</text>`).join('') + '</svg>';
+}
+const nf = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+// "Para a idade de Marina": a média de sono e de fraldas com xixi por dia ao lado da referência.
+// at: o último dia do período ("aaaa-mm-dd"), para a idade. sleep em ms e pee por dia, ou null sem dias.
+// Vazio sem o nascimento, sem dias com registro ou fora das idades com referência.
+export function refHtml({ birth, at, name, cap, sleep, pee }) {
+  if (!birth || at < birth || sleep == null) return '';
+  const age = monthsOn(birth, at), days = Math.round(age * 30.4375), sr = SLEEP_REF.find(r => age < r[0]);
+  let h = '';
+  if (sr) {
+    const [, lo, hi, when] = sr;
+    h += `<div class="ref"><div class="t"><span>Sono por dia</span><em>${esc(name)}: ${dur(sleep)}</em></div>`
+      + refBar(lo - 4, hi + 3, lo, hi, sleep / 36e5, 'rd-sleep', [lo - 4, lo, hi, hi + 3], ' h', `Referência de ${lo} a ${hi} horas; média de ${dur(sleep)}`)
+      + `<span class="s">Referência de ${when}: ${lo} a ${hi} h, com as sonecas</span></div>`;
+  }
+  if (days >= 6 && age < 24) {
+    const max = Math.max(12, Math.ceil(pee));
+    h += `<div class="ref"><div class="t"><span>Fraldas com xixi por dia</span><em>${esc(name)}: ${nf(pee)}</em></div>`
+      + refBar(0, max, 6, max, pee, 'rd-diaper', [0, 6, max], '', `Referência de 6 ou mais; média de ${nf(pee)}`)
+      + '<span class="s">Referência: 6 ou mais por dia</span></div>';
+  }
+  if (!h) return '';
+  return `<div class="card"><h3>Para a idade de ${esc(name)}</h3><p class="cap">${esc(ageText(birth, at) + '. ' + cap)}</p>${h}
+    <p class="foot">Referências gerais para bebês saudáveis: National Sleep Foundation e Academia Americana de Pediatria. Cada bebê tem seu ritmo; quem avalia é o pediatra.</p></div>`;
+}
 
 export const kg = g => (g / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' kg';
 // "5,2" ou "5.235" em kg; "5235" em gramas. Nulo se não der para ler.
