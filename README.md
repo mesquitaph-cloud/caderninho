@@ -650,8 +650,8 @@ mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google pree
 
 **Andamento (12/10):** Sign In with Apple marcado no App ID `br.app.soneca`. Google Cloud: projeto
 "soneca", Branding salvo (nome Soneca, sem logo, `soneca.app.br` com `/privacidade` e `/termos`, domínios
-`soneca.app.br` e `vrhgirpklyklhvzwdfiq.supabase.co`). Cliente Web criado (ID em `config.js`, chave
-secreta só no Supabase). Falta: publicar em Audience, cliente iOS, ligar Google e Apple no Supabase e
+`soneca.app.br` e `vrhgirpklyklhvzwdfiq.supabase.co`). Clientes Web e iOS criados (IDs em `config.js`; o
+esquema de volta do iOS no `Info.plist`; a chave secreta do Web só no Supabase). Falta: publicar em Audience, ligar Google e Apple no Supabase e
 o código do app (prévia: https://claude.ai/artifact/Xx3bceKbJaFe7cncctYYQx).
 
 **Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
