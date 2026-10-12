@@ -62,8 +62,16 @@ declarada no `Info.plist`.
 - **Site:** continua sem build. O `.vercelignore` deixa fora da Vercel o que não é do site (`ios/`,
   `scripts/`, `supabase/`, os `.md` e o `package.json`, para a Vercel não tentar instalar nada).
 
-**Ainda falta no app:** ícone de 1024 px e tela de abertura; links de convite e de indicação (hoje usam
-o endereço do site, que sai do ar); o PDF do relatório pelo compartilhar (o imprimir não funciona no
+- **Ícone e abertura (12/10):** prévia aprovada (privada): https://claude.ai/artifact/HQG9RW4a4cCcaJq3tHvGLN.
+  Ícone de 1024 px igual ao do site (céu do sono e capivara marrom), com a versão para ícones escuros do
+  iOS (fundo da noite, capivara azul-céu). Abertura com a capivara e o nome, creme de dia e cinza-azulado
+  de noite, trocando com o modo do celular. Gerados por `scripts/icones.mjs`.
+- **Convites (decidido em 12/10):** o link de convite abre o app; quem não tem o app cai numa página do
+  Soneca com o botão da App Store e "depois de instalar, toque no link de novo". O link de indicar leva
+  à App Store. Precisa do domínio próprio `soneca.app.br` (o Patrick vai comprar), que fica no ar só com
+  a Política, os Termos, a página de convite e o arquivo que liga o link ao app. Prévia antes de programar.
+
+**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o PDF do relatório pelo compartilhar (o imprimir não funciona no
 app); o aviso do remédio com o app fechado; a compilação no Codemagic.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
