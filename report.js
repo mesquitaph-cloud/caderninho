@@ -1,7 +1,7 @@
 // Resumo para mandar à família: os totais de uma semana ou de um mês, em tela e em texto para
 // compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê. Segue os botões
 // da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
-import { MIN, HOUR, esc, dur, shortDate, ICON } from './util.js';
+import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays } from './util.js';
 import { kg } from './growth.js';
 
 const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -21,8 +21,13 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
   const inP = sleeps.filter(([s0]) => s0 >= a && s0 < end);
   const A = ymd(a), Z = ymd(end - 1);
+  // Médias por dia: só dias que já terminaram e têm algum registro, como no painel da semana.
+  const full = []; for (let d = a; d < Math.min(z, startOfDay(now)); d = addDays(d, 1)) if (day.some(e => e.t >= d && e.t < addDays(d, 1))) full.push(d);
+  const perDay = f => full.length ? full.reduce((s, d) => s + f(d, addDays(d, 1)), 0) / full.length : null;
   return {
     any: day.length > 0,
+    sleepDay: perDay((d, d1) => sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, d1) - Math.max(x, d)), 0)),
+    peeDay: perDay((d, d1) => day.filter(e => e.kind === 'diaper' && e.pee && e.t >= d && e.t < d1).length),
     feeds: feeds.length, bottles: bottles.length, bottleMl: bottles.reduce((s, e) => s + (e.ml || 0), 0),
     breastMs: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0) * MIN,
     slept: sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, end) - Math.max(x, a)), 0),
@@ -47,7 +52,7 @@ function lines(s) {
   const out = [];
   const feedBits = [s.bottleMl ? liters(s.bottleMl) + ' na mamadeira' : '', s.breastMs ? hours(s.breastMs) + ' no peito' : ''].filter(Boolean);
   if (s.feeds) out.push(['feed', plural(s.feeds, 'mamada', 'mamadas') + (feedBits.length ? ': ' + feedBits.join(' e ') : '')]);
-  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '')]);
+  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.sleepDay ? ' (' + dur(s.sleepDay) + ' por dia)' : '') + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '')]);
   if (s.diapers) out.push(['diaper', plural(s.diapers, 'fralda', 'fraldas') + ', ' + s.poos + ' com cocô']);
   if (s.pumpMl) out.push(['pump', liters(s.pumpMl) + ' de leite ordenhado']);
   if (s.doses) out.push(['med', plural(s.doses, 'dose de remédio dada', 'doses de remédio dadas')]);
@@ -74,7 +79,10 @@ export function monthHtml(s, { heading }) {
   let h = `<div class="card"><h3>${esc(heading)}</h3><div class="tiles">`;
   h += s.bottleMl ? tile(TILE.feed, 'Na mamadeira', liters(s.bottleMl), 'em ' + plural(s.bottles, 'mamadeira', 'mamadeiras')) : '';
   h += tile(TILE.feed, 'Mamadas', String(s.feeds), s.breastMs ? hours(s.breastMs) + ' no peito' : '');
-  h += tile(TILE.sleep, 'Sono', hours(s.slept), s.longest ? 'maior seguido: ' + dur(s.longest[1] - s.longest[0]) : '');
+  // Sono: a média por dia em destaque (sem dia terminado ainda, o total); o total e o maior sono embaixo.
+  const longest = s.longest ? 'maior seguido: ' + dur(s.longest[1] - s.longest[0]) : '';
+  h += s.sleepDay != null ? tile(TILE.sleep, 'Sono por dia', dur(s.sleepDay), [hours(s.slept) + ' no mês', longest].filter(Boolean).join(' · '))
+    : tile(TILE.sleep, 'Sono', hours(s.slept), longest);
   h += tile(TILE.diaper, 'Fraldas', String(s.diapers), s.poos + ' com cocô');
   if (s.pumpMl) h += tile(TILE.pump, 'Ordenhado', liters(s.pumpMl), '');
   h += '</div>';

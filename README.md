@@ -13,8 +13,38 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Regras de acesso do banco (RLS): revisadas em 10/10 e 016 rodado em 11/10 (abaixo).
+- Sintomas novos (diarreia, muco nas fezes, urticária): rodar o `supabase/017_sintomas_novos.sql` antes
+  de publicar o app.
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
+
+## Ajustes de 11/10 (no código, falta publicar)
+
+Pedidos do Patrick antes da App Store. Prévia aprovada (privada): https://claude.ai/artifact/RxKax5wEmB2WgcXSJDgi8r
+
+Não muda o banco; basta publicar.
+
+- **Média diária de sono no mês:** o cartão Sono do resumo do mês vira "Sono por dia" (média dos dias que
+  terminaram e têm registro, como no painel da semana), com o total do mês e o maior sono seguido embaixo.
+  O texto para mandar ganha "(13h20 por dia)".
+- **Para a idade do bebê:** cartão novo no painel da semana (depois de "Média por dia") e no resumo do mês,
+  com a faixa de referência e o ponto da média. Sono por dia, com as sonecas (National Sleep Foundation,
+  2015): 14 a 17 h até 3 meses, 12 a 15 h de 4 a 11 meses, 11 a 14 h de 1 a 2 anos. Fraldas com xixi:
+  6 ou mais por dia a partir do 6º dia (Academia Americana de Pediatria). Cocô fica de fora (varia
+  demais). Só com o nascimento anotado; some depois dos 2 anos. Não diz acima nem abaixo.
+- **Marcos em faixa:** na aba do bebê › Marcos, as faixas da OMS dos seis marcos motores (WHO Motor
+  Development Study, 2006, percentis 1 a 99), de 0 a 18 meses, com a linha de hoje e o ponto do marco
+  anotado; a lista mostra a faixa ao lado. Sem nascimento, só as faixas, com o aviso de onde anotar.
+  As sugestões passam a usar os nomes da OMS ("Ficou em pé com apoio", "Andou com apoio", "Ficou em pé
+  sozinho", "Andou sozinho"); marcos antigos "Ficou em pé" e "Primeiros passos" ficam sem faixa.
+- **Alerta marrom:** "vazou da fralda" virou "aperte em caso de emergência".
+- **Fora:** o relatório para pediatra não muda. Avisos nos outros celulares ficaram para depois
+  (decidido em 11/10).
+- **Conferir no celular:** o mês e a semana com o cartão "Para a idade"; a aba do bebê com e sem
+  nascimento; a fralda com cocô.
+
+Testado em 11/10 no navegador com um Supabase de mentira: claro e escuro, 390 px, com e sem nascimento,
+mês atual e anterior, sem rolagem para o lado e sem erros; a conferência de identidade do `CLAUDE.md` passa.
 
 ## Política, Termos e aceites (07/10, no código, falta publicar)
 
@@ -498,7 +528,8 @@ duração e um vômito por Sintomas; anotar uma massagem; ver os losangos em "Co
   todos da família; muda ao vivo no celular dos outros. Desligar Remédio não para os remédios
   programados: o cartão continua aparecendo na hora da dose.
 - **Sintomas:** febre (temperatura opcional, de 34 a 43 °C), cólica e choro inconsolável (duração
-  opcional, em minutos), vômito, tosse, assadura, reação à vacina, incômodo dos dentes e outro (com o
+  opcional, em minutos), vômito, diarreia, muco nas fezes, tosse, assadura, urticária, reação à vacina,
+  incômodo dos dentes e outro (com o
   que aconteceu escrito). Vômito continua sendo o registro de vômito; o botão Vômito saiu da tela. O
   botão mostra o último sintoma do dia ("febre há 2h"). Na telinha: "O Caderninho só anota o que a
   família marcar; não avalia nem orienta."
