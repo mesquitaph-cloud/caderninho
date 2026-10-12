@@ -648,6 +648,12 @@ O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail con
 pessoa, com o mesmo e-mail, cai na mesma conta (o Supabase junta as duas formas de entrar), com as
 mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google preenchido, e pode trocar.
 
+**Andamento (12/10):** Sign In with Apple marcado no App ID `br.app.soneca`. Google Cloud: projeto
+"soneca", Branding salvo (nome Soneca, sem logo, `soneca.app.br` com `/privacidade` e `/termos`, domínios
+`soneca.app.br` e `vrhgirpklyklhvzwdfiq.supabase.co`). Cliente Web criado (ID em `config.js`, chave
+secreta só no Supabase). Falta: publicar em Audience, cliente iOS, ligar Google e Apple no Supabase e
+o código do app (prévia: https://claude.ai/artifact/Xx3bceKbJaFe7cncctYYQx).
+
 **Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
 
 1. **Google Cloud** (console.cloud.google.com): criar um projeto "Soneca". Em Google Auth Platform:
