@@ -12,9 +12,8 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
-- Regras de acesso do banco (RLS): revisadas em 10/10 (abaixo); falta rodar o `supabase/016_revisao_acessos.sql`.
-- Sintomas novos (diarreia, muco nas fezes, urticária): rodar o `supabase/017_sintomas_novos.sql` antes
-  de publicar o app.
+- Regras de acesso do banco (RLS): revisadas em 10/10 e 016 rodado em 11/10 (abaixo).
+- Sintomas novos (diarreia, muco nas fezes, urticária): `supabase/017_sintomas_novos.sql` já rodado (conferido pelo conector em 12/10).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
@@ -76,7 +75,35 @@ dúvidas; apagar a conta e apagar a família continuam funcionando); o app no na
 mentira, claro e escuro, 390 px (32 checagens: cada caixinha obrigatória, aceites gravados, membro sem a
 tela do bebê, páginas sem rolagem para o lado).
 
-## Revisão das regras de acesso (10/10, falta rodar o 016)
+## App do iPhone (Capacitor), começo (11/10, no código)
+
+O mesmo código do site, dentro de um app nativo, com os arquivos no próprio app (a Apple recusa app que
+só abre um site). Bundle ID `br.app.soneca`, só iPhone, só em pé, região pt-BR, criptografia isenta já
+declarada no `Info.plist`.
+
+- **Sem nada de fora:** a biblioteca do Supabase (`vendor/supabase-js-2.117.1.js`, a mesma versão, num
+  arquivo só) e a DM Sans (`fonts/`, variável, licença OFL) passam a vir do próprio site, no site também.
+  Saem o jsDelivr e o Google Fonts da política de segurança das páginas. Testado em 11/10 no navegador:
+  claro e escuro, a fonte carrega e nenhuma chamada sai para fora.
+- **Montar o app:** `npm install` uma vez; depois `npm run ios` (copia o site para `www/` e atualiza
+  `ios/`). O projeto do Xcode fica em `ios/App` (pacotes pelo Swift Package Manager, sem CocoaPods).
+  Compilar e enviar à Apple será na nuvem (Codemagic), porque não há Mac.
+- **Site:** continua sem build. O `.vercelignore` deixa fora da Vercel o que não é do site (`ios/`,
+  `scripts/`, `supabase/`, os `.md` e o `package.json`, para a Vercel não tentar instalar nada).
+
+- **Ícone e abertura (12/10):** prévia aprovada (privada): https://claude.ai/artifact/HQG9RW4a4cCcaJq3tHvGLN.
+  Ícone de 1024 px igual ao do site (céu do sono e capivara marrom), com a versão para ícones escuros do
+  iOS (fundo da noite, capivara azul-céu). Abertura com a capivara e o nome, creme de dia e cinza-azulado
+  de noite, trocando com o modo do celular. Gerados por `scripts/icones.mjs`.
+- **Convites (decidido em 12/10):** o link de convite abre o app; quem não tem o app cai numa página do
+  Soneca com o botão da App Store e "depois de instalar, toque no link de novo". O link de indicar leva
+  à App Store. Precisa do domínio próprio `soneca.app.br` (o Patrick vai comprar), que fica no ar só com
+  a Política, os Termos, a página de convite e o arquivo que liga o link ao app. Prévia antes de programar.
+
+**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o PDF do relatório pelo compartilhar (o imprimir não funciona no
+app); o aviso do remédio com o app fechado; a compilação no Codemagic.
+
+## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
 Feita pelo conector, só lendo regras, funções, permissões e ligações (nenhum dado de família). Tudo certo:
 as 13 tabelas com RLS; quem não entrou não alcança tabela nem função; cada regra pede ser membro (ou quem
@@ -87,7 +114,7 @@ impedem um registro de apontar para o bebê de outra família; convites com 64 c
 
 - **Corrigir:** as seis primeiras tabelas ainda davam TRUNCATE, REFERENCES e TRIGGER a quem entrou.
   Pela API do app não dá para usar, mas saem: `supabase/016_revisao_acessos.sql`, no SQL Editor,
-  quando quiser (não muda o app). Testado num Postgres local: tira só essas três, a leitura continua.
+  rodado em 11/10 e conferido pelo conector (nenhuma tabela dá mais TRUNCATE; a leitura continua).
 - **Avisos do Supabase que ficam:** as 7 funções chamadas pelo app (é de propósito; todas conferem quem
   chama) e "senhas vazadas" desligado, que só vale para a conta da revisão (a das famílias é por código).
 

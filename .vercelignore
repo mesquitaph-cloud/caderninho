@@ -1,0 +1,11 @@
+ios/
+node_modules/
+www/
+scripts/
+supabase/
+*.md
+.claude/
+package.json
+package-lock.json
+capacitor.config.json
+_privado/
