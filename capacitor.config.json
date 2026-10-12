@@ -5,5 +5,16 @@
   "ios": {
     "contentInset": "never",
     "scheme": "Soneca"
+  },
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "apple": true,
+        "facebook": false,
+        "twitter": false
+      },
+      "logLevel": 1
+    }
   }
 }

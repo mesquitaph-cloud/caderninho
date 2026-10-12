@@ -8,6 +8,8 @@
   --diaper:#FFD98A;--diaper-ink:#664700;--vomit:#F6A5A0;--vomit-ink:#7E2722;
   --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;
   --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;
+  /* Botões de entrar: cores exigidas pela Apple (preto de dia, branco de noite) e pelo Google (sempre claro) */
+  --apple-bg:#000000;--apple-ink:#FFFFFF;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#5E97CF;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
   /* Curvas da OMS no gráfico de crescimento */
   --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
@@ -22,6 +24,7 @@
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
+  --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}}
@@ -30,6 +33,7 @@
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
+  --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}
@@ -343,11 +347,15 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 .screen form{display:flex;flex-direction:column;gap:12px}
 .screen .field{font-size:18px}
 #codeIn{letter-spacing:.25em;text-align:center;font-size:24px}
-/* Entrar com Google: botão claro com o G colorido, como o Google pede, nos dois temas */
+/* Entrar com Apple e Google: mesmo tamanho e peso. Apple preta de dia e branca de noite; Google claro
+   com o G colorido nos dois temas, como cada um pede */
 .sso{display:flex;flex-direction:column;gap:12px}
-.google{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px solid #DADCE0;background:#FFFFFF;color:#1F1F1F;font-weight:500;font-size:17px}
+.apple,.google{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 16px;border-radius:16px;border:1.5px solid;font-weight:500;font-size:17px}
+.apple{background:var(--apple-bg);color:var(--apple-ink);border-color:var(--apple-bg)}
+.apple svg{width:19px;height:19px;flex:none;fill:currentColor;margin-top:-3px}
+.google{background:var(--google-bg);color:var(--google-ink);border-color:var(--google-line)}
 .google svg{width:20px;height:20px;flex:none}
-.google:disabled{opacity:.6}
+.apple:disabled,.google:disabled{opacity:.6}
 .or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:14px;font-weight:500}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .link{color:var(--link);font-weight:500;padding:8px;align-self:center}
