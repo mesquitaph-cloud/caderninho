@@ -13,6 +13,8 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
   indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
 - Regras de acesso do banco (RLS): revisadas em 10/10 (abaixo); falta rodar o `supabase/016_revisao_acessos.sql`.
+- Sintomas novos (diarreia, muco nas fezes, urticária): rodar o `supabase/017_sintomas_novos.sql` antes
+  de publicar o app.
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
   aceites no código, 015 rodado, falta publicar o app. O que ainda falta está na seção "LGPD" abaixo.
 
@@ -470,7 +472,8 @@ duração e um vômito por Sintomas; anotar uma massagem; ver os losangos em "Co
   todos da família; muda ao vivo no celular dos outros. Desligar Remédio não para os remédios
   programados: o cartão continua aparecendo na hora da dose.
 - **Sintomas:** febre (temperatura opcional, de 34 a 43 °C), cólica e choro inconsolável (duração
-  opcional, em minutos), vômito, tosse, assadura, reação à vacina, incômodo dos dentes e outro (com o
+  opcional, em minutos), vômito, diarreia, muco nas fezes, tosse, assadura, urticária, reação à vacina,
+  incômodo dos dentes e outro (com o
   que aconteceu escrito). Vômito continua sendo o registro de vômito; o botão Vômito saiu da tela. O
   botão mostra o último sintoma do dia ("febre há 2h"). Na telinha: "O Caderninho só anota o que a
   família marcar; não avalia nem orienta."

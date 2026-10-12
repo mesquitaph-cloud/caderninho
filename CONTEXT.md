@@ -93,7 +93,8 @@ _Evite_: golfada, regurgitação
 
 **Sintoma**:
 Registro do botão Sintomas: febre (com a temperatura, se quiser), cólica ou choro inconsolável (com
-quanto tempo durou, se quiser), tosse, assadura, reação à vacina, incômodo dos dentes ou outro, com o
+quanto tempo durou, se quiser), diarreia, muco nas fezes, tosse, assadura, urticária, reação à vacina,
+incômodo dos dentes ou outro, com o
 que aconteceu escrito. O Soneca só anota; não avalia nem orienta. Fica fora do resumo para mandar.
 _Evite_: doença, diagnóstico, mal-estar, intercorrência
 

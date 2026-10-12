@@ -600,8 +600,9 @@ let S = null;   // estado do painel aberto (null = fechado)
 const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio',
                 symptom:'Sintomas', care:'Cuidados' };
 // As opções do botão Sintomas, na ordem da tela. Vômito grava o registro de vômito de sempre.
-const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'], ['tosse', 'Tosse'],
-                      ['assadura', 'Assadura'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
+const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'],
+                      ['diarreia', 'Diarreia'], ['muco', 'Muco nas fezes'], ['tosse', 'Tosse'], ['assadura', 'Assadura'],
+                      ['urticaria', 'Urticária'], ['vacina', 'Reação à vacina'], ['dentes', 'Incômodo dos dentes'], ['outro', 'Outro']];
 const withDuration = sym => sym === 'colica' || sym === 'choro';
 // Atalhos de minutos no tummy time e no banho de sol.
 const CARE_CHIPS = [3, 5, 10, 15];

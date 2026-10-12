@@ -99,8 +99,9 @@ function sleepBefore(evs, wake) {
 }
 // Sintomas: o que a família marca no botão Sintomas. Vômito também está lá, mas grava o registro
 // de vômito de sempre. "Outro": o que aconteceu vai na observação.
-export const SYMPTOM = { febre: 'Febre', colica: 'Cólica', choro: 'Choro inconsolável', tosse: 'Tosse', assadura: 'Assadura',
-                         vacina: 'Reação à vacina', dentes: 'Incômodo dos dentes', outro: 'Outro' };
+export const SYMPTOM = { febre: 'Febre', colica: 'Cólica', choro: 'Choro inconsolável', diarreia: 'Diarreia', muco: 'Muco nas fezes',
+                         tosse: 'Tosse', assadura: 'Assadura', urticaria: 'Urticária', vacina: 'Reação à vacina',
+                         dentes: 'Incômodo dos dentes', outro: 'Outro' };
 // Tamanho do cocô, opcional, na fralda com cocô. O alerta marrom (vazou da fralda) é à parte.
 export const POO_SIZE = { pequeno: 'pequeno', medio: 'médio', grande: 'grande', gigante: 'gigante' };
 // Cuidados: o que a família escolhe no botão Cuidados, na ordem da tela. Tummy time e banho de sol
