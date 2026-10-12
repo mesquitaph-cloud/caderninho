@@ -680,8 +680,6 @@ código por e-mail, que continua igual. Apple preta de dia e branca de noite; Go
 
 **Falta:**
 
-- Trocar a chave secreta do cliente Web (ficou escrita numa conversa): "Add secret" no Google, colar no
-  Supabase e desativar a antiga.
 - Compilar no Codemagic e testar no iPhone: entrar com a Apple e com o Google; com o mesmo e-mail que já
   usava o código, ver as mesmas famílias; fechar a janela sem entrar e ver que nada acontece.
 - Apagar a conta: a Apple pede que, ao apagar uma conta criada com a Apple, o acesso seja cancelado do
