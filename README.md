@@ -97,10 +97,10 @@ declarada no `Info.plist`.
   de noite, trocando com o modo do celular. Gerados por `scripts/icones.mjs`.
 - **Convites (decidido em 12/10):** o link de convite abre o app; quem não tem o app cai numa página do
   Soneca com o botão da App Store e "depois de instalar, toque no link de novo". O link de indicar leva
-  à App Store. Usa o domínio próprio `soneca.web.br` (comprado pelo Patrick em 12/10), que fica no ar só com
+  à App Store. Usa o domínio próprio `soneca.app.br` (comprado pelo Patrick em 12/10), que fica no ar só com
   a Política, os Termos, a página de convite e o arquivo que liga o link ao app. Prévia antes de programar.
 
-**Domínio `soneca.web.br` (12/10):** falta ligar na Vercel (Settings › Domains) e criar no registro.br os
+**Domínio `soneca.app.br` (12/10):** falta ligar na Vercel (Settings › Domains) e criar no registro.br os
 registros que a Vercel mostrar. Depois: `caderninho-bay.vercel.app` passa a levar ao domínio novo (a
 Política, seção 13, já promete isso), trocar o endereço da política na App Store Connect e o texto da
 seção 13 numa próxima versão da Política.
