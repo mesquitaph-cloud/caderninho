@@ -1,0 +1,40 @@
+# Codemagic: compila o app do iPhone e manda para o TestFlight. Só roda quando alguém clica em
+# "Start new build" (sem gatilho automático). A chave da App Store Connect fica no Codemagic, em
+# Integrations → Developer Portal, com o nome "soneca_asc"; nada de segredo neste arquivo.
+workflows:
+  ios-testflight:
+    name: Soneca iPhone (TestFlight)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: soneca_asc
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: br.app.soneca
+      vars:
+        APP_STORE_APPLE_ID: 6821448149
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Montar o site e atualizar o projeto do iPhone
+        # Copia o site para www/ e roda o cap sync (que também tira o Facebook do plugin de login)
+        script: npm run ios
+      - name: Assinatura (certificado e perfil gerados pelo Codemagic)
+        script: xcode-project use-profiles
+      - name: Compilar
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --archive-xcargs "CURRENT_PROJECT_VERSION=$((LATEST + 1))"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
