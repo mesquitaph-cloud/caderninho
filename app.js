@@ -1,5 +1,5 @@
 import { createClient } from './vendor/supabase-js-2.117.1.js';
-import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, DEMO_EMAIL_SHA256 } from './config.js';
+import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
 import { weekHtml, dayLine } from './week.js';
@@ -73,14 +73,14 @@ async function boot() {
   const googleFailed = /[#&]error/.test(location.hash);
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errGoogle', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
+    if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errSso', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
     show('scrLogin'); if (gone) toast('Conta apagada'); return;
   }
   st.user = session.user;
 
   const { data: prof } = await sb.from('profiles').select('id,display_name').eq('id', st.user.id).maybeSingle();
   if (!prof) {
-    // Quem entrou pelo Google já vem com o nome; dá para trocar antes de continuar.
+    // Quem entrou pelo Google ou pela Apple já vem com o nome; dá para trocar antes de continuar.
     const meta = st.user.user_metadata || {};
     if (!$('nameIn').value) $('nameIn').value = String(meta.full_name || meta.name || '').trim().slice(0, 40);
     show('scrName'); $('nameIn').focus(); return;
@@ -152,13 +152,62 @@ $('fPass').addEventListener('submit', async e => {
   show('scrLoading'); boot();
 });
 $('backPass').onclick = () => { $('fPass').hidden = true; $('fEmail').hidden = false; };
-// Entrar com Google: sai do app para o Google e volta para cá já com a sessão (o convite, se houver,
-// ficou guardado no celular). A mesma pessoa, com o mesmo e-mail, cai na mesma conta do código.
-$('sso').hidden = !GOOGLE_LOGIN;
+// Entrar com Google e Apple. No app do iPhone, pela janela do próprio iPhone (plugin SocialLogin): o
+// token volta para o app e o Supabase confere. No site, só o Google: sai para o Google e volta para cá
+// já com a sessão (o convite, se houver, ficou guardado no celular). A mesma pessoa, com o mesmo e-mail,
+// cai na mesma conta do código; quem escolhe "Ocultar meu e-mail" na Apple vira uma conta nova.
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+const social = NATIVE ? window.Capacitor.registerPlugin('SocialLogin') : null;
+let socialReady = null;
+$('sso').hidden = !GOOGLE_LOGIN && !(NATIVE && APPLE_LOGIN);
+$('googleBtn').hidden = !GOOGLE_LOGIN;
+$('appleBtn').hidden = !(NATIVE && APPLE_LOGIN);
+const SSO_NAME = { google: 'o Google', apple: 'a Apple' };
+
+// Número de uso único contra token reaproveitado: o provedor recebe o SHA-256, o Supabase o original.
+async function nonces() {
+  const raw = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, '0')).join('');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  return { raw, hashed: [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('') };
+}
+
+async function nativeLogin(provider, btn) {
+  err('errSso'); busy(btn, true);
+  try {
+    socialReady ||= social.initialize({
+      google: { iOSClientId: GOOGLE_IOS_CLIENT_ID, iOSServerClientId: GOOGLE_WEB_CLIENT_ID, mode: 'online' },
+      apple: { clientId: 'br.app.soneca' },
+    });
+    await socialReady;
+    const { raw, hashed } = await nonces();
+    const scopes = provider === 'apple' ? ['email', 'name'] : ['email', 'profile'];
+    const { result } = await social.login({ provider, options: { scopes, nonce: hashed } });
+    if (!result?.idToken) throw new Error('sem token');
+    const { error } = await sb.auth.signInWithIdToken({ provider, token: result.idToken, nonce: raw });
+    if (error) throw error;
+    // A Apple manda o nome só na primeira vez: guarda para já vir preenchido em "Como você quer aparecer".
+    const p = result.profile || {};
+    const full = [p.givenName, p.familyName].filter(Boolean).join(' ').trim();
+    if (provider === 'apple' && full) await sb.auth.updateUser({ data: { full_name: full } });
+    // Guarda a chave de acesso da Apple, para cancelar o acesso se a pessoa apagar a conta (exigência
+    // da Apple). Se falhar, a entrada segue: só o cancelamento fica para trás.
+    const code = result.authorizationCode || result.accessToken?.token;
+    if (provider === 'apple' && code) await sb.functions.invoke('apple-login', { body: { action: 'save', code } }).catch(() => {});
+    busy(btn, false);
+    show('scrLoading'); boot();
+  } catch (e) {
+    busy(btn, false); socialReady = null;
+    if (/cancel/i.test(e?.message || '')) return; // fechou a janela: fica na entrada, sem aviso
+    err('errSso', 'Não foi possível entrar com ' + SSO_NAME[provider] + '. Tente de novo ou use o código por e-mail.');
+  }
+}
+
+$('appleBtn').onclick = () => nativeLogin('apple', $('appleBtn'));
 $('googleBtn').onclick = async () => {
-  err('errGoogle'); busy($('googleBtn'), true);
+  if (NATIVE) return nativeLogin('google', $('googleBtn'));
+  err('errSso'); busy($('googleBtn'), true);
   const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/' } });
-  if (error) { busy($('googleBtn'), false); err('errGoogle', 'Não foi possível abrir o Google. Confira a conexão e tente de novo.'); }
+  if (error) { busy($('googleBtn'), false); err('errSso', 'Não foi possível abrir o Google. Confira a conexão e tente de novo.'); }
 };
 
 /* ---------- nome de exibição ---------- */
@@ -1378,6 +1427,10 @@ function printReport() {
   const t = document.title; document.title = pdfName(st.baby, Date.now());
   const back = () => { document.title = t; };
   window.addEventListener('afterprint', back, { once: true }); setTimeout(back, 60000);
+  // No app do iPhone, o window.print() não faz nada: a folha de imprimir do iPhone (com "Salvar em
+  // Arquivos" e "Compartilhar") vem pelo plugin Printer, com as mesmas regras de impressão da página.
+  if (NATIVE) return window.Capacitor.registerPlugin('Printer').printWebView({ name: document.title })
+    .catch(() => toast('Não foi possível abrir o PDF. Tente de novo.')).finally(back);
   window.print();
 }
 function openReportView() { paintReport(); S = null; $('scrim').hidden = true; $('sheet').hidden = true; $('rpView').hidden = false; $('rpView').scrollTop = 0; $('rpBack').focus(); }
@@ -1676,6 +1729,8 @@ async function accountAction(a, btn) {
   if (a !== 'accDel') return;
   if (!S.confirm) { S.confirm = true; return drawAccount(); }
   busy(btn, true);
+  // Quem entrou com a Apple: cancela o acesso do Soneca na Apple antes de apagar (para os outros, não faz nada).
+  await sb.functions.invoke('apple-login', { body: { action: 'revoke' } }).catch(() => {});
   const { error } = await sb.rpc('delete_my_account');
   if (error) { S.err = 'Não foi possível apagar a conta. Confira a conexão e tente de novo.'; S.confirm = false; return drawAccount(); }
   // O login já não existe no banco: basta esquecer a sessão neste celular.

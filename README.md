@@ -6,7 +6,7 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Front:** HTML/CSS/JS puro, sem build. Publicado no Vercel.
 - **Back:** Supabase (região São Paulo) — banco, login por código no e-mail, sincronização.
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
-  Entrar com Google está pronto no código, desligado em `config.js` até a configuração abaixo.
+  Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
 ## Pendências antes de convidar amigos
 
@@ -87,7 +87,11 @@ declarada no `Info.plist`.
   claro e escuro, a fonte carrega e nenhuma chamada sai para fora.
 - **Montar o app:** `npm install` uma vez; depois `npm run ios` (copia o site para `www/` e atualiza
   `ios/`). O projeto do Xcode fica em `ios/App` (pacotes pelo Swift Package Manager, sem CocoaPods).
-  Compilar e enviar à Apple será na nuvem (Codemagic), porque não há Mac.
+  Compilar e enviar à Apple é na nuvem (Codemagic), porque não há Mac: `codemagic.yaml` (12/10), só ao
+  clicar em "Start new build". Faz `npm ci`, `npm run ios`, assina com a chave da App Store Connect
+  cadastrada no Codemagic como `soneca.asc` (Integrations → Developer Portal) e manda para o TestFlight (teste
+  interno, sem revisão beta), com o número da compilação seguinte ao último do TestFlight. O esquema `App` fica compartilhado em
+  `ios/App/App.xcodeproj/xcshareddata`.
 - **Site:** continua sem build. O `.vercelignore` deixa fora da Vercel o que não é do site (`ios/`,
   `scripts/`, `supabase/`, os `.md` e o `package.json`, para a Vercel não tentar instalar nada).
 
@@ -100,8 +104,13 @@ declarada no `Info.plist`.
   à App Store. Precisa do domínio próprio `soneca.app.br` (o Patrick vai comprar), que fica no ar só com
   a Política, os Termos, a página de convite e o arquivo que liga o link ao app. Prévia antes de programar.
 
-**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o PDF do relatório pelo compartilhar (o imprimir não funciona no
-app); o aviso do remédio com o app fechado; a compilação no Codemagic.
+**Relatório em PDF no app (13/10, no código):** "Emitir PDF" abre a folha de imprimir do iPhone pelo plugin
+`@capgo/capacitor-printer` (`printWebView`, com as mesmas regras de impressão da página), que tem "Salvar em
+Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir no iPhone se a folha sai igual.
+
+**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md` (rascunho de 13/10).
+
+**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o aviso do remédio com o app fechado; a compilação no Codemagic.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
@@ -230,14 +239,14 @@ remédios no painel da semana.
 **Rumo à App Store (07/10).** Trilha com caixinhas, pontos e níveis (privada; o que se marca fica salvo
 na página): https://claude.ai/artifact/W5WUjezWR1dyASWTb9u9Wv. Decidido: conta de desenvolvedor da Apple
 como pessoa física, feita pelo iPad (dá para trocar para empresa depois, pelo suporte da Apple); no
-iPhone, lançar só com o código por e-mail, sem Google, para não precisar de Entrar com a Apple na
-primeira versão; categoria Saúde e fitness (não Infantil), só Brasil e só iPhone. Sem Mac, compilar na
+iPhone, lançar só com o código por e-mail (mudou em 12/10: a 1.0 sai com Google e Apple, seção
+"Entrar com Google e Apple"); categoria Saúde e fitness (não Infantil), só Brasil e só iPhone. Sem Mac, compilar na
 nuvem (Codemagic ou GitHub Actions). Falta ainda uma conta de demonstração para o revisor da Apple, que
 não recebe o código por e-mail.
 
 **App Store Connect (10/10):** conta de desenvolvedor aprovada (pessoa física, Team ID `JVL75DAS3X`).
 App criado como **"Soneca: rotina do bebê"** ("Soneca" sozinho já era de outro app), Bundle ID
-`br.app.soneca`, SKU `soneca-ios`. Embaixo do ícone, no iPhone, o nome continua "Soneca". Versão 1.0 grátis.
+`br.app.soneca`, SKU `soneca-ios`, Apple ID (o número do app na App Store) `6821448149`. Embaixo do ícone, no iPhone, o nome continua "Soneca". Versão 1.0 grátis.
 
 ## LGPD: o que falta no app para a política valer
 
@@ -642,37 +651,67 @@ embaixo.
 **No celular:** anotar uma mamada digitando 1447 (vira 14:47); segurar o + dos minutos; num remédio
 com horários fixos, tocar num horário, mudar e salvar. Conferir com teclado de Android e de iPhone.
 
-### Entrar com Google
+### Entrar com Google e Apple (12/10, no código, falta compilar e testar no iPhone)
 
-O botão "Continuar com o Google" fica acima do e-mail; o código por e-mail continua igual. A mesma
-pessoa, com o mesmo e-mail, cai na mesma conta (o Supabase junta as duas formas de entrar), com as
-mesmas famílias. Quem entra pela primeira vez já vem com o nome do Google preenchido, e pode trocar.
+Prévia aprovada (privada): https://claude.ai/artifact/Xx3bceKbJaFe7cncctYYQx. Na entrada, "Continuar com a
+Apple" (só no app do iPhone) e "Continuar com o Google" (no app e no site), com o mesmo tamanho, acima do
+código por e-mail, que continua igual. Apple preta de dia e branca de noite; Google sempre claro.
 
-**Para ligar, nesta ordem (é tudo com você; o código já está pronto):**
+- **No app do iPhone:** os dois abrem a janela do próprio iPhone (plugin `@capgo/capacitor-social-login`,
+  com Facebook e Twitter desligados no `capacitor.config.json`). O token volta para o app e vai para o
+  Supabase (`signInWithIdToken`), com um número de uso único (nonce). O plugin é chamado pela ponte do
+  Capacitor (`vendor/capacitor-core-8.5.3.js`, a mesma versão do `@capacitor/core`, carregada antes do
+  `app.js`; no site ela só se apresenta como "web").
+- **No site:** só o Google, como antes (sai para o Google e volta com a sessão).
+- **Nome:** a Apple manda o nome só na primeira entrada; ele é guardado e já vem preenchido em "Como você
+  quer aparecer para a família?", como o do Google.
+- **Contas:** o Supabase junta pelo e-mail. Quem já entrava com o código e usa Google ou Apple com o
+  mesmo e-mail cai na mesma conta, com as mesmas famílias, sem fazer nada. Quem escolhe "Ocultar meu
+  e-mail" na Apple vira uma conta nova, sem as famílias (pode voltar ao código, ou ser convidado de novo).
+- **Ligar e desligar:** `GOOGLE_LOGIN` e `APPLE_LOGIN` em `config.js` (os dois ligados).
+- **Compilar:** `npm ci` e `npm run ios` antes do Xcode (o `cap sync` tira o Facebook do plugin). Sign In
+  with Apple está nas permissões do app (`ios/App/App/App.entitlements`); o endereço de volta do Google no
+  `Info.plist`.
 
-1. **Google Cloud** (console.cloud.google.com): criar um projeto "Soneca". Em Google Auth Platform:
-   - Identidade visual: nome "Soneca", e-mail de suporte e, em domínios autorizados,
-     `vrhgirpklyklhvzwdfiq.supabase.co` e o domínio do app.
-   - Público: externo, e "Publicar app" (em teste, só entra quem estiver na lista de testadores). Só
-     com e-mail e perfil, o Google não pede verificação.
-   - Clientes → Criar cliente → Aplicativo da Web. Origens JavaScript: o endereço do app (ex.:
-     `https://caderninho-bay.vercel.app`). URI de redirecionamento:
-     `https://vrhgirpklyklhvzwdfiq.supabase.co/auth/v1/callback`. Copiar o ID e a chave secreta.
-2. **Supabase:** Authentication → Sign In / Providers → Google: ligar, colar o ID e a chave, salvar.
-   Em Authentication → URL Configuration, conferir o Site URL e pôr o endereço do app com `/` no fim
-   em Redirect URLs.
-3. **App:** em `config.js`, `GOOGLE_LOGIN = true`, e publicar.
-4. **Conferir:** entrar com Google no navegador do celular; entrar com uma conta Google de mesmo
-   e-mail que já usava o código e ver as mesmas famílias; cancelar no Google e ver o aviso.
+**Configuração (feita em 12/10):**
+
+1. **Apple Developer:** Sign In with Apple marcado no App ID `br.app.soneca` (primário). O perfil de
+   assinatura do Codemagic precisa ser gerado de novo depois disso.
+2. **Google Cloud,** projeto "soneca", Google Auth Platform: Branding (nome Soneca, sem logo, para não
+   precisar de verificação; `https://soneca.app.br` com `/privacidade` e `/termos`; domínios
+   `soneca.app.br` e `vrhgirpklyklhvzwdfiq.supabase.co`), público externo publicado, e dois clientes:
+   Web (origem `https://soneca.app.br`, redirecionamento
+   `https://vrhgirpklyklhvzwdfiq.supabase.co/auth/v1/callback`) e iOS (Bundle ID `br.app.soneca`, Team
+   ID `JVL75DAS3X`). IDs em `config.js`; a chave secreta do Web fica só no Supabase.
+3. **Supabase,** Sign In / Providers: Google com os dois IDs (Web primeiro, separados por vírgula), a
+   chave secreta do Web e "Skip nonce checks" ligado; Apple com `br.app.soneca` em Client IDs, sem chave.
+   URL Configuration: Site URL `https://soneca.app.br` e `https://soneca.app.br/` em Redirect URLs.
+
+**Falta:**
+
+- Compilar no Codemagic e testar no iPhone: entrar com a Apple e com o Google; com o mesmo e-mail que já
+  usava o código, ver as mesmas famílias; fechar a janela sem entrar e ver que nada acontece.
+- Cancelar o acesso da Apple ao apagar a conta (exigência da Apple; no código desde 13/10, falta ligar):
+  ao entrar com a Apple, o app manda o código da Apple para a função `apple-login`
+  (`supabase/functions/apple-login/index.ts`), que troca pela chave de acesso e guarda em
+  `public.apple_tokens` (tabela fechada: só a função alcança). Ao apagar a conta, o app pede à função
+  que cancele o acesso na Apple antes do `delete_my_account`; quem não entrou com a Apple não muda nada.
+  Se a função falhar, a entrada e o apagar seguem. Ligado em 13/10 (passos 1 a 4 feitos; tabela conferida
+  pelo conector: RLS ligado, ninguém do app lê, vazia). Falta o passo 5. Para ligar:
+  1. Apple Developer → Keys → + → "Soneca Apple Login", Sign in with Apple com o App ID
+     `br.app.soneca`. Baixar o .p8 (uma vez só) e anotar o Key ID.
+  2. Supabase → Edge Functions → Secrets: `APPLE_TEAM_ID` = `JVL75DAS3X`, `APPLE_KEY_ID` e
+     `APPLE_PRIVATE_KEY` (o .p8 inteiro, com as linhas BEGIN e END).
+  3. SQL Editor: rodar `supabase/018_chave_da_apple.sql` e a conferência do fim do arquivo.
+  4. Supabase → Edge Functions → Deploy a new function → Via editor: nome `apple-login`, colar o
+     `index.ts`, deixar "Verify JWT" ligado, Deploy.
+  5. Testar no iPhone: entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de
+     Ajustes → (seu nome) → Entrar com a Apple. Pelo conector, só contar as linhas de `apple_tokens`.
 
 **Cuidados:**
 
-- **iPhone com o app instalado:** testar antes de avisar as famílias. O login sai do app para o
-  Google e pode terminar no Safari, e não no app instalado (o mesmo risco de um link de login por
-  e-mail). Se acontecer, o caminho no app instalado continua sendo o código.
-- A tela do Google mostra "vrhgirpklyklhvzwdfiq.supabase.co" como destino. Para mostrar o nome do app
-  é preciso um domínio próprio no Supabase (Custom Domain, pago).
-- Apple exige conta de desenvolvedor paga; ficou para depois.
+- A tela do Google no site mostra "vrhgirpklyklhvzwdfiq.supabase.co" como destino. Para mostrar o nome
+  do app é preciso um domínio próprio no Supabase (Custom Domain, pago). No app do iPhone, não aparece.
 - Menos códigos por e-mail aliviam o limite do Gmail, mas não resolvem a primeira pendência: quem entra
   por e-mail e os convites continuam dependendo do remetente.
 
