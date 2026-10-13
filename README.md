@@ -104,8 +104,13 @@ declarada no `Info.plist`.
   à App Store. Precisa do domínio próprio `soneca.app.br` (o Patrick vai comprar), que fica no ar só com
   a Política, os Termos, a página de convite e o arquivo que liga o link ao app. Prévia antes de programar.
 
-**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o PDF do relatório pelo compartilhar (o imprimir não funciona no
-app); o aviso do remédio com o app fechado; a compilação no Codemagic.
+**Relatório em PDF no app (13/10, no código):** "Emitir PDF" abre a folha de imprimir do iPhone pelo plugin
+`@capgo/capacitor-printer` (`printWebView`, com as mesmas regras de impressão da página), que tem "Salvar em
+Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir no iPhone se a folha sai igual.
+
+**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md` (rascunho de 13/10).
+
+**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o aviso do remédio com o app fechado; a compilação no Codemagic.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 

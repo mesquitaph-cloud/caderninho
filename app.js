@@ -1427,6 +1427,10 @@ function printReport() {
   const t = document.title; document.title = pdfName(st.baby, Date.now());
   const back = () => { document.title = t; };
   window.addEventListener('afterprint', back, { once: true }); setTimeout(back, 60000);
+  // No app do iPhone, o window.print() não faz nada: a folha de imprimir do iPhone (com "Salvar em
+  // Arquivos" e "Compartilhar") vem pelo plugin Printer, com as mesmas regras de impressão da página.
+  if (NATIVE) return window.Capacitor.registerPlugin('Printer').printWebView({ name: document.title })
+    .catch(() => toast('Não foi possível abrir o PDF. Tente de novo.')).finally(back);
   window.print();
 }
 function openReportView() { paintReport(); S = null; $('scrim').hidden = true; $('sheet').hidden = true; $('rpView').hidden = false; $('rpView').scrollTop = 0; $('rpBack').focus(); }
