@@ -250,6 +250,12 @@ App criado como **"Soneca: rotina do bebê"** ("Soneca" sozinho já era de outro
 
 ## LGPD: o que falta no app para a política valer
 
+**Versão 1.3 (13/10, no código, falta publicar e mandar ao advogado):** a Política inclui "Entrar com a
+Apple" junto do Google (dados da seção 3 e empresas da seção 9, com o cancelamento do acesso na Apple ao
+apagar a conta). Os Termos só mudam de número. `TERMS_VERSION` 1.3: quem aceitou a 1.2 vê a tela "mudaram".
+Detalhes em `VERSOES-TERMOS.md`. A seção 13 ainda fala em `caderninho-bay.vercel.app/privacidade`; trocar
+por `soneca.app.br` quando o endereço antigo levar ao novo.
+
 **Versão 1.1 (10/10, no código, falta publicar e mandar ao advogado):** muda só a seção 6 dos Termos
 ("Grátis agora, assinatura depois": grátis hoje, aviso de 30 dias, famílias pioneiras grátis, preço só no
 aviso) e, na Política, a seção 6 e a frase do fim da assinatura na 10. A 1.0 ficou em `termos/1.0.html` e
