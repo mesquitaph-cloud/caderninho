@@ -89,8 +89,8 @@ declarada no `Info.plist`.
   `ios/`). O projeto do Xcode fica em `ios/App` (pacotes pelo Swift Package Manager, sem CocoaPods).
   Compilar e enviar à Apple é na nuvem (Codemagic), porque não há Mac: `codemagic.yaml` (12/10), só ao
   clicar em "Start new build". Faz `npm ci`, `npm run ios`, assina com a chave da App Store Connect
-  cadastrada no Codemagic como `soneca.asc` (Integrations → Developer Portal) e manda para o TestFlight,
-  com o número da compilação seguinte ao último do TestFlight. O esquema `App` fica compartilhado em
+  cadastrada no Codemagic como `soneca.asc` (Integrations → Developer Portal) e manda para o TestFlight (teste
+  interno, sem revisão beta), com o número da compilação seguinte ao último do TestFlight. O esquema `App` fica compartilhado em
   `ios/App/App.xcodeproj/xcshareddata`.
 - **Site:** continua sem build. O `.vercelignore` deixa fora da Vercel o que não é do site (`ios/`,
   `scripts/`, `supabase/`, os `.md` e o `package.json`, para a Vercel não tentar instalar nada).
