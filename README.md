@@ -691,7 +691,8 @@ código por e-mail, que continua igual. Apple preta de dia e branca de noite; Go
   (`supabase/functions/apple-login/index.ts`), que troca pela chave de acesso e guarda em
   `public.apple_tokens` (tabela fechada: só a função alcança). Ao apagar a conta, o app pede à função
   que cancele o acesso na Apple antes do `delete_my_account`; quem não entrou com a Apple não muda nada.
-  Se a função falhar, a entrada e o apagar seguem. Para ligar:
+  Se a função falhar, a entrada e o apagar seguem. Ligado em 13/10 (passos 1 a 4 feitos; tabela conferida
+  pelo conector: RLS ligado, ninguém do app lê, vazia). Falta o passo 5. Para ligar:
   1. Apple Developer → Keys → + → "Soneca Apple Login", Sign in with Apple com o App ID
      `br.app.soneca`. Baixar o .p8 (uma vez só) e anotar o Key ID.
   2. Supabase → Edge Functions → Secrets: `APPLE_TEAM_ID` = `JVL75DAS3X`, `APPLE_KEY_ID` e
