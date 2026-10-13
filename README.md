@@ -686,8 +686,21 @@ código por e-mail, que continua igual. Apple preta de dia e branca de noite; Go
 
 - Compilar no Codemagic e testar no iPhone: entrar com a Apple e com o Google; com o mesmo e-mail que já
   usava o código, ver as mesmas famílias; fechar a janela sem entrar e ver que nada acontece.
-- Apagar a conta: a Apple pede que, ao apagar uma conta criada com a Apple, o acesso seja cancelado do
-  lado da Apple (precisa de uma chave .p8 numa função do Supabase). Fazer antes de enviar para a revisão.
+- Cancelar o acesso da Apple ao apagar a conta (exigência da Apple; no código desde 13/10, falta ligar):
+  ao entrar com a Apple, o app manda o código da Apple para a função `apple-login`
+  (`supabase/functions/apple-login/index.ts`), que troca pela chave de acesso e guarda em
+  `public.apple_tokens` (tabela fechada: só a função alcança). Ao apagar a conta, o app pede à função
+  que cancele o acesso na Apple antes do `delete_my_account`; quem não entrou com a Apple não muda nada.
+  Se a função falhar, a entrada e o apagar seguem. Para ligar:
+  1. Apple Developer → Keys → + → "Soneca Apple Login", Sign in with Apple com o App ID
+     `br.app.soneca`. Baixar o .p8 (uma vez só) e anotar o Key ID.
+  2. Supabase → Edge Functions → Secrets: `APPLE_TEAM_ID` = `JVL75DAS3X`, `APPLE_KEY_ID` e
+     `APPLE_PRIVATE_KEY` (o .p8 inteiro, com as linhas BEGIN e END).
+  3. SQL Editor: rodar `supabase/018_chave_da_apple.sql` e a conferência do fim do arquivo.
+  4. Supabase → Edge Functions → Deploy a new function → Via editor: nome `apple-login`, colar o
+     `index.ts`, deixar "Verify JWT" ligado, Deploy.
+  5. Testar no iPhone: entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de
+     Ajustes → (seu nome) → Entrar com a Apple. Pelo conector, só contar as linhas de `apple_tokens`.
 
 **Cuidados:**
 

@@ -189,6 +189,10 @@ async function nativeLogin(provider, btn) {
     const p = result.profile || {};
     const full = [p.givenName, p.familyName].filter(Boolean).join(' ').trim();
     if (provider === 'apple' && full) await sb.auth.updateUser({ data: { full_name: full } });
+    // Guarda a chave de acesso da Apple, para cancelar o acesso se a pessoa apagar a conta (exigência
+    // da Apple). Se falhar, a entrada segue: só o cancelamento fica para trás.
+    const code = result.authorizationCode || result.accessToken?.token;
+    if (provider === 'apple' && code) await sb.functions.invoke('apple-login', { body: { action: 'save', code } }).catch(() => {});
     busy(btn, false);
     show('scrLoading'); boot();
   } catch (e) {
@@ -1721,6 +1725,8 @@ async function accountAction(a, btn) {
   if (a !== 'accDel') return;
   if (!S.confirm) { S.confirm = true; return drawAccount(); }
   busy(btn, true);
+  // Quem entrou com a Apple: cancela o acesso do Soneca na Apple antes de apagar (para os outros, não faz nada).
+  await sb.functions.invoke('apple-login', { body: { action: 'revoke' } }).catch(() => {});
   const { error } = await sb.rpc('delete_my_account');
   if (error) { S.err = 'Não foi possível apagar a conta. Confira a conexão e tente de novo.'; S.confirm = false; return drawAccount(); }
   // O login já não existe no banco: basta esquecer a sessão neste celular.
