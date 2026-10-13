@@ -54,7 +54,7 @@ Fralda continuam sempre completos, e a autorização da amamentação está na c
 `supabase/015_aceites.sql` rodado em 07/10 e conferido pelo conector (tabela `consents` vazia, gatilhos
 `consents_guard` e `member_left`, trava dos registros nova). Falta só publicar o app.
 
-- **Páginas públicas:** https://caderninho-bay.vercel.app/privacidade e https://caderninho-bay.vercel.app/termos (pastas com `index.html`, os estilos do app e `legal.js`
+- **Páginas públicas:** https://soneca.app.br/privacidade e https://soneca.app.br/termos (pastas com `index.html`, os estilos do app e `legal.js`
   para seguir o claro ou escuro escolhido no Perfil). Texto da versão 1.0, revisado pelo advogado. Links na
   entrada. Ao mudar o texto: subir `TERMS_VERSION` no `app.js`, guardar a versão antiga em
   `privacidade/1.0.html` e listar no rodapé.
@@ -253,8 +253,8 @@ App criado como **"Soneca: rotina do bebê"** ("Soneca" sozinho já era de outro
 **Versão 1.3 (13/10, no código, falta publicar e mandar ao advogado):** a Política inclui "Entrar com a
 Apple" junto do Google (dados da seção 3 e empresas da seção 9, com o cancelamento do acesso na Apple ao
 apagar a conta). Os Termos só mudam de número. `TERMS_VERSION` 1.3: quem aceitou a 1.2 vê a tela "mudaram".
-Detalhes em `VERSOES-TERMOS.md`. A seção 13 ainda fala em `caderninho-bay.vercel.app/privacidade`; trocar
-por `soneca.app.br` quando o endereço antigo levar ao novo.
+Detalhes em `VERSOES-TERMOS.md`. A seção 13 passa a dar o endereço `soneca.app.br/privacidade` (antes,
+`caderninho-bay.vercel.app`, que não é mais o site).
 
 **Versão 1.1 (10/10, no código, falta publicar e mandar ao advogado):** muda só a seção 6 dos Termos
 ("Grátis agora, assinatura depois": grátis hoje, aviso de 30 dias, famílias pioneiras grátis, preço só no
@@ -280,7 +280,8 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 **Ainda falta:**
 
 - **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
-- Com o domínio próprio, redirecionar `caderninho-bay.vercel.app/privacidade` e `/termos` e trocar o link na
+- Domínio próprio: o site é `soneca.app.br` (a seção 13 da Política 1.3 já usa). Se o endereço antigo
+  `caderninho-bay.vercel.app` ainda abrir, redirecionar `/privacidade` e `/termos` para o novo e trocar o link na
   política e nas lojas.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).

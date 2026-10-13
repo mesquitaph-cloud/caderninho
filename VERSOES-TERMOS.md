@@ -20,6 +20,8 @@ Arquivos: `termos/index.html` e `privacidade/index.html`. A 1.2 ficou em `termos
   passa a "entrar".
 - **Política, seção 9 (empresas):** a linha "Google (se entrar com o Google)" passa a "Apple e Google (se
   entrar com eles)", com o cancelamento do acesso do Soneca na Apple quando a pessoa apaga a conta.
+- **Política, seção 13:** o endereço das versões passa a ser `soneca.app.br/privacidade` (era
+  `caderninho-bay.vercel.app`, com a promessa de levar ao domínio próprio, que agora existe).
 - **Por quê:** o app do iPhone ganhou "Continuar com a Apple" (12/10). Mesmo tipo de parceiro de login que
   o Google, já na 1.0. Aprovado pelo Patrick em 13/10; falta mostrar ao advogado.
 
