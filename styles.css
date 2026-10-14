@@ -37,7 +37,7 @@
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}
-*{box-sizing:border-box}[hidden]{display:none!important}
+html{touch-action:manipulation}*{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
