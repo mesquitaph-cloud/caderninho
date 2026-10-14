@@ -8,6 +8,13 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
+## Próximos passos (14/10)
+
+1. **Aviso na hora do remédio, mesmo com o app fechado** (pedido do Patrick em 14/10; já estava no plano
+   do lançamento). Hoje o lembrete só aparece com o app aberto (cartão da tela inicial). A decidir antes
+   de programar: quem recebe (todos da família ou só quem escolher), quanto antes da hora, e o que
+   acontece no celular dos outros quando alguém já deu a dose.
+
 ## Pendências antes de convidar amigos
 
 - Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
