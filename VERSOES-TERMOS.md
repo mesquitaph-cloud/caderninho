@@ -5,9 +5,25 @@ A Política e os Termos andam juntos: uma versão vale para os dois, e é o `TER
 
 | Versão | Em vigor | Revisão do advogado | Aceite de novo? |
 |---|---|---|---|
-| 1.2 | desde 10/10/2026 | pendente | Sim, pela tela "mudaram" |
+| 1.3 | desde 13/10/2026 | pendente | Sim, pela tela "mudaram" |
+| 1.2 | 10/10/2026 a 12/10/2026 | pendente | Sim, pela tela "mudaram" |
 | 1.1 | só em 10/10/2026 | pendente | Sim, pela tela "mudaram" |
 | 1.0 | 06/10/2026 a 09/10/2026 | 07/10/2026, sem mudanças | Primeira versão |
+
+## 1.3 (13/10/2026): entrar com a Apple
+
+Arquivos: `termos/index.html` e `privacidade/index.html`. A 1.2 ficou em `termos/1.2.html` e
+`privacidade/1.2.html`. Os Termos só mudam de número, para andar junto com a Política.
+
+- **Política, seção 3 (dados):** "se entrar com o Google, nome e foto da conta Google" passa a "se entrar
+  com o Google ou com a Apple, o nome da conta (e a foto, no Google)"; a finalidade "entrar com código"
+  passa a "entrar".
+- **Política, seção 9 (empresas):** a linha "Google (se entrar com o Google)" passa a "Apple e Google (se
+  entrar com eles)", com o cancelamento do acesso do Soneca na Apple quando a pessoa apaga a conta.
+- **Política, seção 13:** o endereço das versões passa a ser `soneca.app.br/privacidade` (era
+  `caderninho-bay.vercel.app`, com a promessa de levar ao domínio próprio, que agora existe).
+- **Por quê:** o app do iPhone ganhou "Continuar com a Apple" (12/10). Mesmo tipo de parceiro de login que
+  o Google, já na 1.0. Aprovado pelo Patrick em 13/10; falta mostrar ao advogado.
 
 ## 1.2 (10/10/2026): sem idade mínima, para a App Store dar 4+
 
