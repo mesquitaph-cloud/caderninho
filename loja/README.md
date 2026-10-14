@@ -3,6 +3,7 @@
 Aprovadas em 07/10; refeitas em 14/10 com o app atual (Política 1.3, sem a dica de instalar). Prévia (privada): https://claude.ai/artifact/MsXegQrEamYiSJ2hAJXXgs
 
 - `app-store/`: 8 imagens de 1290 × 2796 px (iPhone de 6,9").
+- `app-store-6.3/`: as mesmas 8 em 1206 × 2622 px, o tamanho que a App Store Connect pediu em 14/10 ("iPhone with Dynamic Island, medium display").
 - `google-play/`: as mesmas 8 em 1080 × 1920 px e o destaque (`feature-graphic.png`, 1024 × 500 px).
 
 As telas são o app de verdade com dados inventados (Helena, 3 meses, família Andrade; Carol, Pedro e Vó

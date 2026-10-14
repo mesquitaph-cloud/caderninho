@@ -26,6 +26,8 @@ body{margin:0;background:#888;font-family:var(--body);display:flex;flex-wrap:wra
 /* iPhone 6,9" (1290 x 2796) e Android (1080 x 1920) */
 .ios{--w:1290px;--h:2796px;--top:24cqh;--ttop:9cqw;--pw:78cqw;--hs:9.2cqw;--ps:4.3cqw}
 .and{--w:1080px;--h:1920px;--top:31cqh;--ttop:7cqw;--pw:72cqw;--hs:8.4cqw;--ps:4cqw}
+.ios63{--w:1206px;--h:2622px}
+/* iPhone 6,3" (1206 x 2622), o tamanho que a App Store Connect pede hoje: os mesmos quadros, menores */
 .ios.l1{--top:28cqh}.and.l1{--top:37cqh}
 /* Destaque do Google Play (1024 x 500) */
 .feat{--w:1024px;--h:500px}
@@ -57,7 +59,7 @@ if (kind === 'feat') {
     <div class="phone p1"><img src="telas/home-light.png" alt=""></div><div class="phone p2"><img src="telas/day-light.png" alt=""></div></div>`;
 } else for (const [id, img, c, t, s, extra, cls] of F) {
   const top = extra === 'lock' ? `<div class="lock">${CAPI}Soneca</div>` : extra === 'capi' ? `<div class="lock">${CAPI}</div>` : '';
-    h += `<div class="f ${kind} ${extra ? 'l1' : ''} ${cls || ''}" id="${id}" style="${c ? `--c:var(${c})` : ''}">
+    h += `<div class="f ${kind === 'ios63' ? 'ios ios63' : kind} ${extra ? 'l1' : ''} ${cls || ''}" id="${id}" style="${c ? `--c:var(${c})` : ''}">
     <div class="blob"></div>
     <div class="txt">${top}<h1>${t}</h1><p>${s}</p></div>
     <div class="phone"><img src="telas/${img}.png" alt=""></div></div>`;
