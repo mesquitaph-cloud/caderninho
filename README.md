@@ -8,12 +8,65 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
-## Próximos passos (14/10)
+## Próximos passos (atualizado em 14/10)
 
-1. **Aviso na hora do remédio, mesmo com o app fechado** (pedido do Patrick em 14/10; já estava no plano
-   do lançamento). Hoje o lembrete só aparece com o app aberto (cartão da tela inicial). A decidir antes
-   de programar: quem recebe (todos da família ou só quem escolher), quanto antes da hora, e o que
-   acontece no celular dos outros quando alguém já deu a dose.
+Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão
+da Apple em 14/10; a publicação é manual, depois da aprovação.
+
+**Enquanto a Apple revisa**
+
+- Não mexer na conta do revisor nem rodar o `013`.
+
+**Logo depois da aprovação**
+
+- Publicar na App Store (publicação manual).
+- Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
+  da Apple (entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de Ajustes; seção
+  "Entrar com Google e Apple").
+- Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase (Authentication → Emails → Templates
+  e o Sender name).
+- Mandar ao advogado as versões 1.1 e 1.3 da Política e dos Termos (seção "LGPD").
+- Tirar o site do ar, deixando só `/privacidade` e `/termos` (decidido em 10/10). Antes, ver quem usa pelo
+  Android: até a Play Store, o site é o único jeito de essas famílias usarem o Soneca.
+
+**Próxima versão do app**
+
+1. **Aviso na hora do remédio, mesmo com o app fechado** (pedido do Patrick em 14/10). Hoje o lembrete só
+   aparece com o app aberto (cartão da tela inicial). A decidir antes de programar: quem recebe (todos da
+   família ou só quem escolher), quanto antes da hora, e o que acontece no celular dos outros quando alguém
+   já deu a dose.
+2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
+   `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
+3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
+   (o Gmail limita quantos e-mails saem por dia).
+4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
+   semana e tempo desde a última mamada (seção "Ideias para depois").
+
+**Android**
+
+- Play Store: teste fechado com 12 testadores por 14 dias antes de publicar (o plano dizia começar até
+  ~25/10).
+
+**LGPD**
+
+- Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a
+  Vercel guardam no plano atual; se for menos, guardar à parte.
+- Botão "Cópia dos dados" (JSON e CSV); por enquanto, a cópia sai à mão pelo Supabase, por e-mail.
+- Tarefa agendada que apaga as provas de aceite com mais de 5 anos (a primeira vence em 2031).
+
+**Quando vier a cobrança** (versão seguinte, com aviso 30 dias antes; famílias pioneiras grátis para sempre)
+
+- Assinatura pelas lojas, com os 7 dias grátis contados pelo app; Supabase no plano Pro, com cópias de
+  segurança, e a frase da seção 10 da Política trocada; tarefa que avisa e apaga famílias 6 meses depois
+  do fim da assinatura.
+
+**Fora do `main`**
+
+- Kit para os Reels do Instagram (passo a passo do app e briefing para o estúdio) está no ramo
+  `claude/compassionate-maxwell-azg02o`, ainda não juntado.
+
+Ideias sem data (cartão com IA, "Pergunte ao Soneca", registro falando, fases até 5 anos, resumo por
+e-mail, QR code, quem indicou quem): seção "Ideias para depois".
 
 ## Pendências antes de convidar amigos
 
@@ -314,7 +367,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 - Domínio próprio no ar (14/10): a seção 13 da Política 1.3 já usa `soneca.app.br`, e o `vercel.json` leva
   `caderninho-bay.vercel.app/privacidade` e `/termos` para o novo.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
-- DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
+- ~~DM Sans servida pelo próprio site, sem Google Fonts~~ (feito em 11/10, seção "App do iPhone").
 - Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
   guardam no plano atual; se for menos, guardar à parte.
