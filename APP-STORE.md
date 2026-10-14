@@ -1,6 +1,6 @@
 # Soneca na App Store: o que preencher
 
-Rascunho de 13/10 para copiar no App Store Connect (app "Soneca: rotina do bebê", Apple ID 6821448149).
+Preenchido e enviado para a revisão em 14/10 (compilação 2). Texto de 13/10 para o App Store Connect (app "Soneca: rotina do bebê", Apple ID 6821448149).
 Revisar antes de colar. Tom neutro e claro; nada de promessa de saúde.
 
 ## App Information
@@ -24,7 +24,7 @@ Revisar antes de colar. Tom neutro e claro; nada de promessa de saúde.
 
 **Description:**
 
-> O Soneca é o caderninho da rotina do bebê, feito para a família inteira usar junto.
+> O Soneca é o diário da rotina do bebê, feito para a família inteira usar junto.
 >
 > Quem está com o bebê anota em um toque: mamada (peito, lado e minutos, ou mamadeira), sono, fralda,
 > ordenha, remédio, banho e outros cuidados. Todo mundo da família vê a mesma linha do tempo, no
@@ -49,13 +49,14 @@ Revisar antes de colar. Tom neutro e claro; nada de promessa de saúde.
 >
 > O Soneca organiza o que a família anota; ele não faz diagnóstico nem substitui o pediatra.
 
-**Keywords (100):** `mamada,amamentação,sono,fralda,bebê,recém-nascido,diário,pediatra,ordenha,remédio,família,cólica`
+**Keywords (100):** `mamada,amamentação,fralda,recém-nascido,diário,pediatra,ordenha,remédio,família,cólica,neném`
+(sem "bebê", "sono" e "rotina", que a Apple já tira do nome e do subtítulo)
 
 **Support URL:** `https://soneca.app.br` (ou a página de contato, quando houver).
 
 **Copyright:** `2026 Patrick Harris de Mesquita`
 
-**Screenshots:** iPhone 6,9" (1320 × 2868), de 3 a 10. Sugestão de ordem: tela inicial com os botões;
+**Screenshots:** as 8 de `loja/app-store-6.3/` (1206 × 2622), na aba "iPhone with Dynamic Island (medium display)", que foi a que a App Store Connect pediu em 14/10. Antes: Sugestão de ordem: tela inicial com os botões;
 linha do tempo do dia; painel da semana; resumo do mês; remédios; relatório para pediatra. Com dados de
 exemplo (a "Família Revisão" do 013 serve), de dia, e uma de noite.
 

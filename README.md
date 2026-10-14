@@ -108,7 +108,14 @@ declarada no `Info.plist`.
 `@capgo/capacitor-printer` (`printWebView`, com as mesmas regras de impressão da página), que tem "Salvar em
 Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir no iPhone se a folha sai igual.
 
-**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md` (rascunho de 13/10).
+**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md`.
+
+**Enviado para a revisão da Apple (14/10):** versão 1.0, compilação 2 (do `main`, com a Política 1.3, sem a
+dica de instalar e com o PDF pelo imprimir do iPhone), só Brasil, grátis, publicação manual depois da
+aprovação. Imagens em `loja/app-store-6.3/`. Durante a revisão, não mexer na conta do revisor nem rodar o 013.
+Fica para depois do lançamento: o teste de apagar a conta que entrou com a Apple (passo 5 abaixo), os modelos
+de e-mail do Supabase ainda com "Caderninho" (Authentication → Emails → Templates e o Sender name), o aviso
+do remédio com o app fechado, os links de convite, o remetente próprio e a Play Store.
 
 **Ainda falta no app:** links de convite e de indicação; o aviso do remédio com o app fechado.
 
