@@ -108,7 +108,14 @@ declarada no `Info.plist`.
 `@capgo/capacitor-printer` (`printWebView`, com as mesmas regras de impressão da página), que tem "Salvar em
 Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir no iPhone se a folha sai igual.
 
-**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md` (rascunho de 13/10).
+**Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md`.
+
+**Enviado para a revisão da Apple (14/10):** versão 1.0, compilação 2 (do `main`, com a Política 1.3, sem a
+dica de instalar e com o PDF pelo imprimir do iPhone), só Brasil, grátis, publicação manual depois da
+aprovação. Imagens em `loja/app-store-6.3/`. Durante a revisão, não mexer na conta do revisor nem rodar o 013.
+Fica para depois do lançamento: o teste de apagar a conta que entrou com a Apple (passo 5 abaixo), os modelos
+de e-mail do Supabase ainda com "Caderninho" (Authentication → Emails → Templates e o Sender name), o aviso
+do remédio com o app fechado, os links de convite, o remetente próprio e a Play Store.
 
 **Ainda falta no app:** links de convite e de indicação; o aviso do remédio com o app fechado.
 
@@ -155,6 +162,10 @@ https://claude.ai/artifact/Di5shtYzm6ZieXcAHLXfJY
   Apaga e monta de novo a "Família Revisão" (Theo, 4 meses, 3 semanas de mamadas, sono, fraldas,
   vitamina D, duas medidas e um marco), com as datas contadas a partir do dia em que roda.
 - **Se o revisor apagar a conta:** criar de novo no painel e rodar o 013 outra vez.
+- **Feito em 14/10:** conta criada (confirmada) e 013 rodado; pelo conector, 1 família, 1 bebê e 528
+  registros até 14/10. A entrada com senha conferida no iPhone. Sem aceites gravados: o revisor passa
+  pelas telas de aceite na primeira entrada (dito nas notas do `APP-STORE.md`). Rodar o 013 de novo no
+  dia do envio.
 
 Testado em 07/10: o 013 rodado duas vezes num Postgres local com todos os arquivos de `supabase/`
 (fica uma família só); a entrada no navegador com um Supabase de mentira (e-mail comum recebe código,
