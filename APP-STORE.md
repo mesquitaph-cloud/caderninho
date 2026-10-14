@@ -95,6 +95,9 @@ Search, Financial, Sensitive Info (a Apple trata saúde em Health & Fitness), De
 > "Receber código". For this account only, the app asks for a password instead of sending a code.
 > The demo account already has a family ("Família Revisão") with a 4-month-old baby and three weeks
 > of sample records.
+> On the first sign-in, the app asks the user to accept the Privacy Policy and Terms of Use and to
+> authorize the baby and health data (required by Brazilian data protection law, LGPD). Please accept
+> to continue.
 >
 > Account deletion: Perfil (last tab) → "Apagar minha conta", then tap again to confirm. If the
 > account was created with Sign in with Apple, the app also revokes the Apple token.
