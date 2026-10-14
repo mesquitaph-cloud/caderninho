@@ -110,7 +110,20 @@ Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir 
 
 **Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md` (rascunho de 13/10).
 
-**Ainda falta no app:** links de convite e de indicação (esperando o domínio); o aviso do remédio com o app fechado; a compilação no Codemagic.
+**Ainda falta no app:** links de convite e de indicação; o aviso do remédio com o app fechado.
+
+**TestFlight (14/10):** a compilação do Codemagic já roda e o app está no iPhone de quem testa. Entrar com
+a Apple e com o Google conferidos no iPhone. Falta conferir lá: o PDF do relatório e o passo 5 do
+cancelamento da Apple (abaixo).
+
+**Sem dica de instalar (14/10):** saiu o aviso "Para usar como app: toque em Compartilhar… Adicionar à
+Tela de Início" (aparecia também dentro do app do iPhone), com o botão "Instalar o Soneca" do Android.
+O texto de indicar não diz mais "Não precisa baixar na loja". As sugestões dizem "app do iPhone" ou
+"no navegador".
+
+**Domínio (14/10):** `soneca.app.br` no ar. O `vercel.json` leva `caderninho-bay.vercel.app/privacidade`
+e `/termos` para o domínio novo (o resto do endereço antigo continua igual, para ninguém perder a
+entrada). Na App Store, a política é `https://soneca.app.br/privacidade`.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
@@ -274,8 +287,8 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 **Ainda falta:**
 
 - **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
-- Com o domínio próprio, redirecionar `caderninho-bay.vercel.app/privacidade` e `/termos` e trocar o link na
-  política e nas lojas.
+- Domínio próprio no ar (14/10) e redirecionamento no `vercel.json`. Falta trocar o endereço escrito no
+  fim da política na próxima versão do texto.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - DM Sans servida pelo próprio site, sem Google Fonts (`index.html` e a política de segurança da página).
 - Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
@@ -689,8 +702,7 @@ código por e-mail, que continua igual. Apple preta de dia e branca de noite; Go
 
 **Falta:**
 
-- Compilar no Codemagic e testar no iPhone: entrar com a Apple e com o Google; com o mesmo e-mail que já
-  usava o código, ver as mesmas famílias; fechar a janela sem entrar e ver que nada acontece.
+- ~~Compilar no Codemagic e testar no iPhone: entrar com a Apple e com o Google~~ (feito, 14/10).
 - Cancelar o acesso da Apple ao apagar a conta (exigência da Apple; no código desde 13/10, falta ligar):
   ao entrar com a Apple, o app manda o código da Apple para a função `apple-login`
   (`supabase/functions/apple-login/index.ts`), que troca pela chave de acesso e guarda em
