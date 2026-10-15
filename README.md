@@ -217,11 +217,11 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
 
 **Falta:**
 
-1. Cadastrar a chave no Codemagic (`_privado/android/LEIA-ME.txt`) e rodar a primeira compilação.
+1. ~~Cadastrar a chave no Codemagic~~ (feito, 15/10) e rodar a primeira compilação (rodando em 15/10).
 2. Play Console: criar o app "Soneca: rotina do bebê", subir o `.aab` no teste interno, com o Play App
    Signing ligado.
 3. Google Cloud, projeto "soneca": dois clientes OAuth do tipo Android, pacote `br.app.soneca`, um com
-   o SHA-1 da chave de envio (no `LEIA-ME.txt`) e outro com o SHA-1 da chave do Google (Play Console →
+   o SHA-1 da chave de envio (no `LEIA-ME.txt`; criado em 15/10, "Soneca Android (chave de envio)") e outro com o SHA-1 da chave do Google (Play Console →
    Teste e lançamento → Integridade do app → Assinatura de apps). O Supabase não muda: o token do
    Android vem com o ID do cliente Web.
 4. Testar num Android: entrar com o Google e com o código, o PDF, o botão "voltar", apagar a conta, o
