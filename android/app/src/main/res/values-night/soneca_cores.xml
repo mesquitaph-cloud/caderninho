@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Noite: o ícone não muda; a abertura fica cinza-azulada (--bg da noite) com a capivara caramelo claro. -->
+<!-- Noite: o ícone não muda; a abertura fica cinza-azulada (a cor de fundo da noite) com a capivara caramelo claro. -->
 <resources>
     <color name="soneca_icone_traco">#4A3522</color>
     <color name="soneca_abertura_fundo">#111B21</color>
