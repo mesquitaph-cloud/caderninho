@@ -170,6 +170,7 @@ declarada no `Info.plist`.
 Arquivos" e "Compartilhar". No site, continua o imprimir do navegador. Conferir no iPhone se a folha sai igual.
 
 **Página da loja:** textos, respostas do App Privacy e notas para a revisão em `APP-STORE.md`.
+Para o Google Play, o mesmo em `PLAY-STORE.md` (rascunho de 15/10).
 
 **Enviado para a revisão da Apple (14/10):** versão 1.0, compilação 2 (do `main`, com a Política 1.3, sem a
 dica de instalar e com o PDF pelo imprimir do iPhone), só Brasil, grátis, publicação manual depois da
