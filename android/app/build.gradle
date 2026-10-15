@@ -18,7 +18,7 @@ android {
         }
     }
     // Assinatura com a chave de envio (upload key). O arquivo e as senhas ficam no Codemagic (Code signing
-    // identities → Android keystores, "soneca_upload"), que os entrega nestas variáveis; nada no repositório.
+    // identities → Android keystores, "soneca_upload_2"), que os entrega nestas variáveis; nada no repositório.
     // A chave que vale na loja é a do Google (Play App Signing); se a de envio se perder, o Google troca.
     signingConfigs {
         release {

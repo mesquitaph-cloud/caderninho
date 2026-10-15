@@ -211,7 +211,7 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
   imprimir do Android pelo mesmo plugin Printer.
 - **Compilar:** Codemagic, fluxo "Soneca Android (Play Store)" no `codemagic.yaml`, só ao clicar em
   "Start new build". Gera o `.aab` assinado com a chave de envio, cadastrada no Codemagic como
-  `soneca_upload` (Team settings → Code signing identities → Android keystores). O arquivo e a senha
+  `soneca_upload_2` (Settings → codemagic.yaml settings → Code signing identities → Android keystores; o nome `soneca_upload` dava erro 409 em 15/10). O arquivo e a senha
   estão em `_privado/android/` (fora do GitHub). O primeiro envio à Play Store é à mão, baixando o
   `.aab` dos artefatos do Codemagic.
 

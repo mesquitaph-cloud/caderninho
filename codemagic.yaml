@@ -41,7 +41,7 @@ workflows:
         # (gente de fora, com link público) pede a revisão beta e as informações de teste preenchidas.
         submit_to_testflight: false
 
-  # App do Android: compila o pacote (.aab) assinado com a chave de envio "soneca_upload" (Team settings →
+  # App do Android: compila o pacote (.aab) assinado com a chave de envio "soneca_upload_2" (Personal Account →
   # Code signing identities → Android keystores). Também só ao clicar em "Start new build".
   # O primeiro envio à Play Store é à mão (baixar o .aab dos artefatos e subir no Play Console); depois
   # dele, dá para o Codemagic enviar sozinho para o teste fechado.
@@ -51,7 +51,7 @@ workflows:
     instance_type: linux_x2
     environment:
       android_signing:
-        - soneca_upload
+        - soneca_upload_2
       vars:
         PACKAGE_NAME: br.app.soneca
       node: 22
