@@ -40,3 +40,32 @@ workflows:
         # Só envia: o teste interno (você e a família) não passa por revisão da Apple. O teste externo
         # (gente de fora, com link público) pede a revisão beta e as informações de teste preenchidas.
         submit_to_testflight: false
+
+  # App do Android: compila o pacote (.aab) assinado com a chave de envio "soneca_upload" (Team settings →
+  # Code signing identities → Android keystores). Também só ao clicar em "Start new build".
+  # O primeiro envio à Play Store é à mão (baixar o .aab dos artefatos e subir no Play Console); depois
+  # dele, dá para o Codemagic enviar sozinho para o teste fechado.
+  android-play:
+    name: Soneca Android (Play Store)
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - soneca_upload
+      vars:
+        PACKAGE_NAME: br.app.soneca
+      node: 22
+      java: 21
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Montar o site e atualizar o projeto do Android
+        script: npm run android
+      - name: Compilar
+        script: |
+          # Número da compilação: um a mais que o último na Play Store (enquanto não houver ligação com a
+          # Play Store, o número da compilação do Codemagic, que só cresce).
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" 2>/dev/null || echo "$BUILD_NUMBER")
+          cd android && chmod +x gradlew && ./gradlew bundleRelease -PversionCode=$((LATEST + 1))
+    artifacts:
+      - android/app/build/outputs/bundle/release/*.aab

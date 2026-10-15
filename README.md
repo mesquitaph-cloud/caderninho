@@ -42,10 +42,11 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
 4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
    semana e tempo desde a última mamada (seção "Ideias para depois").
 
-**Android**
+**Android** (seção "App do Android")
 
 - Play Store: teste fechado com 12 testadores por 14 dias antes de publicar (o plano dizia começar até
   ~25/10).
+- Ícone e abertura do Android (hoje ainda os do Capacitor): prévia antes de programar.
 
 **LGPD**
 
@@ -191,6 +192,43 @@ O texto de indicar não diz mais "Não precisa baixar na loja". As sugestões di
 **Domínio (14/10):** `soneca.app.br` no ar. O `vercel.json` leva `caderninho-bay.vercel.app/privacidade`
 e `/termos` para o domínio novo (o resto do endereço antigo continua igual, para ninguém perder a
 entrada). Na App Store, a política é `https://soneca.app.br/privacidade`.
+
+## App do Android (15/10, no código, falta compilar e testar)
+
+O mesmo app do iPhone, pelo Capacitor (`android/`, pacote `br.app.soneca`, Android 7 ou mais novo,
+compilado para o Android 16). `npm run android` copia o site para `www/` e atualiza `android/`.
+
+- **Conta no Play Console (15/10):** pessoa física, criada pelo Patrick; identidade em verificação. O
+  Soneca entra como "Saúde e fitness" (acompanha rotina), não como "Médico": app médico exige conta de
+  empresa (https://support.google.com/googleplay/android-developer/answer/10788890). Conta pessoal nova
+  precisa do teste fechado com 12 testadores por 14 dias seguidos antes de publicar
+  (https://support.google.com/googleplay/android-developer/answer/14151465). Na loja aparecem o nome
+  legal, o país e o e-mail de desenvolvedor; o endereço completo só se houver cobrança pela Play Store.
+- **Diferenças no código:** sem "Continuar com a Apple" no Android; o Google entra pela janela do próprio
+  Android com o ID do cliente Web; o botão "voltar" fecha o relatório ou a janela, depois volta para
+  Hoje e só então sai do app (plugin `@capacitor/app`); o topo da tela começa abaixo do relógio
+  (`[data-app="android"]` no `styles.css`); as sugestões dizem "app do Android". O PDF usa a folha de
+  imprimir do Android pelo mesmo plugin Printer.
+- **Compilar:** Codemagic, fluxo "Soneca Android (Play Store)" no `codemagic.yaml`, só ao clicar em
+  "Start new build". Gera o `.aab` assinado com a chave de envio, cadastrada no Codemagic como
+  `soneca_upload` (Team settings → Code signing identities → Android keystores). O arquivo e a senha
+  estão em `_privado/android/` (fora do GitHub). O primeiro envio à Play Store é à mão, baixando o
+  `.aab` dos artefatos do Codemagic.
+
+**Falta:**
+
+1. Cadastrar a chave no Codemagic (`_privado/android/LEIA-ME.txt`) e rodar a primeira compilação.
+2. Play Console: criar o app "Soneca: rotina do bebê", subir o `.aab` no teste interno, com o Play App
+   Signing ligado.
+3. Google Cloud, projeto "soneca": dois clientes OAuth do tipo Android, pacote `br.app.soneca`, um com
+   o SHA-1 da chave de envio (no `LEIA-ME.txt`) e outro com o SHA-1 da chave do Google (Play Console →
+   Teste e lançamento → Integridade do app → Assinatura de apps). O Supabase não muda: o token do
+   Android vem com o ID do cliente Web.
+4. Testar num Android: entrar com o Google e com o código, o PDF, o botão "voltar", apagar a conta, o
+   topo da tela e o modo escuro.
+5. Ícone e abertura do Soneca no Android (prévia antes).
+6. Página da loja, Segurança dos dados, classificação, público adulto e a página para pedir a exclusão
+   da conta pela web; depois, o teste fechado de 14 dias.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 

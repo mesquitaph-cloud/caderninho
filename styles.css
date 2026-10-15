@@ -39,6 +39,8 @@
   --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--scrim:rgba(5,9,11,.6);}
 html{touch-action:manipulation}*{box-sizing:border-box}[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:16px;padding-block:12px 40px;-webkit-tap-highlight-color:transparent}
+/* App do Android: a tela vai até em cima, embaixo do relógio; o conteúdo começa depois dele. */
+[data-app="android"] body{padding-top:calc(12px + env(safe-area-inset-top,0px))}
 .wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
 button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
