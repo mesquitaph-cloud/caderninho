@@ -48,7 +48,7 @@ workflows:
   android-play:
     name: Soneca Android (Play Store)
     max_build_duration: 60
-    instance_type: linux_x2
+    instance_type: mac_mini_m2
     environment:
       android_signing:
         - soneca_upload_2
