@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Abertura dos Androids 7 a 11: a mesma cor e a mesma capivara, no meio da tela. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/soneca_abertura_fundo"/>
+    <item android:drawable="@drawable/soneca_capivara_abertura" android:gravity="center"
+        android:width="240dp" android:height="240dp"/>
+</layer-list>

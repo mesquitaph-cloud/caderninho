@@ -16,7 +16,12 @@
     </style>
 
 
+    <!-- Abertura: capivara no meio, creme de dia e cinza-azulado de noite (sem texto: o Android 12 ou mais
+         novo não deixa). -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/soneca_abertura_fundo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/soneca_capivara_abertura</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
+        <item name="android:background">@drawable/soneca_abertura</item>
     </style>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone do Soneca: céu do sono com a capivara; "monochrome" é o ícone temático do Android 13 ou mais novo. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <foreground android:drawable="@drawable/soneca_capivara_icone"/>
+    <monochrome android:drawable="@drawable/soneca_capivara_icone"/>
 </adaptive-icon>

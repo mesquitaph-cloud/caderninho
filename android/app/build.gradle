@@ -8,7 +8,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         // O Codemagic passa o número da compilação (-PversionCode), um a mais que o último da Play Store.
-        versionCode (project.findProperty('versionCode') ?: '1').toInteger()
+        versionCode = Integer.parseInt((project.findProperty('versionCode') ?: '1').toString())
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
