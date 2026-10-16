@@ -186,8 +186,10 @@ async function nativeLogin(provider, btn) {
           apple: { clientId: 'br.app.soneca' } });
     await socialReady;
     const { raw, hashed } = await nonces();
+    // No Android, o plugin já pede e-mail e perfil e recusa qualquer lista de permissões ("scopes").
     const scopes = provider === 'apple' ? ['email', 'name'] : ['email', 'profile'];
-    const { result } = await social.login({ provider, options: { scopes, nonce: hashed } });
+    const options = ANDROID ? { nonce: hashed } : { scopes, nonce: hashed };
+    const { result } = await social.login({ provider, options });
     if (!result?.idToken) throw new Error('sem token');
     const { error } = await sb.auth.signInWithIdToken({ provider, token: result.idToken, nonce: raw });
     if (error) throw error;
