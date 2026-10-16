@@ -47,6 +47,9 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
 - Play Store: teste fechado com 12 testadores por 14 dias antes de publicar (o plano dizia começar até
   ~25/10).
 - Ícone e abertura do Android (hoje ainda os do Capacitor): prévia antes de programar.
+- Página para pedir a exclusão da conta sem o app (exigência do Google): `soneca.app.br/apagar-conta`
+  (15/10, prévia aprovada: https://claude.ai/artifact/F66R6udyXBznRpzCYwstJE). Pedido por e-mail →
+  `supabase/019_apagar_conta_por_email.sql` no SQL Editor, depois de conferir que veio do e-mail da conta.
 
 **LGPD**
 
