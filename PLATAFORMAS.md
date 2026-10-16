@@ -47,6 +47,7 @@ A mesma lista está na aba "Plataformas" do Painel do Soneca (https://claude.ai/
 | Anotar registro em outro dia | Correção | falta | falta | falta | Nenhum registro tem campo de dia (Bruno, 16/10). Prévia antes |
 | Android junto do `main` | Código | — | — | falta | Ramo `claude/android-play-store` ainda separado |
 | Links abrindo o app | Melhoria | falta | falta | falta | Universal Links (iPhone) e App Links (Android), cada um com sua configuração |
+| Outros membros também convidarem | Melhoria | falta | falta | falta | Hoje só o criador convida (regra no banco, no app e nos Termos, seção 4). Mudar pede SQL novo, tela e versão nova dos Termos e da Política. A decidir (pedido do Patrick, 16/10) |
 | Aviso do remédio com o app fechado | Melhoria | — | falta | falta | Notificação: plugin e permissão em cada celular |
 | PDF do relatório no aparelho | Conferência | ok | falta | falta | Ver num aparelho se a folha sai igual |
 | Entrar com o Google | Conferência | ok | ok | ok | Android na versão 5 |
