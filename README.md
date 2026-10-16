@@ -226,7 +226,8 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
    o SHA-1 da chave de envio (no `LEIA-ME.txt`; criado em 15/10, "Soneca Android (chave de envio)") e outro com o SHA-1 da chave do Google (Play Console →
    Protected with Play → Play App Signing; criado em 16/10, "Soneca Android (chave do Google Play)"). O Supabase não muda: o token do
    Android vem com o ID do cliente Web.
-4. Testar num Android: entrar com o Google e com o código, o PDF, o botão "voltar", apagar a conta, o
+4. Testar num Android (16/10, versão 5 no teste interno: entrar com o Google funciona; a versão 4 falhava
+   porque o app mandava a lista de permissões, que o plugin recusa no Android): falta conferir o código, o PDF, o botão "voltar", apagar a conta, o
    topo da tela e o modo escuro.
 5. Ícone e abertura do Soneca no Android (prévia antes).
 6. Página da loja, Segurança dos dados, classificação, público adulto e a página para pedir a exclusão
