@@ -113,7 +113,7 @@ querer?": Não.
 
 **Apps de notícias:** Não. **Apps governamentais:** Não. **Recursos financeiros:** nenhum.
 
-**Apps de saúde** (declaração): marcar só o que o app faz, nada de "Médico"/"Dispositivo médico" (a
+**Apps de saúde** (declaração; feito em 16/10: só Sleep management e Nutrition and weight management, sem nada de "Medical", nem "Medication and treatment management", que existe): marcar só o que o app faz, nada de "Médico"/"Dispositivo médico" (a
 conferir os nomes exatos na tela). O Soneca anota rotina e saúde do dia a dia; não diagnostica, não
 mede nada pelo celular e não é feito por instituição de saúde.
 
@@ -125,8 +125,10 @@ mede nada pelo celular e não é feito por instituição de saúde.
 
 - O app coleta ou compartilha dados do usuário? **Sim.**
 - Os dados são criptografados em trânsito? **Sim** (HTTPS até o Supabase).
-- Como o usuário pede a exclusão: **dentro do app** e pelo endereço
-  `https://soneca.app.br/apagar-conta` (página a fazer; prévia antes).
+- Criação de conta: "Username and other authentication" (código por e-mail) e "OAuth" (Google). Não
+  "Username and password": a senha só existe na conta do revisor.
+- Exclusão da conta: `https://soneca.app.br/apagar-conta` (no ar desde 16/10). Exclusão de parte dos
+  dados sem apagar a conta: Sim, `https://soneca.app.br/apagar-conta#bebe`.
 
 **Compartilhamento:** **Nenhum.** Para o Google, enviar dados a empresas que trabalham para nós
 (Supabase, Vercel, Google para o login) não conta como compartilhar. Nenhum dado vai para anúncios ou
@@ -137,10 +139,11 @@ para terceiros por conta própria.
 | Tipo no formulário | O que é no Soneca | Obrigatório? | Finalidade |
 |---|---|---|---|
 | Informações pessoais → Nome | Nome de exibição na família; nome vindo do Google | Obrigatório | Funcionalidade do app; Gerenciamento da conta |
-| Informações pessoais → Endereço de e-mail | Entrar (código ou Google) | Obrigatório | Funcionalidade do app; Gerenciamento da conta |
+| Informações pessoais → Endereço de e-mail | Entrar (código ou Google) | Obrigatório | Funcionalidade do app; Gerenciamento da conta; Comunicações do desenvolvedor (aviso de mudança da Política) |
 | Informações pessoais → IDs de usuário | O número da conta, que liga os registros a quem anotou | Obrigatório | Funcionalidade do app; Gerenciamento da conta |
+| Informações pessoais → Outras informações | Nome, nascimento e sexo do bebê | Obrigatório (o nome do bebê) | Funcionalidade do app |
 | Saúde e condicionamento físico → Informações de saúde | Sintomas, temperatura, remédios, peso, marcos, amamentação | Opcional | Funcionalidade do app |
-| Atividade no app → Outro conteúdo gerado pelo usuário | Observações, dúvidas para a consulta, nome e nascimento do bebê | Opcional | Funcionalidade do app |
+| Atividade no app → Outro conteúdo gerado pelo usuário | Registros do dia a dia, observações, dúvidas para a consulta | Opcional | Funcionalidade do app |
 | Mensagens → Outras mensagens no app | Sugestões e problemas enviados pelo app | Opcional | Funcionalidade do app (suporte) |
 | Informações e desempenho do app → Outros dados de desempenho | Modelo do aparelho junto das sugestões | Opcional | Funcionalidade do app (corrigir falhas) |
 
