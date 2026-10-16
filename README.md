@@ -41,6 +41,14 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
    (o Gmail limita quantos e-mails saem por dia).
 4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
    semana e tempo desde a última mamada (seção "Ideias para depois").
+5. **Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
+   gera convite, e fica guardado quem convidou cada pessoa. Hoje só quem criou a família convida (banco,
+   app e Termos, seção 4). Pede SQL novo, prévia da tela da Família e versão nova dos Termos e da Política.
+6. **Passar a família para outro membro** (decidido pelo Patrick em 16/10, ainda não começar): quem criou
+   a família entrega o controle a outro membro e pode sair sem apagar. Hoje só tem "Apagar família"; a
+   família só passa adiante se quem criou apagar a conta. Mesmos passos do item 5, e junto com ele.
+7. **Anotar registro em outro dia** (Bruno, 16/10): nenhum registro tem campo de dia, e o remédio só
+   mostra as doses de hoje. Prévia de "Hoje / Ontem / Outro dia" junto do relógio antes de programar.
 
 **Android**
 
