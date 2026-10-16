@@ -113,7 +113,7 @@ querer?": Não.
 
 **Apps de notícias:** Não. **Apps governamentais:** Não. **Recursos financeiros:** nenhum.
 
-**Apps de saúde** (declaração preenchida em 16/10; recomendação: só Sleep management e Nutrition and weight management, sem nada de "Medical", nem "Medication and treatment management", que existe na lista; conferir o que foi marcado): marcar só o que o app faz, nada de "Médico"/"Dispositivo médico" (a
+**Apps de saúde** (declaração feita em 16/10: só Sleep management e Nutrition and weight management, nada de "Medical", nem "Medication and treatment management", que existe na lista; os remédios ficam declarados como Health info na Segurança dos dados): marcar só o que o app faz, nada de "Médico"/"Dispositivo médico" (a
 conferir os nomes exatos na tela). O Soneca anota rotina e saúde do dia a dia; não diagnostica, não
 mede nada pelo celular e não é feito por instituição de saúde.
 
