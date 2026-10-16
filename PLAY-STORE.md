@@ -87,6 +87,15 @@ Apple): a conta de demonstração, com o mesmo texto das notas da App Store, tro
 > The app is free, has no in-app purchases and no ads. It does not provide medical advice; the
 > pediatrician report (PDF) only compiles what the family recorded.
 
+O campo "Any other information" do Play Console (agora "Sign in details") aceita só 500 caracteres. Versão
+usada em 16/10 (488):
+
+> Portuguese-only baby-care log for families in Brazil. Sign in with the email and password above: type
+> the email on the first screen and tap "Receber código"; for this demo account only, the app asks for a
+> password instead of a code. Then accept the Privacy Policy and Terms (required by Brazilian law, LGPD).
+> The account has a family ("Família Revisão") with a sample baby and 3 weeks of records. Delete account:
+> Perfil tab > "Apagar minha conta". No ads, no purchases, no medical advice.
+
 Antes de enviar para o Google, rodar `supabase/013_conta_da_revisao.sql` (datas recentes), como na Apple.
 Atenção: a Apple está revisando com a mesma conta; esperar a aprovação dela antes de rodar.
 
