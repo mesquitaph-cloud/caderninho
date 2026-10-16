@@ -157,6 +157,9 @@ $('backPass').onclick = () => { $('fPass').hidden = true; $('fEmail').hidden = f
 // já com a sessão (o convite, se houver, ficou guardado no celular). A mesma pessoa, com o mesmo e-mail,
 // cai na mesma conta do código; quem escolhe "Ocultar meu e-mail" na Apple vira uma conta nova.
 const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+// Link que vai para outra pessoa (convite, indicação): no app, location.origin é o endereço interno
+// (capacitor://localhost no iPhone, https://localhost no Android), que não abre em outro celular.
+const LINK_BASE = NATIVE ? 'https://soneca.app.br' : location.origin;
 const social = NATIVE ? window.Capacitor.registerPlugin('SocialLogin') : null;
 let socialReady = null;
 $('sso').hidden = !GOOGLE_LOGIN && !(NATIVE && APPLE_LOGIN);
@@ -1819,7 +1822,7 @@ async function paneAction(a, v, btn) {
     const { data, error } = await sb.from('invites').insert({ family_id: f.id }).select('token').single();
     busy(btn, false);
     if (error) return toast('Não foi possível criar o convite.');
-    FP.invite = location.origin + '/?convite=' + data.token; return render();
+    FP.invite = LINK_BASE + '/?convite=' + data.token; return render();
   }
   if (a === 'copyInv') return navigator.clipboard.writeText(FP.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
   if (a === 'shareInv') return navigator.share({ title: 'Soneca', text: 'Entre na família ' + f.name + ' no Soneca:', url: FP.invite }).catch(() => {});
@@ -1842,8 +1845,8 @@ async function paneAction(a, v, btn) {
   if (a === 'theme') return setTheme(v);
   if (a === 'switchFam') return openFamily(v);
   if (a === 'newFam') { $('cancelCreate').hidden = false; return show('scrCreate'); }
-  if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: location.origin + '/' }).catch(() => {});
-  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + location.origin + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
+  if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
+  if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
   if (a === 'logout') { await sb.auth.signOut(); location.href = '/'; }
   if (a === 'delAccount') return accountSheet();
