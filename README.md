@@ -233,8 +233,13 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
    porque o app mandava a lista de permissões, que o plugin recusa no Android): falta conferir o código, o PDF, o botão "voltar", apagar a conta, o
    topo da tela e o modo escuro.
 5. Ícone e abertura do Soneca no Android (prévia antes).
-6. Página da loja, Segurança dos dados, classificação, público adulto e a página para pedir a exclusão
-   da conta pela web; depois, o teste fechado de 14 dias.
+6. ~~Página da loja, Segurança dos dados, classificação, público adulto e a página para pedir a exclusão
+   da conta pela web~~ (16/10, o que foi preenchido está em `PLAY-STORE.md`). Teste fechado (Alpha, só
+   Brasil, versão 6, listas "eu" e "testadores 1" com 12 ou mais Gmails) enviado à revisão do Google em
+   16/10, com o nome de desenvolvedor "Patrick Harris de Mesquita". Classificação no Brasil: 12 anos
+   ("Linguagem imprópria" e "Usuários interagem", por haver texto livre entre membros da família).
+7. Depois da aprovação: mandar o link do teste fechado aos testadores; os 14 dias contam quando 12 tiverem
+   entrado. Depois deles: Painel → "Solicitar acesso à produção".
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
