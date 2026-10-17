@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["JVL75DAS3X.br.app.soneca"],
+        "components": [
+          { "/": "/", "?": { "convite": "?*" }, "comment": "Convite para entrar numa família" }
+        ]
+      }
+    ]
+  }
+}

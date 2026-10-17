@@ -7,6 +7,7 @@
     "ios": "node scripts/www.mjs && npx cap sync ios"
   },
   "dependencies": {
+    "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
     "@capacitor/ios": "8.5.3",
     "@capgo/capacitor-printer": "8.1.7",

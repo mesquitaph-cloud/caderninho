@@ -65,6 +65,7 @@ const REFER_TEXT = 'Conhece o Soneca? É um app para anotar a rotina do bebê (m
 async function boot() {
   const tok = new URLSearchParams(location.search).get('convite');
   if (tok) { lsSet('cad-invite', tok); history.replaceState(null, '', '/'); }
+  await launchInvite();
   // Acabou de apagar a conta: volta para a entrada com o aviso.
   const gone = new URLSearchParams(location.search).get('conta') === 'apagada';
   if (gone) history.replaceState(null, '', '/');
@@ -161,6 +162,25 @@ const NATIVE = !!window.Capacitor?.isNativePlatform?.();
 // (capacitor://localhost no iPhone, https://localhost no Android), que não abre em outro celular.
 const LINK_BASE = NATIVE ? 'https://soneca.app.br' : location.origin;
 const social = NATIVE ? window.Capacitor.registerPlugin('SocialLogin') : null;
+// Link do Soneca tocado com o app instalado (Universal Links no iPhone, App Links no Android): o
+// celular abre o app em vez do navegador, e o convite do link chega aqui. Sem isso, o convite ficava
+// guardado no navegador e o app abria em "Criar família" (Ca, 17/10).
+const appPlugin = NATIVE ? window.Capacitor.registerPlugin('App') : null;
+const inviteIn = url => { try { return new URL(url).searchParams.get('convite'); } catch { return null; } };
+let launchChecked = false;
+async function launchInvite() {
+  if (!appPlugin || launchChecked) return;
+  launchChecked = true;
+  const r = await appPlugin.getLaunchUrl().catch(() => null);
+  const tok = r?.url && inviteIn(r.url);
+  if (tok) lsSet('cad-invite', tok);
+}
+appPlugin?.addListener('appUrlOpen', ({ url }) => {
+  const tok = inviteIn(url); if (!tok) return;
+  lsSet('cad-invite', tok);
+  // Sem sessão, o convite espera a entrada; com sessão, abre a tela do convite já.
+  if (st.user) { show('scrLoading'); boot(); }
+});
 let socialReady = null;
 $('sso').hidden = !GOOGLE_LOGIN && !(NATIVE && APPLE_LOGIN);
 $('googleBtn').hidden = !GOOGLE_LOGIN;
