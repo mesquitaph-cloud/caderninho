@@ -47,6 +47,10 @@ A mesma lista está na aba "Plataformas" do Painel do Soneca (https://claude.ai/
 | Link de "Indicar o Soneca" | Correção | ok | quebrado | quebrado | Ainda não sai o link certo no app (Patrick, 16/10). Para os próximos PRs (README, item 9) |
 | Aviso de versão nova | Melhoria | — | falta | falta | Avisar quem está com versão antiga para atualizar (Patrick, 16/10; README, item 8) |
 | Anotar registro em outro dia | Correção | falta | falta | falta | Nenhum registro tem campo de dia (Bruno, 16/10). Prévia antes |
+| Convite pelo navegador não chega ao app | Correção | — | quebrado | quebrado | O link abre no Safari e o app não recebe o convite; cai em "Criar família" (Ca, 17/10). "Tenho um convite" na tela de criar; README, item 10 |
+| Sono que nunca terminou | Melhoria | falta | falta | falta | "Dormiu" sem "Acordou" deixou o bebê dormindo por dias (Bruno, 17/10); README, item 11 |
+| Cronômetro da mamada | Melhoria | falta | falta | falta | Contar o tempo de cada peito sozinho (Ca, 17/10); README, item 12 |
+| Cronômetro na tela de bloqueio | Melhoria | — | falta | falta | Atividade ao Vivo no iPhone, notificação fixa no Android (Ca, 17/10); README, item 13 |
 | Android junto do `main` | Código | — | — | falta | Ramo `claude/android-play-store` ainda separado |
 | Links abrindo o app | Melhoria | falta | falta | falta | Universal Links (iPhone) e App Links (Android), cada um com sua configuração |
 | Outros membros também convidarem | Melhoria | falta | falta | falta | Decidido em 16/10, no backlog (README, item 5): qualquer membro convida, e fica guardado quem convidou. SQL novo, tela e versão nova dos Termos e da Política |

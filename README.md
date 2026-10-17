@@ -58,6 +58,28 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
 9. **"Indicar o Soneca" com o link certo** (Patrick, 16/10, para os próximos PRs): no app, o link de
    indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
    levar à App Store (e à Play Store no Android), ou à página do item 2.
+10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
+    `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
+    O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
+    fosse um acesso novo, e não tem como entrar na família por ali. Correção rápida, para a 1.0.1, sem
+    esperar o item 2: na tela "Criar família", um "Tenho um convite" para colar o link recebido (prévia do
+    texto antes). Depois, o item 2 resolve de vez. Enquanto isso, o caminho é aceitar o convite pelo site
+    e entrar no app com o **mesmo e-mail**: entrar com a Apple usando "Ocultar meu e-mail" ou com outro
+    Google cria outra conta, sem a família.
+11. **Sono que nunca terminou** (Bruno, 17/10): ficou um "Dormiu" sem "Acordou" e o bebê apareceu dormindo
+    nos dias 11, 12 e 13. Não dava para anotar o "Acordou" no dia certo (o relógio só volta até ontem; é o
+    item 7), então o Bruno apagou o "Dormiu". A decidir antes de programar: a partir de quantas horas o
+    app pergunta "Ainda dormindo?" e oferece anotar a hora que acordou, e se um sono assim longo fica fora
+    das médias até ser corrigido. Prévia antes. Junto com o item 7.
+12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
+    sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
+    A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
+    fica guardada), troca de peito, pausa, e quem mais da família vê a mamada em andamento. Prévia antes.
+13. **Cronômetro na tela de bloqueio** (Ca, 17/10; ela usava assim no Napper): depois do item 12, mostrar
+    a mamada em andamento na tela bloqueada, para trocar de peito ou terminar sem abrir o app. No iPhone é
+    a Atividade ao Vivo (código nativo novo, fora do site, e um plugin do Capacitor); no Android, uma
+    notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista: decidir se vale antes do
+    resto.
 
 **Android**
 
