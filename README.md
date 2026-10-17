@@ -66,11 +66,23 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
     texto antes). Depois, o item 2 resolve de vez. Enquanto isso, o caminho é aceitar o convite pelo site
     e entrar no app com o **mesmo e-mail**: entrar com a Apple usando "Ocultar meu e-mail" ou com outro
     Google cria outra conta, sem a família.
+    **17/10, ramo `claude/backlog-17-10`:** o link de convite passa a abrir o app do iPhone (arquivo
+    `.well-known/apple-app-site-association` no site, "Associated Domains" no app e o plugin App do
+    Capacitor, que entrega o convite ao app aberto ou fechado). Testado com o Soneca de teste
+    (`testes/`, cenário `app-convite`). **Antes da próxima compilação:** no portal da Apple, em
+    Certificates, Identifiers & Profiles → Identifiers → `br.app.soneca`, marcar "Associated Domains" e
+    salvar; sem isso o Codemagic falha na assinatura. Só funciona depois que o `main` (com o arquivo) for
+    publicado na Vercel. **Android:** falta o `assetlinks.json` com a impressão digital SHA-256 da chave de
+    assinatura do app (Play Console → Integridade do app) e o filtro de links no `AndroidManifest.xml`, no
+    ramo do Android. Prévia do "Recebeu um convite?" e da correção de "família Família" (aparece quando o
+    nome já começa com "Família"): https://claude.ai/artifact/NjChTK6fonBHadovmJ1zz3
 11. **Sono que nunca terminou** (Bruno, 17/10): ficou um "Dormiu" sem "Acordou" e o bebê apareceu dormindo
     nos dias 11, 12 e 13. Não dava para anotar o "Acordou" no dia certo (o relógio só volta até ontem; é o
     item 7), então o Bruno apagou o "Dormiu". A decidir antes de programar: a partir de quantas horas o
     app pergunta "Ainda dormindo?" e oferece anotar a hora que acordou, e se um sono assim longo fica fora
-    das médias até ser corrigido. Prévia antes. Junto com o item 7.
+    das médias até ser corrigido. Prévia antes. Junto com o item 7. Reproduzido no Soneca de teste
+    (cenário `sono-aberto`: "Dormindo há 6 dias"). Prévias dos itens 7, 11, 12 e 13 no mesmo artefato
+    do item 10.
 12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
     sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
     A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
