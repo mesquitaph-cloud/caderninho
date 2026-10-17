@@ -238,8 +238,12 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
    Brasil, versão 6, listas "eu" e "testadores 1" com 12 ou mais Gmails) enviado à revisão do Google em
    16/10, com o nome de desenvolvedor "Patrick Harris de Mesquita". Classificação no Brasil: 12 anos
    ("Linguagem imprópria" e "Usuários interagem", por haver texto livre entre membros da família).
-7. Depois da aprovação: mandar o link do teste fechado aos testadores; os 14 dias contam quando 12 tiverem
-   entrado. Depois deles: Painel → "Solicitar acesso à produção".
+7. Teste fechado aprovado pelo Google (17/10). Convite aos testadores com o link do app,
+   `https://play.google.com/store/apps/details?id=br.app.soneca` (conferido com outro Gmail da lista: abre com
+   "Instalar"); reserva, se não abrir: `https://play.google.com/apps/testing/br.app.soneca`. A conta do
+   Patrick conta como testador (entrou pelo link da web; 1 em 17/10). Acompanhar em Dashboard → "testers
+   currently opted-in"; os 14 dias contam quando chegar a 12. Depois deles: Dashboard → "Apply for access to
+   production".
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
