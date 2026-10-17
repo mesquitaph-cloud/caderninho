@@ -43,7 +43,9 @@ A mesma lista está na aba "Plataformas" do Painel do Soneca (https://claude.ai/
 
 | Item | Tipo | Site | iPhone | Android | Nota |
 |---|---|---|---|---|---|
-| Link de convite e de indicação | Correção | ok | quebrado | quebrado | Endereço interno do app no link; "Compartilhar" falha (Bruno, 16/10). Corrigido no código em 16/10; chega aos apps na próxima compilação |
+| Link de convite | Correção | ok | ok | falta | Endereço interno do app no link (Bruno, 16/10). Corrigido em 16/10; conferido pelo Bruno no TestFlight depois de atualizar. Android: próxima compilação. A 1.0 (2) na revisão da Apple ainda tem o erro |
+| Link de "Indicar o Soneca" | Correção | ok | quebrado | quebrado | Ainda não sai o link certo no app (Patrick, 16/10). Para os próximos PRs (README, item 9) |
+| Aviso de versão nova | Melhoria | — | falta | falta | Avisar quem está com versão antiga para atualizar (Patrick, 16/10; README, item 8) |
 | Anotar registro em outro dia | Correção | falta | falta | falta | Nenhum registro tem campo de dia (Bruno, 16/10). Prévia antes |
 | Android junto do `main` | Código | — | — | falta | Ramo `claude/android-play-store` ainda separado |
 | Links abrindo o app | Melhoria | falta | falta | falta | Universal Links (iPhone) e App Links (Android), cada um com sua configuração |

@@ -20,6 +20,8 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
 **Logo depois da aprovação**
 
 - Publicar na App Store (publicação manual).
+- A 1.0 (2) que está na revisão foi compilada antes da correção do convite (16/10): sai na loja com o
+  link de convite quebrado. Mandar logo a 1.0.1 com a correção.
 - Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
   da Apple (entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de Ajustes; seção
   "Entrar com Google e Apple").
@@ -49,6 +51,13 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
    família só passa adiante se quem criou apagar a conta. Mesmos passos do item 5, e junto com ele.
 7. **Anotar registro em outro dia** (Bruno, 16/10): nenhum registro tem campo de dia, e o remédio só
    mostra as doses de hoje. Prévia de "Hoje / Ontem / Outro dia" junto do relógio antes de programar.
+8. **Aviso de versão nova** (pedido do Patrick em 16/10): quando sair uma versão nova do app, avisar quem
+   está com a antiga para atualizar. O convite do Bruno só funcionou depois de atualizar o TestFlight. A
+   decidir antes de programar: de onde o app sabe qual é a versão mais nova (banco ou loja), se o aviso
+   pode ser fechado ou bloqueia o app quando a versão antiga quebra algo, e o texto exato (prévia antes).
+9. **"Indicar o Soneca" com o link certo** (Patrick, 16/10, para os próximos PRs): no app, o link de
+   indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
+   levar à App Store (e à Play Store no Android), ou à página do item 2.
 
 **Android**
 
