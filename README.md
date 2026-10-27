@@ -86,7 +86,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     (cenário `sono-aberto`: "Dormindo há 6 dias"). Prévias dos itens 7, 11, 12 e 13 no mesmo artefato
     do item 10. **Decidido em 27/10:** 14 horas; o sono acima disso fica fora das médias até ser
     corrigido; textos da prévia aprovados. Item 7: até 30 dias para trás; "Hoje", "Ontem", "Outro dia" e
-    "Dia" aprovados. Falta programar os dois.
+    "Dia" aprovados. **Programados em 27/10** e testados no Soneca de teste (cenário `sono-aberto`):
+    "Hoje / Ontem / Outro dia" em todos os registros (fora a marcação de dose do remédio programado, que
+    segue a dose do dia); "Ainda dormindo?" no lugar de "Dormindo há…" depois de 14 horas, com "Anotar
+    quando acordou" abrindo o Sono no dia do "Dormiu" e "Apagar esse 'Dormiu'" com "Desfazer".
 12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
     sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
     A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
