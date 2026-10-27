@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cores do Soneca no Android, iguais às do styles.css e da abertura do iPhone. De noite: values-night. -->
+<resources>
+    <color name="soneca_icone_traco">#4A3522</color>
+    <color name="soneca_abertura_fundo">#FFF8EE</color>
+    <color name="soneca_abertura_traco">#7A5A3C</color>
+</resources>
