@@ -311,7 +311,9 @@ async function showInvite(tok) {
     err('errInvite', row && !row.is_valid ? 'Este convite não vale mais. Peça um novo a quem te convidou.' : ERR.invite_not_found);
     $('acceptInvite').hidden = true; $('inviteOk').hidden = true; return;
   }
-  $('inviteText').textContent = row.creator_name + ' convidou você para a família ' + row.family_name + '.';
+  // "Família Andrade" já traz a palavra: sem isso saía "para a família Família Andrade".
+  const fam = /^fam[íi]lia\s/i.test(row.family_name) ? row.family_name : 'família ' + row.family_name;
+  $('inviteText').textContent = row.creator_name + ' convidou você para a ' + fam + '.';
   $('inviteBaby').textContent = 'Você vai ver e anotar os registros dos bebês da família, que incluem dados de saúde.';
   $('acceptInvite').onclick = async () => {
     if (!$('okInvite').checked) return err('errInvite', 'Para entrar, marque o compromisso acima.');
@@ -326,6 +328,15 @@ async function showInvite(tok) {
 $('skipInvite').onclick = () => { lsSet('cad-invite', null); show('scrLoading'); boot(); };
 
 /* ---------- criar família ---------- */
+// Convite colado: para quem abriu o link no navegador ou estava com uma versão antiga do app (Ca, 17/10).
+// Aceita o link inteiro, com ou sem https://, ou só o código.
+$('fPaste').addEventListener('submit', e => {
+  e.preventDefault(); err('errPaste');
+  const s = $('pasteIn').value.trim();
+  const tok = (s.match(/[?&]convite=([\w-]+)/) || [])[1] || (/^[\w-]{20,}$/.test(s) ? s : null);
+  if (!tok) return err('errPaste', 'Não achei um convite nesse link. Confira com quem te convidou.');
+  $('pasteIn').value = ''; lsSet('cad-invite', tok); showInvite(tok);
+});
 $('fCreate').addEventListener('submit', async e => {
   e.preventDefault(); err('errCreate');
   if (!$('okBaby').checked) return err('errCreate', 'Para criar a família, marque a autorização dos dados do bebê.');

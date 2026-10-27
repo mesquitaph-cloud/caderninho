@@ -75,22 +75,30 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     assinatura do app (Play Console → Integridade do app) e o filtro de links no `AndroidManifest.xml`, no
     ramo do Android. Prévia do "Recebeu um convite?" e da correção de "família Família" (aparece quando o
     nome já começa com "Família"): https://claude.ai/artifact/NjChTK6fonBHadovmJ1zz3
+    **27/10:** textos aprovados pelo Patrick e programados: "Recebeu um convite?" na tela Criar família
+    (aceita o link inteiro, sem `https://` ou só o código) e "Carol convidou você para a Família Andrade."
+    Testado no Soneca de teste (cenário `sem-familia`), de dia e de noite. Vai na 1.0.1.
 11. **Sono que nunca terminou** (Bruno, 17/10): ficou um "Dormiu" sem "Acordou" e o bebê apareceu dormindo
     nos dias 11, 12 e 13. Não dava para anotar o "Acordou" no dia certo (o relógio só volta até ontem; é o
     item 7), então o Bruno apagou o "Dormiu". A decidir antes de programar: a partir de quantas horas o
     app pergunta "Ainda dormindo?" e oferece anotar a hora que acordou, e se um sono assim longo fica fora
     das médias até ser corrigido. Prévia antes. Junto com o item 7. Reproduzido no Soneca de teste
     (cenário `sono-aberto`: "Dormindo há 6 dias"). Prévias dos itens 7, 11, 12 e 13 no mesmo artefato
-    do item 10.
+    do item 10. **Decidido em 27/10:** 14 horas; o sono acima disso fica fora das médias até ser
+    corrigido; textos da prévia aprovados. Item 7: até 30 dias para trás; "Hoje", "Ontem", "Outro dia" e
+    "Dia" aprovados. Falta programar os dois.
 12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
     sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
     A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
     fica guardada), troca de peito, pausa, e quem mais da família vê a mamada em andamento. Prévia antes.
+    **Decidido em 27/10:** a mamada em andamento fica só no celular de quem começou (sem SQL novo). Os
+    textos ainda esperam a aprovação do Patrick na prévia do item 10.
 13. **Cronômetro na tela de bloqueio** (Ca, 17/10; ela usava assim no Napper): depois do item 12, mostrar
     a mamada em andamento na tela bloqueada, para trocar de peito ou terminar sem abrir o app. No iPhone é
     a Atividade ao Vivo (código nativo novo, fora do site, e um plugin do Capacitor); no Android, uma
-    notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista: decidir se vale antes do
-    resto.
+    notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista. **Decidido em 27/10:** fazer
+    já, junto com o item 12 (o Patrick não quis esperar a Ca usar o 12 antes). Textos da tela de bloqueio
+    ainda a aprovar.
 
 **Android** (seção "App do Android")
 

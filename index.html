@@ -100,6 +100,14 @@
 <!-- Criar família -->
 <section class="screen" id="scrCreate" hidden>
   <h1>Criar família</h1>
+  <form id="fPaste" class="consent">
+    <b>Recebeu um convite?</b>
+    <p class="txt">Cole aqui o link que te mandaram para entrar na família de quem convidou.</p>
+    <div><div class="lbl">Link do convite</div><input class="field" id="pasteIn" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <p class="err" id="errPaste" hidden></p>
+    <button class="save" type="submit">Abrir convite</button>
+  </form>
+  <p class="hint" style="margin:0">Ou crie uma família nova:</p>
   <form id="fCreate">
     <p>A família é quem cuida do bebê e vê os mesmos registros. Depois você convida as outras pessoas.</p>
     <div><div class="lbl">Nome da família</div><input class="field" id="famIn" maxlength="60" placeholder="Família Mesquita" required></div>
