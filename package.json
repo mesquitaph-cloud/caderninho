@@ -1,12 +1,14 @@
 {
   "name": "soneca",
   "private": true,
-  "description": "Soneca: o site (HTML, CSS e JS puros, sem build) e o app do iPhone pelo Capacitor.",
+  "description": "Soneca: o site (HTML, CSS e JS puros, sem build) e o app do iPhone e do Android pelo Capacitor.",
   "scripts": {
     "www": "node scripts/www.mjs",
-    "ios": "node scripts/www.mjs && npx cap sync ios"
+    "ios": "node scripts/www.mjs && npx cap sync ios",
+    "android": "node scripts/www.mjs && npx cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.2",
     "@capacitor/core": "8.5.3",
     "@capacitor/ios": "8.5.3",

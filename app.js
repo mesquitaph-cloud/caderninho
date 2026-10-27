@@ -153,11 +153,15 @@ $('fPass').addEventListener('submit', async e => {
   show('scrLoading'); boot();
 });
 $('backPass').onclick = () => { $('fPass').hidden = true; $('fEmail').hidden = false; };
-// Entrar com Google e Apple. No app do iPhone, pela janela do próprio iPhone (plugin SocialLogin): o
-// token volta para o app e o Supabase confere. No site, só o Google: sai para o Google e volta para cá
-// já com a sessão (o convite, se houver, ficou guardado no celular). A mesma pessoa, com o mesmo e-mail,
-// cai na mesma conta do código; quem escolhe "Ocultar meu e-mail" na Apple vira uma conta nova.
+// Entrar com Google e Apple. No app (iPhone e Android), pela janela do próprio celular (plugin
+// SocialLogin): o token volta para o app e o Supabase confere. A Apple, só no app do iPhone. No site, só
+// o Google: sai para o Google e volta para cá já com a sessão (o convite, se houver, ficou guardado no
+// celular). A mesma pessoa, com o mesmo e-mail, cai na mesma conta do código; quem escolhe "Ocultar meu
+// e-mail" na Apple vira uma conta nova.
 const NATIVE = !!window.Capacitor?.isNativePlatform?.();
+const ANDROID = NATIVE && window.Capacitor.getPlatform() === 'android';
+const IOS_APP = NATIVE && !ANDROID;
+if (NATIVE) document.documentElement.dataset.app = ANDROID ? 'android' : 'ios';
 // Link que vai para outra pessoa (convite, indicação): no app, location.origin é o endereço interno
 // (capacitor://localhost no iPhone, https://localhost no Android), que não abre em outro celular.
 const LINK_BASE = NATIVE ? 'https://soneca.app.br' : location.origin;
@@ -182,9 +186,9 @@ appPlugin?.addListener('appUrlOpen', ({ url }) => {
   if (st.user) { show('scrLoading'); boot(); }
 });
 let socialReady = null;
-$('sso').hidden = !GOOGLE_LOGIN && !(NATIVE && APPLE_LOGIN);
+$('sso').hidden = !GOOGLE_LOGIN && !(IOS_APP && APPLE_LOGIN);
 $('googleBtn').hidden = !GOOGLE_LOGIN;
-$('appleBtn').hidden = !(NATIVE && APPLE_LOGIN);
+$('appleBtn').hidden = !(IOS_APP && APPLE_LOGIN);
 const SSO_NAME = { google: 'o Google', apple: 'a Apple' };
 
 // Número de uso único contra token reaproveitado: o provedor recebe o SHA-256, o Supabase o original.
@@ -197,14 +201,18 @@ async function nonces() {
 async function nativeLogin(provider, btn) {
   err('errSso'); busy(btn, true);
   try {
-    socialReady ||= social.initialize({
-      google: { iOSClientId: GOOGLE_IOS_CLIENT_ID, iOSServerClientId: GOOGLE_WEB_CLIENT_ID, mode: 'online' },
-      apple: { clientId: 'br.app.soneca' },
-    });
+    // No Android, o Google pede o ID do cliente Web (o cliente Android só existe no Google Cloud, ligado
+    // à assinatura do app); no iPhone, o do cliente iOS.
+    socialReady ||= social.initialize(ANDROID
+      ? { google: { webClientId: GOOGLE_WEB_CLIENT_ID, mode: 'online' } }
+      : { google: { iOSClientId: GOOGLE_IOS_CLIENT_ID, iOSServerClientId: GOOGLE_WEB_CLIENT_ID, mode: 'online' },
+          apple: { clientId: 'br.app.soneca' } });
     await socialReady;
     const { raw, hashed } = await nonces();
+    // No Android, o plugin já pede e-mail e perfil e recusa qualquer lista de permissões ("scopes").
     const scopes = provider === 'apple' ? ['email', 'name'] : ['email', 'profile'];
-    const { result } = await social.login({ provider, options: { scopes, nonce: hashed } });
+    const options = ANDROID ? { nonce: hashed } : { scopes, nonce: hashed };
+    const { result } = await social.login({ provider, options });
     if (!result?.idToken) throw new Error('sem token');
     const { error } = await sb.auth.signInWithIdToken({ provider, token: result.idToken, nonce: raw });
     if (error) throw error;
@@ -1450,8 +1458,9 @@ function printReport() {
   const t = document.title; document.title = pdfName(st.baby, Date.now());
   const back = () => { document.title = t; };
   window.addEventListener('afterprint', back, { once: true }); setTimeout(back, 60000);
-  // No app do iPhone, o window.print() não faz nada: a folha de imprimir do iPhone (com "Salvar em
-  // Arquivos" e "Compartilhar") vem pelo plugin Printer, com as mesmas regras de impressão da página.
+  // No app (iPhone e Android), o window.print() não faz nada: a folha de imprimir do celular (com "Salvar
+  // em Arquivos"/"Salvar como PDF" e "Compartilhar") vem pelo plugin Printer, com as mesmas regras de
+  // impressão da página.
   if (NATIVE) return window.Capacitor.registerPlugin('Printer').printWebView({ name: document.title })
     .catch(() => toast('Não foi possível abrir o PDF. Tente de novo.')).finally(back);
   window.print();
@@ -1794,7 +1803,7 @@ function feedbackAction(a, v, btn) {
   if (a === 'fbSend') return sendFeedback(btn);
   if (a === 'fbAgain') { FB.sent = false; return drawFeedback(); }
 }
-// O tipo de celular que vai junto: aparelho, sistema, navegador e se é o app do iPhone ou o site.
+// O tipo de celular que vai junto: aparelho, sistema, navegador e se é o app (iPhone ou Android) ou o site.
 function deviceText() {
   const u = navigator.userAgent, ios = u.match(/OS (\d+)[_.](\d+)/), and = u.match(/Android (\d+(?:\.\d+)?)/);
   const dev = /iPad/.test(u) || (isIOS && !/iPhone|iPod/.test(u)) ? 'iPad' : isIOS ? 'iPhone'
@@ -1802,7 +1811,7 @@ function deviceText() {
   const sys = /iPhone|iPad|iPod/.test(u) && ios ? 'iOS ' + ios[1] + '.' + ios[2] : '';
   const nav = /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Edg(A|iOS)?\//.test(u) ? 'Edge' : /CriOS|Chrome\//.test(u) ? 'Chrome'
     : /FxiOS|Firefox\//.test(u) ? 'Firefox' : /Safari\//.test(u) ? 'Safari' : 'outro navegador';
-  return [dev, sys, nav, NATIVE ? 'app do iPhone' : 'no navegador'].filter(Boolean).join(' · ');
+  return [dev, sys, nav, ANDROID ? 'app do Android' : NATIVE ? 'app do iPhone' : 'no navegador'].filter(Boolean).join(' · ');
 }
 
 async function afterLeavingFamily() {
@@ -2022,6 +2031,14 @@ $('weekView').addEventListener('keydown', e => {
 });
 $('scrim').onclick = closeSheet;
 document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (!$('rpView').hidden) closeReportView(); else if (S) closeSheet(); });
+// Botão "voltar" do Android: fecha o relatório ou a janela aberta, depois volta para a aba Hoje; só então
+// deixa o app (sem fechar, como os outros apps do Android).
+if (ANDROID) window.Capacitor.registerPlugin('App').addListener('backButton', () => {
+  if (!$('rpView').hidden) closeReportView();
+  else if (S) closeSheet();
+  else if (!$('scrMain').hidden && st.tab !== 'home') goTab('home');
+  else window.Capacitor.registerPlugin('App').minimizeApp();
+});
 $('rpBack').onclick = closeReportView;
 $('rpPrint').onclick = printReport;
 
