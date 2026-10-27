@@ -8,18 +8,17 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
-## Próximos passos (atualizado em 14/10)
+## Próximos passos (atualizado em 27/10)
 
 Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão
-da Apple em 14/10; a publicação é manual, depois da aprovação.
+da Apple em 14/10 e **aprovado** (registrado em 27/10); a publicação é manual. No Android, o teste fechado
+da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/11).
 
-**Enquanto a Apple revisa**
-
-- Não mexer na conta do revisor nem rodar o `013`.
-
-**Logo depois da aprovação**
+**Agora que a Apple aprovou**
 
 - Publicar na App Store (publicação manual).
+- Não rodar o `013` nem mexer na conta do revisor até a 1.0.1 passar também (a revisão dela usa a mesma
+  conta).
 - A 1.0 (2) que está na revisão foi compilada antes da correção do convite (16/10): sai na loja com o
   link de convite quebrado. Mandar logo a 1.0.1 com a correção.
 - Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
@@ -83,9 +82,10 @@ da Apple em 14/10; a publicação é manual, depois da aprovação.
 
 **Android** (seção "App do Android")
 
-- Play Store: teste fechado com 12 testadores por 14 dias antes de publicar (o plano dizia começar até
-  ~25/10).
-- Ícone e abertura do Android (hoje ainda os do Capacitor): prévia antes de programar.
+- Play Store: teste fechado com 12 testadores por 14 dias antes de publicar. Dia 9 de 14 em 27/10; por
+  volta de 01/11, conferir no Dashboard que os 14 dias fecharam e pedir a produção ("Apply for access to
+  production"), que passa por outra revisão do Google.
+- Testar a fundo num Android: código, PDF, botão "voltar", apagar a conta, topo da tela e modo escuro.
 - Página para pedir a exclusão da conta sem o app (exigência do Google): `soneca.app.br/apagar-conta`
   (15/10, prévia aprovada: https://claude.ai/artifact/F66R6udyXBznRpzCYwstJE). Pedido por e-mail →
   `supabase/019_apagar_conta_por_email.sql` no SQL Editor, depois de conferir que veio do e-mail da conta.
@@ -236,7 +236,7 @@ O texto de indicar não diz mais "Não precisa baixar na loja". As sugestões di
 e `/termos` para o domínio novo (o resto do endereço antigo continua igual, para ninguém perder a
 entrada). Na App Store, a política é `https://soneca.app.br/privacidade`.
 
-## App do Android (15/10, no código, falta compilar e testar)
+## App do Android (15/10; teste fechado na Play Store desde 17/10)
 
 O mesmo app do iPhone, pelo Capacitor (`android/`, pacote `br.app.soneca`, Android 7 ou mais novo,
 compilado para o Android 16). `npm run android` copia o site para `www/` e atualiza `android/`.
@@ -271,7 +271,7 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
 4. Testar num Android (16/10, versão 5 no teste interno: entrar com o Google funciona; a versão 4 falhava
    porque o app mandava a lista de permissões, que o plugin recusa no Android): falta conferir o código, o PDF, o botão "voltar", apagar a conta, o
    topo da tela e o modo escuro.
-5. Ícone e abertura do Soneca no Android (prévia antes).
+5. ~~Ícone e abertura do Soneca no Android~~ (no código em 16/10).
 6. ~~Página da loja, Segurança dos dados, classificação, público adulto e a página para pedir a exclusão
    da conta pela web~~ (16/10, o que foi preenchido está em `PLAY-STORE.md`). Teste fechado (Alpha, só
    Brasil, versão 6, listas "eu" e "testadores 1" com 12 ou mais Gmails) enviado à revisão do Google em
@@ -283,6 +283,7 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
    Patrick conta como testador (entrou pelo link da web; 1 em 17/10). Acompanhar em Dashboard → "testers
    currently opted-in"; os 14 dias contam quando chegar a 12. Depois deles: Dashboard → "Apply for access to
    production".
+8. Dia 9 de 14 em 27/10: os 14 dias fecham por volta de 01/11; aí pedir a produção.
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
