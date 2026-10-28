@@ -15,6 +15,14 @@ Q.prototype.then = function (ok, ko) {
   return Promise.resolve({ data: [], error: null }).then(ok, ko);
 };
 
+// window.testeLento = 3000 deixa a leitura dos registros 3 segundos mais lenta (para ver a tela durante
+// um recarregamento, como ao voltar para o app).
+const thenFast = Q.prototype.then;
+Q.prototype.then = function (ok, ko) {
+  if (this.t !== 'entries' || this.op !== 'select' || !window.testeLento) return thenFast.call(this, ok, ko);
+  return new Promise(r => setTimeout(r, window.testeLento)).then(() => thenFast.call(this, ok, ko));
+};
+
 let ME = U.me;
 const RPC = {};
 
