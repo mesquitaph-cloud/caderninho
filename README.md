@@ -47,9 +47,16 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 **Próxima versão do app**
 
 1. **Aviso na hora do remédio, mesmo com o app fechado** (pedido do Patrick em 14/10). Hoje o lembrete só
-   aparece com o app aberto (cartão da tela inicial). A decidir antes de programar: quem recebe (todos da
-   família ou só quem escolher), quanto antes da hora, e o que acontece no celular dos outros quando alguém
-   já deu a dose.
+   aparece com o app aberto (cartão da tela inicial). **Prévia aprovada em 28/10**
+   (https://claude.ai/artifact/UExfMb9bYN9nLYd2E8Cq1S): aviso local, agendado pelo próprio celular, sem
+   servidor e sem mudar o banco; só no app (o site não avisa). Título "Hora do remédio de Lia"; texto
+   "Amoxicilina · 5 ml · dose das 14:00"; na hora exata, com o som padrão, sem botões; tocar abre a dose.
+   Chave "Ativar notificações de remédios" no alto de "Remédios e horários", só naquele celular, ligada
+   para quem programa o remédio. Canal do Android "Hora do remédio". "Só quando precisar" não avisa.
+   Limite aceito: se outra pessoa já deu a dose e o app deste celular estava fechado, o aviso toca mesmo
+   assim (para evitar, seria preciso aviso pelo servidor, que fica para depois).
+   Permissão negada: "Permita as notificações do Soneca nas configurações do celular." (aprovado em 28/10).
+   Programado no PR #43, ainda sem teste em celular de verdade.
 2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
    `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
 3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
