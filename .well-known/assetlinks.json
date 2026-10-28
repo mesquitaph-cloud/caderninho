@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.app.soneca",
+      "sha256_cert_fingerprints": [
+        "58:8E:22:61:92:77:B5:6F:45:E5:6E:15:F0:5B:8E:74:E6:FF:FB:CF:B1:DF:D9:E5:5E:36:A8:68:E7:E5:C3:05"
+      ]
+    }
+  }
+]
