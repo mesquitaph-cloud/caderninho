@@ -109,13 +109,20 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
     fica guardada), troca de peito, pausa, e quem mais da família vê a mamada em andamento. Prévia antes.
     **Decidido em 27/10:** a mamada em andamento fica só no celular de quem começou (sem SQL novo). Textos
-    da prévia aprovados pelo Patrick em 28/10.
+    da prévia aprovados pelo Patrick em 28/10. **Prévia completa aprovada em 28/10**
+    (https://claude.ai/artifact/Y9mtKm7CL8woD3NwdeopXs): cada peito é um botão que começa ou pausa o seu
+    cronômetro, e só um conta por vez; "tocar para começar", "Descartar mamada", "Mamada descartada" (com
+    "Desfazer"), "Mamada pausada", "mamando" e "pausada" no botão Mamada; faixa menta em cima dos botões;
+    cada peito arredondado para o minuto mais próximo, e o que ficou menos de 30 segundos não é gravado;
+    depois de 2 horas contando, o cronômetro pausa sozinho (número do Patrick, não de estudo); com o bebê
+    "Dormindo", o app não marca "Acordou" sozinho.
 13. **Cronômetro na tela de bloqueio** (Ca, 17/10; ela usava assim no Napper): depois do item 12, mostrar
     a mamada em andamento na tela bloqueada, para trocar de peito ou terminar sem abrir o app. No iPhone é
     a Atividade ao Vivo (código nativo novo, fora do site, e um plugin do Capacitor); no Android, uma
     notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista. **Decidido em 27/10:** fazer
     já, junto com o item 12 (o Patrick não quis esperar a Ca usar o 12 antes). Textos da tela de bloqueio
-    aprovados em 28/10 ("Soneca · Mamada", "começou 19h05", "no direito", "Trocar de peito", "Terminar").
+    aprovados em 28/10 ("Soneca · Mamada", "começou 19h05", "no direito", "Trocar de peito", "Terminar"),
+    e com a mamada pausada "Mamada pausada" e "Continuar" (volta a contar no último peito).
 14. **Tirar do ar o Soneca pelo site, deixando só os apps** (decidido em 10/10, para o backlog em 27/10).
     O endereço `soneca.app.br` continua, mas sem o app: a página inicial vira a do item 2, com os botões da
     App Store e da Play Store. Ficam no ar `/privacidade`, `/termos`, `/apagar-conta` (exigência do Google)
