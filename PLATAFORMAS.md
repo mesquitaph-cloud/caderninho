@@ -32,34 +32,38 @@ Os apps levam uma cópia do código dentro deles: juntar no `main` **não** muda
 - **Compartilhar (`navigator.share`).** No iPhone existe, mas recusa link que não seja `https://`. No
   WebView do Android, em geral, não existe: o botão "Compartilhar" nem aparece (não conferido no aparelho).
 
-- **Ramo do Android.** Até 16/10 o Android vive no ramo `claude/android-play-store`, à frente do `main`.
-  Correção feita no `main` precisa ser trazida para esse ramo antes da compilação do Android, até ele ser
-  juntado.
+- **Ramo do Android.** De 16/10 a 27/10 o Android viveu no ramo `claude/android-play-store`. Foi juntado
+  ao `main` em 27/10: desde então os dois apps saem do mesmo código. Código só do Android que ficar num
+  ramo à parte (como o PR #42) deixa os dois diferentes até ser juntado.
 
 ## O que falta em cada plataforma
 
-ok: feito · falta: ainda não feito · quebrado: erro que alguém já encontrou · —: não se aplica.
-A mesma lista está na aba "Plataformas" do Painel do Soneca (https://claude.ai/artifact/Gfwcfe5WMRZ5YHr2nck1n1).
+Conferido em 28/10 pelo código e pelo histórico do `main` (não pelo Codemagic nem pelas lojas). Os dois
+apps estão na 1.0.1, com os mesmos plugins.
+
+ok: feito e já no app · no `main`: programado, mas a compilação 1.0.1 (`d4b90b8`) saiu antes, então só
+chega com uma compilação nova · falta: ainda não feito · quebrado: erro que alguém já encontrou · —: não se
+aplica. A mesma lista está na aba "Plataformas" do Painel do Soneca
+(https://claude.ai/artifact/Gfwcfe5WMRZ5YHr2nck1n1), que ainda mostra a versão de 17/10.
 
 | Item | Tipo | Site | iPhone | Android | Nota |
 |---|---|---|---|---|---|
-| Link de convite | Correção | ok | ok | falta | Endereço interno do app no link (Bruno, 16/10). Corrigido em 16/10; conferido pelo Bruno no TestFlight depois de atualizar. Android: próxima compilação. A 1.0 (2) na revisão da Apple ainda tem o erro |
-| Link de "Indicar o Soneca" | Correção | ok | quebrado | quebrado | Ainda não sai o link certo no app (Patrick, 16/10). Para os próximos PRs (README, item 9) |
+| Link de convite abrindo o app | Melhoria | — | ok | no `main` | iPhone: Universal Links, na 1.0.1 (a 1.0 da loja ainda tem o link quebrado). Android: App Links em 28/10 (`assetlinks.json` e filtro no `AndroidManifest.xml`), depois da compilação |
+| Cronômetro da mamada | Melhoria | ok | no `main` | no `main` | Item 12, programado em 28/10 |
+| Cronômetro na tela de bloqueio | Melhoria | — | falta | falta | Item 13. Android: notificação fixa pronta no PR #42, ainda não juntado. iPhone: Atividade ao Vivo, não começada. Juntar só o Android deixa os apps diferentes |
+| Aviso do remédio com o app fechado | Melhoria | — | no `main` | no `main` | Item 1, PR #43. Ainda sem teste em celular de verdade |
+| Voltar para o app sem a tela vazia | Correção | ok | no `main` | no `main` | PR #44, 28/10 |
+| Link de "Indicar o Soneca" | Correção | ok | quebrado | quebrado | O app mostra `location.host`, que dentro dele é "localhost" (Patrick, 16/10; README, item 9) |
 | Aviso de versão nova | Melhoria | — | falta | falta | Avisar quem está com versão antiga para atualizar (Patrick, 16/10; README, item 8) |
-| Anotar registro em outro dia | Correção | falta | falta | falta | Nenhum registro tem campo de dia (Bruno, 16/10). Prévia antes |
-| Convite pelo navegador não chega ao app | Correção | — | quebrado | quebrado | O link abre no Safari e o app não recebe o convite; cai em "Criar família" (Ca, 17/10). "Tenho um convite" na tela de criar; README, item 10 |
-| Sono que nunca terminou | Melhoria | falta | falta | falta | "Dormiu" sem "Acordou" deixou o bebê dormindo por dias (Bruno, 17/10); README, item 11 |
-| Cronômetro da mamada | Melhoria | falta | falta | falta | Contar o tempo de cada peito sozinho (Ca, 17/10); README, item 12 |
-| Cronômetro na tela de bloqueio | Melhoria | — | falta | falta | Atividade ao Vivo no iPhone, notificação fixa no Android (Ca, 17/10); README, item 13 |
-| Android junto do `main` | Código | — | — | falta | Ramo `claude/android-play-store` ainda separado |
-| Links abrindo o app | Melhoria | falta | falta | falta | Universal Links (iPhone) e App Links (Android), cada um com sua configuração |
 | Outros membros também convidarem | Melhoria | falta | falta | falta | Decidido em 16/10, no backlog (README, item 5): qualquer membro convida, e fica guardado quem convidou. SQL novo, tela e versão nova dos Termos e da Política |
 | Passar a família para outro membro | Melhoria | falta | falta | falta | Decidido em 16/10, no backlog (README, item 6): quem criou entrega o controle e pode sair sem apagar. Junto com o anterior |
-| Aviso do remédio com o app fechado | Melhoria | — | falta | falta | Notificação: plugin e permissão em cada celular |
 | PDF do relatório no aparelho | Conferência | ok | falta | falta | Ver num aparelho se a folha sai igual |
-| Entrar com o Google | Conferência | ok | ok | ok | Android na versão 5 |
-| Publicação na loja | Loja | — | em revisão | falta | iPhone 1.0 (2) desde 14/10; Android: teste fechado até ~25/10 |
+| Publicação na loja | Loja | — | ok | falta | iPhone: 1.0 publicada, 1.0.1 compilada. Android: teste fechado até ~01/11, depois o pedido de produção |
 | Nome antigo nos e-mails | Correção | falta | falta | falta | Supabase, igual para todos |
-| Tirar o site do ar | Decisão | falta | — | — | Só depois do Android na loja e da página de convite |
+| Tirar o site do ar | Decisão | falta | — | — | Item 14. Só depois do Android na loja e da página de convite |
+
+Chegaram a todos na 1.0.1 e saíram da tabela: endereço certo no link de convite, "Recebeu um convite?" na
+tela Criar família, anotar registro em outro dia, "Ainda dormindo?" para o sono sem fim, Android junto do
+`main` e Entrar com o Google (detalhes no `README.md`).
 
 Quando um item chegar a todos, ele sai desta tabela e vai para o `README.md`.
