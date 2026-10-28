@@ -56,6 +56,12 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sleeping .t{font-family:var(--display);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
 .sleeping small{display:block;font-size:13px}
 .pill{background:var(--surface);color:var(--sleep-ink);border-radius:999px;padding:10px 18px;font-weight:500}
+/* Mamada com o cronômetro aberto: faixa menta, no lugar da do sono */
+.feeding{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--feed);color:var(--feed-ink);border-radius:18px;padding:12px 16px}
+.feeding .fopen{flex:1;text-align:left;color:inherit}
+.feeding .t{display:block;font-family:var(--display);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+.feeding small{display:block;font-size:13px}
+.feeding .pill{color:var(--feed-ink)}
 .pill.alt{background:transparent;border:1.5px solid currentColor}
 /* "Ainda dormindo?": o "Dormiu" passou de 14 horas; a faixa vira pergunta, sem a capivara */
 .sleeping .sold{display:none}
@@ -310,6 +316,16 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 .step input{width:44px;text-align:center;font-size:22px;font-family:var(--display);font-weight:500;border:none;background:none;color:var(--ink);font-variant-numeric:tabular-nums}
 .step input::placeholder{color:var(--muted);opacity:.7}
 .step em{font-style:normal;color:var(--muted);font-size:13px;margin-right:2px}
+/* Cronômetro da mamada: os dois peitos lado a lado; o que está contando fica em menta */
+.tsides{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tside{border-radius:18px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--surface);border:1.5px solid var(--line);color:var(--ink)}
+.tside.run{background:var(--feed);color:var(--feed-ink);border-color:var(--feed-ink)}
+.tside b{font-family:var(--display);font-weight:500;font-size:17px}
+.tside .tm{font-family:var(--display);font-weight:500;font-size:32px;line-height:1.2;font-variant-numeric:tabular-nums}
+.tside small{font-size:13px;color:var(--muted)}
+.tside.run small{color:var(--feed-ink)}
+.ftlinks{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+.ftlinks .mut{color:var(--muted)}
 .hint{font-size:13px;color:var(--muted);margin:-2px 0 8px}
 .total{font-size:14px;color:var(--muted);font-weight:500;margin-top:8px}
 .total:empty{display:none}
