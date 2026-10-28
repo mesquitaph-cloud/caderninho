@@ -55,6 +55,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    para quem programa o remédio. Canal do Android "Hora do remédio". "Só quando precisar" não avisa.
    Limite aceito: se outra pessoa já deu a dose e o app deste celular estava fechado, o aviso toca mesmo
    assim (para evitar, seria preciso aviso pelo servidor, que fica para depois).
+   Permissão negada: "Permita as notificações do Soneca nas configurações do celular." (aprovado em 28/10).
+   Programado no PR #43, ainda sem teste em celular de verdade.
 2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
    `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
 3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
