@@ -759,9 +759,9 @@ const FT_MAX = 2 * HOUR;
 const ftKey = () => st.baby ? 'cad-feedtimer-' + st.baby.id : null;
 const ftMs = (t, key, now) => t[key] + (t.run === key ? now - t.since : 0);
 const ftTotal = (t, now) => ftMs(t, 'l', now) + ftMs(t, 'r', now);
-// No Android, a notificação fixa (item 13) recebe o estado a cada mudança; "ask" pede a permissão de
-// notificações na mamada que acabou de começar.
-const mamadaPlugin = ANDROID ? window.Capacitor.registerPlugin('Mamada') : null;
+// Tela de bloqueio (item 13): a notificação fixa do Android e a Atividade ao Vivo do iPhone recebem o
+// estado a cada mudança; no Android, "ask" pede a permissão de notificações na mamada que acabou de começar.
+const mamadaPlugin = NATIVE ? window.Capacitor.registerPlugin('Mamada') : null;
 function ftSet(t, ask) {
   const k = ftKey(); if (!k) return;
   if (t) { t.at = Date.now(); t.baby = st.baby.id; }
