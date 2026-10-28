@@ -22,6 +22,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Link de convite (https://soneca.app.br/?convite=...) abre o app. O Android não filtra pelo
+                 "?convite"; o app ignora o link sem convite. Verificado por .well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="soneca.app.br" android:path="/" />
+            </intent-filter>
+
         </activity>
 
         <provider
