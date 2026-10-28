@@ -383,34 +383,48 @@ async function loadNames(ids) {
   for (const p of data || []) st.names[p.id] = p.display_name;
 }
 
+// Recarregar não esvazia a tela: os registros antigos ficam até os novos chegarem inteiros. O que
+// chega ao vivo durante o download fica na fila e é refeito sobre os novos.
+let entryQ = null;
 async function loadEntries() {
-  st.entries = new Map();
-  if (!st.baby) return;
+  const b = st.baby;
+  if (!b) { st.entries = new Map(); return; }
   // Os últimos 60 dias e, para o resumo do mês anterior sair inteiro, desde o dia 1º dele.
   const since = new Date(Math.min(startOfDay(Date.now() - KEEP_DAYS * DAY), prevMonth())).toISOString();
+  const fresh = new Map(), q = entryQ = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from('entries').select('*').eq('baby_id', st.baby.id)
+    const { data, error } = await sb.from('entries').select('*').eq('baby_id', b.id)
       .gte('at', since).order('at').range(from, from + 999);
-    if (error) { toast('Não foi possível carregar os registros.'); break; }
-    for (const r of data) st.entries.set(r.id, withT(r));
+    if (error) { if (entryQ === q) entryQ = null; return toast('Não foi possível carregar os registros.'); }
+    for (const r of data) fresh.set(r.id, withT(r));
     if (data.length < 1000) break;
   }
-  await loadNames([...st.entries.values()].map(e => e.author_id));
+  await loadNames([...fresh.values()].map(e => e.author_id));
+  if (entryQ !== q) return;   // outro recarregamento começou depois deste
+  entryQ = null;
+  if (st.baby?.id !== b.id) return;
+  for (const p of q) applyEntry(fresh, p);
+  st.entries = fresh;
+}
+function applyEntry(map, p) {
+  if (p.eventType === 'DELETE') map.delete(p.old.id);
+  else if (st.baby && p.new.baby_id === st.baby.id) map.set(p.new.id, withT(p.new));
 }
 const withT = r => ({ ...r, t: Date.parse(r.at) });
 
 async function loadMeds() {
-  st.meds = [];
-  if (!st.baby) return;
-  const { data, error } = await sb.from('medicines').select('*').eq('baby_id', st.baby.id).is('stopped_at', null).order('created_at');
+  const b = st.baby;
+  if (!b) { st.meds = []; return; }
+  const { data, error } = await sb.from('medicines').select('*').eq('baby_id', b.id).is('stopped_at', null).order('created_at');
   if (error) return toast('Não foi possível carregar os remédios.');
-  st.meds = data;
+  if (st.baby?.id === b.id) st.meds = data;
 }
 async function loadGrowth() {
-  st.measures = st.weights = st.lengths = []; st.milestones = [];
-  if (!st.baby) return;
-  const [w, m] = await Promise.all([sb.from('weights').select('*').eq('baby_id', st.baby.id),
-                                    sb.from('milestones').select('*').eq('baby_id', st.baby.id)]);
+  const b = st.baby;
+  if (!b) { st.measures = st.weights = st.lengths = []; st.milestones = []; return; }
+  const [w, m] = await Promise.all([sb.from('weights').select('*').eq('baby_id', b.id),
+                                    sb.from('milestones').select('*').eq('baby_id', b.id)]);
+  if (st.baby?.id !== b.id) return;
   st.growthOk = !w.error && !m.error;
   st.measures = sortWeights(w.data || []); st.milestones = sortMilestones(m.data || []);
   splitMeasures();
@@ -423,9 +437,10 @@ function splitMeasures() {
 // Dúvidas para a consulta. Sem canal ao vivo: antes do 010 a tabela não existe. Recarrega ao voltar
 // para o app, como o resto.
 async function loadQuestions() {
-  st.questions = [];
-  if (!st.baby) return;
-  const { data, error } = await sb.from('questions').select('*').eq('baby_id', st.baby.id);
+  const b = st.baby;
+  if (!b) { st.questions = []; return; }
+  const { data, error } = await sb.from('questions').select('*').eq('baby_id', b.id);
+  if (st.baby?.id !== b.id) return;
   st.questionsOk = !error; st.questions = data || [];
 }
 // Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
@@ -450,8 +465,8 @@ function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
   st.channel = sb.channel('familia-' + fid)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: 'family_id=eq.' + fid }, async p => {
-      if (p.eventType === 'DELETE') st.entries.delete(p.old.id);
-      else if (st.baby && p.new.baby_id === st.baby.id) { st.entries.set(p.new.id, withT(p.new)); await loadNames([p.new.author_id]); }
+      applyEntry(st.entries, p); entryQ?.push(p);
+      if (p.eventType !== 'DELETE' && st.baby && p.new.baby_id === st.baby.id) await loadNames([p.new.author_id]);
       refresh();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'medicines', filter: 'family_id=eq.' + fid }, p => {
@@ -1730,6 +1745,8 @@ async function saveBaby(btn) {
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
+  // Outro bebê: nada do anterior pode aparecer com o nome deste.
+  st.entries = new Map(); st.meds = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = [];
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render();
 }
 function renameSheet() {
