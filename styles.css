@@ -56,6 +56,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sleeping .t{font-family:var(--display);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
 .sleeping small{display:block;font-size:13px}
 .pill{background:var(--surface);color:var(--sleep-ink);border-radius:999px;padding:10px 18px;font-weight:500}
+.pill.alt{background:transparent;border:1.5px solid currentColor}
+/* "Ainda dormindo?": o "Dormiu" passou de 14 horas; a faixa vira pergunta, sem a capivara */
+.sleeping .sold{display:none}
+.sleeping.old{flex-direction:column;align-items:stretch}
+.sleeping.old>:not(.sold){display:none}
+.sleeping.old .sold{display:flex;flex-direction:column;gap:10px}
+.sleeping .sold p{margin:0}
+.sleeping .sbtns{display:flex;flex-wrap:wrap;gap:8px}
 .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 /* Botões de registro, três por linha: ícone, nome e há quanto tempo */
 .act{border-radius:18px;padding:10px;display:grid;grid-template-columns:1fr;row-gap:2px;align-content:start;min-height:88px;text-align:left;transition:transform .08s}

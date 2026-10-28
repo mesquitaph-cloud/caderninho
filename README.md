@@ -27,8 +27,17 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase (Authentication → Emails → Templates
   e o Sender name).
 - Mandar ao advogado as versões 1.1 e 1.3 da Política e dos Termos (seção "LGPD").
-- Tirar o site do ar, deixando só `/privacidade` e `/termos` (decidido em 10/10). Antes, ver quem usa pelo
-  Android: até a Play Store, o site é o único jeito de essas famílias usarem o Soneca.
+- Tirar o site do ar: virou o item 14 da lista abaixo (27/10).
+
+**Como as mudanças vão ao ar** (combinado em 27/10)
+
+1. Cada mudança nasce num ramo e é testada no Soneca de teste (`testes/`), de dia e de noite.
+2. PR no GitHub com a descrição em português; o Patrick olha e aperta "Merge". Mudança só de README ou
+   de texto interno pode ir direto ao `main`.
+3. O `main` vai sozinho para o site (Vercel). Os apps só mudam quando o Patrick clica em "Start new
+   build" no Codemagic, **sempre a partir do `main`**, nos dois fluxos (iPhone e Android): o app sai
+   igual ao site e um não fica com mudança que o outro não tem.
+4. A compilação vai ao TestFlight e ao teste fechado do Google; depois de testada, à revisão das lojas.
 
 **Próxima versão do app**
 
@@ -86,7 +95,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     (cenário `sono-aberto`: "Dormindo há 6 dias"). Prévias dos itens 7, 11, 12 e 13 no mesmo artefato
     do item 10. **Decidido em 27/10:** 14 horas; o sono acima disso fica fora das médias até ser
     corrigido; textos da prévia aprovados. Item 7: até 30 dias para trás; "Hoje", "Ontem", "Outro dia" e
-    "Dia" aprovados. Falta programar os dois.
+    "Dia" aprovados. **Programados em 27/10** e testados no Soneca de teste (cenário `sono-aberto`):
+    "Hoje / Ontem / Outro dia" em todos os registros (fora a marcação de dose do remédio programado, que
+    segue a dose do dia); "Ainda dormindo?" no lugar de "Dormindo há…" depois de 14 horas, com "Anotar
+    quando acordou" abrindo o Sono no dia do "Dormiu" e "Apagar esse 'Dormiu'" com "Desfazer".
 12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
     sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
     A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
@@ -99,6 +111,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista. **Decidido em 27/10:** fazer
     já, junto com o item 12 (o Patrick não quis esperar a Ca usar o 12 antes). Textos da tela de bloqueio
     ainda a aprovar.
+14. **Tirar do ar o Soneca pelo site, deixando só os apps** (decidido em 10/10, para o backlog em 27/10).
+    O endereço `soneca.app.br` continua, mas sem o app: a página inicial vira a do item 2, com os botões da
+    App Store e da Play Store. Ficam no ar `/privacidade`, `/termos`, `/apagar-conta` (exigência do Google)
+    e o `.well-known/apple-app-site-association` (sem ele, o link de convite não abre o app). Antes: o
+    Android publicado na Play Store (até lá, o site é o único caminho de quem tem Android), ver pelo banco
+    quantas famílias ainda entram pelo site, e um aviso a elas com prazo (texto a aprovar).
 
 **Android** (seção "App do Android")
 

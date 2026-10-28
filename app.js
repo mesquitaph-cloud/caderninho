@@ -503,6 +503,12 @@ function spotlight(id) {
 }
 const babyChips = () => st.babies.map(x => `<button data-baby="${esc(x.id)}" class="${x.id === st.baby?.id ? 'on' : ''}">${esc(x.name)}</button>`).join('');
 
+// Sono que nunca terminou (Bruno, 17/10): um "Dormiu" sem "Acordou" há mais de 14 horas (decidido em
+// 27/10) vira a pergunta "Ainda dormindo?" e fica fora dos gráficos e das médias até alguém corrigir.
+const LONG_SLEEP = 14 * HOUR;
+const liveOpen = (open, now) => open !== null && now - open > LONG_SLEEP ? null : open;
+const DIAS_LONGOS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
 function renderHome() {
   const evs = sortedEntries(), now = Date.now(), b = st.baby;
   $('babyName').textContent = b ? b.name : 'Sem bebê';
@@ -515,9 +521,12 @@ function renderHome() {
   tabs.innerHTML = babyChips();
 
   const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
-  const { out: intervals, open } = sleepIntervals(evs);
-  $('sleepBanner').hidden = open === null;
+  const { out: intervals, open: open0 } = sleepIntervals(evs), open = liveOpen(open0, now);
+  $('sleepBanner').hidden = open0 === null;
+  const old = open0 !== null && open === null;
+  $('sleepBanner').classList.toggle('old', old);
   if (open !== null) $('sleepFor').textContent = dur(now - open);
+  if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
   renderGrid(last, open, now);
   renderMeds();
 
@@ -732,6 +741,7 @@ function openEntry(k, edit) {
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
         sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '',
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
+  S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -769,6 +779,8 @@ function drawEntry() {
     if (CARE_MIN.includes(S.ck)) h += `<div><div class="lbl">Quanto tempo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="10" aria-label="Minutos"><em>min</em></div>
       <div class="seg" style="margin-top:8px">${CARE_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m} min</button>`).join('')}</div></div>`;
   }
+  h += daySeg();
+  if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
@@ -783,8 +795,16 @@ const savedText = ev => ev.poo_alert ? 'Alerta marrom às ' + hm(ev.t) + '. Cora
 function computeT() {
   const [H, M] = (S.time || hm(Date.now())).split(':').map(Number);
   let t = S.base + H * HOUR + M * MIN;
-  if (!S.edit && t > Date.now() + 5 * MIN) t -= DAY;
+  // Hoje com uma hora que ainda não chegou: foi ontem. Outro dia escolhido vale como está.
+  if (!S.edit && S.base === startOfDay(Date.now()) && t > Date.now() + 5 * MIN) t -= DAY;
   return t;
+}
+// Hoje / Ontem / Outro dia, em cima do relógio (Bruno, 16/10): até 30 dias para trás, decidido em 27/10.
+const BACK_DAYS = 30;
+function daySeg() {
+  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
+  const on = S.other ? 'other' : d0 === t0 ? 'today' : d0 === addDays(t0, -1) ? 'yesterday' : 'other';
+  return `<div class="seg" id="daySeg">${opt('Hoje', on === 'today', 'day', 'today')}${opt('Ontem', on === 'yesterday', 'day', 'yesterday')}${opt('Outro dia', on === 'other', 'day', 'other')}</div>`;
 }
 async function saveEntry(btn) {
   const k = S.k;
@@ -1441,7 +1461,7 @@ function medPlan(id) {
 }
 function reportArgs() {
   const now = Date.now(), a = reportStart(), evs = sortedEntries(), { out, open } = sleepIntervals(evs);
-  const sleeps = open === null ? out : [...out, [open, now]];
+  const sleeps = liveOpen(open, now) === null ? out : [...out, [open, now]];
   return { baby: st.baby, a, now, evs, sleeps, stats: reportStats({ a, now, evs, sleeps, on: isOn }), weights: st.weights, milestones: st.milestones,
            questions: st.questionsOk ? openQuestions() : [], parts: RP.parts, medPlan };
 }
@@ -1905,7 +1925,8 @@ $('sheetIn').addEventListener('input', e => {
   if (S?.mode !== 'entry') return;
   const id = e.target.id;
   if (id === 'noteIn') { S.note = e.target.value; if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); } }
-  if (id === 'timeIn') S.time = e.target.value;
+  if (id === 'timeIn') { S.time = e.target.value; $('daySeg')?.insertAdjacentHTML('afterend', daySeg()); $('daySeg')?.remove(); }
+  if (id === 'dayIn' && e.target.value) { const [y, m, d] = e.target.value.split('-').map(Number); S.base = new Date(y, m - 1, d).getTime(); }
   if (id === 'tempIn') S.temp = e.target.value.replace(/[^\d,.]/g, '').slice(0, 4);
   if (id === 'durIn') S.dmin = e.target.value.replace(/\D/g, '').slice(0, 3);
   if ((id === 'tempIn' || id === 'durIn') && S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
@@ -1948,8 +1969,14 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
   else if (a === 'psize') S.psize = S.psize === v ? null : v;
   else if (a === 'palert') { S.palert = !S.palert; S.wig = S.palert; }
-  else if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
+  else if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); S.other = false; }
   else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
+  else if (a === 'day') {
+    const t0 = startOfDay(Date.now());
+    S.other = v === 'other';
+    if (!S.other) S.base = v === 'today' ? t0 : addDays(t0, -1);
+    else if (S.base >= addDays(t0, -1)) S.base = addDays(t0, -2);
+  }
   else if (a === 'del') {
     if (!S.confirmDel) S.confirmDel = true;
     else { const id = S.edit.id; if (await deleteEntry(id)) { closeSheet(); toast('Registro apagado'); } return; }
@@ -1965,6 +1992,17 @@ $('grid').addEventListener('click', e => {
   if (b.dataset.k === 'edit') return goTab('family', 'famButtons');
   openEntry(b.dataset.k);
 });
+// "Ainda dormindo?": abre o Sono em "Acordou", já no dia do "Dormiu", ou apaga esse "Dormiu".
+const oldSleep = () => { const { open } = sleepIntervals(sortedEntries()); return open === null ? null : sortedEntries().find(e => e.kind === 'sleep' && e.t === open); };
+$('oldWake').onclick = () => {
+  const e = oldSleep(); if (!e) return;
+  openEntry('wake'); S.sk = 'wake'; S.base = startOfDay(e.t); S.time = hm(e.t);
+  S.other = S.base < addDays(startOfDay(Date.now()), -1); drawEntry();
+};
+$('oldDel').onclick = async () => {
+  const e = oldSleep(); if (!e || !await deleteEntry(e.id)) return;
+  toast('Registro apagado', () => addEntry({ kind: 'sleep', t: e.t, note: e.note }));
+};
 $('wakeBtn').onclick = async () => {
   const row = await addEntry({ kind: 'wake', t: Date.now() });
   if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));
