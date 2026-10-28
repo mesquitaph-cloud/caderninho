@@ -21,6 +21,11 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   conta).
 - A 1.0 (2) que está na revisão foi compilada antes da correção do convite (16/10): sai na loja com o
   link de convite quebrado. Mandar logo a 1.0.1 com a correção.
+- 1.0.1 (28/10): 1.0 publicada; Associated Domains ligado no identificador `br.app.soneca`; compilações
+  do iPhone e do Android disparadas no Codemagic a partir do `main` (`d4b90b8`). Texto "O que há de
+  novo" aprovado, o mesmo para a App Store e para as notas do Play Console: "Convites mais fáceis: o link
+  agora abre o app, e dá para colar o convite na tela de criar família. Você também pode anotar registros
+  de outro dia, até 30 dias atrás, e o Soneca pergunta quando um sono ficou sem a hora de acordar."
 - Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
   da Apple (entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de Ajustes; seção
   "Entrar com Google e Apple").
