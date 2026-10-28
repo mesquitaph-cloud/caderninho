@@ -33,6 +33,9 @@
 
         </activity>
 
+        <!-- Botões "Trocar de peito" e "Continuar" da mamada na tela de bloqueio -->
+        <receiver android:name=".MamadaReceiver" android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -47,4 +50,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- A mamada em andamento na tela de bloqueio (Android 13 em diante pede a permissão) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
