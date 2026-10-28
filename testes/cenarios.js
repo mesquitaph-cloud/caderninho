@@ -38,6 +38,30 @@ if (CEN === 'app-convite') {
       : new Proxy({}, { get: () => async () => ({}) }) };
 }
 
+// "app-remedio": finge o app do Android, com avisos de mentira guardados em window.avisos (pendentes)
+// e window.tocarAviso(n) para fingir o toque. Mais um remédio de 8 em 8 horas.
+if (CEN === 'app-remedio') {
+  const real = window.Capacitor, perm = { display: 'prompt' }, taps = [];
+  window.avisos = [];
+  window.tocarAviso = n => taps.forEach(f => f({ notification: n }));
+  const LN = {
+    checkPermissions: async () => ({ ...perm }),
+    requestPermissions: async () => { perm.display = 'granted'; return { ...perm }; },
+    createChannel: async c => { window.canal = c; },
+    getPending: async () => ({ notifications: window.avisos.map(n => ({ ...n })) }),
+    schedule: async ({ notifications }) => { window.avisos.push(...notifications); return { notifications }; },
+    cancel: async ({ notifications }) => { const ids = new Set(notifications.map(n => n.id)); window.avisos = window.avisos.filter(n => !ids.has(n.id)); },
+    addListener: (ev, f) => { if (ev === 'localNotificationActionPerformed') taps.push(f); return { remove() {} }; },
+  };
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'android',
+    registerPlugin: name => name === 'LocalNotifications' ? LN : name === 'App'
+      ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+  T.medicines.push({ id: 'm-2', family_id: T.medicines[0].family_id, baby_id: T.medicines[0].baby_id, name: 'Amoxicilina', amount: '5 ml',
+    schedule: 'every', times: ['06:00:00', '14:00:00', '22:00:00'], every_hours: 8, start_date: ymd(NOW - DAY), days: 7, stopped_at: null,
+    created_by: U.me, created_at: new Date(NOW - 2 * DAY).toISOString() });
+}
+
 if (CEN === 'sem-familia' || CEN === 'app-convite') {
   // A Ca: conta nova, nome e Termos aceitos, nenhuma família. O convite "teste-convite" vale.
   ME = 'u-ca';

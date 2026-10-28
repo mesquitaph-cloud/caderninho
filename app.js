@@ -373,7 +373,7 @@ async function openFamily(fid) {
   subscribe(fid);
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions(), loadSettings(fid)]);
   st.tab = 'home'; FP.confirm = FP.invite = null;
-  show('scrMain'); render();
+  show('scrMain'); render(); openAlertDose();
 }
 
 async function loadNames(ids) {
@@ -484,7 +484,7 @@ function render() {
   $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
-  renderHome();
+  renderHome(); medAlertsLater();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -1099,6 +1099,7 @@ function medsSheet() { S = { mode: 'meds' }; drawMeds(); $('sheet').scrollTop = 
 function drawMeds() {
   const ds = todayDoses(), t0 = startOfDay(Date.now()), meds = st.meds.filter(m => medEnd(m) > t0);
   let h = `<div class="grab"></div><div class="shead"><h3>Remédios e horários<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (medNotif) h += `<button class="li tg" role="switch" aria-checked="${alertOn()}" data-act="medAlert"><span>Ativar notificações de remédios</span><span class="sw${alertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
   if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
   h += meds.length
     ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
@@ -1229,7 +1230,7 @@ async function saveMed(btn) {
   const row = { name, amount: amount || null, schedule: S.sched, times,
                 every_hours: S.sched === 'every' || (S.sched === 'prn' && S.gap === 'every') ? S.every : null,
                 days: S.sched !== 'prn' && S.dur === 'days' ? S.days : null };
-  const back = S.back;
+  const back = S.back, isNew = !S.edit;
   busy(btn, true);
   const q = S.edit ? sb.from('medicines').update(row).eq('id', S.edit.id)
                    : sb.from('medicines').insert({ family_id: st.family.id, baby_id: st.baby.id, start_date: localDate(Date.now()), ...row });
@@ -1238,6 +1239,8 @@ async function saveMed(btn) {
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
   leaveMedForm(back); toast('Salvo');
+  // Quem programa o primeiro remédio de horário fica com o aviso ligado neste celular.
+  if (medNotif && isNew && row.schedule !== 'prn' && lsGet(alertKey(st.baby.id)) == null) setMedAlert(true);
 }
 // Parar não apaga: o remédio some da lista e das doses, e os registros continuam na linha do tempo.
 async function stopMed(btn) {
@@ -1251,6 +1254,57 @@ async function stopMed(btn) {
 }
 const leaveMedForm = back => { if (back === 'pane') closeSheet(); else { render(); medsSheet(); } };
 
+// Aviso na hora do remédio (só no app): o próprio celular agenda as doses dos próximos dias do bebê
+// aberto que ninguém marcou. Sem servidor: se outra pessoa marcar com este app fechado, o aviso toca
+// mesmo assim. A chave fica guardada no celular, por bebê; quem programa um remédio fica com ela ligada.
+const medNotif = NATIVE ? window.Capacitor.registerPlugin('LocalNotifications') : null;
+const ALERT_DAYS = 3, ALERT_MAX = 48;   // o iPhone guarda no máximo 64 avisos agendados por app
+const alertKey = id => 'cad-medalert-' + id;
+const alertOn = () => !!st.baby && lsGet(alertKey(st.baby.id)) === '1';
+// Número do aviso: sai da dose e do texto, então mudar o nome ou o horário troca o aviso.
+const alertId = s => { let h = 7; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h) || 1; };
+let alertTimer = 0;
+const medAlertsLater = () => { if (medNotif) { clearTimeout(alertTimer); alertTimer = setTimeout(medAlertsSync, 800); } };
+async function medAlertsSync() {
+  const b = st.baby; if (!medNotif || !b) return;
+  try {
+    const now = Date.now(), ok = alertOn() && (await medNotif.checkPermissions()).display === 'granted';
+    const want = (ok ? dosesFrom(now + 5000, now + ALERT_DAYS * DAY).filter(d => !d.e).slice(0, ALERT_MAX) : []).map(d => {
+      const title = 'Hora do remédio de ' + b.name, body = [d.m.name, d.m.amount, 'dose das ' + d.hhmm].filter(Boolean).join(' · ');
+      return { id: alertId(d.id + title + body), title, body, schedule: { at: new Date(d.due), allowWhileIdle: true },
+               channelId: 'remedio', smallIcon: 'ic_stat_remedio', extra: { baby: b.id, dose: d.id } };
+    });
+    if (ANDROID && want.length) await medNotif.createChannel({ id: 'remedio', name: 'Hora do remédio', importance: 4, visibility: 1, vibration: true });
+    const { notifications: old } = await medNotif.getPending();
+    const mine = old.filter(n => n.extra?.baby === b.id), keep = new Set(want.map(n => n.id)), have = new Set(mine.map(n => +n.id));
+    const drop = mine.filter(n => !keep.has(+n.id)), add = want.filter(n => !have.has(n.id));
+    if (drop.length) await medNotif.cancel({ notifications: drop.map(n => ({ id: +n.id })) });
+    if (add.length) await medNotif.schedule({ notifications: add });
+  } catch {}
+}
+// Ligar a chave pede a permissão de avisos na primeira vez. Negada, a chave volta a ficar desligada.
+async function setMedAlert(on) {
+  if (!medNotif || !st.baby) return;
+  const k = alertKey(st.baby.id);
+  if (on) {
+    let p = await medNotif.checkPermissions().catch(() => ({}));
+    if (p.display !== 'granted') p = await medNotif.requestPermissions().catch(() => ({}));
+    if (p.display !== 'granted') { lsSet(k, '0'); toast('Permita as notificações do Soneca nas configurações do celular.'); return S?.mode === 'meds' && drawMeds(); }
+  }
+  lsSet(k, on ? '1' : '0');
+  if (S?.mode === 'meds') drawMeds();
+  medAlertsSync();
+}
+// Tocar no aviso abre a dose. Com o app ainda abrindo, espera a família carregar.
+let alertTap = null;
+medNotif?.addListener('localNotificationActionPerformed', a => { alertTap = a.notification?.extra?.dose ? a.notification.extra : null; openAlertDose(); });
+async function openAlertDose() {
+  const x = alertTap; if (!x || !st.family || $('scrMain').hidden) return;
+  alertTap = null;
+  if (st.baby?.id !== x.baby) { if (!st.babies.some(b => b.id === x.baby)) return; await selectBaby(x.baby); }
+  if (doseById(x.dose)) doseSheet(x.dose);
+}
+
 function medInput(el) {
   const id = el.id, v = el.value;
   if (id === 'mName') S.name = v;
@@ -1263,6 +1317,7 @@ function medInput(el) {
 }
 async function medAction(a, v, btn) {
   if (S.mode === 'meds') {
+    if (a === 'medAlert') return setMedAlert(!alertOn());
     if (a === 'newMed') return medForm(null);
     if (a === 'editMed') return medForm(st.meds.find(m => m.id === v));
     if (a === 'prnNow') {
