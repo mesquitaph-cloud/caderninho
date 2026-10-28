@@ -527,6 +527,13 @@ function renderHome() {
   $('sleepBanner').classList.toggle('old', old);
   if (open !== null) $('sleepFor').textContent = dur(now - open);
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
+  const ft = ftGet();
+  $('feedBanner').hidden = !ft;
+  if (ft) {
+    $('feedLbl').textContent = ft.run ? 'Mamando há' : 'Mamada pausada';
+    $('feedFor').textContent = dur(ftTotal(ft, now));
+    $('feedSub').textContent = ft.run ? 'no ' + FT_SIDE[ft.run] : 'começou às ' + hhmm(ft.start);
+  }
   renderGrid(last, open, now);
   renderMeds();
 
@@ -625,6 +632,7 @@ function renderGrid(last, open, now) {
     const e = last([k === 'sleep' ? 'wake' : k]);
     if (k === 'sleep') return open !== null ? 'dormindo' : e ? 'acordou ' + ago(e.t) : 'sem registro';
     if (k === 'diaper') return e ? 'troca ' + ago(e.t) : 'sem registro';
+    if (k === 'feed') { const t = ftGet(); if (t) return t.run ? 'mamando' : 'pausada'; }
     if (k === 'med') return medSub();
     if (k === 'symptom') return symptomSub(last, now);
     if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outro cuidado' : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
@@ -729,6 +737,73 @@ const sideRow = (key, name) => `<div class="side${S[key] ? ' on' : ''}" id="row-
 const totalText = () => { const t = (+S.lmin || 0) + (+S.rmin || 0); return t ? 'Total: ' + dur(t * MIN) : ''; };
 function markSide(key) { const r = $('row-' + key); if (!r) return; r.classList.toggle('on', S[key]); r.querySelector('.pick').setAttribute('aria-pressed', S[key]); }
 
+// Cronômetro da mamada (Ca, 17/10; prévia aprovada em 28/10): cada peito começa ou pausa o seu tempo, e
+// só um conta por vez. Fica só no celular de quem começou, sem banco: a hora do primeiro toque, o tempo já
+// contado de cada peito e, se um está contando, desde quando. Depois de 2 horas contando, pausa sozinho.
+const FT_MAX = 2 * HOUR;
+const ftKey = () => st.baby ? 'cad-feedtimer-' + st.baby.id : null;
+const ftMs = (t, key, now) => t[key] + (t.run === key ? now - t.since : 0);
+const ftTotal = (t, now) => ftMs(t, 'l', now) + ftMs(t, 'r', now);
+function ftSet(t) { const k = ftKey(); if (k) lsSet(k, t ? JSON.stringify(t) : null); }
+function ftGet() {
+  const k = ftKey(); if (!k) return null;
+  let t; try { t = JSON.parse(lsGet(k)); } catch { return null; }
+  if (!t || typeof t.start !== 'number') return null;
+  const now = Date.now();
+  if (t.run && ftTotal(t, now) > FT_MAX) { t[t.run] += FT_MAX - t.l - t.r; t.run = null; ftSet(t); }
+  return t;
+}
+// Um toque no peito parado começa a contar (e pausa o outro); no peito que conta, pausa.
+function ftTap(key) {
+  const now = Date.now(), t = ftGet() || { start: now, l: 0, r: 0, run: null, since: 0 };
+  if (t.run) t[t.run] += now - t.since;
+  t.run = t.run === key ? null : key; t.since = now;
+  ftSet(t);
+}
+function ftPause() { const t = ftGet(); if (t?.run) { t[t.run] += Date.now() - t.since; t.run = null; ftSet(t); } return t; }
+// Minutos de cada peito: o mais próximo; menos de 30 segundos não conta.
+const ftMin = ms => ms < 30000 ? 0 : Math.max(1, Math.round(ms / MIN));
+const hhmm = t => { const d = new Date(t); return pad(d.getHours()) + 'h' + pad(d.getMinutes()); };
+const mss = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + pad(s % 60); };
+const FT_SIDE = { l: 'esquerdo', r: 'direito' };
+function ftSidesHtml(t, now) {
+  const one = (key, name) => {
+    const run = t?.run === key, ms = t ? ftMs(t, key, now) : 0;
+    return `<button class="tside${run ? ' run' : ''}" data-act="ftTap" data-val="${key}" aria-pressed="${run}"><b>${name}</b><span class="tm" id="ft-${key}">${mss(ms)}</span><small>${run ? 'contando' : ms ? 'pausado' : 'tocar para começar'}</small></button>`;
+  };
+  return one('l', 'Esquerdo') + one('r', 'Direito');
+}
+const ftTotalText = (t, now) => 'Total: ' + dur(ftTotal(t, now)) + ' · começou às ' + hhmm(t.start);
+async function ftFinish() {
+  const t = ftPause(); if (!t) return;
+  const lm = ftMin(t.l), rm = ftMin(t.r);
+  if (S?.mode === 'entry') closeSheet();
+  if (!lm && !rm) return ftDiscard(t);
+  const ev = { kind: 'feed', t: t.start, src: 'breast', side: lm && rm ? 'both' : lm ? 'left' : 'right' };
+  if (lm) ev.left_min = lm;
+  if (rm) ev.right_min = rm;
+  ftSet(null); render();
+  const row = await addEntry(ev);
+  if (!row) { ftSet(t); return render(); }
+  toast(savedText(ev), () => deleteEntry(row.id));
+}
+function ftDiscard(t = ftGet()) {
+  if (!t) return;
+  ftSet(null);
+  if (S?.mode === 'entry') closeSheet(); else render();
+  toast('Mamada descartada', () => { ftSet(t); render(); });
+}
+// A cada segundo: os relógios da folha e da faixa; se o cronômetro pausou sozinho, redesenha.
+let ftRun;
+setInterval(() => {
+  const t = ftGet(), now = Date.now(), run = t ? t.run : undefined;
+  if (run !== ftRun) { ftRun = run; if (S?.mode === 'entry' && S.k === 'feed') drawEntry(); if (!S) render(); return; }
+  if (!t) return;
+  for (const key of ['l', 'r']) { const el = $('ft-' + key); if (el) el.textContent = mss(ftMs(t, key, now)); }
+  const tot = $('ftTotal'); if (tot) tot.textContent = ftTotalText(t, now);
+  if (!$('feedBanner').hidden) $('feedFor').textContent = dur(ftTotal(t, now));
+}, 1000);
+
 function openEntry(k, edit) {
   if (!st.baby) return babySheet(null);
   if (k === 'med' && !edit) return medsSheet();
@@ -751,6 +826,14 @@ function drawEntry() {
   let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar cuidado' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
+    // Mamada nova no peito: o cronômetro. "Digitar os minutos" volta para os minutos digitados.
+    if (S.src === 'breast' && !S.edit && !S.manual) {
+      const t = ftGet(), now = Date.now(), lb = !t && lastBreast(sortedEntries());
+      h += `<div><div class="lbl">Qual peito</div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="tsides">${ftSidesHtml(t, now)}</div>${t ? `<div class="total" id="ftTotal">${ftTotalText(t, now)}</div>` : ''}</div>`;
+      if (t) h += `<button class="save" data-act="ftEnd">Terminar mamada</button>`;
+      h += `<div class="ftlinks"><button class="lnk" data-act="ftManual">Digitar os minutos</button>${t ? '<button class="lnk mut" data-act="ftDrop">Descartar mamada</button>' : ''}</div>`;
+      return openPanel(h);
+    }
     if (S.src === 'breast') {
       const lb = !S.edit && lastBreast(sortedEntries());
       h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>`;
@@ -854,8 +937,10 @@ async function saveEntry(btn) {
   if (S.note.trim()) ev.note = S.note.trim().slice(0, 300);
   busy(btn, true);
   if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast(savedText(ev)); } else busy(btn, false); return; }
+  const fromTimer = S.fromTimer && ev.kind === 'feed' && ev.src === 'breast';
   const row = await addEntry(ev);
   if (!row) return busy(btn, false);
+  if (fromTimer) ftSet(null);
   closeSheet(); toast(savedText(ev), () => deleteEntry(row.id));
 }
 
@@ -1982,6 +2067,18 @@ $('sheetIn').addEventListener('click', async e => {
     else { const id = S.edit.id; if (await deleteEntry(id)) { closeSheet(); toast('Registro apagado'); } return; }
   }
   else if (a === 'save') return saveEntry(b);
+  else if (a === 'ftTap') ftTap(v);
+  else if (a === 'ftEnd') return ftFinish();
+  else if (a === 'ftDrop') return ftDiscard();
+  else if (a === 'ftManual') {
+    // Os minutos digitados já vêm com o que o cronômetro contou, na hora em que começou.
+    const t = ftPause(); S.manual = true;
+    if (t) {
+      const lm = ftMin(t.l), rm = ftMin(t.r);
+      S.l = !!lm; S.r = !!rm; S.lmin = lm || ''; S.rmin = rm || '';
+      S.base = startOfDay(t.start); S.time = hm(t.start); S.other = S.base < addDays(startOfDay(Date.now()), -1); S.fromTimer = true;
+    }
+  }
   S.err = ''; drawEntry();
 });
 
@@ -2003,6 +2100,8 @@ $('oldDel').onclick = async () => {
   const e = oldSleep(); if (!e || !await deleteEntry(e.id)) return;
   toast('Registro apagado', () => addEntry({ kind: 'sleep', t: e.t, note: e.note }));
 };
+$('feedOpen').onclick = () => openEntry('feed');
+$('feedEnd').onclick = () => ftFinish();
 $('wakeBtn').onclick = async () => {
   const row = await addEntry({ kind: 'wake', t: Date.now() });
   if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));
