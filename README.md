@@ -8,11 +8,37 @@ linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Voc
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
-## Próximos passos (atualizado em 27/10)
+## Próximos passos (atualizado em 29/10)
 
 Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão
 da Apple em 14/10 e **aprovado** (registrado em 27/10); a publicação é manual. No Android, o teste fechado
 da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/11).
+
+**Onde paramos (29/10)**
+
+- **No `main`:** cronômetro da mamada (#41), App Links do Android (#40), tela de bloqueio do Android (#42,
+  e #46: canal "normal" sem som, porque o silencioso não aparecia na tela de bloqueio), aviso do remédio
+  (#43) e voltar ao app sem tela vazia (#44).
+- **Aberto:** PR #45, tela de bloqueio do iPhone (Atividade ao Vivo, widget `MamadaWidget`,
+  `br.app.soneca.mamada`, grupo `group.br.app.soneca`). Compilado pelo ramo `claude/mamada-iphone` (exceção
+  combinada em 28/10: o iPhone de teste sai do ramo, porque vai direto ao TestFlight). A 1ª compilação
+  mostrou só "Soneca · Mamada" (relógio largo demais); a correção (31c94f7) compilou em 29/10. **Falta
+  testar** no TestFlight: tempo, "Trocar de peito", "Continuar", "Terminar", Ilha Dinâmica. Se der certo,
+  Merge do #45.
+- **Apple:** identificadores `br.app.soneca` (Associated Domains, App Groups) e `br.app.soneca.mamada`
+  (App Groups); perfis "Soneca App Store" e "Soneca Mamada App Store", guardados no Codemagic como
+  `soneca_app_store` e `soneca_mamada_app_store`. Mexer nas funções de um identificador invalida o perfil:
+  Edit → Save na Apple e buscar de novo no Codemagic (Fetch profiles), senão a compilação falha.
+- **iPhone 1.0.1:** ainda não enviada à revisão. Candidatas no TestFlight: a de `38b7d45` (convites,
+  "Outro dia", cronômetro; testada antes) ou uma com o aviso do remédio e a tela de bloqueio, depois de
+  testada. O texto "O que há de novo" muda conforme a escolhida (propostas na conversa de 28/10; nenhuma
+  aprovada ainda).
+- **Android:** versão 9 (1.0.1) enviada à revisão do teste fechado em 28/10, já no celular do Patrick
+  (cronômetro ok; a mamada aparecia só na barra). Compilação do `main` com o #46 começando em 29/10: subir
+  como versão 10 no teste fechado e conferir a mamada na tela de bloqueio, sem som. Notas propostas (não
+  aprovadas): "Convites mais fáceis, registros de outro dia, cronômetro da mamada com a tela de bloqueio e
+  aviso na hora do remédio, mesmo com o app fechado."
+- **Testar no celular de verdade:** aviso do remédio (iPhone e Android) e voltar ao app sem tela vazia.
 
 **Agora que a Apple aprovou**
 
