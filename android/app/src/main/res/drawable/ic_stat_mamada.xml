@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone da notificação da mamada: a mamadeira de traço fino dos botões do app, em branco (o Android pinta). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M9,3h6M10.5,3v3M13.5,3v3M9.5,6h5a1.5,1.5 0,0 1,1.5 1.5V19a2,2 0,0 1,-2 2h-4a2,2 0,0 1,-2 -2V7.5A1.5,1.5 0,0 1,9.5 6zM8,12h3M8,15.5h3"
+        android:strokeWidth="1.9"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

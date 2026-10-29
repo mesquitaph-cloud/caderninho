@@ -373,7 +373,7 @@ async function openFamily(fid) {
   subscribe(fid);
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions(), loadSettings(fid)]);
   st.tab = 'home'; FP.confirm = FP.invite = null;
-  show('scrMain'); render(); openAlertDose();
+  show('scrMain'); render(); ftSync(); openAlertDose();
 }
 
 async function loadNames(ids) {
@@ -759,7 +759,26 @@ const FT_MAX = 2 * HOUR;
 const ftKey = () => st.baby ? 'cad-feedtimer-' + st.baby.id : null;
 const ftMs = (t, key, now) => t[key] + (t.run === key ? now - t.since : 0);
 const ftTotal = (t, now) => ftMs(t, 'l', now) + ftMs(t, 'r', now);
-function ftSet(t) { const k = ftKey(); if (k) lsSet(k, t ? JSON.stringify(t) : null); }
+// Tela de bloqueio (item 13): a notificação fixa do Android e a Atividade ao Vivo do iPhone recebem o
+// estado a cada mudança; no Android, "ask" pede a permissão de notificações na mamada que acabou de começar.
+const mamadaPlugin = NATIVE ? window.Capacitor.registerPlugin('Mamada') : null;
+function ftSet(t, ask) {
+  const k = ftKey(); if (!k) return;
+  if (t) { t.at = Date.now(); t.baby = st.baby.id; }
+  lsSet(k, t ? JSON.stringify(t) : null);
+  mamadaPlugin?.update({ state: t ? JSON.stringify(t) : null, ask: !!ask }).catch(() => {});
+}
+// Ao abrir ou voltar ao app: adota o que a notificação mudou ("Trocar de peito", "Continuar") e grava a
+// mamada se alguém tocou em "Terminar" nela.
+async function ftSync() {
+  if (!mamadaPlugin || !st.baby) return;
+  const r = await mamadaPlugin.get().catch(() => null); if (!r) return;
+  let n = null; try { n = r.state ? JSON.parse(r.state) : null; } catch {}
+  if (n && n.baby === st.baby.id) { const t = ftGet(); if (!t || (n.at || 0) > (t.at || 0)) lsSet(ftKey(), JSON.stringify(n)); }
+  if (r.finish) return ftFinish();
+  if (S?.mode === 'entry' && S.k === 'feed') drawEntry(); else if (!S) render();
+}
+mamadaPlugin?.addListener('changed', ftSync);
 function ftGet() {
   const k = ftKey(); if (!k) return null;
   let t; try { t = JSON.parse(lsGet(k)); } catch { return null; }
@@ -770,10 +789,11 @@ function ftGet() {
 }
 // Um toque no peito parado começa a contar (e pausa o outro); no peito que conta, pausa.
 function ftTap(key) {
-  const now = Date.now(), t = ftGet() || { start: now, l: 0, r: 0, run: null, since: 0 };
+  const now = Date.now(), old = ftGet(), t = old || { start: now, l: 0, r: 0, run: null, since: 0 };
   if (t.run) t[t.run] += now - t.since;
   t.run = t.run === key ? null : key; t.since = now;
-  ftSet(t);
+  if (t.run) t.last = t.run;   // "Continuar" na tela de bloqueio volta para este peito
+  ftSet(t, !old);
 }
 function ftPause() { const t = ftGet(); if (t?.run) { t[t.run] += Date.now() - t.since; t.run = null; ftSet(t); } return t; }
 // Minutos de cada peito: o mais próximo; menos de 30 segundos não conta.
@@ -2264,6 +2284,7 @@ $('rpPrint').onclick = printReport;
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
 document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) ftSync();
   if (!document.hidden && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
 setInterval(refresh, 30000);
