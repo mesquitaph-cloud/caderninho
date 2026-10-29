@@ -86,7 +86,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
    `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
 3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
-   (o Gmail limita quantos e-mails saem por dia).
+   (o Gmail limita quantos e-mails saem por dia). **Foco agora (Patrick, 29/10).** Em 29/10, o DNS do
+   `soneca.app.br` está no Registro.br, ainda sem nenhum registro de e-mail (MX, SPF ou DKIM).
 4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
    semana e tempo desde a última mamada (seção "Ideias para depois").
 5. **Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
@@ -103,7 +104,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    pode ser fechado ou bloqueia o app quando a versão antiga quebra algo, e o texto exato (prévia antes).
 9. **"Indicar o Soneca" com o link certo** (Patrick, 16/10, para os próximos PRs): no app, o link de
    indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
-   levar à App Store (e à Play Store no Android), ou à página do item 2.
+   levar à App Store (e à Play Store no Android), ou à página do item 2. **Precisa ser feito (Patrick,
+   29/10).** Conferido em 29/10: a tela de indicar mostra `location.host` (`app.js`), que dentro do app é
+   "localhost".
 10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
     `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
     O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
@@ -159,9 +162,13 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 14. **Tirar do ar o Soneca pelo site, deixando só os apps** (decidido em 10/10, para o backlog em 27/10).
     O endereço `soneca.app.br` continua, mas sem o app: a página inicial vira a do item 2, com os botões da
     App Store e da Play Store. Ficam no ar `/privacidade`, `/termos`, `/apagar-conta` (exigência do Google)
-    e o `.well-known/apple-app-site-association` (sem ele, o link de convite não abre o app). Antes: o
-    Android publicado na Play Store (até lá, o site é o único caminho de quem tem Android), ver pelo banco
-    quantas famílias ainda entram pelo site, e um aviso a elas com prazo (texto a aprovar).
+    e o `.well-known/apple-app-site-association` (sem ele, o link de convite não abre o app).
+    **29/10: o Patrick decidiu tirar já**, sem esperar o Android na Play Store (quem tem Android e entra
+    pelo site fica sem o Soneca até a loja). Ainda antes: a página do item 2 (prévia), ver pelo banco
+    quantas famílias ainda entram pelo site e o aviso a elas (texto a aprovar).
+15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
+    registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
+    botão) e até quanto. Prévia antes.
 
 **Android** (seção "App do Android")
 
