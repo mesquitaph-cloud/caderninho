@@ -22,7 +22,9 @@ final class Mamada {
     static final String PREFS = "soneca_mamada", KEY = "state", FINISH = "finish";
     static final String ACT_SWITCH = "br.app.soneca.MAMADA_TROCAR", ACT_RESUME = "br.app.soneca.MAMADA_CONTINUAR";
     static final String EXTRA_FINISH = "mamada_terminar";
-    private static final String CHANNEL = "mamada";
+    // Canal "normal" sem som: os de importância baixa contam como silenciosos, e muitos Android escondem
+    // os silenciosos na tela de bloqueio. O canal antigo ("mamada") era assim e é apagado.
+    private static final String CHANNEL = "mamada_bloqueio", OLD_CHANNEL = "mamada";
     private static final int ID = 1205;
     // Igual ao app: depois de 2 horas contando, pausa sozinho.
     private static final long MAX = 2 * 60 * 60 * 1000L;
@@ -70,8 +72,12 @@ final class Mamada {
         if (Build.VERSION.SDK_INT >= 33
             && c.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
-            NotificationChannel ch = new NotificationChannel(CHANNEL, "Mamada em andamento", NotificationManager.IMPORTANCE_LOW);
+            nm.deleteNotificationChannel(OLD_CHANNEL);
+            NotificationChannel ch = new NotificationChannel(CHANNEL, "Mamada em andamento", NotificationManager.IMPORTANCE_DEFAULT);
+            ch.setSound(null, null);
+            ch.enableVibration(false);
             ch.setShowBadge(false);
+            ch.setLockscreenVisibility(android.app.Notification.VISIBILITY_PUBLIC);
             nm.createNotificationChannel(ch);
         }
         long now = System.currentTimeMillis(), total = ms(t, "l", now) + ms(t, "r", now);
@@ -81,7 +87,7 @@ final class Mamada {
             .setContentTitle("Soneca · Mamada")
             .setOngoing(true)
             .setOnlyAlertOnce(true)
-            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_STOPWATCH)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(open(c, false));
