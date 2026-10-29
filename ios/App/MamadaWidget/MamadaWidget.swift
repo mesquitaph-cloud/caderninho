@@ -37,7 +37,9 @@ private struct Tempo: View {
     let s: MamadaAttributes.ContentState
     var body: some View {
         if s.run != nil {
-            Text(timerInterval: s.from...Date.distantFuture, countsDown: false)
+            // O relógio mede a largura pelo maior valor do intervalo: com um fim muito longe, ele fica largo
+            // demais e empurra o resto para fora da tela. O app pausa sozinho em 2 horas; 3 horas sobram.
+            Text(timerInterval: s.from...s.from.addingTimeInterval(3 * 3600), countsDown: false)
         } else {
             Text(mss(s.total))
         }
@@ -80,7 +82,8 @@ private struct Bloqueio: View {
                     .font(.system(size: 32, weight: .medium))
                     .monospacedDigit()
                     .foregroundStyle(numero)
-                    .fixedSize()
+                    .lineLimit(1)
+                    .frame(width: 130, alignment: .leading)
                 Text(lado(s)).font(.subheadline).opacity(0.8)
                 Spacer(minLength: 0)
             }
@@ -104,6 +107,7 @@ struct MamadaLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Tempo(s: ctx.state).font(.title3.weight(.medium)).monospacedDigit().foregroundStyle(numero)
+                        .lineLimit(1).frame(width: 90, alignment: .trailing)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 8) {
