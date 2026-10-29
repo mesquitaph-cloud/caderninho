@@ -27,8 +27,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   (App Groups); perfis "Soneca App Store" e "Soneca Mamada App Store", guardados no Codemagic como
   `soneca_app_store` e `soneca_mamada_app_store`. Mexer nas funções de um identificador invalida o perfil:
   Edit → Save na Apple e buscar de novo no Codemagic (Fetch profiles), senão a compilação falha.
-- **iPhone 1.0.1:** ainda não enviada à revisão. Vai a compilação de 31c94f7 (não precisa compilar de
-  novo), depois de testar o aviso do remédio nela. Texto "O que há de novo" aprovado em 29/10:
+- **iPhone 1.0.1:** **enviada à revisão da Apple em 29/10, 17:41** (compilação 6, de 31c94f7; status
+  "Waiting for Review"), com lançamento manual e as notas para o revisor de `APP-STORE.md`. Quando aprovar,
+  apertar "Release This Version". Até lá, não rodar o `013` nem mexer na conta do revisor. Texto "O que há
+  de novo" aprovado em 29/10:
 
   > Novidades:
   > • Cronômetro da mamada, com o tempo de cada peito.
@@ -36,7 +38,6 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   > • Aviso no celular na hora de cada dose de remédio.
   > • Ao voltar para o app, ele não mostra mais a tela vazia enquanto carrega.
 
-  Lançamento sugerido: manual, depois da aprovação.
 - **Android:** versão 9 (1.0.1) enviada à revisão do teste fechado em 28/10, já no celular do Patrick
   (cronômetro ok; a mamada aparecia só na barra). Compilação do `main` com o #46 começando em 29/10: subir
   como versão 10 no teste fechado e conferir a mamada na tela de bloqueio, sem som. Notas propostas (não

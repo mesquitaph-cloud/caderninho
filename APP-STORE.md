@@ -86,7 +86,9 @@ Search, Financial, Sensitive Info (a Apple trata saúde em Health & Fitness), De
   Supabase, Authentication → Users → Add user, "Auto Confirm User"). Logo antes de enviar, rodar
   `supabase/013_conta_da_revisao.sql` para os dados de exemplo ficarem com datas recentes.
 - **Contact:** nome, telefone e e-mail do Patrick.
-- **Notes (em inglês):**
+- **Notes (em inglês):** versão da 1.0.1, enviada em 29/10 (compilação 6). Em relação à 1.0, sai "three
+  weeks of" (os registros de exemplo são de até 14/10 e o 013 não roda durante a revisão) e entra a seção
+  "What's new in 1.0.1". Na próxima versão, trocar essa seção pelas novidades dela.
 
 > Soneca is a shared baby-care log for families in Brazil (Portuguese only). Families record feedings,
 > sleep, diapers, medicines and other care, and everyone in the family sees the same timeline.
@@ -94,11 +96,20 @@ Search, Financial, Sensitive Info (a Apple trata saúde em Health & Fitness), De
 > Sign-in: regular users sign in with Sign in with Apple, Google, or a one-time code sent by email.
 > For review, please use the demo account above: type the email on the first screen and tap
 > "Receber código". For this account only, the app asks for a password instead of sending a code.
-> The demo account already has a family ("Família Revisão") with a 4-month-old baby and three weeks
-> of sample records.
+> The demo account already has a family ("Família Revisão") with a 4-month-old baby and sample records.
 > On the first sign-in, the app asks the user to accept the Privacy Policy and Terms of Use and to
 > authorize the baby and health data (required by Brazilian data protection law, LGPD). Please accept
 > to continue.
+>
+> What's new in 1.0.1, and how to see it with the demo account:
+> - Feeding timer: on the home screen, tap "Mamada", choose "Peito" and tap a side. The timer runs while
+>   the app is closed.
+> - Lock screen / Dynamic Island: with the timer running, lock the phone. The Live Activity shows the
+>   elapsed time and the buttons "Trocar de peito", "Continuar" and "Terminar".
+> - Medicine reminders: open "Remédios e horários" and turn on "Ativar notificações de remédios" (iOS asks
+>   for permission). The demo family has Vitamina D scheduled daily at 9:00; a notification arrives at the
+>   time of each scheduled dose, even with the app closed.
+> - The invitation link now opens the app directly.
 >
 > Account deletion: Perfil (last tab) → "Apagar minha conta", then tap again to confirm. If the
 > account was created with Sign in with Apple, the app also revokes the Apple token.
