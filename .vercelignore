@@ -11,3 +11,16 @@ package-lock.json
 capacitor.config.json
 _privado/
 testes/
+# O app saiu do site (item 14 do README): estes arquivos só vão para os apps, pelo scripts/www.mjs.
+/index.html
+/manifest.webmanifest
+/app.js
+/config.js
+/util.js
+/clock.js
+/week.js
+/growth.js
+/who.js
+/report.js
+/pediatra.js
+/vendor/

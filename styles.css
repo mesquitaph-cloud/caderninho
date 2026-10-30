@@ -8,6 +8,8 @@
   --diaper:#FFD98A;--diaper-ink:#664700;--vomit:#F6A5A0;--vomit-ink:#7E2722;
   --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;
   --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;
+  /* Selo da App Store na página das lojas: preto de dia, branco de noite */
+  --badge-day:inline;--badge-night:none;
   /* Botões de entrar: cores exigidas pela Apple (preto de dia, branco de noite) e pelo Google (sempre claro) */
   --apple-bg:#000000;--apple-ink:#FFFFFF;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#5E97CF;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
@@ -23,7 +25,7 @@
   color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
-  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
+  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
@@ -32,7 +34,7 @@
   color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
-  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;
+  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
@@ -676,6 +678,22 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 /* Entrada: os links da Política e dos Termos, no fim */
 .legal{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;font-size:14px;padding-top:6px}
 .legal a{color:var(--link);font-weight:500;text-underline-offset:2px}
+
+/* Página das lojas (inicio/): soneca.app.br sem o app, só com o selo da App Store */
+.ln{max-width:440px;margin:0 auto;min-height:calc(100vh - 52px);display:flex;flex-direction:column;gap:18px;padding-top:max(32px,env(safe-area-inset-top,0px))}
+.ln p{margin:0}
+.ln h1.brand{display:flex;align-items:center;gap:12px;margin:0;font-family:var(--display);font-weight:500;font-size:36px;letter-spacing:-.02em}
+.ln-tag{font-size:19px;line-height:1.35}
+.ln-inv{background:var(--feed);color:var(--ink);border-radius:18px;padding:16px}
+.ln-invt{font-family:var(--display);font-weight:500;font-size:18px}
+.ln-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:17px}
+.ln-badge{align-self:flex-start;display:block;border-radius:10px;line-height:0}
+.ln-badge img{height:50px;width:auto}
+.ln-badge .ln-day{display:var(--badge-day)}.ln-badge .ln-night{display:var(--badge-night)}
+.ln-note{font-size:15px;color:var(--muted)}
+.ln-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.ln-boxt{font-family:var(--display);font-weight:500;font-size:17px}
+.ln .legal{margin-top:auto}
 /* Aceites: o cartão e a caixinha */
 .consent{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .consent b{font-weight:500}

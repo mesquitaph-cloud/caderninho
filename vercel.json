@@ -3,7 +3,11 @@
     { "source": "/privacidade", "has": [{ "type": "host", "value": "caderninho-bay.vercel.app" }], "destination": "https://soneca.app.br/privacidade", "permanent": true },
     { "source": "/privacidade/:path*", "has": [{ "type": "host", "value": "caderninho-bay.vercel.app" }], "destination": "https://soneca.app.br/privacidade/:path*", "permanent": true },
     { "source": "/termos", "has": [{ "type": "host", "value": "caderninho-bay.vercel.app" }], "destination": "https://soneca.app.br/termos", "permanent": true },
-    { "source": "/termos/:path*", "has": [{ "type": "host", "value": "caderninho-bay.vercel.app" }], "destination": "https://soneca.app.br/termos/:path*", "permanent": true }
+    { "source": "/termos/:path*", "has": [{ "type": "host", "value": "caderninho-bay.vercel.app" }], "destination": "https://soneca.app.br/termos/:path*", "permanent": true },
+    { "source": "/index.html", "destination": "/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/", "destination": "/inicio/index.html" }
   ],
   "headers": [
     { "source": "/.well-known/apple-app-site-association", "headers": [{ "key": "Content-Type", "value": "application/json" }] },

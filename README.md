@@ -171,6 +171,17 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     **29/10: o Patrick decidiu tirar já**, sem esperar o Android na Play Store (quem tem Android e entra
     pelo site fica sem o Soneca até a loja). Ainda antes: a página do item 2 (prévia), ver pelo banco
     quantas famílias ainda entram pelo site e o aviso a elas (texto a aprovar).
+    **30/10:** contagem no banco (sessões ativas, pelo navegador que entrou): nos últimos 30 dias, 8
+    pessoas abriram o Soneca pelo navegador, 7 delas também usam o app; nenhuma família ficaria sem o
+    Soneca. Página das lojas aprovada pelo Patrick (prévia: https://claude.ai/artifact/2xxBq3uyk3oLmtXEr4pzSW)
+    e programada em `inicio/`: a Vercel mostra essa página em `/` (`vercel.json`) e deixa de publicar os
+    arquivos do app (`.vercelignore`); os apps continuam iguais. Com `?convite=`, a página mostra os passos
+    do convite. Selo oficial da App Store em português (preto de dia, branco de noite), link
+    `https://apps.apple.com/br/app/id6821448149`. **Só juntar ao `main` depois de publicar o app na App
+    Store e de a 1.0.1 ser aprovada** (sem ela, quem recebe um convite não consegue entrar na família).
+    **Quando o Soneca estiver na Play Store: atualizar a página** (`inicio/index.html`), trocando a linha
+    "No Android, o Soneca chega ao Google Play em breve." pelo selo oficial do Google Play, levando a
+    `https://play.google.com/store/apps/details?id=br.app.soneca`.
 15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
     registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
     botão) e até quanto. Prévia antes.
@@ -180,6 +191,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - Play Store: teste fechado com 12 testadores por 14 dias antes de publicar. Dia 9 de 14 em 27/10; por
   volta de 01/11, conferir no Dashboard que os 14 dias fecharam e pedir a produção ("Apply for access to
   production"), que passa por outra revisão do Google.
+- **Assim que estiver na Play Store:** pôr o selo do Google Play na página de `soneca.app.br` (item 14).
 - Testar a fundo num Android: código, PDF, botão "voltar", apagar a conta, topo da tela e modo escuro.
 - Página para pedir a exclusão da conta sem o app (exigência do Google): `soneca.app.br/apagar-conta`
   (15/10, prévia aprovada: https://claude.ai/artifact/F66R6udyXBznRpzCYwstJE). Pedido por e-mail →
