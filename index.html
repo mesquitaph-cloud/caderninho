@@ -153,7 +153,10 @@
 
   <section class="meds" id="meds" hidden aria-label="Remédios"></section>
 
+  <!-- Boas-vindas: um cartão por vez, para quem acabou de entrar na família (app.js, renderBv) -->
+  <div class="bvslot" id="bvTop"></div>
   <div class="grid" id="grid"></div>
+  <div class="bvslot" id="bvMid"></div>
 
   <div class="views" role="tablist" aria-label="Ver por">
     <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>
@@ -168,6 +171,7 @@
   <div class="view" id="dayView" role="tabpanel" aria-labelledby="tabDay">
     <div id="summary"></div>
     <div class="tl" id="timeline"></div>
+    <div class="bvslot" id="bvEnd"></div>
   </div>
   <div class="view" id="weekView" role="tabpanel" aria-labelledby="tabWeek" hidden></div>
   <div class="view" id="monthView" role="tabpanel" aria-labelledby="tabMonth" hidden></div>
