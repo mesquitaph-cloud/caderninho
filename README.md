@@ -1,24 +1,27 @@
 # Soneca
 
 Antes Caderninho. App para famílias registrarem a rotina dos bebês (mamadas, sono, fraldas, vômitos, remédios) numa
-linha do tempo compartilhada. Site instalável na tela do celular, sem loja. Vocabulário em `CONTEXT.md`.
+linha do tempo compartilhada. App do iPhone (App Store) e do Android (teste fechado da Play Store); desde
+30/10, o site `soneca.app.br` mostra só a página das lojas (item 14). Vocabulário em `CONTEXT.md`.
 
 - **Front:** HTML/CSS/JS puro, sem build. Publicado no Vercel.
 - **Back:** Supabase (região São Paulo) — banco, login por código no e-mail, sincronização.
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
-## Próximos passos (atualizado em 29/10)
+## Próximos passos (atualizado em 30/10)
 
 Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão
 da Apple em 14/10 e **aprovado** (registrado em 27/10); a publicação é manual. No Android, o teste fechado
 da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/11).
 
-**Onde paramos (29/10)**
+**Onde paramos (30/10)**
 
 - **No `main`:** cronômetro da mamada (#41), App Links do Android (#40), tela de bloqueio do Android (#42,
   e #46: canal "normal" sem som, porque o silencioso não aparecia na tela de bloqueio), aviso do remédio
-  (#43) e voltar ao app sem tela vazia (#44).
+  (#43) e voltar ao app sem tela vazia (#44). **Em 30/10:** boas-vindas (#48), Política e Termos no
+  navegador do celular (#49), zoom nos gráficos (#50) e o site só com a página das lojas (#47). O #48, o #49
+  e o #50 ainda não estão em nenhuma compilação: vão na próxima versão dos apps.
 - **PR #45 (tela de bloqueio do iPhone):** testado no TestFlight em 29/10 (compilação do ramo
   `claude/mamada-iphone`, 31c94f7): tempo, "Trocar de peito", "Continuar" e "Terminar" ok. Sem conflito; Merge
   com o Patrick. Desde o ramo, o `main` só mudou README e `Mamada.java` (Android), então essa compilação já é a
@@ -30,7 +33,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - **iPhone 1.0.1:** **enviada à revisão da Apple em 29/10, 17:41** (compilação 6, de 31c94f7; status
   "Waiting for Review"), com lançamento manual e as notas para o revisor de `APP-STORE.md`. Quando aprovar,
   apertar "Release This Version". Até lá, não rodar o `013` nem mexer na conta do revisor. **30/10:
-  aprovada pela Apple** (Patrick). Texto "O que há de novo" aprovado em 29/10:
+  aprovada pela Apple e liberada na App Store** (Patrick; a página da loja já mostra a versão 1.0.1). Texto
+  "O que há de novo" aprovado em 29/10:
 
   > Novidades:
   > • Cronômetro da mamada, com o tempo de cada peito.
@@ -44,14 +48,17 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   aprovadas): "Convites mais fáceis, registros de outro dia, cronômetro da mamada com a tela de bloqueio e
   aviso na hora do remédio, mesmo com o app fechado."
 - **Testar no celular de verdade:** aviso do remédio (iPhone e Android) e voltar ao app sem tela vazia.
+  Depois da próxima compilação: a Política e os Termos abrindo no navegador do celular (#49) e o zoom com
+  duplo toque (#50).
 
 **Agora que a Apple aprovou**
 
-- Publicar na App Store (publicação manual).
+- ~~Publicar na App Store (publicação manual).~~ A 1.0 em 28/10 e a 1.0.1 em 30/10.
 - Não rodar o `013` nem mexer na conta do revisor até a 1.0.1 passar também (a revisão dela usa a mesma
-  conta).
-- A 1.0 (2) que está na revisão foi compilada antes da correção do convite (16/10): sai na loja com o
-  link de convite quebrado. Mandar logo a 1.0.1 com a correção.
+  conta). **A 1.0.1 passou em 30/10.**
+- ~~A 1.0 (2) que está na revisão foi compilada antes da correção do convite (16/10): sai na loja com o
+  link de convite quebrado. Mandar logo a 1.0.1 com a correção.~~ A 1.0.1, com a correção, está na loja
+  desde 30/10.
 - 1.0.1 (28/10): 1.0 publicada; Associated Domains ligado no identificador `br.app.soneca`; compilações
   do iPhone e do Android disparadas no Codemagic a partir do `main` (`d4b90b8`). Texto "O que há de
   novo" aprovado, o mesmo para a App Store e para as notas do Play Console: "Convites mais fáceis: o link
@@ -63,7 +70,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - ~~Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase~~ (conferido em 30/10: assunto e
   texto de "Confirm sign up" e "Magic link" já dizem Soneca, com o código e "vale por uma hora").
 - Mandar ao advogado as versões 1.1 e 1.3 da Política e dos Termos (seção "LGPD").
-- Tirar o site do ar: virou o item 14 da lista abaixo (27/10).
+- ~~Tirar o site do ar~~: feito em 30/10 (item 14 da lista abaixo, PR #47).
 
 **Como as mudanças vão ao ar** (combinado em 27/10)
 
@@ -186,10 +193,14 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     "No Android, o Soneca chega ao Google Play em breve." pelo selo oficial do Google Play, levando a
     `https://play.google.com/store/apps/details?id=br.app.soneca`.
     **30/10: a Apple aprovou a 1.0.1** (Patrick); PR #47 atualizado com o `main` (#48 a #50).
+    **30/10: no ar.** A 1.0.1 foi liberada na App Store e o #47 entrou no `main`. Conferido em
+    `soneca.app.br`: a página das lojas em `/` (também com `?convite=`), e `/index.html` leva a `/`.
+    `/privacidade`, `/termos`, `/apagar-conta` e os dois arquivos do `.well-known` continuam no ar.
+    `/app.js`, `/config.js` e `/vendor/` dão 404. Para voltar atrás: reverter o #47.
 15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
     registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
     botão) e até quanto. Prévia antes. **30/10:** no gráfico do dia e no da semana, com duplo toque
-    (Patrick); prévia antes de programar.
+    (Patrick); prévia antes de programar. **No `main` em 30/10 (#50)**; falta conferir no celular.
 
 **Android** (seção "App do Android")
 
