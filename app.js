@@ -166,6 +166,15 @@ if (NATIVE) document.documentElement.dataset.app = ANDROID ? 'android' : 'ios';
 // (capacitor://localhost no iPhone, https://localhost no Android), que não abre em outro celular.
 const LINK_BASE = NATIVE ? 'https://soneca.app.br' : location.origin;
 const social = NATIVE ? window.Capacitor.registerPlugin('SocialLogin') : null;
+// No app, a Política e os Termos abrem no navegador do celular, por cima do app: o endereço relativo
+// (/privacidade, /termos) caía nos arquivos do próprio app, que abria de novo (defeito de 30/10).
+if (NATIVE) {
+  const browser = window.Capacitor.registerPlugin('Browser');
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href="/privacidade"],a[href="/termos"]'); if (!a) return;
+    e.preventDefault(); browser.open({ url: LINK_BASE + a.getAttribute('href') });
+  }, true);
+}
 // Link do Soneca tocado com o app instalado (Universal Links no iPhone, App Links no Android): o
 // celular abre o app em vez do navegador, e o convite do link chega aqui. Sem isso, o convite ficava
 // guardado no navegador e o app abria em "Criar família" (Ca, 17/10).

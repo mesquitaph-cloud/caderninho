@@ -86,6 +86,17 @@ if (CEN === 'sem-familia' || CEN === 'app-convite') {
   };
 }
 
+// "app-politica": finge o app do iPhone; o que o app manda abrir no navegador do celular fica em
+// window.abertos (para conferir que a Política e os Termos não abrem o próprio app).
+if (CEN === 'app-politica') {
+  const real = window.Capacitor;
+  window.abertos = [];
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'ios',
+    registerPlugin: name => name === 'Browser' ? { open: async o => { window.abertos.push(o.url); } }
+      : name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+}
+
 const baseClient = createClient;
 createClient = (...a) => {
   const c = baseClient(...a);
