@@ -60,8 +60,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
   da Apple (entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de Ajustes; seção
   "Entrar com Google e Apple").
-- Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase (Authentication → Emails → Templates
-  e o Sender name).
+- ~~Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase~~ (conferido em 30/10: assunto e
+  texto de "Confirm sign up" e "Magic link" já dizem Soneca, com o código e "vale por uma hora").
 - Mandar ao advogado as versões 1.1 e 1.3 da Política e dos Termos (seção "LGPD").
 - Tirar o site do ar: virou o item 14 da lista abaixo (27/10).
 
@@ -90,9 +90,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    Programado no PR #43, ainda sem teste em celular de verdade.
 2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
    `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
-3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
-   (o Gmail limita quantos e-mails saem por dia). **Foco agora (Patrick, 29/10).** Em 29/10, o DNS do
-   `soneca.app.br` está no Registro.br, ainda sem nenhum registro de e-mail (MX, SPF ou DKIM).
+3. ~~**Remetente próprio dos e-mails**~~ **(feito, 30/10):** os e-mails do login saem pelo Resend, do
+   domínio `soneca.app.br` (SMTP do Supabase conferido pelo Patrick). DNS conferido em 30/10: SPF e DKIM
+   do Resend e DMARC `p=none`; sem MX no domínio principal, então não dá para responder a esses e-mails.
+   O Supabase segue no limite de 30 e-mails de login por hora (mantido de propósito).
 4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
    semana e tempo desde a última mamada (seção "Ideias para depois").
 5. **Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
@@ -208,8 +209,7 @@ e-mail, QR code, quem indicou quem): seção "Ideias para depois".
 
 ## Pendências antes de convidar amigos
 
-- Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
-  indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
+- ~~Trocar o remetente dos e-mails por uma conta dedicada~~ (feito em 30/10: Resend, do `soneca.app.br`).
 - Regras de acesso do banco (RLS): revisadas em 10/10 e 016 rodado em 11/10 (abaixo).
 - Sintomas novos (diarreia, muco nas fezes, urticária): `supabase/017_sintomas_novos.sql` já rodado (conferido pelo conector em 12/10).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
@@ -556,7 +556,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
   `caderninho-bay.vercel.app/privacidade` e `/termos` para o novo.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - ~~DM Sans servida pelo próprio site, sem Google Fonts~~ (feito em 11/10, seção "App do iPhone").
-- Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
+- ~~Remetente dos e-mails em serviço próprio com domínio do Soneca~~ (feito em 30/10, Resend).
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
   guardam no plano atual; se for menos, guardar à parte.
 - Revisão das regras de acesso (RLS) (já acima).
@@ -1146,6 +1146,31 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
   o que vai no e-mail (talvez só os números, sem remédios).
 
+- **Painel de gestão, próximas fases** (30/10): o painel "Soneca: uso do app"
+  (https://claude.ai/artifact/D7ULhARJi27XzwuPqPb7cC, privado; PDF pedindo "gera o PDF do painel") tem
+  aquisição, ativação e retenção. Ficam para depois: **custos** (planilha mensal com Supabase, Vercel,
+  contas da Apple e do Google, Codemagic, domínio) e **receita** (MRR, conversão do teste em assinatura
+  por família, sem contar as pioneiras; LTV só com uns 3 a 6 meses de cobrança).
+- **Guardar "última vez que abriu o app"** (30/10, do painel de novos usuários): hoje só sabemos
+  que alguém usou o Soneca quando anota um registro, então quem só abre para olhar conta como
+  inativo. Uma coluna com a última abertura por pessoa (e talvez o aparelho do cadastro, que hoje
+  é deduzido das sessões) deixaria a retenção medir "voltou ao app". Mexe no app e no banco
+  (arquivo novo em `supabase/`).
+- **Boas-vindas para quem acabou de entrar** (30/10): uma apresentação curta do Soneca para
+  usuário novo, que a pessoa pode pular ("opt out") e que não volta depois de pulada ou vista.
+  Escopo, telas e textos ainda por decidir.
+- **"Indicar o Soneca" só com o botão Compartilhar** (30/10, próxima versão do iPhone e do Android):
+  tirar a caixa com o endereço e ligar a janela de compartilhar do celular pelo `@capacitor/share`
+  (hoje o app não tem acesso a ela, por isso o botão some no Android). Onde não há compartilhamento
+  (site no computador), o botão vira "Copiar texto". Prévia aprovada antes de programar:
+  https://claude.ai/artifact/HR6eJgLj4V73ibC2wjhC5q
+- **Defeito: "Ler" a Política de Privacidade e os Termos abre o próprio app de novo** (30/10, visto
+  pelo Patrick no app do celular). Os links usam endereço relativo (`/privacidade`, `/termos`, com
+  `target="_blank"`) em `index.html` e `app.js`; dentro do app (Capacitor) isso provavelmente cai nos
+  arquivos do próprio app em vez do site. Caminho provável: no app, abrir o endereço completo do site
+  pelo navegador do sistema (`@capacitor/browser` ou equivalente). Conferir no iPhone e no Android,
+  inclusive o link da caixa de aceite do cadastro. A Apple e o Google exigem a política acessível
+  dentro do app, então vale entrar na próxima versão.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
 - QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
