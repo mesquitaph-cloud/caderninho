@@ -62,24 +62,41 @@ function dayStats(d0, evs, sleeps, now) {
   };
 }
 
-// "Como foram os dias": uma linha por dia, de 0h a 24h, com hoje no alto.
-function routineChart(all, sleeps, now, show, k) {
-  const today = startOfDay(now);
+// Zoom (30/10): dois toques no gráfico mostram só 6 horas (das 0h, 6h, 12h ou 18h), com a hora de hora
+// em hora; z é a hora em que o trecho começa, ou null para o dia inteiro. O app guarda e troca o z.
+export const ZOOM_H = 6;
+const zSpan = z => z == null ? [0, 24] : [z, z + ZOOM_H];
+const zTicks = z => z == null ? [0, 6, 12, 18, 24] : Array.from({ length: ZOOM_H + 1 }, (_, i) => z + i);
+// Um momento do dia (h horas depois das 0h), contando o dia como ele é (d0 a d1).
+const at = (d0, d1, h) => d0 + h / 24 * (d1 - d0);
+const ARROW = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="${d}"/></svg>`;
+// No alto do gráfico: a dica, ou o trecho aproximado com as setas e "Dia inteiro".
+export const zoomHead = (z, cap) => z == null ? `<p class="cap">${cap}</p>`
+  : `<div class="zb"><button class="zarr" data-zoom="prev" aria-label="6 horas antes"${z === 0 ? ' disabled' : ''}>${ARROW('M15 5l-7 7 7 7')}</button>`
+    + `<span class="zr">${z}h às ${z + ZOOM_H}h</span>`
+    + `<button class="zarr" data-zoom="next" aria-label="6 horas depois"${z === 24 - ZOOM_H ? ' disabled' : ''}>${ARROW('M9 5l7 7-7 7')}</button>`
+    + '<button class="zfull" data-zoom="full">Dia inteiro</button></div>';
+const ticks = (z, x, top, H, ly) => zTicks(z).map((h, i, all) => `<line class="gl" x1="${x(h)}" x2="${x(h)}" y1="${top - 4}" y2="${H}"/><text class="ax" x="${x(h)}" y="${ly}" text-anchor="${i === 0 ? 'start' : i === all.length - 1 ? 'end' : 'middle'}">${h}h</text>`).join('');
+
+// "Como foram os dias": uma linha por dia, de 0h a 24h (ou o trecho aproximado), com hoje no alto.
+function routineChart(all, sleeps, now, show, k, zoom) {
+  const today = startOfDay(now), [h0, h1] = zSpan(zoom);
   const W = 360, LW = 58, CW = W - LW - 6, RH = 28, TOP = 20, H = TOP + all.length * RH + 2;
   const x = f => +(LW + f * CW).toFixed(1);
-  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foram os dias, de 0h a 24h">`;
-  for (const h of [0, 6, 12, 18, 24])
-    s += `<line class="gl" x1="${x(h / 24)}" x2="${x(h / 24)}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${x(h / 24)}" y="${TOP - 8}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foram os dias, de ${h0}h a ${h1}h" data-zchart data-w="${W}" data-lw="${LW}" data-cw="${CW}">`;
+  s += ticks(zoom, h => x((h - h0) / (h1 - h0)), TOP, H, TOP - 8);
   all.slice().reverse().forEach((d, i) => {
-    const y = TOP + i * RH, mid = y + RH / 2, end = Math.min(d.d1, now);
-    const f = t => (t - d.d0) / (d.d1 - d.d0);   // parte do dia, de 0 a 1
+    const y = TOP + i * RH, mid = y + RH / 2, a0 = at(d.d0, d.d1, h0), a1 = at(d.d0, d.d1, h1), end = Math.min(a1, now);
+    const f = t => (t - a0) / (a1 - a0);   // parte do trecho, de 0 a 1
+    const inZ = t => t >= a0 && t <= a1;
     s += `<g class="dayrow" data-day="${d.d0}" tabindex="0" role="button" aria-label="Abrir ${esc(dayTitle(d.d0))}"><rect class="hit" x="0" y="${y}" width="${W}" height="${RH}" rx="6"/>`;
     s += `<text class="dl" x="4" y="${mid + 4}">${d.d0 === today ? 'hoje' : shortDay(d.d0)}</text><line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
     if (show.sleep !== false) for (const [a, z] of sleeps) {
-      const A = Math.max(a, d.d0), Z = Math.min(z, end);
+      const A = Math.max(a, a0), Z = Math.min(z, end);
       if (Z > A) s += `<rect class="m-sleep" x="${x(f(A))}" y="${y + 7}" width="${Math.max(1.5, (f(Z) - f(A)) * CW).toFixed(1)}" height="${RH - 14}" rx="3"/>`;
     }
     for (const e of d.day) {
+      if (!inZ(e.t)) continue;
       const cx = x(f(e.t));
       if (e.kind === 'feed' && show.feed !== false) s += `<circle class="m-feed" cx="${cx}" cy="${mid}" r="3.6"/>`;
       // Fralda: o mesmo ponto verde. Com cocô, ganha um miolo marrom.
@@ -90,7 +107,7 @@ function routineChart(all, sleeps, now, show, k) {
       const t = topKind(e, k);
       if (t && show[t] !== false) s += TOP_MARK[t](cx, y + 3.8, 2.6);
     }
-    if (d.d0 === today) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
+    if (d.d0 === today && inZ(now)) s += `<line class="now" x1="${x(f(now))}" x2="${x(f(now))}" y1="${y + 3}" y2="${y + RH - 3}"/>`;
     s += '</g>';
   });
   return s + '</svg>';
@@ -98,33 +115,34 @@ function routineChart(all, sleeps, now, show, k) {
 
 // "Como foi o dia": o dia aberto numa linha só, com as mesmas marcas do painel da semana, um pouco
 // maiores. A contagem vai embaixo. Tocar numa marca abre o registro. on: se a família usa o botão.
-export function dayLine({ d0, evs, sleeps, now, on }) {
-  const k = shownKinds(on);
+export function dayLine({ d0, evs, sleeps, now, on, zoom = null }) {
+  const k = shownKinds(on), [h0, h1] = zSpan(zoom);
   const d1 = addDays(d0, 1), end = Math.min(d1, now), day = evs.filter(e => e.t >= d0 && e.t < d1);
+  const a0 = at(d0, d1, h0), a1 = at(d0, d1, h1), inZ = t => t >= a0 && t <= a1;
   const K = 1.45, RH = 50, W = 360, LW = 8, CW = W - 2 * LW, TOP = 16, H = TOP + RH + 4, y = TOP, mid = y + RH / 2;
-  const x = t => +(LW + (t - d0) / (d1 - d0) * CW).toFixed(1);
+  const x = t => +(LW + (t - a0) / (a1 - a0) * CW).toFixed(1);
   const mark = (e, shape) => `<g class="mk" data-id="${esc(e.id)}"><circle class="hit" cx="${x(e.t)}" cy="${mid}" r="12"/>${shape}<title>${esc(hm(e.t) + ' · ' + [label(e, evs), detail(e)].filter(Boolean).join(' · '))}</title></g>`;
-  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foi o dia, de 0h a 24h">`;
-  for (const h of [0, 6, 12, 18, 24]) {
-    const hx = x(d0 + h / 24 * (d1 - d0));
-    s += `<line class="gl" x1="${hx}" x2="${hx}" y1="${TOP - 4}" y2="${H}"/><text class="ax" x="${hx}" y="${TOP - 6}" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}h</text>`;
-  }
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="group" aria-label="Como foi o dia, de ${h0}h a ${h1}h" data-zchart data-w="${W}" data-lw="${LW}" data-cw="${CW}">`;
+  s += ticks(zoom, h => x(at(d0, d1, h)), TOP, H, TOP - 6);
   s += `<line class="base" x1="${LW}" x2="${LW + CW}" y1="${mid}" y2="${mid}"/>`;
+  // O sono da contagem é do dia inteiro; o desenho, só do trecho aproximado.
   let slept = 0;
   for (const [a, z] of sleeps) {
-    const A = Math.max(a, d0), Z = Math.min(z, end); if (Z <= A) continue;
-    slept += Z - A;
-    s += `<rect class="m-sleep" x="${x(A)}" y="${(y + 7 * K).toFixed(1)}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${(RH - 14 * K).toFixed(1)}" rx="3"><title>${esc('Sono das ' + hm(A) + ' às ' + hm(Z) + ' · ' + dur(Z - A))}</title></rect>`;
+    const A0 = Math.max(a, d0), Z0 = Math.min(z, end); if (Z0 <= A0) continue;
+    slept += Z0 - A0;
+    const A = Math.max(A0, a0), Z = Math.min(Z0, a1); if (Z <= A) continue;
+    s += `<rect class="m-sleep" x="${x(A)}" y="${(y + 7 * K).toFixed(1)}" width="${Math.max(2, x(Z) - x(A)).toFixed(1)}" height="${(RH - 14 * K).toFixed(1)}" rx="3"><title>${esc('Sono das ' + hm(A0) + ' às ' + hm(Z0) + ' · ' + dur(Z0 - A0))}</title></rect>`;
   }
   const dy = (y + RH - 4.3 * K).toFixed(1), top = y + 3.8 * K;
   for (const e of day) {
+    if (!inZ(e.t)) continue;
     const cx = x(e.t);
     if (e.kind === 'feed') s += mark(e, `<circle class="m-feed" cx="${cx}" cy="${mid}" r="${(3.6 * K).toFixed(1)}"/>`);
     if (e.kind === 'diaper') s += mark(e, `<circle class="m-diaper dot" cx="${cx}" cy="${dy}" r="${(4 * K).toFixed(1)}"/>` + (e.poo ? `<circle class="m-poo dot" cx="${cx}" cy="${dy}" r="${(2.4 * K).toFixed(1)}"/>` : ''));
     const t = topKind(e, k);
     if (t) s += mark(e, TOP_MARK[t](cx, top, 2.6 * K));
   }
-  if (d0 === startOfDay(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
+  if (d0 === startOfDay(now) && inZ(now)) s += `<line class="now" x1="${x(now)}" x2="${x(now)}" y1="${TOP - 2}" y2="${H - 2}"/>`;
   s += '</svg>';
   const n = f => day.filter(f).length, pump = day.filter(e => e.kind === 'pump');
   // Volume: só das mamadeiras (mamada no peito não tem ml).
@@ -200,7 +218,7 @@ const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden=
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
-export function weekHtml({ end, evs, sleep, now, show, metric, on, ref = '' }) {
+export function weekHtml({ end, evs, sleep, now, show, metric, on, zoom = null, ref = '' }) {
   const k = shownKinds(on);
   const today = startOfDay(now), a = addDays(end, -6), z = Math.min(addDays(end, 1), now);
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
@@ -233,9 +251,9 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on, ref = '' }) {
   const feedSub = [avg(d => d.breastMin) >= 1 ? dur(avg(d => d.breastMin) * MIN) + ' no peito' : '',
                    avg(d => d.ml) >= 1 ? Math.round(avg(d => d.ml)) + ' ml na mamadeira' : ''].filter(Boolean).join(' · ');
 
-  let h = `<div class="card"><h3>Como foram os dias</h3><p class="cap">Cada linha é um dia, de 0h a 24h. Toque num dia para ver os registros.</p>
+  let h = `<div class="card"><h3>Como foram os dias</h3>${zoomHead(zoom, 'Cada linha é um dia, de 0h a 24h. Toque num dia para ver os registros. Toque duas vezes para aproximar.')}
     <div class="flts">${FILTERS.filter(([f]) => k[f]).map(([f, t]) => `<button class="flt" data-flt="${f}" aria-pressed="${show[f] !== false}">${KEY[f]()}${t}</button>`).join('')}</div>
-    <div class="svgbox">${routineChart(all, sleeps, now, show, k)}</div>${show.diaper !== false ? LGD_DIAPER : ''}</div>`;
+    <div class="svgbox">${routineChart(all, sleeps, now, show, k, zoom)}</div>${show.diaper !== false ? LGD_DIAPER : ''}</div>`;
 
   h += `<div class="card"><h3>Média por dia</h3>${cap ? `<p class="cap">${cap}</p>` : ''}<div class="tiles">
     ${tile('--c-sleep', 'Sono', dur(avg(d => d.slept)), 'maior sono seguido: ' + (longest ? dur(longest[1] - longest[0]) : '—'))}

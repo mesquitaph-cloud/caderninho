@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
-import { weekHtml, dayLine } from './week.js';
+import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
@@ -39,6 +39,7 @@ const st = {
   month: 0,                    // primeiro dia do mês do resumo (0 = o mês atual)
   shareText: '',               // o resumo da semana ou do mês aberto, pronto para compartilhar
   show: { sleep: true, feed: true, diaper: true, pump: true },   // filtro de "Como foram os dias"
+  zoom: { day: null, week: null }, // trecho aproximado de cada gráfico (hora de início) ou null
   metric: 'sleep',             // o que aparece em "Dia a dia"
   channel: null,
 };
@@ -166,6 +167,15 @@ if (NATIVE) document.documentElement.dataset.app = ANDROID ? 'android' : 'ios';
 // (capacitor://localhost no iPhone, https://localhost no Android), que não abre em outro celular.
 const LINK_BASE = NATIVE ? 'https://soneca.app.br' : location.origin;
 const social = NATIVE ? window.Capacitor.registerPlugin('SocialLogin') : null;
+// No app, a Política e os Termos abrem no navegador do celular, por cima do app: o endereço relativo
+// (/privacidade, /termos) caía nos arquivos do próprio app, que abria de novo (defeito de 30/10).
+if (NATIVE) {
+  const browser = window.Capacitor.registerPlugin('Browser');
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href="/privacidade"],a[href="/termos"]'); if (!a) return;
+    e.preventDefault(); browser.open({ url: LINK_BASE + a.getAttribute('href') });
+  }, true);
+}
 // Link do Soneca tocado com o app instalado (Universal Links no iPhone, App Links no Android): o
 // celular abre o app em vez do navegador, e o convite do link chega aqui. Sem isso, o convite ficava
 // guardado no navegador e o app abria em "Criar família" (Ca, 17/10).
@@ -350,6 +360,8 @@ $('fCreate').addEventListener('submit', async e => {
   const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
   if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
   await addConsent('baby', { family_id: fid });
+  // Família nova começa só com Mamada, Sono e Fralda (30/10); os outros ela liga em Editar.
+  await sb.from('family_settings').upsert({ family_id: fid, hidden_kinds: OPTIONAL }, { onConflict: 'family_id' });
   $('fCreate').reset(); await loadFamilies(); openFamily(fid);
 });
 $('cancelCreate').onclick = () => { show('scrMain'); };
@@ -499,7 +511,7 @@ function render() {
   $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
-  renderHome(); medAlertsLater();
+  renderHome(); renderBv(); medAlertsLater();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -589,7 +601,7 @@ function renderHome() {
     const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn,
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn, zoom: st.zoom.week,
                    ref: refHtml({ birth: b.birth_date, at: localDate(Math.min(wz - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
                                   cap: 'Médias destes 7 dias, nos dias com registros.' }) })
         + divisionHtml(div, { name: b.name })
@@ -607,12 +619,12 @@ function renderHome() {
   const sleeps = open === null ? intervals : [...intervals, [open, now]];
   const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
   $('summary').innerHTML = !b || (!day.length && !slept) ? ''
-    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, on: isOn })}</div>`;
+    : `<div class="card daycard"><h3>Como foi o dia</h3>${zoomHead(st.zoom.day, 'Toque duas vezes para aproximar.')}${dayLine({ d0, evs, sleeps, now, on: isOn, zoom: st.zoom.day })}</div>`;
 
   // Dose pulada não entra na linha do tempo; continua em "Remédios e horários", com Desfazer.
   const rows = day.filter(e => !(e.kind === 'med' && e.skipped));
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-    : !rows.length ? '<div class="empty">Nada registrado neste dia.</div>'
+    : !rows.length ? `<div class="empty">${d0 === today ? 'Toque num botão acima para anotar o primeiro.' : 'Nada registrado neste dia.'}</div>`
     : rows.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
         const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
@@ -620,6 +632,61 @@ function renderHome() {
         return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
+
+/* ---------- boas-vindas ---------- */
+// Cartões para quem acabou de entrar numa família, um de cada vez e na ordem: boas-vindas (quem criou)
+// ou "Você entrou" (quem veio por convite), o convite, os botões (a partir do 2º dia) e a semana (com 3
+// dias de registros). Visto ou pulado, não volta; a marca fica neste celular, uma por família. Só para
+// quem entrou na família a partir de BV_DESDE: quem já usava o Soneca não vê nada novo.
+// Os testes (testes/cenarios.js) mudam a data por window.testeBvDesde.
+const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
+const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+const bvKey = () => 'cad-bv-' + st.family.id;
+const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
+const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
+// "a Marina", "o Pedro"; sem menina ou menino anotado, só o nome.
+const artigo = (b, a, o, nada) => b.sex === 'F' ? a : b.sex === 'M' ? o : nada;
+function bvCard() {
+  const b = st.baby, f = st.family, me = st.members.find(m => m.user_id === st.user.id);
+  const joined = me ? Date.parse(me.joined_at) : NaN;
+  if (!b || !f || !(joined >= BV_DESDE)) return null;
+  const done = bvDone(), evs = [...st.entries.values()], creator = f.creator_id === st.user.id;
+  if (creator && !evs.length) return done.includes('ola') ? null : 'ola';
+  if (!creator && !done.includes('entrou')) return 'entrou';
+  if (creator && st.members.length < 2 && !done.includes('convite')) return 'convite';
+  const j0 = startOfDay(joined);
+  if (!evs.length || j0 >= startOfDay(Date.now())) return null;
+  if (!done.includes('botoes') && OPTIONAL.some(k => !isOn(k))) return 'botoes';
+  const days = new Set(evs.filter(e => e.t >= j0).map(e => startOfDay(e.t)));
+  return days.size >= 3 && !done.includes('semana') ? 'semana' : null;
+}
+function renderBv() {
+  const k = bvCard(), b = st.baby;
+  const x = `<button class="x" data-bv="${k}" aria-label="Fechar">×</button>`;
+  const go = (label, no) => `<div class="btns"><button class="save" data-bvgo="${k}">${label}</button>${no ? `<button class="link" data-bv="${k}">${no}</button>` : ''}</div>`;
+  const card = h => `<div class="card bv">${h}</div>`;
+  const nome = b ? esc(b.name) : '';
+  $('bvTop').innerHTML = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
+      + '<p>Toque em Mamada, Sono ou Fralda para anotar. A hora já vem como agora, e dá para mudar.</p><p>Tudo aparece aqui embaixo, na linha do tempo do dia.</p>')
+    : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(st.family.name)}</h3></div>`
+      + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
+    : '';
+  $('bvMid').innerHTML = k === 'botoes' ? card(x + '<h3>Escolha os botões da família</h3><p>Além de Mamada, Sono e Fralda, dá para ligar Remédio, Sintomas, Ordenha e Cuidados (banho, massagem, lavagem nasal e outros). Vale para todos da família.</p>' + go('Escolher botões', 'Agora não'))
+    : k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
+    : '';
+  $('bvEnd').innerHTML = k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '';
+  // Enquanto o cartão fala deles, o botão Editar e a aba Semana ficam com a borda caramelo.
+  document.querySelector('#grid .k-edit')?.classList.toggle('bvhl', k === 'botoes');
+  $('tabWeek').classList.toggle('bvhl', k === 'semana');
+}
+$('paneHome').addEventListener('click', e => {
+  const b = e.target.closest('[data-bv],[data-bvgo]'); if (!b) return;
+  const k = b.dataset.bv || b.dataset.bvgo; bvSkip(k);
+  if (!b.dataset.bvgo || k === 'entrou') return render();
+  if (k === 'convite') return goTab('family', 'famMembers');
+  if (k === 'botoes') return goTab('family', 'famButtons');
+  if (k === 'semana') { st.view = 'week'; st.weekEnd = startOfDay(Date.now()); render(); }
+});
 
 /* ---------- botões da tela inicial ---------- */
 // Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
@@ -1138,8 +1205,12 @@ function drawMeds() {
   if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
   h += meds.length
     ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
-    : `<div class="soft">Anote aqui quais são os remédios de ${esc(st.baby.name)} e os horários de cada um. Depois de salvar, as doses do dia começam a aparecer no alto da tela inicial.</div><button class="save" data-act="newMed">Programar um remédio</button>`;
-  const top = $('sheet').scrollTop; openPanel(h + MED_RULE); $('sheet').scrollTop = top;
+    : '<ol class="steps"><li><span class="n">1</span><span>Anote o remédio, quanto dar e quando: em horários fixos, de tantas em tantas horas ou só quando precisar.</span></li>'
+      + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto da tela Hoje. Quem der marca, e todos da família veem.</span></li>'
+      // O aviso na hora só existe no app do celular, não no site.
+      + (medNotif ? '<li><span class="n">3</span><span>Se quiser, o celular avisa na hora de cada dose.</span></li>' : '') + '</ol>'
+      + '<p class="dim">O Soneca só lembra o que vocês programarem. Não sugere remédio, dose nem horário.</p><button class="save" data-act="newMed">Programar um remédio</button>';
+  const top = $('sheet').scrollTop; openPanel(h + (meds.length ? MED_RULE : '')); $('sheet').scrollTop = top;
 }
 const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && e.medicine_id === m.id && !e.skipped).reduce((b, e) => !b || e.t > b.t ? e : b, null);
 // "Só quando precisar" com intervalo: quando pode dar de novo (nulo se já pode).
@@ -1848,7 +1919,7 @@ function drawFamilyPane() {
   let h = `<div class="ptitle"><h2>${esc(f.name)}</h2><small>${n} ${n === 1 ? 'membro' : 'membros'} · ${nb} ${nb === 1 ? 'bebê' : 'bebês'}</small></div>`;
   h += `<div class="sec"><h4>Nome da família</h4><div class="li"><span>${esc(f.name)}</span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`
     + (creator ? '' : '<p class="dim">Só quem criou a família muda o nome.</p>') + '</div>';
-  h += '<div class="sec"><h4>Membros</h4>' + st.members.map(m => {
+  h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
     const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
     const rm = creator && m.user_id !== st.user.id
       ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">${FP.confirm === 'rm:' + m.user_id ? 'Confirmar' : 'Remover'}</button>` : '';
@@ -2212,10 +2283,37 @@ for (const id of ['paneBaby', 'paneFamily', 'paneProfile']) $(id).addEventListen
   const c = e.target.closest('[data-baby]'); if (c) return selectBaby(c.dataset.baby);
   const b = e.target.closest('[data-act]'); if (b) paneAction(b.dataset.act, b.dataset.val, b);
 });
+// Zoom nos gráficos (30/10): dois toques seguidos aproximam as 6 horas em volta do toque, ou voltam ao
+// dia inteiro. O toque simples (abrir o registro ou o dia) espera um instante para não brigar com o duplo.
+const TAP2 = 300;
+let tap1 = null;
+function chartTap(e, single) {
+  const svg = e.target.closest('svg[data-zchart]');
+  if (tap1 && tap1.svg === svg && Date.now() - tap1.t < TAP2) { clearTimeout(tap1.timer); tap1 = null; return toggleZoom(svg, e); }
+  if (tap1) clearTimeout(tap1.timer);
+  tap1 = { svg, t: Date.now(), timer: setTimeout(() => { tap1 = null; single?.(); }, TAP2) };
+}
+function toggleZoom(svg, e) {
+  const k = svg.closest('#weekView') ? 'week' : 'day';
+  if (st.zoom[k] != null) st.zoom[k] = null;
+  else {
+    const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * +svg.dataset.w;
+    const h = (vx - +svg.dataset.lw) / +svg.dataset.cw * 24;
+    st.zoom[k] = Math.min(24 - ZOOM_H, Math.max(0, Math.floor(h / ZOOM_H) * ZOOM_H));
+  }
+  render();
+}
+// Setas e "Dia inteiro", no alto do gráfico aproximado.
+function zoomStep(k, a) {
+  st.zoom[k] = a === 'full' ? null : Math.min(24 - ZOOM_H, Math.max(0, st.zoom[k] + (a === 'next' ? ZOOM_H : -ZOOM_H)));
+  render();
+}
 // Tocar numa marca do gráfico do dia abre o registro, como na linha do tempo.
 $('summary').addEventListener('click', e => {
-  const m = e.target.closest('[data-id]'); if (!m) return;
-  const ev = st.entries.get(m.dataset.id); if (ev) openEntry(ev.kind, ev);
+  const z = e.target.closest('[data-zoom]'); if (z) return zoomStep('day', z.dataset.zoom);
+  if (!e.target.closest('svg[data-zchart]')) return;
+  const m = e.target.closest('[data-id]'), ev = m && st.entries.get(m.dataset.id);
+  chartTap(e, ev ? () => openEntry(ev.kind, ev) : null);
 });
 $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
@@ -2262,7 +2360,9 @@ $('weekView').addEventListener('click', e => {
   const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
   const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = st.show[f.dataset.flt] === false; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
-  const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
+  const z = e.target.closest('[data-zoom]'); if (z) return zoomStep('week', z.dataset.zoom);
+  const r = e.target.closest('.dayrow');
+  if (e.target.closest('svg[data-zchart]')) return chartTap(e, r ? () => openDay(+r.dataset.day) : null);
   const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
 });
 $('weekView').addEventListener('keydown', e => {

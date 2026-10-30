@@ -86,6 +86,39 @@ if (CEN === 'sem-familia' || CEN === 'app-convite') {
   };
 }
 
+// Boas-vindas (30/10). "bv-nova": a Ana acabou de criar a Família Souza, com o Pedro e nenhum registro,
+// só com Mamada, Sono e Fralda. "bv-convidado": o Pedro acabou de entrar na Família Andrade por convite.
+// "bv-dias": a Carol, sozinha na família, entrou há 4 dias, com Ordenha e Cuidados desligados.
+if (CEN === 'bv-nova') {
+  ME = 'u-ana';
+  T.profiles.push({ id: ME, display_name: 'Ana' });
+  T.families = [{ id: 'f-2', name: 'Família Souza', creator_id: ME, created_at: new Date().toISOString() }];
+  T.family_members = [{ family_id: 'f-2', user_id: ME, joined_at: new Date().toISOString() }];
+  T.babies = [{ id: 'b-2', family_id: 'f-2', name: 'Pedro', birth_date: ymd(NOW - 20 * DAY), sex: 'M', created_at: new Date().toISOString() }];
+  T.family_settings = [{ family_id: 'f-2', hidden_kinds: ['med', 'symptom', 'pump', 'care'] }];
+  T.consents = [{ kind: 'terms', version: '1.3', family_id: null, created_at: new Date().toISOString() }, { kind: 'baby', version: '1.3', family_id: 'f-2', created_at: new Date().toISOString() }];
+}
+if (CEN === 'bv-convidado') {
+  ME = U.p;
+  T.family_members.find(m => m.user_id === U.p).joined_at = new Date().toISOString();
+}
+if (CEN === 'bv-dias') {
+  window.testeBvDesde = sod(NOW) - 10 * DAY;
+  T.family_members = [{ family_id: F, user_id: U.me, joined_at: new Date(sod(NOW) - 4 * DAY).toISOString() }];
+  T.family_settings = [{ family_id: F, hidden_kinds: ['pump', 'care'] }];
+}
+
+// "app-politica": finge o app do iPhone; o que o app manda abrir no navegador do celular fica em
+// window.abertos (para conferir que a Política e os Termos não abrem o próprio app).
+if (CEN === 'app-politica') {
+  const real = window.Capacitor;
+  window.abertos = [];
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'ios',
+    registerPlugin: name => name === 'Browser' ? { open: async o => { window.abertos.push(o.url); } }
+      : name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+}
+
 const baseClient = createClient;
 createClient = (...a) => {
   const c = baseClient(...a);

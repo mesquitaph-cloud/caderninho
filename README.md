@@ -29,8 +29,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   Edit → Save na Apple e buscar de novo no Codemagic (Fetch profiles), senão a compilação falha.
 - **iPhone 1.0.1:** **enviada à revisão da Apple em 29/10, 17:41** (compilação 6, de 31c94f7; status
   "Waiting for Review"), com lançamento manual e as notas para o revisor de `APP-STORE.md`. Quando aprovar,
-  apertar "Release This Version". Até lá, não rodar o `013` nem mexer na conta do revisor. Texto "O que há
-  de novo" aprovado em 29/10:
+  apertar "Release This Version". Até lá, não rodar o `013` nem mexer na conta do revisor. **30/10:
+  aprovada pela Apple** (Patrick). Texto "O que há de novo" aprovado em 29/10:
 
   > Novidades:
   > • Cronômetro da mamada, com o tempo de cada peito.
@@ -60,8 +60,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - Conferir no iPhone, com o app da loja: o PDF do relatório (folha de imprimir) e o passo 5 do cancelamento
   da Apple (entrar com a Apple numa conta de teste, apagar a conta e ver o Soneca sumir de Ajustes; seção
   "Entrar com Google e Apple").
-- Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase (Authentication → Emails → Templates
-  e o Sender name).
+- ~~Trocar "Caderninho" por "Soneca" nos modelos de e-mail do Supabase~~ (conferido em 30/10: assunto e
+  texto de "Confirm sign up" e "Magic link" já dizem Soneca, com o código e "vale por uma hora").
 - Mandar ao advogado as versões 1.1 e 1.3 da Política e dos Termos (seção "LGPD").
 - Tirar o site do ar: virou o item 14 da lista abaixo (27/10).
 
@@ -90,9 +90,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    Programado no PR #43, ainda sem teste em celular de verdade.
 2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
    `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
-3. **Remetente próprio dos e-mails,** com o domínio do Soneca, no lugar do Gmail profissional do Patrick
-   (o Gmail limita quantos e-mails saem por dia). **Foco agora (Patrick, 29/10).** Em 29/10, o DNS do
-   `soneca.app.br` está no Registro.br, ainda sem nenhum registro de e-mail (MX, SPF ou DKIM).
+3. ~~**Remetente próprio dos e-mails**~~ **(feito, 30/10):** os e-mails do login saem pelo Resend, do
+   domínio `soneca.app.br` (SMTP do Supabase conferido pelo Patrick). DNS conferido em 30/10: SPF e DKIM
+   do Resend e DMARC `p=none`; sem MX no domínio principal, então não dá para responder a esses e-mails.
+   O Supabase segue no limite de 30 e-mails de login por hora (mantido de propósito).
 4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
    semana e tempo desde a última mamada (seção "Ideias para depois").
 5. **Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
@@ -111,7 +112,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
    levar à App Store (e à Play Store no Android), ou à página do item 2. **Precisa ser feito (Patrick,
    29/10).** Conferido em 29/10: a tela de indicar mostra `location.host` (`app.js`), que dentro do app é
-   "localhost".
+   "localhost". **30/10: esperar o Android estar na Play Store** para o link ter para onde ir (Patrick).
 10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
     `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
     O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
@@ -171,6 +172,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     **29/10: o Patrick decidiu tirar já**, sem esperar o Android na Play Store (quem tem Android e entra
     pelo site fica sem o Soneca até a loja). Ainda antes: a página do item 2 (prévia), ver pelo banco
     quantas famílias ainda entram pelo site e o aviso a elas (texto a aprovar).
+    **30/10: o Patrick confirmou "pode tirar"**, sem contagem nem aviso antes. Ramo
+    `claude/site-so-lojas-pr`.
     **30/10:** contagem no banco (sessões ativas, pelo navegador que entrou): nos últimos 30 dias, 8
     pessoas abriram o Soneca pelo navegador, 7 delas também usam o app; nenhuma família ficaria sem o
     Soneca. Página das lojas aprovada pelo Patrick (prévia: https://claude.ai/artifact/2xxBq3uyk3oLmtXEr4pzSW)
@@ -182,9 +185,11 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     **Quando o Soneca estiver na Play Store: atualizar a página** (`inicio/index.html`), trocando a linha
     "No Android, o Soneca chega ao Google Play em breve." pelo selo oficial do Google Play, levando a
     `https://play.google.com/store/apps/details?id=br.app.soneca`.
+    **30/10: a Apple aprovou a 1.0.1** (Patrick); PR #47 atualizado com o `main` (#48 a #50).
 15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
     registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
-    botão) e até quanto. Prévia antes.
+    botão) e até quanto. Prévia antes. **30/10:** no gráfico do dia e no da semana, com duplo toque
+    (Patrick); prévia antes de programar.
 
 **Android** (seção "App do Android")
 
@@ -220,8 +225,7 @@ e-mail, QR code, quem indicou quem): seção "Ideias para depois".
 
 ## Pendências antes de convidar amigos
 
-- Trocar o remetente dos e-mails (hoje o Gmail profissional do Patrick) por uma conta dedicada. Com a
-  indicação a outras famílias, mais gente nova recebe esses e-mails, e o Gmail limita quantos saem por dia.
+- ~~Trocar o remetente dos e-mails por uma conta dedicada~~ (feito em 30/10: Resend, do `soneca.app.br`).
 - Regras de acesso do banco (RLS): revisadas em 10/10 e 016 rodado em 11/10 (abaixo).
 - Sintomas novos (diarreia, muco nas fezes, urticária): `supabase/017_sintomas_novos.sql` já rodado (conferido pelo conector em 12/10).
 - Privacidade (LGPD): Política de Privacidade e Termos de Uso revisados pelo advogado (07/10); páginas e
@@ -568,7 +572,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
   `caderninho-bay.vercel.app/privacidade` e `/termos` para o novo.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - ~~DM Sans servida pelo próprio site, sem Google Fonts~~ (feito em 11/10, seção "App do iPhone").
-- Remetente dos e-mails em serviço próprio com domínio do Soneca (já acima).
+- ~~Remetente dos e-mails em serviço próprio com domínio do Soneca~~ (feito em 30/10, Resend).
 - Registros de acesso (IP, data e hora) por 6 meses, pelo Marco Civil: conferir quanto o Supabase e a Vercel
   guardam no plano atual; se for menos, guardar à parte.
 - Revisão das regras de acesso (RLS) (já acima).
@@ -1158,8 +1162,47 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   (o servidor roda em UTC). Dado de saúde de criança sai do app e fica na caixa de e-mail: decidir
   o que vai no e-mail (talvez só os números, sem remédios).
 
+- **Painel de gestão, próximas fases** (30/10): o painel "Soneca: uso do app"
+  (https://claude.ai/artifact/D7ULhARJi27XzwuPqPb7cC, privado; PDF pedindo "gera o PDF do painel") tem
+  aquisição, ativação e retenção. Ficam para depois: **custos** (planilha mensal com Supabase, Vercel,
+  contas da Apple e do Google, Codemagic, domínio) e **receita** (MRR, conversão do teste em assinatura
+  por família, sem contar as pioneiras; LTV só com uns 3 a 6 meses de cobrança).
+- **Guardar "última vez que abriu o app"** (30/10, do painel de novos usuários): hoje só sabemos
+  que alguém usou o Soneca quando anota um registro, então quem só abre para olhar conta como
+  inativo. Uma coluna com a última abertura por pessoa (e talvez o aparelho do cadastro, que hoje
+  é deduzido das sessões) deixaria a retenção medir "voltou ao app". Mexe no app e no banco
+  (arquivo novo em `supabase/`).
+- **Boas-vindas para quem acabou de entrar** (30/10, ramo `claude/boas-vindas`, ainda não no `main`):
+  feito. Telas e textos aprovados pelo Patrick em 30/10 (prévia: https://claude.ai/artifact/QsigXXt3bq4YdG11pZVmjY).
+  Cartões no Hoje, um de cada vez, com borda caramelo; visto ou pulado (X, "Agora não", "Fechar",
+  "Entendi"), não volta. A marca fica no celular (`cad-bv-<família>`): trocar de celular mostra de novo.
+  Só para quem entrou na família a partir de 30/10 (`BV_DESDE` no `app.js`); quem já usava não vê nada.
+  1. Quem criou a família e ainda não anotou nada: "Tudo pronto para a Marina", acima dos botões.
+     Quem entrou por convite: "Você entrou na Família…", com Entendi.
+  2. Depois do primeiro registro, quem criou e está sozinho: o convite, no fim da linha do tempo.
+  3. A partir do 2º dia, se algum botão estiver desligado: "Escolha os botões da família", com o
+     Editar realçado.
+  4. Com 3 dias de registros desde a entrada: "Dá para ver a semana inteira", com a aba Semana realçada.
+  - "a Marina", "o Pedro" pelo menina ou menino do cadastro; sem ele, só o nome ("de Marina").
+  - Família nova começa só com Mamada, Sono e Fralda (antes, os sete botões). As antigas não mudam.
+  - Linha do tempo de hoje vazia: "Toque num botão acima para anotar o primeiro."
+  - Remédios e horários sem remédio: três passos numerados (o 3º, do aviso, só no app do celular).
+  - Testado em 30/10 no navegador com os cenários `bv-nova`, `bv-convidado` e `bv-dias`
+    (`node testes/servidor.mjs`), de dia e de noite. Falta conferir no celular de verdade.
+- **"Indicar o Soneca" só com o botão Compartilhar** (30/10, próxima versão do iPhone e do Android):
+  tirar a caixa com o endereço e ligar a janela de compartilhar do celular pelo `@capacitor/share`
+  (hoje o app não tem acesso a ela, por isso o botão some no Android). Onde não há compartilhamento
+  (site no computador), o botão vira "Copiar texto". Prévia aprovada antes de programar:
+  https://claude.ai/artifact/HR6eJgLj4V73ibC2wjhC5q **30/10: esperar a Play Store**, junto com o item 9.
+- **Defeito: "Ler" a Política de Privacidade e os Termos abre o próprio app de novo** (30/10, visto
+  pelo Patrick no app do celular). Os links usam endereço relativo (`/privacidade`, `/termos`, com
+  `target="_blank"`) em `index.html` e `app.js`; dentro do app (Capacitor) isso provavelmente cai nos
+  arquivos do próprio app em vez do site. Caminho provável: no app, abrir o endereço completo do site
+  pelo navegador do sistema (`@capacitor/browser` ou equivalente). Conferir no iPhone e no Android,
+  inclusive o link da caixa de aceite do cadastro. A Apple e o Google exigem a política acessível
+  dentro do app, então vale entrar na próxima versão. **30/10: decidido abrir no navegador do celular,
+  por cima do app** (`@capacitor/browser`); ramo `claude/politica-navegador`.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
-- QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 
