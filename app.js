@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
-import { weekHtml, dayLine } from './week.js';
+import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
@@ -39,6 +39,7 @@ const st = {
   month: 0,                    // primeiro dia do mês do resumo (0 = o mês atual)
   shareText: '',               // o resumo da semana ou do mês aberto, pronto para compartilhar
   show: { sleep: true, feed: true, diaper: true, pump: true },   // filtro de "Como foram os dias"
+  zoom: { day: null, week: null }, // trecho aproximado de cada gráfico (hora de início) ou null
   metric: 'sleep',             // o que aparece em "Dia a dia"
   channel: null,
 };
@@ -600,7 +601,7 @@ function renderHome() {
     const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn,
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn, zoom: st.zoom.week,
                    ref: refHtml({ birth: b.birth_date, at: localDate(Math.min(wz - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
                                   cap: 'Médias destes 7 dias, nos dias com registros.' }) })
         + divisionHtml(div, { name: b.name })
@@ -618,7 +619,7 @@ function renderHome() {
   const sleeps = open === null ? intervals : [...intervals, [open, now]];
   const slept = sleeps.some(([a, z]) => z > d0 && a < d1);
   $('summary').innerHTML = !b || (!day.length && !slept) ? ''
-    : `<div class="card daycard"><h3>Como foi o dia</h3>${dayLine({ d0, evs, sleeps, now, on: isOn })}</div>`;
+    : `<div class="card daycard"><h3>Como foi o dia</h3>${zoomHead(st.zoom.day, 'Toque duas vezes para aproximar.')}${dayLine({ d0, evs, sleeps, now, on: isOn, zoom: st.zoom.day })}</div>`;
 
   // Dose pulada não entra na linha do tempo; continua em "Remédios e horários", com Desfazer.
   const rows = day.filter(e => !(e.kind === 'med' && e.skipped));
@@ -2282,10 +2283,37 @@ for (const id of ['paneBaby', 'paneFamily', 'paneProfile']) $(id).addEventListen
   const c = e.target.closest('[data-baby]'); if (c) return selectBaby(c.dataset.baby);
   const b = e.target.closest('[data-act]'); if (b) paneAction(b.dataset.act, b.dataset.val, b);
 });
+// Zoom nos gráficos (30/10): dois toques seguidos aproximam as 6 horas em volta do toque, ou voltam ao
+// dia inteiro. O toque simples (abrir o registro ou o dia) espera um instante para não brigar com o duplo.
+const TAP2 = 300;
+let tap1 = null;
+function chartTap(e, single) {
+  const svg = e.target.closest('svg[data-zchart]');
+  if (tap1 && tap1.svg === svg && Date.now() - tap1.t < TAP2) { clearTimeout(tap1.timer); tap1 = null; return toggleZoom(svg, e); }
+  if (tap1) clearTimeout(tap1.timer);
+  tap1 = { svg, t: Date.now(), timer: setTimeout(() => { tap1 = null; single?.(); }, TAP2) };
+}
+function toggleZoom(svg, e) {
+  const k = svg.closest('#weekView') ? 'week' : 'day';
+  if (st.zoom[k] != null) st.zoom[k] = null;
+  else {
+    const r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * +svg.dataset.w;
+    const h = (vx - +svg.dataset.lw) / +svg.dataset.cw * 24;
+    st.zoom[k] = Math.min(24 - ZOOM_H, Math.max(0, Math.floor(h / ZOOM_H) * ZOOM_H));
+  }
+  render();
+}
+// Setas e "Dia inteiro", no alto do gráfico aproximado.
+function zoomStep(k, a) {
+  st.zoom[k] = a === 'full' ? null : Math.min(24 - ZOOM_H, Math.max(0, st.zoom[k] + (a === 'next' ? ZOOM_H : -ZOOM_H)));
+  render();
+}
 // Tocar numa marca do gráfico do dia abre o registro, como na linha do tempo.
 $('summary').addEventListener('click', e => {
-  const m = e.target.closest('[data-id]'); if (!m) return;
-  const ev = st.entries.get(m.dataset.id); if (ev) openEntry(ev.kind, ev);
+  const z = e.target.closest('[data-zoom]'); if (z) return zoomStep('day', z.dataset.zoom);
+  if (!e.target.closest('svg[data-zchart]')) return;
+  const m = e.target.closest('[data-id]'), ev = m && st.entries.get(m.dataset.id);
+  chartTap(e, ev ? () => openEntry(ev.kind, ev) : null);
 });
 $('timeline').addEventListener('click', e => {
   const r = e.target.closest('.row'); if (!r) return;
@@ -2332,7 +2360,9 @@ $('weekView').addEventListener('click', e => {
   const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
   const f = e.target.closest('[data-flt]'); if (f) { st.show[f.dataset.flt] = st.show[f.dataset.flt] === false; return render(); }
   const m = e.target.closest('[data-met]'); if (m) { st.metric = m.dataset.met; return render(); }
-  const r = e.target.closest('.dayrow'); if (r) openDay(+r.dataset.day);
+  const z = e.target.closest('[data-zoom]'); if (z) return zoomStep('week', z.dataset.zoom);
+  const r = e.target.closest('.dayrow');
+  if (e.target.closest('svg[data-zchart]')) return chartTap(e, r ? () => openDay(+r.dataset.day) : null);
   const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
 });
 $('weekView').addEventListener('keydown', e => {
