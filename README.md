@@ -112,7 +112,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
    levar à App Store (e à Play Store no Android), ou à página do item 2. **Precisa ser feito (Patrick,
    29/10).** Conferido em 29/10: a tela de indicar mostra `location.host` (`app.js`), que dentro do app é
-   "localhost".
+   "localhost". **30/10: esperar o Android estar na Play Store** para o link ter para onde ir (Patrick).
 10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
     `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
     O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
@@ -172,9 +172,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     **29/10: o Patrick decidiu tirar já**, sem esperar o Android na Play Store (quem tem Android e entra
     pelo site fica sem o Soneca até a loja). Ainda antes: a página do item 2 (prévia), ver pelo banco
     quantas famílias ainda entram pelo site e o aviso a elas (texto a aprovar).
+    **30/10: o Patrick confirmou "pode tirar"**, sem contagem nem aviso antes. Ramo
+    `claude/site-so-lojas-pr`.
 15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
     registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
-    botão) e até quanto. Prévia antes.
+    botão) e até quanto. Prévia antes. **30/10:** no gráfico do dia e no da semana, com duplo toque
+    (Patrick); prévia antes de programar.
 
 **Android** (seção "App do Android")
 
@@ -1156,23 +1159,37 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   inativo. Uma coluna com a última abertura por pessoa (e talvez o aparelho do cadastro, que hoje
   é deduzido das sessões) deixaria a retenção medir "voltou ao app". Mexe no app e no banco
   (arquivo novo em `supabase/`).
-- **Boas-vindas para quem acabou de entrar** (30/10): uma apresentação curta do Soneca para
-  usuário novo, que a pessoa pode pular ("opt out") e que não volta depois de pulada ou vista.
-  Escopo, telas e textos ainda por decidir.
+- **Boas-vindas para quem acabou de entrar** (30/10, ramo `claude/boas-vindas`, ainda não no `main`):
+  feito. Telas e textos aprovados pelo Patrick em 30/10 (prévia: https://claude.ai/artifact/QsigXXt3bq4YdG11pZVmjY).
+  Cartões no Hoje, um de cada vez, com borda caramelo; visto ou pulado (X, "Agora não", "Fechar",
+  "Entendi"), não volta. A marca fica no celular (`cad-bv-<família>`): trocar de celular mostra de novo.
+  Só para quem entrou na família a partir de 30/10 (`BV_DESDE` no `app.js`); quem já usava não vê nada.
+  1. Quem criou a família e ainda não anotou nada: "Tudo pronto para a Marina", acima dos botões.
+     Quem entrou por convite: "Você entrou na Família…", com Entendi.
+  2. Depois do primeiro registro, quem criou e está sozinho: o convite, no fim da linha do tempo.
+  3. A partir do 2º dia, se algum botão estiver desligado: "Escolha os botões da família", com o
+     Editar realçado.
+  4. Com 3 dias de registros desde a entrada: "Dá para ver a semana inteira", com a aba Semana realçada.
+  - "a Marina", "o Pedro" pelo menina ou menino do cadastro; sem ele, só o nome ("de Marina").
+  - Família nova começa só com Mamada, Sono e Fralda (antes, os sete botões). As antigas não mudam.
+  - Linha do tempo de hoje vazia: "Toque num botão acima para anotar o primeiro."
+  - Remédios e horários sem remédio: três passos numerados (o 3º, do aviso, só no app do celular).
+  - Testado em 30/10 no navegador com os cenários `bv-nova`, `bv-convidado` e `bv-dias`
+    (`node testes/servidor.mjs`), de dia e de noite. Falta conferir no celular de verdade.
 - **"Indicar o Soneca" só com o botão Compartilhar** (30/10, próxima versão do iPhone e do Android):
   tirar a caixa com o endereço e ligar a janela de compartilhar do celular pelo `@capacitor/share`
   (hoje o app não tem acesso a ela, por isso o botão some no Android). Onde não há compartilhamento
   (site no computador), o botão vira "Copiar texto". Prévia aprovada antes de programar:
-  https://claude.ai/artifact/HR6eJgLj4V73ibC2wjhC5q
+  https://claude.ai/artifact/HR6eJgLj4V73ibC2wjhC5q **30/10: esperar a Play Store**, junto com o item 9.
 - **Defeito: "Ler" a Política de Privacidade e os Termos abre o próprio app de novo** (30/10, visto
   pelo Patrick no app do celular). Os links usam endereço relativo (`/privacidade`, `/termos`, com
   `target="_blank"`) em `index.html` e `app.js`; dentro do app (Capacitor) isso provavelmente cai nos
   arquivos do próprio app em vez do site. Caminho provável: no app, abrir o endereço completo do site
   pelo navegador do sistema (`@capacitor/browser` ou equivalente). Conferir no iPhone e no Android,
   inclusive o link da caixa de aceite do cadastro. A Apple e o Google exigem a política acessível
-  dentro do app, então vale entrar na próxima versão.
+  dentro do app, então vale entrar na próxima versão. **30/10: decidido abrir no navegador do celular,
+  por cima do app** (`@capacitor/browser`); ramo `claude/politica-navegador`.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
-- QR code na seção "Indicar o Caderninho" do menu, para a outra pessoa escanear direto da tela.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 

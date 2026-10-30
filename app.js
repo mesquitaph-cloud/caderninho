@@ -350,6 +350,8 @@ $('fCreate').addEventListener('submit', async e => {
   const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
   if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
   await addConsent('baby', { family_id: fid });
+  // Família nova começa só com Mamada, Sono e Fralda (30/10); os outros ela liga em Editar.
+  await sb.from('family_settings').upsert({ family_id: fid, hidden_kinds: OPTIONAL }, { onConflict: 'family_id' });
   $('fCreate').reset(); await loadFamilies(); openFamily(fid);
 });
 $('cancelCreate').onclick = () => { show('scrMain'); };
@@ -499,7 +501,7 @@ function render() {
   $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
-  renderHome(); medAlertsLater();
+  renderHome(); renderBv(); medAlertsLater();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -612,7 +614,7 @@ function renderHome() {
   // Dose pulada não entra na linha do tempo; continua em "Remédios e horários", com Desfazer.
   const rows = day.filter(e => !(e.kind === 'med' && e.skipped));
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-    : !rows.length ? '<div class="empty">Nada registrado neste dia.</div>'
+    : !rows.length ? `<div class="empty">${d0 === today ? 'Toque num botão acima para anotar o primeiro.' : 'Nada registrado neste dia.'}</div>`
     : rows.slice().reverse().map(e => {
         const who = e.author_id ? st.names[e.author_id] : '';
         const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
@@ -620,6 +622,61 @@ function renderHome() {
         return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
+
+/* ---------- boas-vindas ---------- */
+// Cartões para quem acabou de entrar numa família, um de cada vez e na ordem: boas-vindas (quem criou)
+// ou "Você entrou" (quem veio por convite), o convite, os botões (a partir do 2º dia) e a semana (com 3
+// dias de registros). Visto ou pulado, não volta; a marca fica neste celular, uma por família. Só para
+// quem entrou na família a partir de BV_DESDE: quem já usava o Soneca não vê nada novo.
+// Os testes (testes/cenarios.js) mudam a data por window.testeBvDesde.
+const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
+const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+const bvKey = () => 'cad-bv-' + st.family.id;
+const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
+const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
+// "a Marina", "o Pedro"; sem menina ou menino anotado, só o nome.
+const artigo = (b, a, o, nada) => b.sex === 'F' ? a : b.sex === 'M' ? o : nada;
+function bvCard() {
+  const b = st.baby, f = st.family, me = st.members.find(m => m.user_id === st.user.id);
+  const joined = me ? Date.parse(me.joined_at) : NaN;
+  if (!b || !f || !(joined >= BV_DESDE)) return null;
+  const done = bvDone(), evs = [...st.entries.values()], creator = f.creator_id === st.user.id;
+  if (creator && !evs.length) return done.includes('ola') ? null : 'ola';
+  if (!creator && !done.includes('entrou')) return 'entrou';
+  if (creator && st.members.length < 2 && !done.includes('convite')) return 'convite';
+  const j0 = startOfDay(joined);
+  if (!evs.length || j0 >= startOfDay(Date.now())) return null;
+  if (!done.includes('botoes') && OPTIONAL.some(k => !isOn(k))) return 'botoes';
+  const days = new Set(evs.filter(e => e.t >= j0).map(e => startOfDay(e.t)));
+  return days.size >= 3 && !done.includes('semana') ? 'semana' : null;
+}
+function renderBv() {
+  const k = bvCard(), b = st.baby;
+  const x = `<button class="x" data-bv="${k}" aria-label="Fechar">×</button>`;
+  const go = (label, no) => `<div class="btns"><button class="save" data-bvgo="${k}">${label}</button>${no ? `<button class="link" data-bv="${k}">${no}</button>` : ''}</div>`;
+  const card = h => `<div class="card bv">${h}</div>`;
+  const nome = b ? esc(b.name) : '';
+  $('bvTop').innerHTML = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
+      + '<p>Toque em Mamada, Sono ou Fralda para anotar. A hora já vem como agora, e dá para mudar.</p><p>Tudo aparece aqui embaixo, na linha do tempo do dia.</p>')
+    : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(st.family.name)}</h3></div>`
+      + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
+    : '';
+  $('bvMid').innerHTML = k === 'botoes' ? card(x + '<h3>Escolha os botões da família</h3><p>Além de Mamada, Sono e Fralda, dá para ligar Remédio, Sintomas, Ordenha e Cuidados (banho, massagem, lavagem nasal e outros). Vale para todos da família.</p>' + go('Escolher botões', 'Agora não'))
+    : k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
+    : '';
+  $('bvEnd').innerHTML = k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '';
+  // Enquanto o cartão fala deles, o botão Editar e a aba Semana ficam com a borda caramelo.
+  document.querySelector('#grid .k-edit')?.classList.toggle('bvhl', k === 'botoes');
+  $('tabWeek').classList.toggle('bvhl', k === 'semana');
+}
+$('paneHome').addEventListener('click', e => {
+  const b = e.target.closest('[data-bv],[data-bvgo]'); if (!b) return;
+  const k = b.dataset.bv || b.dataset.bvgo; bvSkip(k);
+  if (!b.dataset.bvgo || k === 'entrou') return render();
+  if (k === 'convite') return goTab('family', 'famMembers');
+  if (k === 'botoes') return goTab('family', 'famButtons');
+  if (k === 'semana') { st.view = 'week'; st.weekEnd = startOfDay(Date.now()); render(); }
+});
 
 /* ---------- botões da tela inicial ---------- */
 // Mamada, Sono e Fralda sempre; os outros a família liga ou desliga em Editar, e vale para todos da
@@ -1138,8 +1195,12 @@ function drawMeds() {
   if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
   h += meds.length
     ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
-    : `<div class="soft">Anote aqui quais são os remédios de ${esc(st.baby.name)} e os horários de cada um. Depois de salvar, as doses do dia começam a aparecer no alto da tela inicial.</div><button class="save" data-act="newMed">Programar um remédio</button>`;
-  const top = $('sheet').scrollTop; openPanel(h + MED_RULE); $('sheet').scrollTop = top;
+    : '<ol class="steps"><li><span class="n">1</span><span>Anote o remédio, quanto dar e quando: em horários fixos, de tantas em tantas horas ou só quando precisar.</span></li>'
+      + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto da tela Hoje. Quem der marca, e todos da família veem.</span></li>'
+      // O aviso na hora só existe no app do celular, não no site.
+      + (medNotif ? '<li><span class="n">3</span><span>Se quiser, o celular avisa na hora de cada dose.</span></li>' : '') + '</ol>'
+      + '<p class="dim">O Soneca só lembra o que vocês programarem. Não sugere remédio, dose nem horário.</p><button class="save" data-act="newMed">Programar um remédio</button>';
+  const top = $('sheet').scrollTop; openPanel(h + (meds.length ? MED_RULE : '')); $('sheet').scrollTop = top;
 }
 const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && e.medicine_id === m.id && !e.skipped).reduce((b, e) => !b || e.t > b.t ? e : b, null);
 // "Só quando precisar" com intervalo: quando pode dar de novo (nulo se já pode).
@@ -1848,7 +1909,7 @@ function drawFamilyPane() {
   let h = `<div class="ptitle"><h2>${esc(f.name)}</h2><small>${n} ${n === 1 ? 'membro' : 'membros'} · ${nb} ${nb === 1 ? 'bebê' : 'bebês'}</small></div>`;
   h += `<div class="sec"><h4>Nome da família</h4><div class="li"><span>${esc(f.name)}</span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`
     + (creator ? '' : '<p class="dim">Só quem criou a família muda o nome.</p>') + '</div>';
-  h += '<div class="sec"><h4>Membros</h4>' + st.members.map(m => {
+  h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
     const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
     const rm = creator && m.user_id !== st.user.id
       ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">${FP.confirm === 'rm:' + m.user_id ? 'Confirmar' : 'Remover'}</button>` : '';
