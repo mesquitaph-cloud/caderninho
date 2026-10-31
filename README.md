@@ -201,6 +201,14 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
     botão) e até quanto. Prévia antes. **30/10:** no gráfico do dia e no da semana, com duplo toque
     (Patrick); prévia antes de programar. **No `main` em 30/10 (#50)**; falta conferir no celular.
+16. **Pausar a mamada num peito, no app e na tela de bloqueio** (Patrick, 31/10): parar o cronômetro do
+    peito que está contando para retomar logo depois. Hoje, no app, a pausa já existe (tocar de novo no
+    peito que conta), mas o botão só diz "contando", sem dizer que um toque pausa. Na tela de bloqueio,
+    com a mamada contando, só há "Trocar de peito" e "Terminar"; "Continuar" só aparece quando ela já
+    está pausada (pelo app ou pelas 2 horas). A decidir antes de programar: o texto do botão de pausar
+    na tela de bloqueio (cabem três botões no iPhone e no Android?) e se o peito que conta no app ganha
+    "tocar para pausar". Prévia antes. Mexe no `MamadaWidget.swift`/`MamadaShared.swift` (iPhone),
+    `Mamada.java`/`MamadaReceiver.java` (Android) e `app.js`, então vai numa versão nova dos apps.
 
 **Android** (seção "App do Android")
 
