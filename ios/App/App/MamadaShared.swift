@@ -106,7 +106,7 @@ enum MamadaLive {
 }
 #endif
 
-// "Trocar de peito" (contando) e "Continuar" (pausada): o mesmo botão, sem abrir o app.
+// "Trocar" (contando) e "Continuar" (pausada): o mesmo botão, sem abrir o app.
 @available(iOS 17.0, *)
 struct MamadaTocarIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Trocar de peito"
@@ -118,6 +118,26 @@ struct MamadaTocarIntent: LiveActivityIntent {
         MamadaStore.cap(&t, now)
         if let run = t.run { MamadaStore.tap(&t, run == "l" ? "r" : "l", now) }
         else { MamadaStore.tap(&t, t.last ?? "l", now) }
+        MamadaStore.save(t)
+        #if !WIDGET
+        await MamadaLive.sync()
+        NotificationCenter.default.post(name: .mamadaMudou, object: nil)
+        #endif
+        return .result()
+    }
+}
+
+// "Pausar" (contando; item 16, 31/10): pausa o peito que conta, sem abrir o app. "Continuar" volta a ele.
+@available(iOS 17.0, *)
+struct MamadaPausarIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Pausar"
+    static var isDiscoverable: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        guard var t = MamadaStore.load() else { return .result() }
+        let now = MamadaStore.nowMs
+        MamadaStore.cap(&t, now)
+        if let run = t.run { MamadaStore.tap(&t, run, now) }
         MamadaStore.save(t)
         #if !WIDGET
         await MamadaLive.sync()

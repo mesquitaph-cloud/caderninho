@@ -835,7 +835,7 @@ function ftSet(t, ask) {
   lsSet(k, t ? JSON.stringify(t) : null);
   mamadaPlugin?.update({ state: t ? JSON.stringify(t) : null, ask: !!ask }).catch(() => {});
 }
-// Ao abrir ou voltar ao app: adota o que a notificação mudou ("Trocar de peito", "Continuar") e grava a
+// Ao abrir ou voltar ao app: adota o que a notificação mudou ("Pausar", "Trocar de peito", "Continuar") e grava a
 // mamada se alguém tocou em "Terminar" nela.
 async function ftSync() {
   if (!mamadaPlugin || !st.baby) return;
@@ -871,7 +871,7 @@ const FT_SIDE = { l: 'esquerdo', r: 'direito' };
 function ftSidesHtml(t, now) {
   const one = (key, name) => {
     const run = t?.run === key, ms = t ? ftMs(t, key, now) : 0;
-    return `<button class="tside${run ? ' run' : ''}" data-act="ftTap" data-val="${key}" aria-pressed="${run}"><b>${name}</b><span class="tm" id="ft-${key}">${mss(ms)}</span><small>${run ? 'contando' : ms ? 'pausado' : 'tocar para começar'}</small></button>`;
+    return `<button class="tside${run ? ' run' : ''}" data-act="ftTap" data-val="${key}" aria-pressed="${run}"><b>${name}</b><span class="tm" id="ft-${key}">${mss(ms)}</span><small>${run ? 'tocar para pausar' : ms ? 'pausado' : 'tocar para começar'}</small></button>`;
   };
   return one('l', 'Esquerdo') + one('r', 'Direito');
 }

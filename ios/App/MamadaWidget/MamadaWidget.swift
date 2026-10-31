@@ -49,9 +49,18 @@ private struct Tempo: View {
 private struct Botoes: View {
     let s: MamadaAttributes.ContentState
     var body: some View {
+        // Contando: "Pausar", "Trocar" e "Terminar" (item 16, 31/10: "Trocar de peito" não cabe com três).
         HStack(spacing: 8) {
+            if s.run != nil {
+                Button(intent: MamadaPausarIntent()) {
+                    Text("Pausar").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .padding(.vertical, 9)
+                .background(Color.white.opacity(0.18), in: Capsule())
+            }
             Button(intent: MamadaTocarIntent()) {
-                Text(s.run == nil ? "Continuar" : "Trocar de peito").frame(maxWidth: .infinity)
+                Text(s.run == nil ? "Continuar" : "Trocar").frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
             .padding(.vertical, 9)

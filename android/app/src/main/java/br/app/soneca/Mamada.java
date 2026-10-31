@@ -16,11 +16,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 // Mamada em andamento na tela de bloqueio (item 13): uma notificação fixa que espelha o cronômetro do app.
-// O estado é o mesmo do app ({start, l, r, run, since, last, at, baby}, em milissegundos). "Trocar de peito"
-// e "Continuar" mudam o estado aqui mesmo; "Terminar" abre o app, que grava a mamada.
+// O estado é o mesmo do app ({start, l, r, run, since, last, at, baby}, em milissegundos). "Pausar",
+// "Trocar de peito" e "Continuar" mudam o estado aqui mesmo; "Terminar" abre o app, que grava a mamada.
 final class Mamada {
     static final String PREFS = "soneca_mamada", KEY = "state", FINISH = "finish";
-    static final String ACT_SWITCH = "br.app.soneca.MAMADA_TROCAR", ACT_RESUME = "br.app.soneca.MAMADA_CONTINUAR";
+    static final String ACT_SWITCH = "br.app.soneca.MAMADA_TROCAR", ACT_RESUME = "br.app.soneca.MAMADA_CONTINUAR",
+        ACT_PAUSE = "br.app.soneca.MAMADA_PAUSAR";
     static final String EXTRA_FINISH = "mamada_terminar";
     // Canal "normal" sem som: os de importância baixa contam como silenciosos, e muitos Android escondem
     // os silenciosos na tela de bloqueio. O canal antigo ("mamada") era assim e é apagado.
@@ -95,6 +96,7 @@ final class Mamada {
             // O relógio do Android conta sozinho a partir do tempo já mamado.
             b.setWhen(now - total).setShowWhen(true).setUsesChronometer(true)
                 .setContentText("no " + ("l".equals(run) ? "esquerdo" : "direito") + " · começou " + start)
+                .addAction(0, "Pausar", broadcast(c, ACT_PAUSE))
                 .addAction(0, "Trocar de peito", broadcast(c, ACT_SWITCH));
         } else {
             b.setShowWhen(false).setUsesChronometer(false)
@@ -113,7 +115,7 @@ final class Mamada {
 
     private static PendingIntent broadcast(Context c, String action) {
         Intent i = new Intent(c, MamadaReceiver.class).setAction(action);
-        return PendingIntent.getBroadcast(c, ACT_SWITCH.equals(action) ? 3 : 4, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getBroadcast(c, ACT_SWITCH.equals(action) ? 3 : ACT_PAUSE.equals(action) ? 5 : 4, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private static String hhmm(long t) {
