@@ -209,6 +209,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     na tela de bloqueio (cabem três botões no iPhone e no Android?) e se o peito que conta no app ganha
     "tocar para pausar". Prévia antes. Mexe no `MamadaWidget.swift`/`MamadaShared.swift` (iPhone),
     `Mamada.java`/`MamadaReceiver.java` (Android) e `app.js`, então vai numa versão nova dos apps.
+    **31/10: prévia aprovada** (https://claude.ai/artifact/Gky9uZiS1NF9gFbXSr5xau): no app, o peito que
+    conta diz "tocar para pausar" no lugar de "contando"; na tela de bloqueio, com a mamada contando,
+    "Pausar" na frente. No iPhone os botões ficam "Pausar", "Trocar" e "Terminar" ("Trocar de peito" não
+    cabe com três); no Android, "Pausar", "Trocar de peito" e "Terminar". Pausada, segue igual
+    ("Continuar" e "Terminar"). **Programado em 31/10** (ramo `claude/pausar-mamada`); o texto do app
+    testado no Soneca de teste. Falta compilar e testar a tela de bloqueio no iPhone e no Android.
 
 **Android** (seção "App do Android")
 
