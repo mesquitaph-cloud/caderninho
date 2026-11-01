@@ -232,6 +232,22 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     cabe com três); no Android, "Pausar", "Trocar de peito" e "Terminar". Pausada, segue igual
     ("Continuar" e "Terminar"). **Programado em 31/10** (ramo `claude/pausar-mamada`); o texto do app
     testado no Soneca de teste. Falta compilar e testar a tela de bloqueio no iPhone e no Android.
+17. **"Como foram as noites", no fim da aba Mês** (Patrick, 01/11: testar o app fazendo análises, sem IA).
+    Decidido com o Patrick, pergunta por pergunta: comparar **grupos fixos**, lado a lado, sem buscar
+    associações (com ~30 noites, procurar combinações acharia padrões por acaso). Noite é o sono que começa
+    entre 18h e 6h; madrugada, 0h às 6h (despertar = "acordou" seguido de outro "dormiu"). Dois grupos: as
+    até 7 noites de maior sono seguido, só as de 6 h ou mais; e as noites com 2 ou mais despertares. Cada
+    um contra as outras noites, e cada lado precisa de 3 noites, senão só a contagem. Linhas em contagem
+    com porcentagem e barra ("5 de 7 (71%)"): dormiu depois das 20h, banho nas 3 h antes, mamou menos de
+    2 h antes, última soneca terminando 2 h ou mais antes, mamadeira, peito e sono de dia acima da média
+    do mês (média escrita na linha). Linha sem registro num dos lados não aparece. Remédio, sintomas e
+    vômito ficam de fora. Prévia aprovada em 01/11 (https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b).
+    **Programado em 01/11** (`noites.js`, PR próprio), testado no Soneca de teste (cenário `noites`), de
+    dia e de noite. Dois textos que não estavam na prévia, aprovados pelo Patrick em 01/11: "Dormiu 6 horas seguidas
+    ou mais em X de N noites. São poucas as outras para comparar." e "Ainda são poucas noites com 2 ou
+    mais despertares para comparar: X de N."
+18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
+    discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
 
 **Android** (seção "App do Android")
 
