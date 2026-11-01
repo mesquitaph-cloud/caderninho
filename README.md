@@ -22,6 +22,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   (#43) e voltar ao app sem tela vazia (#44). **Em 30/10:** boas-vindas (#48), Política e Termos no
   navegador do celular (#49), zoom nos gráficos (#50) e o site só com a página das lojas (#47). O #48, o #49
   e o #50 ainda não estão em nenhuma compilação: vão na próxima versão dos apps.
+- **Compilação de 02/11** (Patrick, 01/11: o Android deve liberar na Play Store em 02/11): o `main` com
+  #48 a #51 e o #52 (Indicar o Soneca, item 9). A 1.0.1 da App Store foi compilada antes do #49, por isso
+  a Política ainda abre o próprio app no iPhone.
 - **PR #45 (tela de bloqueio do iPhone):** testado no TestFlight em 29/10 (compilação do ramo
   `claude/mamada-iphone`, 31c94f7): tempo, "Trocar de peito", "Continuar" e "Terminar" ok. Sem conflito; Merge
   com o Patrick. Desde o ramo, o `main` só mudou README e `Mamada.java` (Android), então essa compilação já é a
@@ -120,6 +123,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
    levar à App Store (e à Play Store no Android), ou à página do item 2. **Precisa ser feito (Patrick,
    29/10).** Conferido em 29/10: a tela de indicar mostra `location.host` (`app.js`), que dentro do app é
    "localhost". **30/10: esperar o Android estar na Play Store** para o link ter para onde ir (Patrick).
+   **01/11 (PR #52):** a tela mostra `soneca.app.br`, e o link continua `https://soneca.app.br/`, que desde
+   o item 14 é a página das lojas (o app não precisa mudar quando entrar a Play Store, só a página). Texto
+   aprovado pelo Patrick: "Conhece o Soneca? É um app para anotar a rotina do bebê (mamadas, sono,
+   fraldas) numa linha do tempo que toda a família vê junto. Baixe pelo link, entre com seu e-mail e crie
+   a sua família." Testado no Soneca de teste (cenário `app-politica`), de dia e de noite. Vai na
+   compilação de 02/11.
 10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
     `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
     O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
