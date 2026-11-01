@@ -60,7 +60,7 @@ const ERR = {
 };
 function errMsg(e) { const m = e?.message || ''; for (const k in ERR) if (m.includes(k)) return ERR[k]; return 'Não foi possível concluir. Confira a conexão e tente de novo.'; }
 // Indicação: link do app, sem convite. Quem abre cria a própria família.
-const REFER_TEXT = 'Conhece o Soneca? É um app para anotar a rotina do bebê (mamadas, sono, fraldas) numa linha do tempo que toda a família vê junto. Abra o link, entre com seu e-mail e crie a sua família.';
+const REFER_TEXT = 'Conhece o Soneca? É um app para anotar a rotina do bebê (mamadas, sono, fraldas) numa linha do tempo que toda a família vê junto. Baixe pelo link, entre com seu e-mail e crie a sua família.';
 
 /* ---------- início ---------- */
 async function boot() {
@@ -1970,7 +1970,7 @@ function drawProfilePane() {
       : `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('')
     + '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
   h += '<div class="sec"><h4>Indicar o Soneca</h4>' +
-    `<div class="invite">${esc(location.host)}</div>` +
+    `<div class="invite">${esc(new URL(LINK_BASE).host)}</div>` +
     `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
     '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button></div>';
