@@ -704,7 +704,7 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .legal{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;font-size:14px;padding-top:6px}
 .legal a{color:var(--link);font-weight:500;text-underline-offset:2px}
 
-/* Página das lojas (inicio/): soneca.app.br sem o app, só com o selo da App Store */
+/* Página das lojas (inicio/): soneca.app.br sem o app, só com os selos da App Store e do Google Play */
 .ln{max-width:440px;margin:0 auto;min-height:calc(100vh - 52px);display:flex;flex-direction:column;gap:18px;padding-top:max(32px,env(safe-area-inset-top,0px))}
 .ln p{margin:0}
 .ln h1.brand{display:flex;align-items:center;gap:12px;margin:0;font-family:var(--display);font-weight:500;font-size:36px;letter-spacing:-.02em}
@@ -712,7 +712,8 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .ln-inv{background:var(--feed);color:var(--ink);border-radius:18px;padding:16px}
 .ln-invt{font-family:var(--display);font-weight:500;font-size:18px}
 .ln-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:17px}
-.ln-badge{align-self:flex-start;display:block;border-radius:10px;line-height:0}
+.ln-badges{display:flex;flex-wrap:wrap;gap:12px}
+.ln-badge{display:block;border-radius:10px;line-height:0}
 .ln-badge img{height:50px;width:auto}
 .ln-badge .ln-day{display:var(--badge-day)}.ln-badge .ln-night{display:var(--badge-night)}
 .ln-note{font-size:15px;color:var(--muted)}
