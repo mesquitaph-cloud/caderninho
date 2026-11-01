@@ -28,8 +28,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - **Pedido de avaliação nas lojas (01/11, ramo `claude/avaliacao-lojas`):** a janela do próprio celular
   (plugin `@capawesome/capacitor-app-review`; a Apple não aceita janela nossa, e o Google proíbe perguntar
   "está gostando?" antes). Pede logo depois de um registro de rotina (mamada, ordenha, sono, fralda), entre
-  8h e 21h, para quem anotou pelo menos 7 dias atrás e em 5 dias diferentes, no máximo uma vez a cada 60
-  dias (`cad-review` no celular). Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
+  8h e 17h (o Patrick, 01/11: nunca entre 17h e 7h), para quem anotou pelo menos 7 dias atrás e em 5 dias
+  diferentes, no máximo uma vez a cada 60 dias (`cad-review` no celular). Prévia aprovada em 01/11:
+  https://claude.ai/artifact/YadD7hYqMp9r7sF4Z5rFT6. Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
   novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
   Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
 - **PR #45 (tela de bloqueio do iPhone):** testado no TestFlight em 29/10 (compilação do ramo
