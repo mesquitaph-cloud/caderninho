@@ -278,6 +278,12 @@ Os 3 sonos mais longos dos 7 dias do painel, cada um com a última mamada e o ú
 antes de dormir. Só põe lado a lado; não diz o que fez o bebê dormir mais.
 _Evite_: causa, relação, correlação, análise do sono
 
+**Como foram as noites**:
+O cartão no fim da aba Mês que compara as noites mais longas (até 7, de 6 h ou mais) e as noites com 2 ou
+mais despertares entre 0h e 6h com as outras noites do mês, contando em quantas noites algo aconteceu
+antes de dormir. Grupos e cortes fixos; só põe lado a lado.
+_Evite_: causa, o que ajuda a dormir, padrão, análise do sono
+
 **Resumo do mês**:
 A aba Mês: os totais do mês atual (até agora) ou do anterior, inteiro. Mamadas, leite na mamadeira,
 tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que

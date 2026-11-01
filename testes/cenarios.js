@@ -36,6 +36,23 @@ if (CEN === 'sono-aberto') {
   add(from + 20 * 36e5 + 50 * MIN, 'sleep');
 }
 
+// "noites": noites variadas para o cartão "Como foram as noites" da aba Mês. Troca todo sono que começa
+// entre 18h e 7h por uma noite de um de três jeitos: longa (6 a 8 h seguidas), com 3 despertares ou comum.
+if (CEN === 'noites') {
+  const hr = t => new Date(t).getHours();
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if ((e.kind === 'sleep' || e.kind === 'wake') && (hr(Date.parse(e.at)) >= 18 || hr(Date.parse(e.at)) < 7)) entries.splice(i, 1);
+  }
+  for (let d = 40; d >= 1; d--) {
+    const base = sod(NOW) - d * DAY, bed = base + 19 * 36e5 + Math.round(rnd() * 120) * MIN, up = base + DAY + 6.5 * 36e5;
+    const r = rnd(), cuts = r < .3 ? [bed + (6 + rnd() * 2) * 36e5] : r < .55 ? [base + DAY + 30 * MIN, base + DAY + 150 * MIN, base + DAY + 270 * MIN] : [base + DAY + 120 * MIN];
+    let s = bed;
+    for (const c of cuts) { if (c >= up) break; add(s, 'sleep'); add(c, 'wake'); s = c + 25 * MIN; }
+    add(s, 'sleep'); add(up, 'wake');
+  }
+}
+
 // "app-convite": finge o app do iPhone aberto por um link de convite (Universal Link), sem passar
 // pelo navegador. O app tem de mostrar a tela do convite, não "Criar família".
 if (CEN === 'app-convite') {

@@ -4,6 +4,7 @@
 //   normal        rotina de 40 dias da Helena, como nas fotos da loja
 //   sono-aberto   um "Dormiu" de 6 dias atrás sem "Acordou" (o caso do Bruno, 17/10)
 //   sem-familia   conta nova sem família, com um convite válido para a Família Andrade (o caso da Ca)
+//   noites        noites variadas (longas, com 3 despertares e comuns) para o cartão da aba Mês
 //   app-convite   a mesma conta, no "app do iPhone" aberto pelo link de convite (Universal Link)
 import http from 'node:http';
 import fs from 'node:fs';

@@ -704,6 +704,23 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .legal{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;font-size:14px;padding-top:6px}
 .legal a{color:var(--link);font-weight:500;text-underline-offset:2px}
 
+/* "Como foram as noites" (aba Mês): o grupo em cor de sono, as outras noites em --curve-mid */
+.nt-g{display:flex;flex-direction:column;gap:10px;padding-top:6px;border-top:1px solid var(--line)}
+.nt-g h4{margin:6px 0 0;font-family:var(--display);font-weight:500;font-size:15px}
+.nt-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+.nt-key span{display:flex;align-items:center;gap:6px}
+.nt-key i{width:10px;height:10px;border-radius:3px;flex:none}
+.nt-ia{background:var(--c-sleep)}.nt-ib{background:var(--curve-mid)}
+.nt-it{display:flex;flex-direction:column;gap:5px}
+.nt-it p{margin:0;font-size:14px;line-height:1.3}
+.nt-it em{font-style:normal;color:var(--muted)}
+.nt-v{display:grid;grid-template-columns:8.8em 1fr;align-items:center;gap:8px;font-size:13px;font-variant-numeric:tabular-nums}
+.nt-v b{font-weight:500;padding:1px 6px;justify-self:start;white-space:nowrap}
+.nt-v .nt-a{color:var(--sleep-ink);background:var(--sleep);border-radius:6px}
+.nt-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.nt-bar i{display:block;height:100%;border-radius:3px}
+.nt-few{margin:0;background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.4}
+
 /* Página das lojas (inicio/): soneca.app.br sem o app, só com os selos da App Store e do Google Play */
 .ln{max-width:440px;margin:0 auto;min-height:calc(100vh - 52px);display:flex;flex-direction:column;gap:18px;padding-top:max(32px,env(safe-area-inset-top,0px))}
 .ln p{margin:0}

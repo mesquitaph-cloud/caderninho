@@ -6,6 +6,7 @@ import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
+import { nightsHtml } from './noites.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -585,7 +586,7 @@ function renderHome() {
     const ref = refHtml({ birth: b.birth_date, at: localDate(Math.min(end - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
                           cap: 'Médias de ' + MESES_L[d.getMonth()].toLowerCase() + ', nos dias com registros.' });
     $('monthView').innerHTML = monthHtml(s, { heading }) + ref + divisionHtml(div, { name: b.name })
-      + (s.any ? shareHtml(st.shareText) : '');
+      + (s.any ? shareHtml(st.shareText) : '') + nightsHtml({ a: st.month, z: end, evs, sleeps: intervals, now });
     return;
   }
   if (week) {
