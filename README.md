@@ -25,6 +25,13 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - **Compilação de 02/11** (Patrick, 01/11: o Android deve liberar na Play Store em 02/11): o `main` com
   #48 a #51 e o #52 (Indicar o Soneca, item 9). A 1.0.1 da App Store foi compilada antes do #49, por isso
   a Política ainda abre o próprio app no iPhone.
+- **Pedido de avaliação nas lojas (01/11, ramo `claude/avaliacao-lojas`):** a janela do próprio celular
+  (plugin `@capawesome/capacitor-app-review`; a Apple não aceita janela nossa, e o Google proíbe perguntar
+  "está gostando?" antes). Pede logo depois de um registro de rotina (mamada, ordenha, sono, fralda), entre
+  8h e 21h, para quem anotou pelo menos 7 dias atrás e em 5 dias diferentes, no máximo uma vez a cada 60
+  dias (`cad-review` no celular). Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
+  novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
+  Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
 - **PR #45 (tela de bloqueio do iPhone):** testado no TestFlight em 29/10 (compilação do ramo
   `claude/mamada-iphone`, 31c94f7): tempo, "Trocar de peito", "Continuar" e "Terminar" ok. Sem conflito; Merge
   com o Patrick. Desde o ramo, o `main` só mudou README e `Mamada.java` (Android), então essa compilação já é a

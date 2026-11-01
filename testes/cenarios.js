@@ -70,6 +70,16 @@ if (CEN === 'app-remedio') {
     created_by: U.me, created_at: new Date(NOW - 2 * DAY).toISOString() });
 }
 
+// "app-avaliacao": finge o app do iPhone; cada pedido de avaliação na loja entra em window.avaliacoes.
+if (CEN === 'app-avaliacao') {
+  const real = window.Capacitor;
+  window.avaliacoes = [];
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'ios',
+    registerPlugin: name => name === 'AppReview' ? { requestReview: async () => { window.avaliacoes.push(new Date().toISOString()); } }
+      : name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+}
+
 if (CEN === 'sem-familia' || CEN === 'app-convite') {
   // A Ca: conta nova, nome e Termos aceitos, nenhuma família. O convite "teste-convite" vale.
   ME = 'u-ca';

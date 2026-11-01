@@ -776,7 +776,23 @@ async function addEntry(ev) {
   // 23505: a dose já foi marcada (duas pessoas marcaram juntas). Recarrega para mostrar quem marcou.
   if (error?.code === '23505') { toast('Alguém já marcou esta dose.'); await loadEntries(); refresh(); return null; }
   if (error) { toast('Não foi possível salvar. Confira a conexão.'); return null; }
-  st.entries.set(data.id, withT(data)); render(); return data;
+  st.entries.set(data.id, withT(data)); render(); askReview(data); return data;
+}
+// Pedido de avaliação na loja, só no app. A janela é a do próprio celular (a Apple não aceita outra): o
+// iPhone mostra no máximo 3 vezes por ano, e o app não fica sabendo se ela apareceu nem se a pessoa
+// avaliou. Por isso só pedimos em boa hora: logo depois de um registro de rotina, entre 8h e 21h, para
+// quem anotou pelo menos 7 dias atrás e em 5 dias diferentes, e no máximo uma vez a cada 60 dias.
+// Nunca depois de febre, sintomas ou remédio.
+const ROUTINE = ['feed', 'pump', 'sleep', 'wake', 'diaper'];
+const appReview = NATIVE ? window.Capacitor.registerPlugin('AppReview') : null;
+function askReview(e) {
+  if (!appReview || !ROUTINE.includes(e.kind)) return;
+  const h = new Date().getHours(); if (h < 8 || h >= 21) return;
+  if (Date.now() - (+lsGet('cad-review') || 0) < 60 * DAY) return;
+  const days = new Set([...st.entries.values()].filter(x => x.author_id === st.user.id && ROUTINE.includes(x.kind)).map(x => startOfDay(x.t)));
+  if (days.size < 5 || Math.min(...days) > startOfDay(Date.now()) - 7 * DAY) return;
+  lsSet('cad-review', String(Date.now()));
+  setTimeout(() => appReview.requestReview().catch(() => {}), 1500);   // depois de o painel fechar
 }
 async function updateEntry(id, ev) {
   const { data, error } = await sb.from('entries').update(fields(ev)).eq('id', id).select().single();
