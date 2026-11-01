@@ -243,7 +243,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     do mês (média escrita na linha). Linha sem registro num dos lados não aparece. Remédio, sintomas e
     vômito ficam de fora. Prévia aprovada em 01/11 (https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b).
     **Programado em 01/11** (`noites.js`, PR próprio), testado no Soneca de teste (cenário `noites`), de
-    dia e de noite. Dois textos não estavam na prévia (falta o Patrick aprovar): "Dormiu 6 horas seguidas
+    dia e de noite. Dois textos que não estavam na prévia, aprovados pelo Patrick em 01/11: "Dormiu 6 horas seguidas
     ou mais em X de N noites. São poucas as outras para comparar." e "Ainda são poucas noites com 2 ou
     mais despertares para comparar: X de N."
 18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
