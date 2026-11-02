@@ -26,8 +26,10 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   #48 a #51 e o #52 (Indicar o Soneca, item 9). A 1.0.1 da App Store foi compilada antes do #49, por isso
   a Política ainda abre o próprio app no iPhone.
 - **Versão 1.0.2 (02/11, `db43728`):** número da versão trocado no iPhone e no Android (a 1.0.1 já está
-  publicada, e a Apple não aceita compilação nova com ela). Vai com #48 a #56. Compilações no Codemagic a
-  partir do `main`, disparadas pelo Patrick. Texto "O que há de novo" aprovado em 02/11, o mesmo para a
+  publicada, e a Apple não aceita compilação nova com ela). Vai com #48 a #57. Compilações no Codemagic a
+  partir do `main`, disparadas pelo Patrick. A compilação 7 (iPhone) saiu com o cartão "Os maiores sonos"
+  da Semana esticado (a classe `.ln` da página das lojas, #47, caiu nas linhas do cartão); corrigido no #57.
+  **A 7 não vai à revisão: a da loja é a 8 ou seguinte**, compilada depois do #57. Texto "O que há de novo" aprovado em 02/11, o mesmo para a
   App Store e para o Play Console:
 
   > Novidades:
