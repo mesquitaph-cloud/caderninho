@@ -39,6 +39,19 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   > • Toque duas vezes nos gráficos para ampliar.
   > • Antes de apagar um registro, o app pede confirmação.
   > • Boas-vindas para quem acabou de entrar na família.
+- **Android na produção (02/11):** acesso à produção liberado pelo Google. Versão 14 (1.0.2, de `8f27629`,
+  com #57 e #58) enviada à revisão da produção, só Brasil, lançamento para 100%, com a publicação
+  gerenciada desligada: sai na Play Store sozinha quando o Google aprovar. A mesma 14 foi ao teste fechado.
+  Notas da versão aprovadas em 02/11 (apresentam o app, não a atualização):
+
+  > Chegou o Soneca: o diário da rotina do bebê, para a família inteira usar junto.
+  > • Anote em um toque mamada (com o tempo de cada peito), sono, fralda, ordenha, remédio e cuidados.
+  > • Todo mundo da família vê a mesma linha do tempo, na hora.
+  > • Aviso na hora de cada dose de remédio.
+  > • Resumo da semana e do mês e curvas de crescimento da OMS.
+  > • Relatório em PDF para levar ao pediatra.
+
+  Aviso "no deobfuscation file" ignorado: a compilação não ofusca o código (`minifyEnabled false`).
 - **Pedido de avaliação nas lojas (01/11, ramo `claude/avaliacao-lojas`):** a janela do próprio celular
   (plugin `@capawesome/capacitor-app-review`; a Apple não aceita janela nossa, e o Google proíbe perguntar
   "está gostando?" antes). Pede logo depois de um registro de rotina (mamada, ordenha, sono, fralda), entre
@@ -282,9 +295,8 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Android** (seção "App do Android")
 
-- Play Store: teste fechado com 12 testadores por 14 dias antes de publicar. Dia 9 de 14 em 27/10; por
-  volta de 01/11, conferir no Dashboard que os 14 dias fecharam e pedir a produção ("Apply for access to
-  production"), que passa por outra revisão do Google.
+- Play Store: acesso à produção liberado; versão 14 (1.0.2) na revisão da produção desde 02/11 (só
+  Brasil). Quando aprovar, conferir a página na Play Store e registrar aqui a data do lançamento.
 - **Assim que estiver na Play Store:** pôr o selo do Google Play na página de `soneca.app.br` (item 14).
 - Testar a fundo num Android: código, PDF, botão "voltar", apagar a conta, topo da tela e modo escuro.
 - Página para pedir a exclusão da conta sem o app (exigência do Google): `soneca.app.br/apagar-conta`
@@ -484,6 +496,8 @@ compilado para o Android 16). `npm run android` copia o site para `www/` e atual
    currently opted-in"; os 14 dias contam quando chegar a 12. Depois deles: Dashboard → "Apply for access to
    production".
 8. Dia 9 de 14 em 27/10: os 14 dias fecham por volta de 01/11; aí pedir a produção.
+9. Produção liberada pelo Google; em 02/11, versão 14 (1.0.2) enviada à revisão da produção, só Brasil,
+   publicação gerenciada desligada (detalhes em "Onde paramos").
 
 ## Revisão das regras de acesso (10/10; 016 rodado em 11/10)
 
