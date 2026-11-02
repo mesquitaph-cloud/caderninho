@@ -200,14 +200,16 @@ const spanLong = ([a, z]) => startOfDay(a) === startOfDay(z) ? span([a, z])
   : durLong(z - a) + ' · de ' + shortDay(startOfDay(a)) + ', ' + hm(a) + ' a ' + shortDay(startOfDay(z)) + ', ' + hm(z);
 // "Os maiores sonos": os 3 sonos mais longos que começaram nestes dias e, para cada um, a última
 // mamada e o último cocô registrados antes de dormir. Só põe lado a lado; não tira conclusão.
-function before(list, t) { let b = null; for (const e of list) { if (e.t >= t) break; b = e; } return b; }
+export function before(list, t) { let b = null; for (const e of list) { if (e.t >= t) break; b = e; } return b; }
 const agoFrom = (e, t) => startOfDay(e.t) === startOfDay(t) ? hm(e.t) : shortDay(startOfDay(e.t)) + ', ' + hm(e.t);
+// Uma linha do que veio antes: "Última mamada: 20:40, 30 min antes" (também nas noites de noites.js).
+export const beforeLine = (k, what, e, s0, more = '') => `<span class="lsl"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
+  ? esc(agoFrom(e, s0) + ', ' + durLong(s0 - e.t) + ' antes' + more) : 'sem registro antes'}</span></span>`;
 function longSleeps(sleeps, evs, a, z) {
   const top = sleeps.filter(([s0]) => s0 >= a && s0 < z).sort((x, y) => (y[1] - y[0]) - (x[1] - x[0])).slice(0, 3);
   if (!top.length) return '';
   const feeds = evs.filter(e => e.kind === 'feed'), poos = evs.filter(e => e.kind === 'diaper' && e.poo);
-  const line = (k, what, e, s0, more = '') => `<span class="lsl"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
-    ? esc(agoFrom(e, s0) + ', ' + durLong(s0 - e.t) + ' antes' + more) : 'sem registro antes'}</span></span>`;
+  const line = beforeLine;
   return `<div class="card"><h3>Os maiores sonos e o que veio antes</h3><p class="cap">Os 3 sonos mais longos destes 7 dias, com a última mamada e o último cocô registrados antes de dormir. Toque para ver o dia.</p>
     <div class="ls">${top.map(iv => `<button class="lsi" data-open="${startOfDay(iv[0])}"><b>${esc(span(iv))}</b>
       ${(f => line('--c-feed', 'Última mamada', f, iv[0], f ? ' · ' + label(f, evs) : ''))(before(feeds, iv[0]))}${line('--c-poo', 'Último cocô', before(poos, iv[0]), iv[0])}</button>`).join('')}</div>

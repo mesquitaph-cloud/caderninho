@@ -37,7 +37,7 @@ export const ICON = {
 ICON.wake = ICON.sleep;
 
 export const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
-const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+export const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 export const MESES_L = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 export const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 

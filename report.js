@@ -27,6 +27,9 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
   return {
     any: day.length > 0,
     sleepDay: perDay((d, d1) => sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, d1) - Math.max(x, d)), 0)),
+    // Sono de dia (02/11, pedido da Carol): os sonos que começam entre 6h e 18h, inteiros, nos mesmos dias
+    // de sleepDay. Pode diferir uns minutos da média de "Como foram as noites", que conta por noite.
+    napDay: perDay(d => sleeps.filter(([x]) => x >= d + 6 * HOUR && x < d + 18 * HOUR).reduce((s, [x, y]) => s + y - x, 0)),
     peeDay: perDay((d, d1) => day.filter(e => e.kind === 'diaper' && e.pee && e.t >= d && e.t < d1).length),
     feeds: feeds.length, bottles: bottles.length, bottleMl: bottles.reduce((s, e) => s + (e.ml || 0), 0),
     breastMs: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0) * MIN,
@@ -89,6 +92,7 @@ export function monthHtml(s, { heading }) {
   if (s.pumpMl) h += tile(TILE.pump, 'Ordenhado', liters(s.pumpMl), '');
   h += '</div>';
   const extra = [];
+  if (s.napDay) extra.push(['Sono de dia', dur(s.napDay) + ' por dia, das 6h às 18h']);
   if (s.laps) extra.push(['Sono no colo', hours(s.lapMs) + ' em ' + plural(s.laps, 'sono', 'sonos')]);
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);
   if (s.care.length) extra.push(['Cuidados', careText(s)]);

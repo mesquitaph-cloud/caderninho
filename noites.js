@@ -12,8 +12,14 @@
 //   só as 7 mais longas). Cada lado precisa de pelo menos 3 noites; senão, só a contagem.
 //   Os despertares (02/11, no lugar da comparação das noites com 2 ou mais): quantos, o tempo médio do
 //   "acordou" ao "dormiu" seguinte, em quantos mamou e em quantos teve sintoma ou vômito anotado nesse
-//   intervalo, com o nome de cada sintoma.
-import { HOUR, esc, dur, addDays, MESES_L, SYMPTOM } from './util.js';
+//   intervalo, com o nome de cada sintoma. Desde 02/11 (pedido da Carol), também em quantas noites houve
+//   despertar e a média de despertares só nessas noites.
+//   As noites com mais despertares e o que veio antes (02/11, pedido da Carol, no formato de "Os maiores
+//   sonos" da aba Semana): as 3 do mês com mais despertares (empate: a mais recente primeiro), com a hora
+//   de dormir, a última mamada e o último cocô antes dela. Noite sem sono de mais de 3 h: o primeiro sono.
+//   Prévia aprovada em 02/11: https://claude.ai/artifact/W9ZLLSQzxCtDCrJ5JxEzoq
+import { HOUR, esc, dur, hm, addDays, label, MESES, MESES_L, SYMPTOM } from './util.js';
+import { before, beforeLine } from './week.js';
 
 const LONG = 6 * HOUR, BED = 3 * HOUR, FEW = 3, MAX_SLEEP = 14 * HOUR;
 const at = (d0, h) => d0 + h * HOUR; // d0 é início do dia; ok para 6h e 18h (a troca de horário é à meia-noite)
@@ -37,7 +43,7 @@ function nights(a, z, evs, sleeps, now) {
       return [{ awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
     });
     if (bed === null) {
-      out.push({ longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
+      out.push({ d, t0: ns[0][0], hasBed: false, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
       continue;
     }
     // O dia que veio antes: das 6h até a hora de dormir.
@@ -47,7 +53,7 @@ function nights(a, z, evs, sleeps, now) {
     const lastFeed = feeds.filter(e => e.t < bed && e.t >= bed - 24 * HOUR).at(-1);
     const any = dayEvs.length > 0 || naps.length > 0;
     out.push({
-      longest, wakes,
+      d, t0: bed, hasBed: true, longest, wakes,
       late: (bed - d) > 20 * HOUR,
       bath: baths.some(e => e.t >= bed - 3 * HOUR && e.t <= bed),
       feedSoon: lastFeed ? bed - lastFeed.t < 2 * HOUR : null,
@@ -95,10 +101,34 @@ function wakesBox(all, month) {
   const sym = ws.filter(w => w.syms.length).length, counts = {};
   for (const s of ws.flatMap(w => w.syms)) counts[s] = (counts[s] || 0) + 1;
   const list = Object.entries(counts).sort((x, y) => y[1] - x[1]).map(([s, c]) => `${esc(s)} (${c})`).join(', ');
+  const withW = all.filter(n => n.wakes.length).length, perNight = (W / withW).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
   return `<div class="nt-g"><h4>${T}</h4><p class="nt-sub">${plural(W, 'despertar', 'despertares')} em ${plural(all.length, 'noite', 'noites')}.</p>
+    <div class="nt-it"><p>Noites com despertar</p>${val(withW, all.length, 'nt-a', '--c-sleep')}</div>
+    <div class="nt-it"><p>Média nas noites com despertar</p><div class="nt-v1"><b class="nt-a">${perNight} por noite</b></div></div>
     <div class="nt-it"><p>Tempo médio até voltar a dormir</p><div class="nt-v1"><b class="nt-a">${dur(mean(ws.map(w => w.awake)))}</b></div></div>
     <div class="nt-it"><p>Mamou durante o despertar</p>${val(ws.filter(w => w.fed).length, W, 'nt-a', '--c-sleep')}</div>
     <div class="nt-it"><p>Sintoma anotado durante o despertar</p>${val(sym, W, 'nt-a', '--c-sleep')}${list ? `<p class="nt-sym">${list}</p>` : ''}</div></div>`;
+}
+
+// "noite de 14 para 15 out"; na virada do mês, "noite de 31 out para 1 nov".
+function nightName(d) {
+  const x = new Date(d), y = new Date(addDays(d, 1));
+  return 'noite de ' + x.getDate() + (x.getMonth() === y.getMonth() ? '' : ' ' + MESES[x.getMonth()]) + ' para ' + y.getDate() + ' ' + MESES[y.getMonth()];
+}
+// As 3 noites com mais despertares e o que veio antes, como "Os maiores sonos" da aba Semana.
+function topWakes(all, evs) {
+  const top = all.filter(n => n.wakes.length).sort((x, y) => y.wakes.length - x.wakes.length || y.d - x.d).slice(0, 3);
+  if (!top.length) return '';
+  const feeds = evs.filter(e => e.kind === 'feed'), poos = evs.filter(e => e.kind === 'diaper' && e.poo);
+  const item = n => {
+    const f = before(feeds, n.t0);
+    return `<button class="lsi" data-open="${n.d}"><b>${plural(n.wakes.length, 'despertar', 'despertares')} · ${nightName(n.d)}</b>
+      <span class="lsl"><i style="--sw:var(--c-sleep)"></i><span><em>${n.hasBed ? 'Hora de dormir' : 'Primeiro sono'}:</em> ${hm(n.t0)}</span></span>
+      ${beforeLine('--c-feed', 'Última mamada', f, n.t0, f ? ' · ' + label(f, evs) : '')}${beforeLine('--c-poo', 'Último cocô', before(poos, n.t0), n.t0)}</button>`;
+  };
+  return `<div class="nt-g"><h4>As noites com mais despertares e o que veio antes</h4>
+    <p class="nt-sub">Com a hora de dormir, a última mamada e o último cocô registrados antes. Toque para ver o dia.</p>
+    <div class="ls">${top.map(item).join('')}</div></div>`;
 }
 
 // a, z: o mês [a, z). sleeps: os sonos fechados, [dormiu, acordou].
@@ -114,5 +144,5 @@ export function nightsHtml({ a, z, evs, sleeps, now }) {
   return `<div class="card nt"><h3>Como foram as noites</h3>
     <p class="cap">${month}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado.</p>
     <div class="nt-defs"><p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p></div>
-    ${g1}${wakesBox(all, month.toLowerCase())}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
+    ${g1}${wakesBox(all, month.toLowerCase())}${topWakes(all, evs)}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
 }
