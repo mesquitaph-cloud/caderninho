@@ -1230,7 +1230,29 @@ function homeDoses() {
   const missed = ds.filter(d => d.state === 'late' && !shown.includes(d) && !dayWord(d.due)).length;
   return { shown, missed };
 }
+// Marcar ou pular na tela inicial: a linha dá o check na hora, fica meio segundo e encolhe. Enquanto
+// isso o cartão não é redesenhado (medsBusy); se não salvar, ele volta como estava.
+let medsBusy = 0;
+const pause = ms => new Promise(r => setTimeout(r, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms));
+async function markHome(b, skipped) {
+  const row = b.closest('.dose'); if (!row || row.classList.contains('done') || row.classList.contains('skip')) return;
+  const ck = row.querySelector('.ck'), stx = row.querySelector('.st');
+  medsBusy++;
+  row.classList.add('ticking', skipped ? 'skip' : 'done');
+  ck.innerHTML = skipped ? DASH : CHECK; ck.setAttribute('aria-checked', 'true');
+  if (stx) stx.textContent = skipped ? 'pulada por você' : 'dada por você às ' + hm(Date.now());
+  const [saved] = await Promise.all([giveDose(b.dataset.val, Date.now(), null, skipped), pause(550)]);
+  if (saved) {
+    row.classList.add('fade'); await pause(250);
+    row.style.height = row.offsetHeight + 'px'; row.offsetHeight;
+    row.classList.add('shrink'); row.style.height = '0px'; await pause(220);
+    row.remove();
+    if (medsBusy === 1 && !$('meds').querySelector('.dose') && !homeDoses().shown.length) { $('meds').classList.add('gone'); await pause(250); }
+  }
+  medsBusy--; if (!medsBusy) { $('meds').classList.remove('gone'); renderMeds(); }
+}
 function renderMeds() {
+  if (medsBusy) return;
   const box = $('meds'), { shown, missed } = homeDoses();
   box.hidden = !shown.length && !missed; if (box.hidden) return;
   const n = todayDoses().length, more = shown.length ? 'Mais ' : '';
@@ -1304,10 +1326,11 @@ async function giveDose(id, t, note, skipped) {
   const row = await addEntry({ kind: 'med', t, medicine_id: d.m.id, med_name: d.m.name, med_amount: d.m.amount,
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null });
   if (!row) return;
-  if (S?.mode === 'meds') drawMeds();
+  if (S?.mode === 'meds') { drawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
   const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
     : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
   toast(msg, async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+  return row;
 }
 async function prnNow(mid) {
   const m = st.meds.find(x => x.id === mid); if (!m) return;
@@ -2330,8 +2353,8 @@ $('wakeBtn').onclick = async () => {
 };
 $('meds').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
-  if (b.dataset.act === 'check') return giveDose(b.dataset.val, Date.now());
-  if (b.dataset.act === 'skipDose') return giveDose(b.dataset.val, Date.now(), null, true);
+  if (b.dataset.act === 'check') return markHome(b);
+  if (b.dataset.act === 'skipDose') return markHome(b, true);
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
 });
