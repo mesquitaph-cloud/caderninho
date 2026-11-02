@@ -122,8 +122,9 @@ export function label(e, evs) {
     return (e.side ? cap(SIDE[e.side]) : 'Peito') + (min ? ' · ' + dur(min * MIN) : '');
   }
   if (e.kind === 'pump') return 'Ordenha · ' + e.ml + ' ml';
-  if (e.kind === 'sleep') return 'Dormiu';
-  if (e.kind === 'wake') { const s = sleepBefore(evs, e); return s !== null ? 'Acordou · dormiu ' + dur(e.t - s) : 'Acordou'; }
+  const lap = e.lap_min ? dur(e.lap_min * MIN) + ' no colo' : '';
+  if (e.kind === 'sleep') return 'Dormiu' + (lap ? ' · ' + lap : '');
+  if (e.kind === 'wake') { const s = sleepBefore(evs, e); return s !== null ? 'Acordou · dormiu ' + dur(e.t - s) + (lap ? ', ' + lap : '') : 'Acordou' + (lap ? ' · ' + lap : ''); }
   if (e.kind === 'diaper') {
     const poo = 'cocô' + (e.poo_size ? ' ' + POO_SIZE[e.poo_size] : '');
     return e.pee && e.poo ? 'Xixi + ' + poo : e.poo ? cap(poo) : 'Xixi';
