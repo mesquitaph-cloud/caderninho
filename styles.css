@@ -138,6 +138,28 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
   .dose.late .ck{animation:pulse 1.8s ease-in-out infinite}
   @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--c-med)}60%{box-shadow:0 0 0 7px transparent}}
 }
+/* Ao marcar: o círculo afunda no toque, enche com um pulinho e o check se desenha. Na tela inicial,
+   a linha some e encolhe depois (markHome no app.js). */
+.dose.ticking.done .ck{background:var(--med-ink);border-color:var(--med-ink);color:var(--med)}
+.dose.ticking.skip .ck{background:var(--surface2);border-color:var(--line);color:var(--muted)}
+.dose.ticking .skipbtn{opacity:0;pointer-events:none}
+.dose.ticking.soon b,.dose.ticking.soon .tm,.dose.ticking.late b,.dose.ticking.late .tm{color:inherit}
+.dose.fade{opacity:0;transform:scale(.96)}
+.dose.shrink{overflow:hidden;margin-top:-4px}
+.meds.gone{opacity:0;transform:translateY(-6px)}
+@media (prefers-reduced-motion:no-preference){
+  button.ck{transition:transform .08s ease-out}
+  button.ck:active{transform:scale(.88)}
+  .dose{transition:background .25s,border-color .25s,color .25s}
+  .dose .skipbtn{transition:opacity .2s}
+  .dose.ticking .ck{animation:pop .32s cubic-bezier(.3,1.6,.5,1)}
+  .dose.ticking .ck path{stroke-dasharray:21;animation:draw .26s .06s ease-out backwards}
+  .dose.fade{transition:transform .25s ease-in,opacity .25s}
+  .dose.shrink{transition:height .22s ease-in-out,margin .22s ease-in-out}
+  .meds{transition:opacity .25s,transform .25s}
+  @keyframes pop{0%{transform:scale(.88)}55%{transform:scale(1.18)}100%{transform:scale(1)}}
+  @keyframes draw{from{stroke-dashoffset:21}to{stroke-dashoffset:0}}
+}
 /* Dia | Semana | Mês e a data, que abre o calendário */
 .views{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--surface2);margin-top:4px}
 .views button{padding:9px;border-radius:12px;font-family:var(--display);font-weight:500;font-size:16px;color:var(--muted)}
