@@ -25,6 +25,18 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 - **Compilação de 02/11** (Patrick, 01/11: o Android deve liberar na Play Store em 02/11): o `main` com
   #48 a #51 e o #52 (Indicar o Soneca, item 9). A 1.0.1 da App Store foi compilada antes do #49, por isso
   a Política ainda abre o próprio app no iPhone.
+- **Versão 1.0.2 (02/11, `db43728`):** número da versão trocado no iPhone e no Android (a 1.0.1 já está
+  publicada, e a Apple não aceita compilação nova com ela). Vai com #48 a #56. Compilações no Codemagic a
+  partir do `main`, disparadas pelo Patrick. Texto "O que há de novo" aprovado em 02/11, o mesmo para a
+  App Store e para o Play Console:
+
+  > Novidades:
+  > • Pausar a mamada, no app e na tela bloqueada.
+  > • Sono no colo: anote quanto tempo o bebê dormiu no colo.
+  > • Na aba Mês, um resumo de como foram as noites.
+  > • Toque duas vezes nos gráficos para ampliar.
+  > • Antes de apagar um registro, o app pede confirmação.
+  > • Boas-vindas para quem acabou de entrar na família.
 - **Pedido de avaliação nas lojas (01/11, ramo `claude/avaliacao-lojas`):** a janela do próprio celular
   (plugin `@capawesome/capacitor-app-review`; a Apple não aceita janela nossa, e o Google proíbe perguntar
   "está gostando?" antes). Pede logo depois de um registro de rotina (mamada, ordenha, sono, fralda), entre
