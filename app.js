@@ -399,11 +399,17 @@ async function loadNames(ids) {
 // Recarregar não esvazia a tela: os registros antigos ficam até os novos chegarem inteiros. O que
 // chega ao vivo durante o download fica na fila e é refeito sobre os novos.
 let entryQ = null;
+// Desde quando os registros do bebê aberto estão no celular.
+let entriesFrom = Infinity;
+// Os últimos 60 dias e, para o resumo do mês anterior sair inteiro, desde o dia 1º dele.
+const baseSince = () => Math.min(startOfDay(Date.now() - KEEP_DAYS * DAY), prevMonth());
+// Um mês mais antigo do resumo precisa dos registros desde a véspera do dia 1º (o sono da virada).
+const monthSince = m => Math.min(baseSince(), addDays(m, -1));
 async function loadEntries() {
   const b = st.baby;
-  if (!b) { st.entries = new Map(); return; }
-  // Os últimos 60 dias e, para o resumo do mês anterior sair inteiro, desde o dia 1º dele.
-  const since = new Date(Math.min(startOfDay(Date.now() - KEEP_DAYS * DAY), prevMonth())).toISOString();
+  if (!b) { st.entries = new Map(); entriesFrom = Infinity; return; }
+  // Recarregar com um mês antigo aberto no resumo já traz desde ele.
+  const t0 = st.view === 'month' && st.month ? monthSince(clampMonth(st.month)) : baseSince(), since = new Date(t0).toISOString();
   const fresh = new Map(), q = entryQ = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb.from('entries').select('*').eq('baby_id', b.id)
@@ -417,8 +423,36 @@ async function loadEntries() {
   entryQ = null;
   if (st.baby?.id !== b.id) return;
   for (const p of q) applyEntry(fresh, p);
-  st.entries = fresh;
+  st.entries = fresh; entriesFrom = t0;
 }
+// Mês antigo do resumo (Patrick, 02/11: voltar até o nascimento): busca só o que falta, da véspera do
+// mês até onde o celular já tem, e junta aos outros. Fica até o próximo recarregamento. O que chega ao
+// vivo durante o download vai para a fila, como no loadEntries.
+let olderQ = null, olderFail = 0;
+const olderMissing = m => entriesFrom < Infinity && monthSince(m) < entriesFrom;
+const olderFailed = () => Date.now() - olderFail < 15000;   // depois de 15 s, tenta de novo
+async function loadOlder(m) {
+  const b = st.baby, map = st.entries, until = entriesFrom, t0 = monthSince(m);
+  if (!b || !olderMissing(m) || olderQ || entryQ || olderFailed()) return;
+  const got = new Map(), q = olderQ = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('entries').select('*').eq('baby_id', b.id)
+      .gte('at', new Date(t0).toISOString()).lt('at', new Date(until).toISOString()).order('at').range(from, from + 999);
+    if (error) { olderQ = null; olderFail = Date.now(); return olderDone(); }
+    for (const r of data) got.set(r.id, withT(r));
+    if (data.length < 1000) break;
+  }
+  await loadNames([...got.values()].map(e => e.author_id));
+  olderQ = null;
+  // Recarregou ou trocou de bebê no meio: o que veio fica de fora, e a tela pede de novo se precisar.
+  if (st.entries === map && st.baby?.id === b.id && entriesFrom === until) {
+    for (const p of q) applyEntry(got, p);
+    for (const [id, e] of got) if (!map.has(id)) map.set(id, e);
+    entriesFrom = t0;
+  }
+  olderDone();
+}
+function olderDone() { refresh(); if (S?.mode === 'cal') drawCal(); }
 function applyEntry(map, p) {
   if (p.eventType === 'DELETE') map.delete(p.old.id);
   else if (st.baby && p.new.baby_id === st.baby.id) map.set(p.new.id, withT(p.new));
@@ -478,7 +512,7 @@ function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
   st.channel = sb.channel('familia-' + fid)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: 'family_id=eq.' + fid }, async p => {
-      applyEntry(st.entries, p); entryQ?.push(p);
+      applyEntry(st.entries, p); entryQ?.push(p); olderQ?.push(p);
       if (p.eventType !== 'DELETE' && st.baby && p.new.baby_id === st.baby.id) await loadNames([p.new.author_id]);
       refresh();
     })
@@ -495,10 +529,12 @@ function subscribe(fid) {
 const sortedEntries = () => [...st.entries.values()].sort((a, b) => a.t - b.t);
 // Primeiro dia que dá para ver: o app carrega os últimos 60 dias.
 const firstDay = () => addDays(startOfDay(Date.now()), -(KEEP_DAYS - 1));
-// Resumo do mês: o mês atual e o anterior.
+// Resumo do mês: do mês do nascimento (sem a data anotada, do mês do cadastro) até o atual; o mês
+// anterior sempre, como antes.
 const monthStart = (t, n = 0) => { const d = new Date(t); return new Date(d.getFullYear(), d.getMonth() + n, 1).getTime(); };
 const curMonth = () => monthStart(Date.now()), prevMonth = () => monthStart(Date.now(), -1);
-const clampMonth = t => Math.min(curMonth(), Math.max(monthStart(t), prevMonth()));
+const firstMonth = () => { const b = st.baby; return !b ? prevMonth() : Math.min(prevMonth(), monthStart(b.birth_date ? dayOf(b.birth_date) : Date.parse(b.created_at))); };
+const clampMonth = t => Math.min(curMonth(), Math.max(monthStart(t), firstMonth()));
 // Última mamada em que marcaram o peito (no banco, só a mamada no peito tem peito marcado).
 const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
@@ -577,8 +613,14 @@ function renderHome() {
     const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
     const title = MESES_L[d.getMonth()] + ' ' + d.getFullYear();
     $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
-    $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= prevMonth();
+    $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= firstMonth();
     if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
+    // Mês de mais de 60 dias atrás: os registros dele ainda estão chegando.
+    if (olderMissing(st.month)) {
+      loadOlder(st.month); st.shareText = '';
+      $('monthView').innerHTML = `<div class="empty">${olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'}</div>`;
+      return;
+    }
     const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
     const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
@@ -1134,7 +1176,9 @@ const chosenDay = () => st.view === 'week' ? st.weekEnd
 function calSheet() { const d = new Date(chosenDay()); S = { mode: 'cal', y: d.getFullYear(), m: d.getMonth() }; drawCal(); }
 function drawCal() {
   const today = startOfDay(Date.now()), week = st.view === 'week', month = st.view === 'month', sel = chosenDay();
-  const min = month ? Math.min(firstDay(), prevMonth()) : firstDay(), from = week ? addDays(sel, -6) : month ? monthStart(sel) : sel;
+  const min = month ? firstMonth() : firstDay(), from = week ? addDays(sel, -6) : month ? monthStart(sel) : sel;
+  // No Mês, os pontos de um mês antigo aparecem quando os registros dele chegam.
+  if (month) loadOlder(new Date(S.y, S.m, 1).getTime());
   const has = new Set([...st.entries.values()].map(e => startOfDay(e.t)));
   const ym = t => { const d = new Date(t); return d.getFullYear() * 12 + d.getMonth(); }, cur = S.y * 12 + S.m;
   const first = new Date(S.y, S.m, 1), days = new Date(S.y, S.m + 1, 0).getDate();
@@ -1149,8 +1193,8 @@ function drawCal() {
     `<div class="mhead">${arrow(-1, cur > ym(min), 'Mês anterior', 'M15 5l-7 7 7 7')}<b>${MESES_L[S.m]} ${S.y}</b>${arrow(1, cur < ym(today), 'Próximo mês', 'M9 5l7 7-7 7')}</div>
     <div class="wdays" aria-hidden="true">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(w => `<span>${w}</span>`).join('')}</div>
     <div class="cal">${cells}</div>
-    <div class="calkey"><i></i>dia com registros · o Soneca mostra os últimos ${KEEP_DAYS} dias</div>
-    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : month ? '<p class="dim">O resumo mostra o mês atual e o anterior.</p>' : ''}
+    <div class="calkey"><i></i>dia com registros${month ? '' : ` · o Soneca mostra os últimos ${KEEP_DAYS} dias`}</div>
+    ${week ? '<p class="dim">O painel mostra os 7 dias que terminam no dia escolhido.</p>' : ''}
     <button class="ghost" data-act="pickDay" data-val="${today}">Ir para hoje</button>`);
 }
 function calAction(a, v) {

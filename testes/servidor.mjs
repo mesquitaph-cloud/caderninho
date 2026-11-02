@@ -5,6 +5,8 @@
 //   sono-aberto   um "Dormiu" de 6 dias atrás sem "Acordou" (o caso do Bruno, 17/10)
 //   sem-familia   conta nova sem família, com um convite válido para a Família Andrade (o caso da Ca)
 //   noites        noites variadas (longas, com 3 despertares e comuns) para o cartão da aba Mês
+//   nascimento    rotina desde o nascimento (97 dias), para a aba Mês voltar até julho
+//   sem-nascimento   o mesmo, sem a data de nascimento anotada
 //   app-convite   a mesma conta, no "app do iPhone" aberto pelo link de convite (Universal Link)
 import http from 'node:http';
 import fs from 'node:fs';

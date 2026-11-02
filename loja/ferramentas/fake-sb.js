@@ -62,6 +62,7 @@ class Q {
   in(k, v) { this.f.push(r => v.includes(r[k])); return this; }
   is(k, v) { this.f.push(r => (r[k] ?? null) === v); return this; }
   gte(k, v) { this.f.push(r => r[k] >= v); return this; }
+  lt(k, v) { this.f.push(r => r[k] < v); return this; }
   order(k) { this.ord = k; return this; }
   range(a, b) { this.rg = [a, b]; return this; }
   maybeSingle() { this.one = 1; return this; }
