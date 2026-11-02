@@ -32,6 +32,8 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     breastMs: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0) * MIN,
     slept: sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, end) - Math.max(x, a)), 0),
     longest: inP.reduce((b, iv) => !b || iv[1] - iv[0] > b[1] - b[0] ? iv : b, null),
+    // Tempo no colo: anotado no Dormiu ou no Acordou; um sono com os dois soma os dois.
+    lapMs: day.reduce((s, e) => s + (e.lap_min || 0), 0) * MIN, laps: day.filter(e => e.lap_min).length,
     diapers: day.filter(e => e.kind === 'diaper').length, poos: day.filter(e => e.kind === 'diaper' && e.poo).length,
     pumpMl: on('pump') ? day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0) : 0,
     doses: on('med') ? day.filter(e => e.kind === 'med' && !e.skipped).length : 0,
@@ -52,7 +54,7 @@ function lines(s) {
   const out = [];
   const feedBits = [s.bottleMl ? liters(s.bottleMl) + ' na mamadeira' : '', s.breastMs ? hours(s.breastMs) + ' no peito' : ''].filter(Boolean);
   if (s.feeds) out.push(['feed', plural(s.feeds, 'mamada', 'mamadas') + (feedBits.length ? ': ' + feedBits.join(' e ') : '')]);
-  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.sleepDay ? ' (' + dur(s.sleepDay) + ' por dia)' : '') + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '')]);
+  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.sleepDay ? ' (' + dur(s.sleepDay) + ' por dia)' : '') + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '') + (s.laps ? '; ' + hours(s.lapMs) + ' no colo, em ' + plural(s.laps, 'sono', 'sonos') : '')]);
   if (s.diapers) out.push(['diaper', plural(s.diapers, 'fralda', 'fraldas') + ', ' + s.poos + ' com cocô']);
   if (s.pumpMl) out.push(['pump', liters(s.pumpMl) + ' de leite ordenhado']);
   if (s.doses) out.push(['med', plural(s.doses, 'dose de remédio dada', 'doses de remédio dadas')]);
@@ -87,6 +89,7 @@ export function monthHtml(s, { heading }) {
   if (s.pumpMl) h += tile(TILE.pump, 'Ordenhado', liters(s.pumpMl), '');
   h += '</div>';
   const extra = [];
+  if (s.laps) extra.push(['Sono no colo', hours(s.lapMs) + ' em ' + plural(s.laps, 'sono', 'sonos')]);
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);
   if (s.care.length) extra.push(['Cuidados', careText(s)]);
   if (s.wTo) extra.push(['Peso', (s.wFrom ? kg(s.wFrom.grams) + ' → ' : '') + kg(s.wTo.grams)]);

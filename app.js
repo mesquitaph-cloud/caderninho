@@ -385,7 +385,7 @@ async function openFamily(fid) {
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions(), loadSettings(fid)]);
-  st.tab = 'home'; FP.confirm = FP.invite = null;
+  st.tab = 'home'; FP.invite = null;
   show('scrMain'); render(); ftSync(); openAlertDose();
 }
 
@@ -517,7 +517,7 @@ function render() {
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
   if (t === st.tab && !anchor) return window.scrollTo({ top: 0, behavior: smooth() });
-  if (t !== st.tab) { if (st.tab === 'family') FP.confirm = FP.invite = null; st.tab = t; window.scrollTo(0, 0); }
+  if (t !== st.tab) { if (st.tab === 'family') FP.invite = null; st.tab = t; window.scrollTo(0, 0); }
   render();
   if (anchor) spotlight(anchor);
 }
@@ -769,6 +769,7 @@ function fields(ev) {
   if (ev.kind === 'symptom') Object.assign(f, { symptom: ev.symptom, temp_c: ev.temp_c ?? null, duration_min: ev.duration_min ?? null });
   if ('poo_size' in ev) Object.assign(f, { poo_size: ev.poo_size ?? null, poo_alert: ev.poo_alert ?? null });
   if (CARE[ev.kind]) f.duration_min = ev.duration_min ?? null;
+  if ('lap_min' in ev) f.lap_min = ev.lap_min ?? null;
   return f;
 }
 async function addEntry(ev) {
@@ -817,11 +818,33 @@ const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Chor
 const withDuration = sym => sym === 'colica' || sym === 'choro';
 // Atalhos de minutos no tummy time e no banho de sol.
 const CARE_CHIPS = [3, 5, 10, 15];
+// Atalhos do tempo no colo, no Dormiu e no Acordou.
+const LAP_CHIPS = [10, 20, 30, 60];
 // Atalhos embaixo do relógio: agora ou tantos minutos antes do horário que está nele.
 const QUICK_TIME = '<div class="time quick"><button class="small" data-act="now">Agora</button>'
   + [5, 10, 30].map(m => `<button class="small" data-act="back" data-val="${m}">−${m} min</button>`).join('') + '</div>';
 function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
 function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
+// Caixa de confirmação para apagar (e sair, remover): o primeiro toque abre a caixa, só o botão de
+// dentro age. Cancelar, Esc ou um toque fora fecham sem fazer nada.
+let askYes = null;
+function askConfirm(title, text, yes, onYes) {
+  askYes = onYes;
+  $('ask').innerHTML = `<div class="cbox" role="alertdialog" aria-modal="true" aria-labelledby="askT" aria-describedby="askP"><h3 id="askT">${esc(title)}</h3><p id="askP">${esc(text)}</p>
+    <div class="row2"><button class="ghost" data-ask="no">Cancelar</button><button class="go-del" data-ask="yes">${esc(yes)}</button></div></div>`;
+  $('ask').hidden = false; $('ask').querySelector('[data-ask="no"]').focus();
+}
+function closeAsk() { $('ask').hidden = true; $('ask').innerHTML = ''; askYes = null; }
+$('ask').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ask]');
+  if (!b) { if (e.target === $('ask')) closeAsk(); return; }
+  if (b.dataset.ask === 'no' || !askYes) return closeAsk();
+  const f = askYes; busy(b, true); await f(b); closeAsk();
+});
+// "Dormiu, hoje às 13h05": o registro na caixa de apagar.
+const askWhen = t => { const d = new Date(t), d0 = startOfDay(Date.now()), day = startOfDay(t);
+  return (day === d0 ? 'hoje' : day === addDays(d0, -1) ? 'ontem' : pad(d.getDate()) + '/' + pad(d.getMonth() + 1)) + ' às ' + pad(d.getHours()) + 'h' + pad(d.getMinutes()); };
+const ddmm = ymd => ymd.slice(8, 10) + '/' + ymd.slice(5, 7);
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
 const opt = (txt, on, act, val, big) => `<button class="opt${big ? ' big' : ''}${on ? ' on' : ''}" data-act="${act}" data-val="${val}">${txt}</button>`;
 const mlBlock = k => `<div><div class="lbl">Quantidade</div><div class="seg k-${k}" style="background:none;margin-bottom:10px">${[30,60,90,120,150,180].map(v => opt(v + ' ml', +S.ml === v, 'ml', v)).join('')}</div>
@@ -933,8 +956,8 @@ function openEntry(k, edit) {
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
-        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', confirmDel: false, err: '',
-        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || '' };
+        sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', err: '',
+        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '' };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   drawEntry();
 }
@@ -984,11 +1007,14 @@ function drawEntry() {
   h += daySeg();
   if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
+  // Sono: quanto tempo foi no colo, opcional, no Dormiu ou no Acordou.
+  if (k === 'sleep') h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
+    <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
   if (k === 'symptom') h += '<p class="dim">O Soneca só anota o que a família marcar; não avalia nem orienta.</p>';
-  if (S.edit) h += `<button class="del" data-act="del">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar registro'}</button>`;
+  if (S.edit) h += '<button class="del" data-act="del">Apagar registro</button>';
   openPanel(h);
 }
 // Um pouco de humor só na fralda: o cocô gigante e o alerta marrom ganham mensagem própria.
@@ -1030,8 +1056,11 @@ async function saveEntry(btn) {
     if (S.ck === 'care' && !S.note.trim()) { S.err = 'Escreva o que foi feito.'; return drawEntry(); }
     if (CARE_MIN.includes(S.ck) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo vai de 1 a 600 minutos.'; return drawEntry(); }
   }
+  if (k === 'sleep' && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo no colo vai de 1 a 600 minutos.'; return drawEntry(); }
   // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. Cuidados grava o cuidado escolhido.
   const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
+  // Só manda o colo quando há o que mandar (ou apagar): sem o 020, o resto do sono continua salvando.
+  if (k === 'sleep' && (S.dmin !== '' || S.edit?.lap_min)) ev.lap_min = S.dmin !== '' ? dmin : null;
   if (k === 'care') ev.duration_min = CARE_MIN.includes(S.ck) && S.dmin !== '' ? dmin : null;
   if (ev.kind === 'symptom') {
     ev.symptom = S.sym;
@@ -1634,7 +1663,7 @@ async function askQuestion(id) {
   if (await setAsked(id, localDate(Date.now()))) toast('Foi para Respostas do pediatra', () => setAsked(id, null));
 }
 function questionForm(q) {
-  S = { mode: 'question', edit: q || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', confirmDel: false, err: '' };
+  S = { mode: 'question', edit: q || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', err: '' };
   drawQuestion(); $('sheet').scrollTop = 0;
 }
 function drawQuestion() {
@@ -1652,7 +1681,7 @@ function drawQuestion() {
   }
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveQ">Salvar</button>';
-  if (q) h += `<button class="del" data-act="delQ">${S.confirmDel ? 'Toque de novo para apagar' : 'Apagar dúvida'}</button>`;
+  if (q) h += '<button class="del" data-act="delQ">Apagar dúvida</button>';
   const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
 }
 function questionInput(el) {
@@ -1694,7 +1723,7 @@ function questionAction(a, v, btn) {
   if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v));
   if (a === 'qAsked') { S.asked = S.asked ? null : S.edit.asked_on || localDate(Date.now()); return drawQuestion(); }
   if (a === 'saveQ') return saveQuestion(btn);
-  if (a === 'delQ') { if (S.confirmDel) return delQuestion(btn); S.confirmDel = true; return drawQuestion(); }
+  if (a === 'delQ') return askConfirm('Apagar esta dúvida?', 'Não dá para desfazer.', 'Apagar', delQuestion);
 }
 
 /* ---------- relatório para pediatra ---------- */
@@ -1772,7 +1801,7 @@ function reportAction(a, v) {
 // Anotar ou editar uma medida (peso, comprimento ou os dois) ou um marco.
 function logForm(kind, row) {
   const today = localDate(Date.now());
-  S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '', confirmDel: false,
+  S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '',
         kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '',
         cm: row?.cm != null ? Number(row.cm).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '', title: row?.title || '' };
   drawLog(); $('sheet').scrollTop = 0;
@@ -1793,7 +1822,7 @@ function drawLog() {
          : `<input class="field" id="lgNote" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += '<button class="save" data-act="saveLog">Salvar</button>';
-  if (S.edit) h += `<button class="del" data-act="delLog">${S.confirmDel ? 'Toque de novo para apagar' : w ? 'Apagar esta medida' : 'Apagar este marco'}</button>`;
+  if (S.edit) h += `<button class="del" data-act="delLog">${w ? 'Apagar esta medida' : 'Apagar este marco'}</button>`;
   openPanel(h);
 }
 function logInput(el) {
@@ -1847,13 +1876,18 @@ async function delLog(btn) {
 function growthAction(a, v, btn) {
   if (a === 'sug') { S.title = v; S.err = ''; return drawLog(); }
   if (a === 'saveLog') return saveLog(btn);
-  if (a === 'delLog') { if (S.confirmDel) return delLog(btn); S.confirmDel = true; return drawLog(); }
+  if (a === 'delLog') {
+    const e = S.edit, w = S.mode === 'weight';
+    // "Peso de 5,4 kg, 12/10" ou "Firmou a cabeça, 23/10".
+    const what = !w ? e.title : e.grams && e.cm ? 'Peso de ' + kg(e.grams) + ' e comprimento de ' + cmText(e.cm) : e.grams ? 'Peso de ' + kg(e.grams) : 'Comprimento de ' + cmText(e.cm);
+    return askConfirm(w ? 'Apagar esta medida?' : 'Apagar este marco?', what + ', ' + ddmm(e[LOG[S.mode].day]) + '. Não dá para desfazer.', 'Apagar', delLog);
+  }
 }
 
 /* ---------- bebê e nome ---------- */
 const CHECK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 function babySheet(b) {
-  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', confirmDel: false };
+  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '' };
   drawBaby();
 }
 // Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
@@ -1867,12 +1901,10 @@ function drawBaby() {
        <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.${b ? ' Mudar aqui muda a curva.' : ''}</p></div>
      ${b ? '' : `<label class="chk"><input type="checkbox" id="bOk">${CHECK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar os dados dele, inclusive de saúde e amamentação, para o uso da minha família.</span></label>`}
      <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
-  if (del) h += S.confirmDel
-    ? `<div class="warn" role="alert"><b>Tem certeza?</b><span>Essa ação não poderá ser desfeita. ${esc(b.name)} e todos os seus registros serão apagados.</span></div>
-       <div class="row2"><button class="ghost" data-act="keepBaby">Cancelar</button><button class="danger-btn" data-act="delBaby">Apagar</button></div>`
-    : '<button class="danger-btn" data-act="askDelBaby">Apagar bebê</button>';
+  if (del) h += '<button class="danger-btn" data-act="askDelBaby">Apagar bebê</button>';
   openPanel(h);
 }
+const askDelBaby = () => askConfirm('Apagar ' + S.b.name + '?', S.b.name + ' e todos os seus registros serão apagados. Não dá para desfazer.', 'Apagar', delBaby);
 async function delBaby(btn) {
   const id = S.b.id;
   busy(btn, true);
@@ -1930,7 +1962,7 @@ async function saveName(btn) {
 
 /* ---------- Família ---------- */
 // O que vale para todos: nome da família, membros e convite, bebês, botões da tela inicial e sair.
-const FP = { confirm: null, invite: null };   // a confirmação aberta e o link de convite gerado
+const FP = { invite: null };   // o link de convite gerado
 function drawFamilyPane() {
   const f = st.family, creator = f.creator_id === st.user.id, n = st.members.length, nb = st.babies.length;
   let h = `<div class="ptitle"><h2>${esc(f.name)}</h2><small>${n} ${n === 1 ? 'membro' : 'membros'} · ${nb} ${nb === 1 ? 'bebê' : 'bebês'}</small></div>`;
@@ -1939,7 +1971,7 @@ function drawFamilyPane() {
   h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
     const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
     const rm = creator && m.user_id !== st.user.id
-      ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">${FP.confirm === 'rm:' + m.user_id ? 'Confirmar' : 'Remover'}</button>` : '';
+      ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">Remover</button>` : '';
     return `<div class="li"><span>${esc(st.names[m.user_id] || 'Alguém')}${tags}</span>${rm}</div>`;
   }).join('');
   if (creator) h += FP.invite
@@ -1950,8 +1982,8 @@ function drawFamilyPane() {
     '<button class="ghost" data-act="addBaby">+ Adicionar bebê</button></div>';
   h += buttonsHtml();
   h += creator
-    ? `<button class="danger-btn" data-act="delFam">${FP.confirm === 'delFam' ? 'Toque de novo: apaga a família, os bebês e todos os registros' : 'Apagar família'}</button>`
-    : `<button class="danger-btn" data-act="leave">${FP.confirm === 'leave' ? 'Toque de novo: você sai, e o que anotou fica na família sem seu nome' : 'Sair da família'}</button>`;
+    ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
+    : '<button class="danger-btn" data-act="leave">Sair da família</button>';
   $('paneFamily').innerHTML = h;
 }
 // Mudar o nome da família: só quem criou (é a regra do banco).
@@ -2014,7 +2046,7 @@ function setTheme(v) {
 // Mostra antes o que acontece com cada família. Quem criou uma família com outras pessoas passa a
 // família para o membro mais antigo depois dela; o resto é a função delete_my_account (012).
 async function accountSheet() {
-  S = { mode: 'account', rows: null, confirm: false, err: '' }; drawAccount();
+  S = { mode: 'account', rows: null, err: '' }; drawAccount();
   const ids = st.families.map(f => f.id);
   const [{ data: mem, error: e1 }, { data: bab, error: e2 }] = await Promise.all([
     sb.from('family_members').select('family_id,user_id,joined_at').in('family_id', ids),
@@ -2050,17 +2082,17 @@ function drawAccount() {
     : S.err ? '' : '<p class="dim">Carregando…</p>') + '</div>';
   h += '<p class="dim">As sugestões que você mandou também são apagadas.</p>';
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
-  if (S.rows) h += `<button class="danger-btn" data-act="accDel">${S.confirm ? 'Toque de novo para apagar a conta' : 'Apagar minha conta'}</button>`;
+  if (S.rows) h += '<button class="danger-btn" data-act="accDel">Apagar minha conta</button>';
   openPanel(h);
 }
-async function accountAction(a, btn) {
-  if (a !== 'accDel') return;
-  if (!S.confirm) { S.confirm = true; return drawAccount(); }
-  busy(btn, true);
+function accountAction(a) {
+  if (a === 'accDel') askConfirm('Apagar sua conta?', 'Seu login e seu nome são apagados. Não dá para desfazer.', 'Apagar conta', deleteAccount);
+}
+async function deleteAccount() {
   // Quem entrou com a Apple: cancela o acesso do Soneca na Apple antes de apagar (para os outros, não faz nada).
   await sb.functions.invoke('apple-login', { body: { action: 'revoke' } }).catch(() => {});
   const { error } = await sb.rpc('delete_my_account');
-  if (error) { S.err = 'Não foi possível apagar a conta. Confira a conexão e tente de novo.'; S.confirm = false; return drawAccount(); }
+  if (error) { S.err = 'Não foi possível apagar a conta. Confira a conexão e tente de novo.'; return drawAccount(); }
   // O login já não existe no banco: basta esquecer a sessão neste celular.
   await sb.auth.signOut({ scope: 'local' }).catch(() => {});
   lsSet('cad-family', null); lsSet('cad-invite', null);
@@ -2137,7 +2169,7 @@ async function paneAction(a, v, btn) {
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
   if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
   if (a === 'addBaby') return babySheet(null);
-  if (a === 'delBabyAsk') { babySheet(st.babies.find(b => b.id === v)); S.confirmDel = true; drawBaby(); $('sheet').scrollTop = $('sheet').scrollHeight; return; }
+  if (a === 'delBabyAsk') { babySheet(st.babies.find(b => b.id === v)); return askDelBaby(); }
   // Família
   if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
   if (a === 'famName') return famNameSheet();
@@ -2152,18 +2184,24 @@ async function paneAction(a, v, btn) {
   if (a === 'copyInv') return navigator.clipboard.writeText(FP.invite).then(() => toast('Link copiado'), () => toast('Selecione o link e copie'));
   if (a === 'shareInv') return navigator.share({ title: 'Soneca', text: 'Entre na família ' + f.name + ' no Soneca:', url: FP.invite }).catch(() => {});
   if (a === 'rm') {
-    if (FP.confirm !== 'rm:' + v) { FP.confirm = 'rm:' + v; return render(); }
-    const { error } = await sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', v);
-    if (error) return toast('Não foi possível remover.');
-    st.members = st.members.filter(m => m.user_id !== v); FP.confirm = null; return render();
+    const n = st.names[v] || 'Alguém';
+    return askConfirm('Remover ' + n + ' da família?', n + ' deixa de ver a família. O que anotou fica na família, sem o nome.', 'Remover', async () => {
+      const { error } = await sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', v);
+      if (error) return toast('Não foi possível remover.');
+      st.members = st.members.filter(m => m.user_id !== v); render();
+    });
   }
   if (a === 'delFam' || a === 'leave') {
-    if (FP.confirm !== a) { FP.confirm = a; return render(); }
-    const q = a === 'delFam' ? sb.from('families').delete().eq('id', f.id)
-                             : sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', st.user.id);
-    const { error } = await q;
-    if (error) return toast('Não foi possível concluir.');
-    return afterLeavingFamily();
+    const [t, p, yes] = a === 'delFam'
+      ? ['Apagar a família?', 'Apaga a família, os bebês e todos os registros, para todos os membros. Não dá para desfazer.', 'Apagar']
+      : ['Sair da família?', 'O que você anotou fica na família, sem seu nome.', 'Sair'];
+    return askConfirm(t, p, yes, async () => {
+      const q = a === 'delFam' ? sb.from('families').delete().eq('id', f.id)
+                               : sb.from('family_members').delete().eq('family_id', f.id).eq('user_id', st.user.id);
+      const { error } = await q;
+      if (error) return toast('Não foi possível concluir.');
+      return afterLeavingFamily();
+    });
   }
   // Perfil
   if (a === 'rename') return renameSheet();
@@ -2207,13 +2245,10 @@ $('sheetIn').addEventListener('click', async e => {
   const a = b.dataset.act, v = b.dataset.val;
   if (a === 'close') return closeSheet();
   if (a === 'saveBaby') return saveBaby(b);
-  if (a === 'askDelBaby' || a === 'keepBaby') {
-    S.name = $('bName').value; S.birth = $('bBirth').value; S.sex = bSex() || ''; S.confirmDel = a === 'askDelBaby'; return drawBaby();
-  }
-  if (a === 'delBaby') return delBaby(b);
+  if (a === 'askDelBaby') return askDelBaby();
   if (a === 'saveName') return saveName(b);
   if (S.mode === 'feedback') return feedbackAction(a, v, b);
-  if (S.mode === 'account') return accountAction(a, b);
+  if (S.mode === 'account') return accountAction(a);
   if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
@@ -2243,8 +2278,9 @@ $('sheetIn').addEventListener('click', async e => {
     else if (S.base >= addDays(t0, -1)) S.base = addDays(t0, -2);
   }
   else if (a === 'del') {
-    if (!S.confirmDel) S.confirmDel = true;
-    else { const id = S.edit.id; if (await deleteEntry(id)) { closeSheet(); toast('Registro apagado'); } return; }
+    const e = S.edit;
+    return askConfirm('Apagar este registro?', label(e, sortedEntries()) + ', ' + askWhen(e.t) + '. Não dá para desfazer.', 'Apagar',
+      async () => { if (await deleteEntry(e.id)) { closeSheet(); toast('Registro apagado'); } });
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'ftTap') ftTap(v);
@@ -2387,11 +2423,12 @@ $('weekView').addEventListener('keydown', e => {
   if (r && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDay(+r.dataset.day); }
 });
 $('scrim').onclick = closeSheet;
-document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (!$('rpView').hidden) closeReportView(); else if (S) closeSheet(); });
+document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (!$('ask').hidden) closeAsk(); else if (!$('rpView').hidden) closeReportView(); else if (S) closeSheet(); });
 // Botão "voltar" do Android: fecha o relatório ou a janela aberta, depois volta para a aba Hoje; só então
 // deixa o app (sem fechar, como os outros apps do Android).
 if (ANDROID) window.Capacitor.registerPlugin('App').addListener('backButton', () => {
-  if (!$('rpView').hidden) closeReportView();
+  if (!$('ask').hidden) closeAsk();
+  else if (!$('rpView').hidden) closeReportView();
   else if (S) closeSheet();
   else if (!$('scrMain').hidden && st.tab !== 'home') goTab('home');
   else window.Capacitor.registerPlugin('App').minimizeApp();
