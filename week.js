@@ -206,7 +206,7 @@ function longSleeps(sleeps, evs, a, z) {
   const top = sleeps.filter(([s0]) => s0 >= a && s0 < z).sort((x, y) => (y[1] - y[0]) - (x[1] - x[0])).slice(0, 3);
   if (!top.length) return '';
   const feeds = evs.filter(e => e.kind === 'feed'), poos = evs.filter(e => e.kind === 'diaper' && e.poo);
-  const line = (k, what, e, s0, more = '') => `<span class="ln"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
+  const line = (k, what, e, s0, more = '') => `<span class="lsl"><i style="--sw:var(${k})"></i><span><em>${what}:</em> ${e
     ? esc(agoFrom(e, s0) + ', ' + durLong(s0 - e.t) + ' antes' + more) : 'sem registro antes'}</span></span>`;
   return `<div class="card"><h3>Os maiores sonos e o que veio antes</h3><p class="cap">Os 3 sonos mais longos destes 7 dias, com a última mamada e o último cocô registrados antes de dormir. Toque para ver o dia.</p>
     <div class="ls">${top.map(iv => `<button class="lsi" data-open="${startOfDay(iv[0])}"><b>${esc(span(iv))}</b>

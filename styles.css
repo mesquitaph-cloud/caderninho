@@ -264,8 +264,8 @@ svg .part{opacity:.45}
 .ls{display:flex;flex-direction:column;gap:8px}
 .lsi{display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:14px;background:var(--surface2);text-align:left;font-size:14px}
 .lsi b{font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;margin-bottom:2px}
-.lsi .ln{display:flex;align-items:baseline;gap:8px;font-weight:500;font-variant-numeric:tabular-nums}
-.lsi .ln i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
+.lsi .lsl{display:flex;align-items:baseline;gap:8px;font-weight:500;font-variant-numeric:tabular-nums}
+.lsi .lsl i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--sw);transform:translateY(-1px)}
 .lsi em{font-style:normal;color:var(--muted);font-weight:500}
 /* Resumo para mandar à família: a prévia da mensagem */
 .msgbox{white-space:pre-wrap;background:var(--surface2);border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5}
