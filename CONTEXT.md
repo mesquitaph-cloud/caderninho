@@ -99,9 +99,10 @@ que aconteceu escrito. O Soneca só anota; não avalia nem orienta. Fica fora do
 _Evite_: doença, diagnóstico, mal-estar, intercorrência
 
 **Cuidado**:
-O que a família escolhe no botão Cuidados: massagem, banho, lavagem nasal, tummy time, banho de sol ou
-outro. Todos com o horário e uma observação, se quiser. Tummy time e banho de sol podem ter quantos
-minutos duraram; no outro, o que foi feito é escrito à mão e é obrigatório.
+O que a família escolhe no botão Cuidados: massagem, banho, lavagem nasal, tummy time, banho de sol,
+arroto ou outro. Todos com o horário e uma observação, se quiser. Tummy time e banho de sol podem ter
+quantos minutos duraram; no arroto, marca-se "Pôs para arrotar", "Arrotou" ou os dois, sem tempo; no
+outro, o que foi feito é escrito à mão e é obrigatório.
 _Evite_: atividade, procedimento, atalho
 
 **Tummy time**:

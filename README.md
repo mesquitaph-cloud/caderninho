@@ -45,6 +45,13 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   https://claude.ai/artifact/YadD7hYqMp9r7sF4Z5rFT6. Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
   novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
   Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
+- **Arroto em Cuidados (02/11, no ramo `claude/arroto`):** opção nova "Arroto" em Qual cuidado, com
+  "Pôs para arrotar" e "Arrotou", que se marcam como xixi e cocô: um ou os dois no mesmo registro, sem
+  tempo. Na linha do tempo, "Pôs para arrotar", "Arrotou" ou "Pôs para arrotar e arrotou"; no botão
+  Cuidados, "arrotou há 12 min" ou "pôs para arrotar há 3 min". Fica fora do relatório do pediatra.
+  Prévia aprovada em 02/11: https://claude.ai/artifact/43RdLsLdN1eGajpDqEXE9k. **Antes do Merge:** rodar
+  `supabase/021_arroto.sql` no SQL Editor (tipo novo `burp` e coluna `burp`); sem ele, só o arroto não
+  salva. No iPhone e no Android, só chega com a próxima compilação.
 - **Sono no colo e caixa para apagar (02/11, no `main` pelo #56):** no Sono, "Quanto tempo no
   colo (opcional)" no Dormiu e no Acordou (atalhos 10, 20, 30 min e 1 h; de 1 a 600 min), na coluna nova
   `lap_min`. Aparece na linha do registro ("Dormiu · 20 min no colo") e no resumo da Semana e do Mês ("Sono

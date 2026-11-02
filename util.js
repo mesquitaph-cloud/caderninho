@@ -19,6 +19,8 @@ export const ICON = {
   care: `<svg viewBox="0 0 24 24" ${P}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M8 11.5 6.6 10a1.6 1.6 0 0 0-2.4 2.1l3.3 4.6A6 6 0 0 0 12.4 19H13a4 4 0 0 0 4-4v-2"/></svg>`,
   tummy: `<svg viewBox="0 0 24 24" ${P}><circle cx="17" cy="8.5" r="2.6"/><path d="M14.6 10.4c-2.6.6-5.6 2.2-8.6 3.4"/><path d="M15.4 11.2 16 14.6"/><path d="M6 13.8c-1 .4-1.9.8-2.6 1.4"/><path d="M2.5 18.5h19"/></svg>`,
   sunbath: `<svg viewBox="0 0 24 24" ${P}><path d="M7 15a5 5 0 0 1 10 0"/><path d="M12 4v3M4.9 7.9l2.1 2.1M19.1 7.9 17 10M2.5 15h3M18.5 15h3"/><path d="M3 19h18"/></svg>`,
+  // Arroto: três bolhas subindo.
+  burp: `<svg viewBox="0 0 24 24" ${P}><circle cx="8.5" cy="16" r="4"/><circle cx="15.5" cy="8.5" r="2.6"/><circle cx="19.5" cy="3.8" r="1.3"/></svg>`,
   // Últimos 3 dias: a listinha, três linhas com pontos, como a linha do tempo.
   hist: `<svg viewBox="0 0 24 24" ${P}><path d="M9.5 6.5h10M9.5 12h10M9.5 17.5h10"/><path d="M5 6.5h.01M5 12h.01M5 17.5h.01" stroke-width="2.8"/></svg>`,
   edit: `<svg viewBox="0 0 24 24" ${P}><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
@@ -106,7 +108,9 @@ export const SYMPTOM = { febre: 'Febre', colica: 'Cólica', choro: 'Choro incons
 export const POO_SIZE = { pequeno: 'pequeno', medio: 'médio', grande: 'grande', gigante: 'gigante' };
 // Cuidados: o que a família escolhe no botão Cuidados, na ordem da tela. Tummy time e banho de sol
 // podem ter os minutos; "Outro cuidado" leva o que foi feito na observação.
-export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal', tummy: 'Tummy time', sunbath: 'Banho de sol', care: 'Outro cuidado' };
+export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal', tummy: 'Tummy time', sunbath: 'Banho de sol', burp: 'Arroto', care: 'Outro cuidado' };
+// Arroto: pôs para arrotar, arrotou ou os dois no mesmo registro (coluna burp).
+export const BURP = { put: 'Pôs para arrotar', done: 'Arrotou', both: 'Pôs para arrotar e arrotou' };
 export const CARE_MIN = ['tummy', 'sunbath'];
 const temp = c => Number(c).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' °C';
 // Qual peito: na mamada no peito e na ordenha.
@@ -134,6 +138,7 @@ export function label(e, evs) {
   if (e.kind === 'symptom') return e.symptom === 'outro' ? e.note || 'Sintoma'
     : (SYMPTOM[e.symptom] || 'Sintoma') + (e.temp_c != null ? ' · ' + temp(e.temp_c) : '') + (e.duration_min ? ' · durou ' + dur(e.duration_min * MIN) : '');
   if (e.kind === 'care') return e.note || CARE.care;
+  if (e.kind === 'burp') return BURP[e.burp] || CARE.burp;
   if (CARE[e.kind]) return CARE[e.kind] + (e.duration_min ? ' · ' + dur(e.duration_min * MIN) : '');
   return e.note || 'Outros';
 }
