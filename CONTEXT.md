@@ -288,7 +288,8 @@ hora de dormir e as 6h.
 _Evite_: causa, o que ajuda a dormir, padrão, análise do sono
 
 **Resumo do mês**:
-A aba Mês: os totais do mês atual (até agora) ou do anterior, inteiro. Mamadas, leite na mamadeira,
+A aba Mês: os totais do mês atual (até agora) ou de um mês anterior, inteiro, até o mês do nascimento
+(sem a data anotada, até o mês do cadastro do bebê). Mamadas, leite na mamadeira,
 tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que
 foi registrado.
 _Evite_: relatório, balanço, desempenho
@@ -313,7 +314,7 @@ _Evite_: ranking, placar, competição, quem mais cuidou
 
 **Calendário**:
 O mês que abre ao tocar na data, para escolher um dia dos últimos 60. No painel da semana, o dia
-escolhido é o último dos 7; no resumo do mês, escolhe o mês (o atual ou o anterior).
+escolhido é o último dos 7; no resumo do mês, escolhe o mês, desde o do nascimento.
 _Evite_: agenda
 
 ## Conversa com quem cuida do app

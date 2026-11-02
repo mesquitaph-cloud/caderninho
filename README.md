@@ -60,6 +60,17 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   https://claude.ai/artifact/YadD7hYqMp9r7sF4Z5rFT6. Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
   novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
   Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
+- **Aba Mês desde o nascimento (02/11, no `main` pelo #61):** o Patrick viu no TestFlight que
+  setembro não abria: a aba Mês só mostrava o mês atual e o anterior (decidido assim na criação da aba).
+  Agora as setas e o calendário do Mês voltam até o mês do nascimento; sem a data anotada, até o mês do
+  cadastro do bebê (o mês anterior continua sempre). Ao abrir, o app continua baixando só os últimos 60
+  dias; um mês mais antigo é buscado quando alguém chega nele ("Carregando…"; sem internet, "Não foi
+  possível carregar os registros.", e tenta de novo depois de 15 s) e fica no celular até o próximo
+  recarregamento. No calendário do Mês, a legenda virou "dia com registros" e saiu a frase "O resumo
+  mostra o mês atual e o anterior."; Dia e Semana continuam nos últimos 60 dias. Prévia e textos
+  aprovados em 02/11: https://claude.ai/artifact/PvjeMZL7qxbnfDE6cKJzkd. Não muda o banco. No iPhone e no
+  Android, só chega com a próxima compilação. Para testar: `testes/servidor.mjs` com os cenários
+  `nascimento` e `sem-nascimento`.
 - **Arroto em Cuidados (02/11, no `main` pelo #58):** opção nova "Arroto" em Qual cuidado, com
   "Pôs para arrotar" e "Arrotou", que se marcam como xixi e cocô: um ou os dois no mesmo registro, sem
   tempo. Na linha do tempo, "Pôs para arrotar", "Arrotou" ou "Pôs para arrotar e arrotou"; no botão

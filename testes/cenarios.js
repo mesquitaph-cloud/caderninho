@@ -22,6 +22,27 @@ Q.prototype.then = function (ok, ko) {
   if (this.t !== 'entries' || this.op !== 'select' || !window.testeLento) return thenFast.call(this, ok, ko);
   return new Promise(r => setTimeout(r, window.testeLento)).then(() => thenFast.call(this, ok, ko));
 };
+// window.testeFalha = true faz a leitura dos registros dar erro (como sem internet).
+const thenOk = Q.prototype.then;
+Q.prototype.then = function (ok, ko) {
+  if (this.t !== 'entries' || this.op !== 'select' || !window.testeFalha) return thenOk.call(this, ok, ko);
+  return Promise.resolve({ data: null, error: { message: 'teste' } }).then(ok, ko);
+};
+
+// "nascimento": a rotina vai até o dia em que a Helena nasceu (97 dias), para a aba Mês voltar até
+// julho. "sem-nascimento": o mesmo, sem a data de nascimento anotada (a aba Mês volta até o cadastro).
+if (CEN === 'nascimento' || CEN === 'sem-nascimento') {
+  for (let d = 96; d > 40; d--) {
+    const base = sod(NOW) - d * DAY, h = (hh, mm = 0) => base + hh * 36e5 + mm * MIN + Math.round((rnd() - .5) * 20) * MIN;
+    for (const hh of [0, 3, 6, 9, 12, 15, 18, 21]) {
+      const t = h(hh, 30), side = pick(['left', 'right', 'both']);
+      add(t, 'feed', { src: 'breast', side, left_min: side !== 'right' ? 12 : null, right_min: side !== 'left' ? 10 : null });
+      add(t + 25 * MIN, 'diaper', rnd() < .4 ? { pee: true, poo: true, poo_size: 'medio' } : { pee: true });
+    }
+    for (const [a, z] of [[1, 3], [4, 6], [7, 9], [10, 12], [13, 15], [16, 18], [19, 21], [22, 24.4]]) { add(h(a, 10), 'sleep'); add(h(z, 0), 'wake'); }
+  }
+  if (CEN === 'sem-nascimento') T.babies[0].birth_date = null;
+}
 
 let ME = U.me;
 const RPC = {};
