@@ -751,6 +751,10 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .nt-v .nt-a{color:var(--sleep-ink);background:var(--sleep);border-radius:6px}
 .nt-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .nt-bar i{display:block;height:100%;border-radius:3px}
+.nt-sub{margin:-4px 0 0;font-size:13px;color:var(--muted)}
+.nt-v1{display:flex;font-size:13px;font-variant-numeric:tabular-nums}
+.nt-v1 b{font-weight:500;padding:1px 6px;color:var(--sleep-ink);background:var(--sleep);border-radius:6px}
+.nt-sym{margin:0;font-size:13px;color:var(--muted)}
 .nt-defs{display:grid;gap:4px;background:var(--surface2);border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.4;color:var(--muted)}
 .nt-defs p{margin:0}
 .nt-defs b{font-weight:500;color:var(--ink)}
