@@ -281,8 +281,10 @@ _Evite_: causa, relação, correlação, análise do sono
 
 **Como foram as noites**:
 O cartão no fim da aba Mês que compara as noites mais longas (até 7, de 6 h ou mais) e as noites com 2 ou
-mais despertares entre 0h e 6h com as outras noites do mês, contando em quantas noites algo aconteceu
-antes de dormir. Grupos e cortes fixos; só põe lado a lado.
+mais despertares com as outras noites do mês, contando em quantas noites algo aconteceu antes de dormir.
+Grupos e cortes fixos; só põe lado a lado. **Hora de dormir**: o primeiro sono de mais de 3 h que começa
+entre 18h e 6h (o cochilo do começo da noite não conta). **Despertar**: acordou e voltou a dormir entre a
+hora de dormir e as 6h.
 _Evite_: causa, o que ajuda a dormir, padrão, análise do sono
 
 **Resumo do mês**:

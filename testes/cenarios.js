@@ -47,6 +47,8 @@ if (CEN === 'noites') {
   for (let d = 40; d >= 1; d--) {
     const base = sod(NOW) - d * DAY, bed = base + 19 * 36e5 + Math.round(rnd() * 120) * MIN, up = base + DAY + 6.5 * 36e5;
     const r = rnd(), cuts = r < .3 ? [bed + (6 + rnd() * 2) * 36e5] : r < .55 ? [base + DAY + 30 * MIN, base + DAY + 150 * MIN, base + DAY + 270 * MIN] : [base + DAY + 120 * MIN];
+    // Metade das noites com um cochilo curto às 18h, que não pode virar a hora de dormir.
+    if (rnd() < .5) { add(base + 18 * 36e5 + 10 * MIN, 'sleep'); add(base + 18 * 36e5 + 30 * MIN, 'wake'); }
     let s = bed;
     for (const c of cuts) { if (c >= up) break; add(s, 'sleep'); add(c, 'wake'); s = c + 25 * MIN; }
     add(s, 'sleep'); add(up, 'wake');
