@@ -33,16 +33,16 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   https://claude.ai/artifact/YadD7hYqMp9r7sF4Z5rFT6. Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
   novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
   Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
-- **Sono no colo e caixa para apagar (02/11, ramo `claude/colo-e-apagar`):** no Sono, "Quanto tempo no
+- **Sono no colo e caixa para apagar (02/11, no `main` pelo #56):** no Sono, "Quanto tempo no
   colo (opcional)" no Dormiu e no Acordou (atalhos 10, 20, 30 min e 1 h; de 1 a 600 min), na coluna nova
   `lap_min`. Aparece na linha do registro ("Dormiu · 20 min no colo") e no resumo da Semana e do Mês ("Sono
   no colo: 9h30 em 18 sonos", e no texto para a família); fica fora do relatório do pediatra. O "Acordou"
   da faixa continua salvando na hora, sem perguntar do colo. E todo "toque de novo para apagar" virou uma
   caixa de confirmação (Cancelar e Apagar): registro, dúvida, medida, marco, bebê, remover membro, apagar
   família, sair da família e apagar a conta. Prévia aprovada em 02/11:
-  https://claude.ai/artifact/Dy1u6aUe4YgCmzCGC1pAA8. **Antes de publicar:** rodar
-  `supabase/020_sono_no_colo.sql` no SQL Editor (sem ele, salvar o colo dá erro; o resto salva). No iPhone e
-  no Android, só chega com a próxima compilação.
+  https://claude.ai/artifact/Dy1u6aUe4YgCmzCGC1pAA8. `supabase/020_sono_no_colo.sql` rodado
+  pelo Patrick em 02/11 (coluna, regra e permissões conferidas pelo conector). No iPhone e no Android, só
+  chega com a próxima compilação.
 - **PR #45 (tela de bloqueio do iPhone):** testado no TestFlight em 29/10 (compilação do ramo
   `claude/mamada-iphone`, 31c94f7): tempo, "Trocar de peito", "Continuar" e "Terminar" ok. Sem conflito; Merge
   com o Patrick. Desde o ramo, o `main` só mudou README e `Mamada.java` (Android), então essa compilação já é a
