@@ -1,7 +1,7 @@
 import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, POO_SIZE } from './util.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
@@ -718,7 +718,7 @@ function renderGrid(last, open, now) {
     if (k === 'feed') { const t = ftGet(); if (t) return t.run ? 'mamando' : 'pausada'; }
     if (k === 'med') return medSub();
     if (k === 'symptom') return symptomSub(last, now);
-    if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outro cuidado' : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
+    if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outro cuidado' : c.kind === 'burp' ? (c.burp === 'put' ? 'pôs para arrotar' : 'arrotou') : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
     return e ? ago(e.t) : 'sem registro';
   };
   // Sobra no fim: o último ocupa o espaço que falta na linha.
@@ -770,6 +770,7 @@ function fields(ev) {
   if ('poo_size' in ev) Object.assign(f, { poo_size: ev.poo_size ?? null, poo_alert: ev.poo_alert ?? null });
   if (CARE[ev.kind]) f.duration_min = ev.duration_min ?? null;
   if ('lap_min' in ev) f.lap_min = ev.lap_min ?? null;
+  if (ev.kind === 'burp') f.burp = ev.burp;
   return f;
 }
 async function addEntry(ev) {
@@ -955,7 +956,7 @@ function openEntry(k, edit) {
         src: edit ? (edit.src || '') : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
-        pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
+        pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
         sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', err: '',
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '' };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
@@ -1003,6 +1004,8 @@ function drawEntry() {
     h += `<div><div class="lbl">Qual cuidado</div><div class="copts">${Object.entries(CARE).map(([id, n]) => `<button class="copt${S.ck === id ? ' on' : ''}" data-act="ck" data-val="${id}" aria-pressed="${S.ck === id}">${ICON[id]}<span>${id === 'care' ? 'Outro' : n}</span></button>`).join('')}</div></div>`;
     if (CARE_MIN.includes(S.ck)) h += `<div><div class="lbl">Quanto tempo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="10" aria-label="Minutos"><em>min</em></div>
       <div class="seg" style="margin-top:8px">${CARE_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m} min</button>`).join('')}</div></div>`;
+    // Arroto: como xixi e cocô, um ou os dois; cada registro é só o momento, sem tempo.
+    if (S.ck === 'burp') h += `<div><div class="lbl">Marque o que aconteceu</div><div class="seg ${c}" style="background:none">${opt('Pôs para arrotar', S.bput, 'bput', 1, 1)}${opt('Arrotou', S.bdone, 'bdone', 1, 1)}</div></div>`;
   }
   h += daySeg();
   if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
@@ -1054,6 +1057,7 @@ async function saveEntry(btn) {
   if (k === 'care') {
     if (!S.ck) { S.err = 'Escolha o cuidado.'; return drawEntry(); }
     if (S.ck === 'care' && !S.note.trim()) { S.err = 'Escreva o que foi feito.'; return drawEntry(); }
+    if (S.ck === 'burp' && !S.bput && !S.bdone) { S.err = 'Marque pôs para arrotar, arrotou ou os dois.'; return drawEntry(); }
     if (CARE_MIN.includes(S.ck) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo vai de 1 a 600 minutos.'; return drawEntry(); }
   }
   if (k === 'sleep' && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo no colo vai de 1 a 600 minutos.'; return drawEntry(); }
@@ -1062,6 +1066,7 @@ async function saveEntry(btn) {
   // Só manda o colo quando há o que mandar (ou apagar): sem o 020, o resto do sono continua salvando.
   if (k === 'sleep' && (S.dmin !== '' || S.edit?.lap_min)) ev.lap_min = S.dmin !== '' ? dmin : null;
   if (k === 'care') ev.duration_min = CARE_MIN.includes(S.ck) && S.dmin !== '' ? dmin : null;
+  if (ev.kind === 'burp') ev.burp = S.bput && S.bdone ? 'both' : S.bput ? 'put' : 'done';
   if (ev.kind === 'symptom') {
     ev.symptom = S.sym;
     if (S.sym === 'febre' && S.temp !== '') ev.temp_c = Math.round(temp * 10) / 10;
@@ -2266,6 +2271,7 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'sym') { S.sym = v; if (v !== 'febre') S.temp = ''; if (!withDuration(v)) S.dmin = ''; }
   else if (a === 'ck') { S.ck = v; if (!CARE_MIN.includes(v)) S.dmin = ''; }
   else if (a === 'dchip') S.dmin = +S.dmin === +v ? '' : v;
+  else if (a === 'bput' || a === 'bdone') S[a] = !S[a];
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
   else if (a === 'psize') S.psize = S.psize === v ? null : v;
   else if (a === 'palert') { S.palert = !S.palert; S.wig = S.palert; }
