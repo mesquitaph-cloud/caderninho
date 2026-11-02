@@ -60,7 +60,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   https://claude.ai/artifact/YadD7hYqMp9r7sF4Z5rFT6. Nunca depois de febre, sintomas ou remédio; nada no site. Plugin nativo
   novo: só funciona a partir da próxima compilação. No Android, a janela só aparece com o app instalado pela
   Play Store. Falta decidir a linha "Avaliar o Soneca" nos Ajustes (prévia antes de programar).
-- **Aba Mês desde o nascimento (02/11, ramo `claude/mes-nascimento`):** o Patrick viu no TestFlight que
+- **Aba Mês desde o nascimento (02/11, no `main` pelo #61):** o Patrick viu no TestFlight que
   setembro não abria: a aba Mês só mostrava o mês atual e o anterior (decidido assim na criação da aba).
   Agora as setas e o calendário do Mês voltam até o mês do nascimento; sem a data anotada, até o mês do
   cadastro do bebê (o mês anterior continua sempre). Ao abrir, o app continua baixando só os últimos 60
