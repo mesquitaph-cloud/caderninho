@@ -729,6 +729,9 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .nt-v .nt-a{color:var(--sleep-ink);background:var(--sleep);border-radius:6px}
 .nt-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 .nt-bar i{display:block;height:100%;border-radius:3px}
+.nt-defs{display:grid;gap:4px;background:var(--surface2);border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.4;color:var(--muted)}
+.nt-defs p{margin:0}
+.nt-defs b{font-weight:500;color:var(--ink)}
 .nt-few{margin:0;background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.4}
 
 /* Página das lojas (inicio/): soneca.app.br sem o app, só com os selos da App Store e do Google Play */

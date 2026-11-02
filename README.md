@@ -290,6 +290,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     dia e de noite. Dois textos que não estavam na prévia, aprovados pelo Patrick em 01/11: "Dormiu 6 horas seguidas
     ou mais em X de N noites. São poucas as outras para comparar." e "Ainda são poucas noites com 2 ou
     mais despertares para comparar: X de N."
+    **Correção em 02/11** (o Patrick viu que não batia com o sono da Marina): a hora de dormir era o
+    primeiro sono depois das 18h, e o cochilo do começo da noite virava a hora de dormir em quase toda
+    noite, o que falseava banho, mamada e soneca "antes de dormir". Agora é o primeiro sono de mais de
+    3 h que começa entre 18h e 6h; o despertar conta da hora de dormir às 6h (antes, só de 0h às 6h); e
+    a noite sem sono de mais de 3 h fica fora das linhas de "antes de dormir". As duas definições
+    aparecem escritas no cartão. Prévia aprovada em 02/11: https://claude.ai/artifact/WPDLkEEwTS78BkJ3HbGwZL
 18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
     discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
 

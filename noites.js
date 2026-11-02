@@ -2,13 +2,17 @@
 // https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b). Compara grupos fixos de noites com as outras
 // do mês, contando em quantas noites algo aconteceu. Só põe lado a lado: não procura associações nem
 // diz o que ajuda o bebê a dormir (CONTEXT.md).
-//   Noite: o sono que começa entre 18h e 6h. Madrugada: 0h às 6h; despertar é um "acordou" nesse
-//   horário seguido de outro "dormiu" antes das 6h. Soneca: o sono que começa entre 6h e 18h.
+//   Noite: o sono que começa entre 18h e 6h. Soneca: o sono que começa entre 6h e 18h.
+//   Hora de dormir: o primeiro sono de mais de 3 h da noite (02/11; antes era o primeiro sono, e o
+//   cochilo do começo da noite virava a hora de dormir). Prévia: https://claude.ai/artifact/WPDLkEEwTS78BkJ3HbGwZL
+//   Despertar: um "acordou" entre a hora de dormir e as 6h seguido de outro "dormiu" antes das 6h.
+//   Noite sem sono de mais de 3 h: conta nas noites mais longas e nos despertares (a partir de 0h),
+//   mas fica fora das linhas de "antes de dormir".
 //   Noites mais longas: as até 7 de maior sono seguido, só as de 6 h ou mais.
 //   Cada lado precisa de pelo menos 3 noites; senão, só a contagem.
 import { HOUR, esc, dur, addDays, MESES_L } from './util.js';
 
-const LONG = 6 * HOUR, TOP = 7, FEW = 3, MAX_SLEEP = 14 * HOUR;
+const LONG = 6 * HOUR, BED = 3 * HOUR, TOP = 7, FEW = 3, MAX_SLEEP = 14 * HOUR;
 const at = (d0, h) => d0 + h * HOUR; // d0 é início do dia; ok para 6h e 18h (a troca de horário é à meia-noite)
 
 // Uma noite por dia d: os sonos que começam em [d 18h, d+1 6h).
@@ -20,8 +24,13 @@ function nights(a, z, evs, sleeps, now) {
     if (w1 > now) break;
     const ns = ivs.filter(([x]) => x >= w0 && x < w1);
     if (!ns.length) continue;
-    const bed = ns[0][0];
-    const wakes = ns.filter(([, y], i) => y >= d1 && y < w1 && ns[i + 1]).length;
+    const main = ns.find(([x, y]) => y - x > BED), bed = main ? main[0] : null, from = bed ?? d1;
+    const longest = Math.max(...ns.map(([x, y]) => y - x));
+    const wakes = ns.filter(([x, y], i) => x >= from && y >= from && y < w1 && ns[i + 1]).length;
+    if (bed === null) {
+      out.push({ longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
+      continue;
+    }
     // O dia que veio antes: das 6h até a hora de dormir.
     const day0 = at(d, 6), dayEvs = evs.filter(e => e.t >= day0 && e.t < bed);
     const naps = ivs.filter(([x, y]) => x >= day0 && x < at(d, 18) && y <= bed);
@@ -29,7 +38,7 @@ function nights(a, z, evs, sleeps, now) {
     const lastFeed = feeds.filter(e => e.t < bed && e.t >= bed - 24 * HOUR).at(-1);
     const any = dayEvs.length > 0 || naps.length > 0;
     out.push({
-      longest: Math.max(...ns.map(([x, y]) => y - x)), wakes,
+      longest, wakes,
       late: (bed - d) > 20 * HOUR,
       bath: baths.some(e => e.t >= bed - 3 * HOUR && e.t <= bed),
       feedSoon: lastFeed ? bed - lastFeed.t < 2 * HOUR : null,
@@ -81,9 +90,10 @@ export function nightsHtml({ a, z, evs, sleeps, now }) {
     : group(T1, `${top.length} noites com 6 h ou mais`, top, all.filter(n => !top.includes(n)), rs);
   const bad = all.filter(n => n.wakes >= 2);
   const g2 = bad.length < FEW ? fewBox(T2, `Ainda são poucas noites com 2 ou mais despertares para comparar: ${bad.length} de ${N}.`)
-    : N - bad.length < FEW ? fewBox(T2, `Acordou 2 ou mais vezes entre 0h e 6h em ${bad.length} de ${N} noites. São poucas as outras para comparar.`)
-    : group(T2, `${bad.length} noites que acordou 2 ou mais vezes entre 0h e 6h`, bad, all.filter(n => n.wakes < 2), rs);
+    : N - bad.length < FEW ? fewBox(T2, `Acordou 2 ou mais vezes durante a noite em ${bad.length} de ${N} noites. São poucas as outras para comparar.`)
+    : group(T2, `${bad.length} noites com 2 ou mais despertares`, bad, all.filter(n => n.wakes < 2), rs);
   return `<div class="card nt"><h3>Como foram as noites</h3>
-    <p class="cap">${MESES_L[new Date(a).getMonth()]}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado. Noite é o sono que começa entre 18h e 6h.</p>
+    <p class="cap">${MESES_L[new Date(a).getMonth()]}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado.</p>
+    <div class="nt-defs"><p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p></div>
     ${g1}${g2}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
 }
