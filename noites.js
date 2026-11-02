@@ -1,24 +1,28 @@
 // "Como foram as noites" (aba Mês, decidido com o Patrick em 01/11; prévia aprovada:
-// https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b). Compara grupos fixos de noites com as outras
-// do mês, contando em quantas noites algo aconteceu. Só põe lado a lado: não procura associações nem
-// diz o que ajuda o bebê a dormir (CONTEXT.md).
+// https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b). Compara as noites de 6 h seguidas ou mais com
+// as outras do mês, contando em quantas noites algo aconteceu, e resume os despertares do mês. Só põe
+// lado a lado: não procura associações nem diz o que ajuda o bebê a dormir (CONTEXT.md).
 //   Noite: o sono que começa entre 18h e 6h. Soneca: o sono que começa entre 6h e 18h.
 //   Hora de dormir: o primeiro sono de mais de 3 h da noite (02/11; antes era o primeiro sono, e o
 //   cochilo do começo da noite virava a hora de dormir). Prévia: https://claude.ai/artifact/WPDLkEEwTS78BkJ3HbGwZL
 //   Despertar: um "acordou" entre a hora de dormir e as 6h seguido de outro "dormiu" antes das 6h.
-//   Noite sem sono de mais de 3 h: conta nas noites mais longas e nos despertares (a partir de 0h),
+//   Noite sem sono de mais de 3 h: conta nas noites de 6 h e nos despertares (a partir de 0h),
 //   mas fica fora das linhas de "antes de dormir".
-//   Noites mais longas: as até 7 de maior sono seguido, só as de 6 h ou mais.
-//   Cada lado precisa de pelo menos 3 noites; senão, só a contagem.
-import { HOUR, esc, dur, addDays, MESES_L } from './util.js';
+//   Noites de 6 h: todas as de maior sono seguido de 6 h ou mais, contra as de menos (02/11; antes eram
+//   só as 7 mais longas). Cada lado precisa de pelo menos 3 noites; senão, só a contagem.
+//   Os despertares (02/11, no lugar da comparação das noites com 2 ou mais): quantos, o tempo médio do
+//   "acordou" ao "dormiu" seguinte, em quantos mamou e em quantos teve sintoma ou vômito anotado nesse
+//   intervalo, com o nome de cada sintoma.
+import { HOUR, esc, dur, addDays, MESES_L, SYMPTOM } from './util.js';
 
-const LONG = 6 * HOUR, BED = 3 * HOUR, TOP = 7, FEW = 3, MAX_SLEEP = 14 * HOUR;
+const LONG = 6 * HOUR, BED = 3 * HOUR, FEW = 3, MAX_SLEEP = 14 * HOUR;
 const at = (d0, h) => d0 + h * HOUR; // d0 é início do dia; ok para 6h e 18h (a troca de horário é à meia-noite)
 
 // Uma noite por dia d: os sonos que começam em [d 18h, d+1 6h).
 function nights(a, z, evs, sleeps, now) {
   const out = [], ivs = sleeps.filter(([x, y]) => y - x <= MAX_SLEEP);
   const feeds = evs.filter(e => e.kind === 'feed'), baths = evs.filter(e => e.kind === 'bath');
+  const syms = evs.filter(e => e.kind === 'symptom' || e.kind === 'vomit');
   for (let d = a; d < z; d = addDays(d, 1)) {
     const d1 = addDays(d, 1), w0 = at(d, 18), w1 = at(d1, 6);
     if (w1 > now) break;
@@ -26,7 +30,12 @@ function nights(a, z, evs, sleeps, now) {
     if (!ns.length) continue;
     const main = ns.find(([x, y]) => y - x > BED), bed = main ? main[0] : null, from = bed ?? d1;
     const longest = Math.max(...ns.map(([x, y]) => y - x));
-    const wakes = ns.filter(([x, y], i) => x >= from && y >= from && y < w1 && ns[i + 1]).length;
+    // Cada despertar: do "acordou" (y) ao "dormiu" seguinte (back).
+    const wakes = ns.flatMap(([x, y], i) => {
+      if (!(x >= from && y >= from && y < w1 && ns[i + 1])) return [];
+      const back = ns[i + 1][0], inWake = e => e.t >= y && e.t < back;
+      return [{ awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
+    });
     if (bed === null) {
       out.push({ longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
       continue;
@@ -68,32 +77,42 @@ function rows(all, evs, a, z) {
 
 const pct = (x, n) => Math.round(100 * x / n);
 const val = (x, n, cls, col) => `<div class="nt-v"><b class="${cls}">${x} de ${n} (${pct(x, n)}%)</b><span class="nt-bar"><i style="width:${pct(x, n)}%;background:var(${col})"></i></span></div>`;
-function group(title, keyA, inA, rest, rs) {
+function group(title, keyA, keyB, inA, rest, rs) {
   const items = rs.map(([txt, f]) => {
     const ya = inA.map(f).filter(v => v !== null), yb = rest.map(f).filter(v => v !== null);
     if (!ya.length || !yb.length) return '';
     return `<div class="nt-it"><p>${txt}</p>${val(ya.filter(Boolean).length, ya.length, 'nt-a', '--c-sleep')}${val(yb.filter(Boolean).length, yb.length, 'nt-b', '--curve-mid')}</div>`;
   }).join('');
-  return `<div class="nt-g"><h4>${title}</h4><div class="nt-key"><span><i class="nt-ia"></i>${keyA}</span><span><i class="nt-ib"></i>${rest.length} outras noites</span></div>${items}</div>`;
+  return `<div class="nt-g"><h4>${title}</h4><div class="nt-key"><span><i class="nt-ia"></i>${keyA}</span><span><i class="nt-ib"></i>${keyB}</span></div>${items}</div>`;
 }
 const fewBox = (title, text) => `<div class="nt-g"><h4>${title}</h4><p class="nt-few">${text}</p></div>`;
+const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+// Os despertares do mês, sem comparar: tempo até voltar a dormir, mamada e sintoma.
+function wakesBox(all, month) {
+  const T = 'Os despertares', ws = all.flatMap(n => n.wakes), W = ws.length;
+  if (!W) return fewBox(T, `Nenhum despertar anotado em ${month}.`);
+  const sym = ws.filter(w => w.syms.length).length, counts = {};
+  for (const s of ws.flatMap(w => w.syms)) counts[s] = (counts[s] || 0) + 1;
+  const list = Object.entries(counts).sort((x, y) => y[1] - x[1]).map(([s, c]) => `${esc(s)} (${c})`).join(', ');
+  return `<div class="nt-g"><h4>${T}</h4><p class="nt-sub">${plural(W, 'despertar', 'despertares')} em ${plural(all.length, 'noite', 'noites')}.</p>
+    <div class="nt-it"><p>Tempo médio até voltar a dormir</p><div class="nt-v1"><b class="nt-a">${dur(mean(ws.map(w => w.awake)))}</b></div></div>
+    <div class="nt-it"><p>Mamou durante o despertar</p>${val(ws.filter(w => w.fed).length, W, 'nt-a', '--c-sleep')}</div>
+    <div class="nt-it"><p>Sintoma anotado durante o despertar</p>${val(sym, W, 'nt-a', '--c-sleep')}${list ? `<p class="nt-sym">${list}</p>` : ''}</div></div>`;
+}
 
 // a, z: o mês [a, z). sleeps: os sonos fechados, [dormiu, acordou].
 export function nightsHtml({ a, z, evs, sleeps, now }) {
   const all = nights(a, z, evs, sleeps, now), N = all.length;
   if (!N) return '';
   const rs = rows(all, evs, a, z);
-  const T1 = 'As noites mais longas', T2 = 'As noites com 2 ou mais despertares';
-  const top = all.filter(n => n.longest >= LONG).sort((x, y) => y.longest - x.longest).slice(0, TOP);
+  const T1 = 'As noites com 6 h seguidas ou mais', month = MESES_L[new Date(a).getMonth()];
+  const top = all.filter(n => n.longest >= LONG), rest = all.filter(n => n.longest < LONG);
   const g1 = top.length < FEW ? fewBox(T1, `Ainda são poucas noites com 6 horas seguidas para comparar: ${top.length} de ${N}.`)
-    : N - top.length < FEW ? fewBox(T1, `Dormiu 6 horas seguidas ou mais em ${top.length} de ${N} noites. São poucas as outras para comparar.`)
-    : group(T1, `${top.length} noites com 6 h ou mais`, top, all.filter(n => !top.includes(n)), rs);
-  const bad = all.filter(n => n.wakes >= 2);
-  const g2 = bad.length < FEW ? fewBox(T2, `Ainda são poucas noites com 2 ou mais despertares para comparar: ${bad.length} de ${N}.`)
-    : N - bad.length < FEW ? fewBox(T2, `Acordou 2 ou mais vezes durante a noite em ${bad.length} de ${N} noites. São poucas as outras para comparar.`)
-    : group(T2, `${bad.length} noites com 2 ou mais despertares`, bad, all.filter(n => n.wakes < 2), rs);
+    : rest.length < FEW ? fewBox(T1, `Dormiu 6 horas seguidas ou mais em ${top.length} de ${N} noites. São poucas as outras para comparar.`)
+    : group(T1, `${top.length} noites com 6 h ou mais`, `${rest.length} noites com menos de 6 h`, top, rest, rs);
   return `<div class="card nt"><h3>Como foram as noites</h3>
-    <p class="cap">${MESES_L[new Date(a).getMonth()]}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado.</p>
+    <p class="cap">${month}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado.</p>
     <div class="nt-defs"><p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p></div>
-    ${g1}${g2}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
+    ${g1}${wakesBox(all, month.toLowerCase())}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
 }

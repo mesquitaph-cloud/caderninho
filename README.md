@@ -296,6 +296,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     3 h que começa entre 18h e 6h; o despertar conta da hora de dormir às 6h (antes, só de 0h às 6h); e
     a noite sem sono de mais de 3 h fica fora das linhas de "antes de dormir". As duas definições
     aparecem escritas no cartão. Prévia aprovada em 02/11: https://claude.ai/artifact/WPDLkEEwTS78BkJ3HbGwZL
+    **Segunda mudança em 02/11** (mesma prévia, versão 3): o primeiro grupo vira todas as noites de 6 h
+    seguidas ou mais contra as de menos de 6 h (o limite de 7 deixava 15 noites de 6 h da Marina entre as
+    "outras"). O grupo dos despertares deixa de comparar e resume os despertares do mês: tempo médio até
+    voltar a dormir, mamou durante o despertar e sintoma anotado durante o despertar, com o nome de cada
+    sintoma (botão Sintomas e vômito). O Patrick escolheu mostrar o nome sabendo que fica mais perto de
+    sugerir causa; a decisão de 01/11 de deixar sintomas de fora ficou só para as linhas de "antes de dormir".
 18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
     discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
 

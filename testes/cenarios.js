@@ -50,7 +50,16 @@ if (CEN === 'noites') {
     // Metade das noites com um cochilo curto às 18h, que não pode virar a hora de dormir.
     if (rnd() < .5) { add(base + 18 * 36e5 + 10 * MIN, 'sleep'); add(base + 18 * 36e5 + 30 * MIN, 'wake'); }
     let s = bed;
-    for (const c of cuts) { if (c >= up) break; add(s, 'sleep'); add(c, 'wake'); s = c + 25 * MIN; }
+    // Nos despertares: às vezes mamadeira, de vez em quando cólica, tosse ou vômito.
+    for (const c of cuts) {
+      if (c >= up) break;
+      add(s, 'sleep'); add(c, 'wake'); s = c + 25 * MIN;
+      if (rnd() < .6) add(c + 5 * MIN, 'feed', { src: 'bottle', ml: 90 });
+      const r2 = rnd();
+      if (r2 < .08) add(c + 10 * MIN, 'symptom', { symptom: 'colica' });
+      else if (r2 < .12) add(c + 10 * MIN, 'symptom', { symptom: 'tosse' });
+      else if (r2 < .14) add(c + 10 * MIN, 'vomit');
+    }
     add(s, 'sleep'); add(up, 'wake');
   }
 }
