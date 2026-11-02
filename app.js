@@ -2476,7 +2476,11 @@ function shareReport(how) {
   if (how === 'share') return navigator.share({ text }).catch(() => {});
   navigator.clipboard.writeText(text).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
 }
-$('monthView').addEventListener('click', e => { const sh = e.target.closest('[data-share]'); if (sh) shareReport(sh.dataset.share); });
+$('monthView').addEventListener('click', e => {
+  const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
+  // As noites com mais despertares (noites.js): tocar abre o dia em que a noite começou.
+  const o = e.target.closest('[data-open]'); if (o) openDay(+o.dataset.open);
+});
 // Painel da semana: filtro, métrica e tocar num dia para abrir a linha do tempo dele.
 function openDay(d0) {
   st.viewDay = d0; st.view = 'day'; render();

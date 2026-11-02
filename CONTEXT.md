@@ -282,7 +282,9 @@ _Evite_: causa, relação, correlação, análise do sono
 **Como foram as noites**:
 O cartão no fim da aba Mês que compara as noites com 6 h seguidas ou mais com as de menos, contando em
 quantas noites algo aconteceu antes de dormir, e resume os despertares do mês (tempo médio até voltar a
-dormir, em quantos mamou, em quantos teve sintoma anotado e qual). Cortes fixos; só põe lado a lado. **Hora de dormir**: o primeiro sono de mais de 3 h que começa
+dormir, em quantos mamou, em quantos teve sintoma anotado e qual, em quantas noites houve despertar e a
+média só nessas noites). No fim, **as noites com mais despertares e o que veio antes**: as 3 do mês, com
+a hora de dormir, a última mamada e o último cocô, como em "Os maiores sonos e o que veio antes". Cortes fixos; só põe lado a lado. **Hora de dormir**: o primeiro sono de mais de 3 h que começa
 entre 18h e 6h (o cochilo do começo da noite não conta). **Despertar**: acordou e voltou a dormir entre a
 hora de dormir e as 6h.
 _Evite_: causa, o que ajuda a dormir, padrão, análise do sono
@@ -291,7 +293,8 @@ _Evite_: causa, o que ajuda a dormir, padrão, análise do sono
 A aba Mês: os totais do mês atual (até agora) ou de um mês anterior, inteiro, até o mês do nascimento
 (sem a data anotada, até o mês do cadastro do bebê). Mamadas, leite na mamadeira,
 tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que
-foi registrado.
+foi registrado. **Sono de dia**: a média por dia dos sonos que começam entre 6h e 18h, nos mesmos dias
+da média de sono por dia.
 _Evite_: relatório, balanço, desempenho
 
 **Resumo para mandar**:

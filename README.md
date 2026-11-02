@@ -313,6 +313,14 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     voltar a dormir, mamou durante o despertar e sintoma anotado durante o despertar, com o nome de cada
     sintoma (botão Sintomas e vômito). O Patrick escolheu mostrar o nome sabendo que fica mais perto de
     sugerir causa; a decisão de 01/11 de deixar sintomas de fora ficou só para as linhas de "antes de dormir".
+    **Terceira mudança em 02/11** (pedidos da Carol): "Os despertares" ganha "Noites com despertar" (X de N)
+    e "Média nas noites com despertar" (por noite, só nas noites com despertar). Grupo novo no fim, "As
+    noites com mais despertares e o que veio antes", no formato de "Os maiores sonos": as 3 noites com mais
+    despertares (empate: a mais recente primeiro), com hora de dormir, última mamada e último cocô antes;
+    tocar abre o dia em que a noite começou. No resumo do mês, a linha "Sono de dia" (média por dia dos
+    sonos que começam entre 6h e 18h); a mensagem para a família não muda. Prévia aprovada em 02/11:
+    https://claude.ai/artifact/W9ZLLSQzxCtDCrJ5JxEzoq. Um texto fora da prévia, aprovado pelo Patrick em
+    02/11: "Primeiro sono: 21:00" no lugar de "Hora de dormir", na noite sem sono de mais de 3 h.
 18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
     discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
 
