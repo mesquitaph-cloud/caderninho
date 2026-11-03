@@ -117,8 +117,12 @@ const temp = c => Number(c).toLocaleString('pt-BR', { minimumFractionDigits: 1, 
 const SIDE = { left: 'peito esquerdo', right: 'peito direito', both: 'os dois peitos' };
 export const SIDE_SHORT = { left: 'esquerdo', right: 'direito', both: 'os dois' };
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+// "Pegou no sono sozinha" (02/11), marcado no Dormiu: menina ou menino pelo cadastro; sem ele, "por
+// conta própria".
+export const aloneText = sex => 'pegou no sono ' + (sex === 'F' ? 'sozinha' : sex === 'M' ? 'sozinho' : 'por conta própria');
 
-export function label(e, evs) {
+// sex: o do bebê, para o "pegou no sono sozinha".
+export function label(e, evs, sex) {
   if (e.kind === 'feed') {
     if (e.src === 'bottle') return 'Mamadeira' + (e.ml ? ' · ' + e.ml + ' ml' : '');
     if (e.src !== 'breast') return 'Mamada';
@@ -127,7 +131,7 @@ export function label(e, evs) {
   }
   if (e.kind === 'pump') return 'Ordenha · ' + e.ml + ' ml';
   const lap = e.lap_min ? dur(e.lap_min * MIN) + ' no colo' : '';
-  if (e.kind === 'sleep') return 'Dormiu' + (lap ? ' · ' + lap : '');
+  if (e.kind === 'sleep') return 'Dormiu' + (e.self_settled ? ' · ' + aloneText(sex) : lap ? ' · ' + lap : '');
   if (e.kind === 'wake') { const s = sleepBefore(evs, e); return s !== null ? 'Acordou · dormiu ' + dur(e.t - s) + (lap ? ', ' + lap : '') : 'Acordou' + (lap ? ' · ' + lap : ''); }
   if (e.kind === 'diaper') {
     const poo = 'cocô' + (e.poo_size ? ' ' + POO_SIZE[e.poo_size] : '');

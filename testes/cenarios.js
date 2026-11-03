@@ -15,6 +15,13 @@ Q.prototype.then = function (ok, ko) {
   return Promise.resolve({ data: [], error: null }).then(ok, ko);
 };
 
+// Quem anotou: no banco de verdade, a trava do 001 põe quem está logado.
+const thenAuthor = Q.prototype.then;
+Q.prototype.then = function (ok, ko) {
+  if (this.t === 'entries' && this.op === 'insert' && this.row) this.row = { ...this.row, author_id: ME };
+  return thenAuthor.call(this, ok, ko);
+};
+
 // window.testeLento = 3000 deixa a leitura dos registros 3 segundos mais lenta (para ver a tela durante
 // um recarregamento, como ao voltar para o app).
 const thenFast = Q.prototype.then;
@@ -176,6 +183,18 @@ if (CEN === 'app-politica') {
     registerPlugin: name => name === 'Browser' ? { open: async o => { window.abertos.push(o.url); } }
       : name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
       : new Proxy({}, { get: () => async () => ({}) }) };
+}
+
+// "quem-fez": quem fez diferente de quem anotou e "pegou no sono sozinha" (02/11). Nos últimos 30
+// dias, 1 a cada 4 "Dormiu" pegou no sono sozinha, e as mamadeiras e fraldas que o Pedro anotou foi
+// a Carol que fez.
+if (CEN === 'quem-fez') {
+  let i = 0;
+  for (const e of entries) {
+    if (Date.parse(e.at) < sod(NOW) - 30 * DAY) continue;
+    if (e.kind === 'sleep' && i++ % 4 === 0) e.self_settled = true;
+    if (e.author_id === U.p && (e.kind === 'diaper' || (e.kind === 'feed' && e.src === 'bottle'))) e.done_by = U.me;
+  }
 }
 
 const baseClient = createClient;

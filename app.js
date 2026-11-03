@@ -1,7 +1,7 @@
 import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE } from './util.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE, aloneText } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
@@ -418,7 +418,7 @@ async function loadEntries() {
     for (const r of data) fresh.set(r.id, withT(r));
     if (data.length < 1000) break;
   }
-  await loadNames([...fresh.values()].map(e => e.author_id));
+  await loadNames([...fresh.values()].flatMap(e => [e.author_id, e.done_by]));
   if (entryQ !== q) return;   // outro recarregamento começou depois deste
   entryQ = null;
   if (st.baby?.id !== b.id) return;
@@ -442,7 +442,7 @@ async function loadOlder(m) {
     for (const r of data) got.set(r.id, withT(r));
     if (data.length < 1000) break;
   }
-  await loadNames([...got.values()].map(e => e.author_id));
+  await loadNames([...got.values()].flatMap(e => [e.author_id, e.done_by]));
   olderQ = null;
   // Recarregou ou trocou de bebê no meio: o que veio fica de fora, e a tela pede de novo se precisar.
   if (st.entries === map && st.baby?.id === b.id && entriesFrom === until) {
@@ -513,7 +513,7 @@ function subscribe(fid) {
   st.channel = sb.channel('familia-' + fid)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'entries', filter: 'family_id=eq.' + fid }, async p => {
       applyEntry(st.entries, p); entryQ?.push(p); olderQ?.push(p);
-      if (p.eventType !== 'DELETE' && st.baby && p.new.baby_id === st.baby.id) await loadNames([p.new.author_id]);
+      if (p.eventType !== 'DELETE' && st.baby && p.new.baby_id === st.baby.id) await loadNames([p.new.author_id, p.new.done_by]);
       refresh();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'medicines', filter: 'family_id=eq.' + fid }, p => {
@@ -621,7 +621,7 @@ function renderHome() {
       $('monthView').innerHTML = `<div class="empty">${olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'}</div>`;
       return;
     }
-    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs });
+    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs, sex: b.sex });
     const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
     st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês', div }) : '';
@@ -640,7 +640,7 @@ function renderHome() {
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
     const wa = addDays(st.weekEnd, -6), wz = addDays(st.weekEnd, 1);
-    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs });
+    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs, sex: b.sex });
     const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
@@ -669,10 +669,9 @@ function renderHome() {
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
     : !rows.length ? `<div class="empty">${d0 === today ? 'Toque num botão acima para anotar o primeiro.' : 'Nada registrado neste dia.'}</div>`
     : rows.slice().reverse().map(e => {
-        const who = e.author_id ? st.names[e.author_id] : '';
         const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
-        const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
-        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
+        const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', esc(byText(e))].filter(Boolean).join(' · ');
+        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs, b.sex))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
       }).join('');
 }
 
@@ -813,6 +812,9 @@ function fields(ev) {
   if (CARE[ev.kind]) f.duration_min = ev.duration_min ?? null;
   if ('lap_min' in ev) f.lap_min = ev.lap_min ?? null;
   if (ev.kind === 'burp') f.burp = ev.burp;
+  // Quem fez e o "pegou no sono sozinha" também só vão quando há o que mandar (ou apagar): sem o 022.
+  if ('done_by' in ev) f.done_by = ev.done_by ?? null;
+  if ('self_settled' in ev) f.self_settled = ev.self_settled ?? null;
   return f;
 }
 async function addEntry(ev) {
@@ -892,8 +894,28 @@ const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3>
 const opt = (txt, on, act, val, big) => `<button class="opt${big ? ' big' : ''}${on ? ' on' : ''}" data-act="${act}" data-val="${val}">${txt}</button>`;
 const mlBlock = k => `<div><div class="lbl">Quantidade</div><div class="seg k-${k}" style="background:none;margin-bottom:10px">${[30,60,90,120,150,180].map(v => opt(v + ' ml', +S.ml === v, 'ml', v)).join('')}</div>
   <div class="ml"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>`;
+// Quem fez (02/11): opcional, nada marcado de saída; um toque escolhe, outro desmarca. Só com duas
+// pessoas ou mais na família. Não têm: peito e ordenha (só quem amamenta faz), o Acordou e o sono que
+// pegou sozinho (ninguém fez dormir), sintomas, vômito e Outro. A dose pulada também não.
+const canBy = () => st.members.length > 1 && (S.k === 'feed' ? S.src === 'bottle'
+  : S.k === 'sleep' ? S.sk === 'sleep' && !S.alone : S.k === 'med' ? !S.edit?.skipped : S.k === 'diaper' || S.k === 'care');
+// Você primeiro, depois os outros pelo primeiro nome, dividindo a linha por igual (4 pessoas: 2 por linha).
+function byHtml(k, lbl) {
+  const ms = [...st.members].sort((a, b) => (b.user_id === st.user.id) - (a.user_id === st.user.id));
+  const n = ms.length === 4 ? 2 : Math.min(ms.length, 3);
+  return `<div><div class="lbl">${lbl} <small>(opcional)</small></div><div class="whos k-${k}" style="--n:${n};background:none">${ms.map(m =>
+    opt(m.user_id === st.user.id ? 'Você' : esc(firstName(m.user_id)), S.by === m.user_id, 'by', esc(m.user_id))).join('')}</div></div>`;
+}
+// O "Dormiu" que um "Acordou" às t fecha: o primeiro depois do último "Acordou", como em sleepIntervals.
+function sleepOf(t) {
+  let s = null;
+  for (const e of sortedEntries()) { if (e.t >= t) break; if (e.kind === 'sleep') s = s ?? e; if (e.kind === 'wake') s = null; }
+  return s;
+}
+// O tempo no colo some no sono que pegou sozinho: no "Dormiu" marcado e no "Acordou" que fecha esse sono.
+const lapShown = () => S.sk === 'sleep' ? !S.alone : !sleepOf(computeT())?.self_settled;
 // Peito na mamada: um toque marca o peito; mexer nos minutos também marca, desmarcar apaga os minutos.
-const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>`;
+const CHECK =`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>`;
 const sideRow = (key, name) => `<div class="side${S[key] ? ' on' : ''}" id="row-${key}">
   <button class="pick" data-act="pick" data-val="${key}" aria-pressed="${S[key]}"><span class="ck">${CHECK}</span><b>${name}</b></button>
   <div class="step"><button data-act="minstep" data-val="${key}:-1" aria-label="Menos 1 minuto no peito ${name.toLowerCase()}">−</button>
@@ -1000,7 +1022,8 @@ function openEntry(k, edit) {
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
         sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', err: '',
-        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '' };
+        sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '',
+        by: edit?.done_by || null, alone: !!edit?.self_settled };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   drawEntry();
 }
@@ -1052,9 +1075,12 @@ function drawEntry() {
   h += daySeg();
   if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
-  // Sono: quanto tempo foi no colo, opcional, no Dormiu ou no Acordou.
-  if (k === 'sleep') h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
+  // Sono: no Dormiu, se pegou no sono sozinho (marcado, o colo e o quem fez somem); quanto tempo foi no
+  // colo, opcional, no Dormiu ou no Acordou.
+  if (k === 'sleep' && S.sk === 'sleep') { const t = aloneText(st.baby.sex); h += `<div class="alone k-sleep" style="background:none">${opt(t[0].toUpperCase() + t.slice(1), S.alone, 'alone', 1)}</div>`; }
+  if (k === 'sleep' && lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
     <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
+  if (canBy()) h += byHtml(k, k === 'med' ? 'Quem deu' : 'Quem fez');
   if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
@@ -1102,11 +1128,17 @@ async function saveEntry(btn) {
     if (S.ck === 'burp' && !S.bput && !S.bdone) { S.err = 'Marque pôs para arrotar, arrotou ou os dois.'; return drawEntry(); }
     if (CARE_MIN.includes(S.ck) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo vai de 1 a 600 minutos.'; return drawEntry(); }
   }
-  if (k === 'sleep' && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo no colo vai de 1 a 600 minutos.'; return drawEntry(); }
+  if (k === 'sleep' && S.dmin !== '' && !(dmin >= 1 && dmin <= 600) && lapShown()) { S.err = 'O tempo no colo vai de 1 a 600 minutos.'; return drawEntry(); }
   // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. Cuidados grava o cuidado escolhido.
   const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
   // Só manda o colo quando há o que mandar (ou apagar): sem o 020, o resto do sono continua salvando.
-  if (k === 'sleep' && (S.dmin !== '' || S.edit?.lap_min)) ev.lap_min = S.dmin !== '' ? dmin : null;
+  // No sono que pegou sozinho, o colo vai vazio.
+  const lap = k === 'sleep' && lapShown() && S.dmin !== '';
+  if (k === 'sleep' && (lap || S.edit?.lap_min)) ev.lap_min = lap ? dmin : null;
+  // Quem fez e o "pegou no sono sozinha", do mesmo jeito: sem o 022, o resto continua salvando.
+  const by = canBy() ? S.by : null, alone = k === 'sleep' && S.sk === 'sleep' && S.alone;
+  if (by || S.edit?.done_by) ev.done_by = by;
+  if (alone || S.edit?.self_settled) ev.self_settled = alone || null;
   if (k === 'care') ev.duration_min = CARE_MIN.includes(S.ck) && S.dmin !== '' ? dmin : null;
   if (ev.kind === 'burp') ev.burp = S.bput && S.bdone ? 'both' : S.bput ? 'put' : 'done';
   if (ev.kind === 'symptom') {
@@ -1155,10 +1187,9 @@ function drawHist() {
     const d0 = addDays(today, -i), d1 = addDays(d0, 1);
     const rows = evs.filter(e => kinds.includes(e.kind) && e.t >= d0 && e.t < d1).reverse();
     h += `<div class="hday"><h4>${esc(dayTitle(d0))}</h4>` + (!rows.length ? '<div class="empty">Nada anotado.</div>' : '<div class="tl">' + rows.map(e => {
-      const who = e.author_id ? st.names[e.author_id] : '';
       const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
-      const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', who ? 'por ' + esc(who.split(' ')[0]) : ''].filter(Boolean).join(' · ');
-      return `<button class="row" data-act="histRow" data-val="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
+      const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', esc(byText(e))].filter(Boolean).join(' · ');
+      return `<button class="row" data-act="histRow" data-val="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs, st.baby.sex))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
     }).join('') + '</div>') + '</div>';
   }
   h += `<button class="save" data-act="histAdd">+ Anotar ${esc(ADD[S.k])}</button>`;
@@ -1221,9 +1252,18 @@ function everyTimes(every, first) {
   for (let k = (H * 60 + M) % step; k < 1440; k += step) out.push(pad(Math.floor(k / 60)) + ':' + pad(k % 60));
   return out;
 }
-// O primeiro nome de quem anotou, para a divisão de tarefas (vai no texto para mandar: nunca "você").
+// O primeiro nome de quem fez, para a divisão de tarefas (vai no texto para mandar: nunca "você").
 const firstName = id => (st.names[id] || 'alguém').split(' ')[0];
-const whoGave = e => e.author_id === st.user.id ? 'você' : (st.names[e.author_id] || 'alguém').split(' ')[0];
+// Quem deu a dose: quem fez ou, sem quem fez, quem marcou.
+const whoGave = e => { const id = e.done_by || e.author_id; return id === st.user.id ? 'você' : (st.names[id] || 'alguém').split(' ')[0]; };
+// A linha de baixo do registro: "por Carol" (quem fez; sem quem fez, quem anotou) e, quando quem fez
+// não é quem anotou, "por Carol, anotado por Pedro".
+function byText(e) {
+  const by = e.done_by && e.done_by !== e.author_id && st.names[e.done_by] ? e.done_by : null;
+  const author = e.author_id && st.names[e.author_id] ? firstName(e.author_id) : '';
+  if (!by) return author ? 'por ' + author : '';
+  return 'por ' + firstName(by) + (author ? ', anotado por ' + author : '');
+}
 const whenText = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return (d0 === t0 ? 'hoje' : d0 === addDays(t0, -1) ? 'ontem' : shortDay(d0)) + ' às ' + hm(t); };
 const dayWord = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); return d0 === t0 ? '' : d0 < t0 ? 'ontem' : 'amanhã'; };
 
@@ -1364,11 +1404,12 @@ function nowDose(m) {
   return cur && !cur.e ? cur : ds.find(d => d.due > now && !d.e) || null;
 }
 
-// Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega.
-async function giveDose(id, t, note, skipped) {
+// Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega. by: quem deu,
+// quando foi escolhido (só vai quando há, para salvar mesmo sem o 022).
+async function giveDose(id, t, note, skipped, by) {
   const d = doseById(id); if (!d) return;
   const row = await addEntry({ kind: 'med', t, medicine_id: d.m.id, med_name: d.m.name, med_amount: d.m.amount,
-                               dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null });
+                               dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null, ...(by ? { done_by: by } : {}) });
   if (!row) return;
   if (S?.mode === 'meds') { drawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
   const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
@@ -1397,6 +1438,7 @@ function drawDose() {
   } else {
     if (d.state === 'later') h += `<div class="soft">Ainda não é a hora: a dose é às ${d.hhmm}${when ? ' de ' + when : ''}. Se já deu, dá para marcar.</div>`;
     h += `<div><div class="lbl">Horário que deu</div>${clockHtml('timeIn', S.time, 'med', 'Horário que deu')}${QUICK_TIME}</div>`;
+    if (st.members.length > 1) h += byHtml('med', 'Quem deu');
     h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
     h += '<button class="save" data-act="give">Marcar como dada</button><button class="del" data-act="skip">Pular esta dose</button>';
   }
@@ -1562,9 +1604,10 @@ async function medAction(a, v, btn) {
   if (S.mode === 'dose') {
     if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
     else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
+    else if (a === 'by') S.by = S.by === v ? null : v;
     else if (a === 'give' || a === 'skip') {
-      const { id, note } = S, t = a === 'give' ? computeT() : Date.now();
-      leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), a === 'skip');
+      const { id, note, by } = S, t = a === 'give' ? computeT() : Date.now();
+      leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), a === 'skip', a === 'give' ? by : null);
     }
     else if (a === 'unmark') {
       const d = doseById(S.id); leaveDose();
@@ -2339,6 +2382,8 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'ck') { S.ck = v; if (!CARE_MIN.includes(v)) S.dmin = ''; }
   else if (a === 'dchip') S.dmin = +S.dmin === +v ? '' : v;
   else if (a === 'bput' || a === 'bdone') S[a] = !S[a];
+  else if (a === 'by') S.by = S.by === v ? null : v;
+  else if (a === 'alone') { S.alone = !S.alone; if (S.alone) { S.dmin = ''; S.by = null; } }
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
   else if (a === 'psize') S.psize = S.psize === v ? null : v;
   else if (a === 'palert') { S.palert = !S.palert; S.wig = S.palert; }
@@ -2352,7 +2397,7 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'del') {
     const e = S.edit;
-    return askConfirm('Apagar este registro?', label(e, sortedEntries()) + ', ' + askWhen(e.t) + '. Não dá para desfazer.', 'Apagar',
+    return askConfirm('Apagar este registro?', label(e, sortedEntries(), st.baby.sex) + ', ' + askWhen(e.t) + '. Não dá para desfazer.', 'Apagar',
       async () => { if (await deleteEntry(e.id)) { closeSheet(); toast('Registro apagado'); } });
   }
   else if (a === 'save') return saveEntry(b);
