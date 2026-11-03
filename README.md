@@ -331,8 +331,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     anotou, então os meses antigos não mudam). Pede SQL novo (coluna no registro). Prévia em aprovação
     (v2): https://claude.ai/artifact/8sce5SbXDnp8FCLMS8eggV
 20. **Pegou no sono sozinha** (Patrick, 02/11): marcar no "Dormiu" que o bebê adormeceu sem colo, sem
-    ninar e sem peito. Opcional. Decidido em 02/11: marcado, o "Quem fez" some (por definição, ninguém
-    fez dormir); aparece na linha do registro e no resumo da Semana e do Mês (e no texto para a
+    ninar e sem peito. Opcional. Decidido em 02/11: marcado, o "Quem fez" e o tempo no colo somem (por
+    definição, ninguém fez dormir nem segurou no colo); falta decidir se o "Acordou" desse sono também
+    fica sem o colo. Aparece na linha do registro e no resumo da Semana e do Mês (e no texto para a
     família), como o sono no colo; fora do relatório do pediatra e de "Como foram as noites". Pede SQL
     novo. Mesma prévia do item 19.
 21. **Notificações que trazem a família de volta** (Patrick, 02/11). Duas ideias: (a) pontos
