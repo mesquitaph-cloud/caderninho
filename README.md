@@ -335,6 +335,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     fez dormir); aparece na linha do registro e no resumo da Semana e do Mês (e no texto para a
     família), como o sono no colo; fora do relatório do pediatra e de "Como foram as noites". Pede SQL
     novo. Mesma prévia do item 19.
+21. **Notificações que trazem a família de volta** (Patrick, 02/11). Duas ideias: (a) pontos
+    interessantes do desenvolvimento da criança para a idade dela; (b) lembrar de ver o resumo da
+    semana. A decidir: de onde vêm os marcos (fonte citada, como os da SBP ou do CDC) e o tom, que não
+    pode virar lista de cobrança nem gerar ansiedade em quem ainda não viu o marco; com que frequência;
+    e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também "Lembrete
+    para usar o app" em "Ideias para depois".
 
 **Android** (seção "App do Android")
 
