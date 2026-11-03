@@ -362,6 +362,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     lançamento que a janela aparece: no Android só com o app baixado da Play Store, e no iPhone o
     TestFlight não mostra a janela de verdade; (c) acompanhar as notas e responder as avaliações nas duas
     lojas.
+24. **Horários dos despertares em "Como foram as noites"** (Patrick, 02/11): no resumo da aba Mês, no
+    grupo dos despertares, mostrar os horários em que o bebê acordou à noite. A decidir (com prévia): em
+    que linha ou grupo entram e como mostrar um mês inteiro de horários sem virar lista longa.
 
 **Android** (seção "App do Android")
 
