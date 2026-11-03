@@ -339,7 +339,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     ninguém. Mesma prévia do item 19.
 
     **Itens 19 e 20 programados em 02/11** (ramo `claude/quem-fez-sozinha`), testados no Soneca de teste
-    (cenário `quem-fez`), de dia e de noite. **Antes de juntar ao `main`:** rodar
+    (cenário `quem-fez`), de dia e de noite, no PR #65. `supabase/022_quem_fez_e_sozinha.sql` rodado pelo
+    Patrick em 02/11 (colunas, travas, gatilho, `member_left` e permissões conferidos pelo conector). Era
+    o passo antes de juntar ao `main`:
     `supabase/022_quem_fez_e_sozinha.sql` no SQL Editor (colunas `done_by` e `self_settled`, travas e
     permissões). Sem ele, o app novo salva o resto do registro, mas não quem fez nem o "sozinha". No
     iPhone e no Android, só chega com a próxima compilação.
