@@ -349,8 +349,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     interessantes do desenvolvimento da criança para a idade dela; (b) lembrar de ver o resumo da
     semana. A decidir: de onde vêm os marcos (fonte citada, como os da SBP ou do CDC) e o tom, que não
     pode virar lista de cobrança nem gerar ansiedade em quem ainda não viu o marco; com que frequência;
-    e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também "Lembrete
-    para usar o app" em "Ideias para depois".
+    e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também o item 30.
 22. **Sono de dia na Semana** (Patrick, 02/11; em PR): a média por dia dos sonos que começam entre 6h
     e 18h, como na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. Decidido em
     02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
@@ -365,6 +364,24 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 24. **Horários dos despertares em "Como foram as noites"** (Patrick, 02/11): no resumo da aba Mês, no
     grupo dos despertares, mostrar os horários em que o bebê acordou à noite. A decidir (com prévia): em
     que linha ou grupo entram e como mostrar um mês inteiro de horários sem virar lista longa.
+25. **Limpar a tela inicial de botões** (Patrick, 03/11). A decidir (com prévia): quais botões saem ou
+    se juntam e para onde vão. Hoje a família já pode desligar botões em Família › Botões.
+26. **Melhorar a experiência dos relatórios** (Patrick, 03/11). A decidir: o que hoje atrapalha, na aba
+    Mês e no relatório para o pediatra.
+27. **Tirar o relatório sem ficar preso à tela do mês** (Patrick, 03/11): gerar e mandar o relatório
+    por conta própria, em vez de ele já estar dentro da aba Mês. A decidir: que período se escolhe e em
+    que formato sai (PDF, texto).
+28. **Calendário de vacinas** (Felipe Boin, 03/11): uma aba com as vacinas por idade. A decidir: a fonte
+    (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
+    se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas.
+29. **Linha de "tarefas diárias" na tela inicial** (Felipe Boin, 03/11): tummy time, banho etc., para
+    marcar no dia. A decidir: se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho,
+    banho de sol) mostrados como linha no alto; e quais tarefas.
+30. **Aviso para anotar depois de X horas sem registro** (Patrick, 03/11; antes "Lembrete para usar o
+    app", em "Ideias para depois"): lembrar os pais de anotar quando passam X horas sem nenhum registro.
+    A decidir: quantas horas (e se a família escolhe), se não avisa de madrugada, e se conta só o que
+    esta pessoa anotou ou o da família toda. Aviso agendado pelo próprio celular, como o do remédio, não
+    sabe o que os outros anotaram com o app fechado; para isso, aviso pelo servidor.
 
 **Android** (seção "App do Android")
 
@@ -1379,10 +1396,6 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   dentro do app, então vale entrar na próxima versão. **30/10: decidido abrir no navegador do celular,
   por cima do app** (`@capacitor/browser`); ramo `claude/politica-navegador`.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
-- **Lembrete para usar o app** (Patrick, 02/11): um aviso no celular para quem anda esquecendo de
-  anotar. A decidir: o que dispara o lembrete (horas sem nenhum registro, um horário fixo do dia) e se
-  conta só o que esta pessoa anotou ou o da família toda. Aviso agendado pelo próprio celular, como o
-  do remédio, não sabe o que os outros anotaram com o app fechado; para isso, aviso pelo servidor.
 - **Aviso da hora da rotina da noite** (Patrick, 02/11): a família escolhe a que horas começa a rotina
   da noite (banho, mamada, dormir) e o app avisa no celular. Pode ser aviso local, como o do remédio,
   sem servidor. A decidir: quem escolhe a hora (cada pessoa ou a família), se vale todo dia e o texto.
