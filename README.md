@@ -1337,6 +1337,13 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   dentro do app, então vale entrar na próxima versão. **30/10: decidido abrir no navegador do celular,
   por cima do app** (`@capacitor/browser`); ramo `claude/politica-navegador`.
 - Aviso no celular na hora do remédio, mesmo com o app fechado.
+- **Lembrete para usar o app** (Patrick, 02/11): um aviso no celular para quem anda esquecendo de
+  anotar. A decidir: o que dispara o lembrete (horas sem nenhum registro, um horário fixo do dia) e se
+  conta só o que esta pessoa anotou ou o da família toda. Aviso agendado pelo próprio celular, como o
+  do remédio, não sabe o que os outros anotaram com o app fechado; para isso, aviso pelo servidor.
+- **Aviso da hora da rotina da noite** (Patrick, 02/11): a família escolhe a que horas começa a rotina
+  da noite (banho, mamada, dormir) e o app avisa no celular. Pode ser aviso local, como o do remédio,
+  sem servidor. A decidir: quem escolhe a hora (cada pessoa ou a família), se vale todo dia e o texto.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 
