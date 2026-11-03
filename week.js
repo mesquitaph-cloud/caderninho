@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia o bebê. A referência para a idade vem pronta em "ref".
-import { MIN, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
+import { MIN, HOUR, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 // Mamadeira é o leite dado na mamadeira, em ml; só aparece se a semana tiver alguma com ml.
@@ -55,6 +55,8 @@ function dayStats(d0, evs, sleeps, now) {
   return {
     d0, d1, day, feeds, pumps, dia,
     slept: sleeps.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, end) - Math.max(a, d0)), 0),
+    // Sono de dia: os sonos que começam entre 6h e 18h, inteiros, como na aba Mês (napDay em report.js).
+    nap: sleeps.filter(([a]) => a >= d0 + 6 * HOUR && a < d0 + 18 * HOUR).reduce((s, [a, z]) => s + z - a, 0),
     ml: feeds.reduce((s, e) => s + (e.ml || 0), 0),
     breastMin: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0),
     pumpMl: pumps.reduce((s, e) => s + e.ml, 0),
@@ -258,7 +260,7 @@ export function weekHtml({ end, evs, sleep, now, show, metric, on, zoom = null, 
     <div class="svgbox">${routineChart(all, sleeps, now, show, k, zoom)}</div>${show.diaper !== false ? LGD_DIAPER : ''}</div>`;
 
   h += `<div class="card"><h3>Média por dia</h3>${cap ? `<p class="cap">${cap}</p>` : ''}<div class="tiles">
-    ${tile('--c-sleep', 'Sono', dur(avg(d => d.slept)), 'maior sono seguido: ' + (longest ? dur(longest[1] - longest[0]) : '—'))}
+    ${tile('--c-sleep', 'Sono', dur(avg(d => d.slept)), (avg(d => d.nap) >= MIN ? 'de dia: ' + dur(avg(d => d.nap)) + ' · ' : '') + 'maior sono seguido: ' + (longest ? dur(longest[1] - longest[0]) : '—'))}
     ${tile('--c-feed', 'Mamadas', nf(avg(d => d.feeds.length)), feedSub)}
     ${tile('--c-diaper', 'Fraldas', nf(avg(d => d.dia.length)), nf(avg(d => d.poo)) + ' com cocô')}
     ${k.pump ? tile('--c-pump', 'Ordenhas', nf(avg(d => d.pumps.length)), Math.round(avg(d => d.pumpMl)) + ' ml por dia') : ''}
