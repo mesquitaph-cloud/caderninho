@@ -344,6 +344,11 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 .opt{border:1.5px solid var(--line);border-radius:14px;padding:12px 16px;font-weight:500;font-size:16px;background:var(--surface)}
 .opt.on{border-color:currentColor;background:var(--kbg,var(--surface2))}
 .opt.big{flex:1;padding:18px 12px;font-size:18px;font-family:var(--display);font-weight:500}
+/* "Pegou no sono sozinha" na linha toda, e os nomes de "Quem fez" dividindo a linha por igual (--n por linha) */
+.alone{display:grid}
+.alone .opt{width:100%;text-align:center}
+.whos{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px}
+.whos .opt{text-align:center;padding-inline:6px;min-width:0;overflow-wrap:anywhere}
 .ml{display:flex;align-items:center;gap:10px}
 .ml button{width:48px;height:48px;border-radius:50%;background:var(--surface2);font-size:24px;font-weight:500}
 .ml input{width:100px;text-align:center;font-size:28px;font-family:var(--display);font-weight:500;border:none;background:none;color:var(--ink)}

@@ -328,14 +328,23 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     anotou); na mamadeira, no "Dormiu", na Fralda, em Cuidados e no Remédio ("Quem deu"). Não têm: peito
     e ordenha (só quem amamenta faz), "Acordou", sono marcado como "Pegou no sono sozinha", sintomas,
     vômito e Outro. A Divisão de tarefas passa a contar quem fez (registro sem quem fez conta para quem
-    anotou, então os meses antigos não mudam). Pede SQL novo (coluna no registro). Prévia em aprovação
-    (v2): https://claude.ai/artifact/8sce5SbXDnp8FCLMS8eggV
+    anotou, então os meses antigos não mudam). Prévia v3 aprovada em 02/11:
+    https://claude.ai/artifact/8sce5SbXDnp8FCLMS8eggV
 20. **Pegou no sono sozinha** (Patrick, 02/11): marcar no "Dormiu" que o bebê adormeceu sem colo, sem
     ninar e sem peito. Opcional. Decidido em 02/11: marcado, o "Quem fez" e o tempo no colo somem (por
-    definição, ninguém fez dormir nem segurou no colo); falta decidir se o "Acordou" desse sono também
-    fica sem o colo. Aparece na linha do registro e no resumo da Semana e do Mês (e no texto para a
-    família), como o sono no colo; fora do relatório do pediatra e de "Como foram as noites". Pede SQL
-    novo. Mesma prévia do item 19.
+    definição, ninguém fez dormir nem segurou no colo). O "Acordou" que fecha esse sono também fica sem
+    o colo (escolha da sessão, a recomendada; o Patrick não chegou a responder). Aparece na linha do
+    registro e no resumo da Semana e do Mês (e no texto para a família), como o sono no colo; fora do
+    relatório do pediatra e de "Como foram as noites". O Hipnotizador de Bebê não conta esse sono para
+    ninguém. Mesma prévia do item 19.
+
+    **Itens 19 e 20 programados em 02/11** (ramo `claude/quem-fez-sozinha`), testados no Soneca de teste
+    (cenário `quem-fez`), de dia e de noite, no PR #65. `supabase/022_quem_fez_e_sozinha.sql` rodado pelo
+    Patrick em 02/11 (colunas, travas, gatilho, `member_left` e permissões conferidos pelo conector). Era
+    o passo antes de juntar ao `main`:
+    `supabase/022_quem_fez_e_sozinha.sql` no SQL Editor (colunas `done_by` e `self_settled`, travas e
+    permissões). Sem ele, o app novo salva o resto do registro, mas não quem fez nem o "sozinha". No
+    iPhone e no Android, só chega com a próxima compilação.
 21. **Notificações que trazem a família de volta** (Patrick, 02/11). Duas ideias: (a) pontos
     interessantes do desenvolvimento da criança para a idade dela; (b) lembrar de ver o resumo da
     semana. A decidir: de onde vêm os marcos (fonte citada, como os da SBP ou do CDC) e o tom, que não

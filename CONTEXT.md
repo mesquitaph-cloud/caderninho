@@ -54,9 +54,17 @@ um remédio dado ou outro fato anotado à mão.
 _Evite_: evento, entrada, log, anotação
 
 **Autor**:
-O membro que fez o registro. Quando ele sai da família, é removido ou apaga a conta, o registro fica
+O membro que anotou o registro. Quando ele sai da família, é removido ou apaga a conta, o registro fica
 na família sem autor.
 _Evite_: responsável, criador (criador é da família, não do registro)
+
+**Quem fez**:
+O membro que fez o que foi anotado, quando não é o autor ("por Carol, anotado por Pedro"). Opcional e
+sem ninguém marcado de saída; vazio, conta o autor. Só na mamadeira, no dormiu, na fralda, nos cuidados
+e no remédio (no remédio, "Quem deu"). Não têm: peito e ordenha (só quem amamenta faz), o acordou, o
+dormiu marcado como "pegou no sono sozinha", sintomas, vômito e Outro. Só membros da família; quem sai
+deixa de aparecer, como o autor.
+_Evite_: responsável, executor
 
 **Mamada**:
 Registro de alimentação, feita no peito ou na mamadeira; na mamadeira, com a quantidade em ml. No
@@ -76,6 +84,13 @@ _Evite_: extração, bombeamento, coleta
 Os dois registros que marcam o início e o fim de um sono. O sono em si não é registrado: é o
 intervalo entre um dormiu e o acordou seguinte.
 _Evite_: soneca (como registro), cochilo
+
+**Pegou no sono sozinha**:
+Marca opcional no dormiu: o bebê adormeceu sem colo, sem ninar e sem peito ("sozinho" para menino;
+"por conta própria" sem menina ou menino no cadastro). Esse sono não tem quem fez nem tempo no colo,
+nem no acordou que o fecha. No resumo, conta quantas vezes foi marcado, sem "de tantos sonos": um sono
+sem a marca pode ter sido sozinho também.
+_Evite_: dormiu sozinha (parece onde dormiu), autoacalmar, treinamento do sono
 
 **Fralda**:
 Registro de uma troca de fralda, com xixi, cocô ou os dois. Com cocô, pode dizer o tamanho (pequeno,
@@ -308,9 +323,10 @@ _Evite_: relatório, mensagem (mensagem é o que vai para quem cuida do Soneca)
 **Divisão de tarefas**:
 O cartão "Como foi a divisão de tarefas", no resumo do mês e no fim do painel da semana. No alto, o
 Chef Favorito: as mamadas no peito do período, sem nome. Depois, três títulos de brincadeira para quem
-mais anotou cada cuidado: Campeão do Cocô (fraldas), Hipnotizador de Bebê (dormiu) e Garçom de Leite
-(mamadeiras), cada um com o 2º lugar, só o nome. Empate divide o título. Conta quem anotou, não quem
-fez. Cada título precisa de pelo menos 3 registros, e o cartão some quando só uma pessoa registrou. Só
+mais fez cada cuidado: Campeão do Cocô (fraldas), Hipnotizador de Bebê (dormiu) e Garçom de Leite
+(mamadeiras), cada um com o 2º lugar, só o nome. Empate divide o título. Conta quem fez; sem quem fez,
+o autor (desde 02/11; antes, contava sempre o autor). O dormiu que pegou no sono sozinho não conta para
+ninguém. Cada título precisa de pelo menos 3 registros, e o cartão some quando uma pessoa só fez tudo. Só
 cuidados: sintomas, vômito e remédio ficam de fora, sem brincadeira. No resumo para mandar, vai só
 quem ganhou.
 _Evite_: ranking, placar, competição, quem mais cuidou

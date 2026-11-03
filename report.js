@@ -1,7 +1,7 @@
 // Resumo para mandar à família: os totais de uma semana ou de um mês, em tela e em texto para
 // compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê. Segue os botões
 // da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
-import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays } from './util.js';
+import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays, aloneText } from './util.js';
 import { kg } from './growth.js';
 
 const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -15,7 +15,8 @@ const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos
 
 // Totais de [a, z). sleep: o que sleepIntervals devolve; o sono em andamento conta até agora.
 // on(k): se a família usa o botão k (Ordenha, Remédio e os cuidados só entram se usar).
-export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = () => true }) {
+// sex: o do bebê, para o "pegou no sono sozinha".
+export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = () => true, sex = null }) {
   const end = Math.min(z, now), day = evs.filter(e => e.t >= a && e.t < end);
   const feeds = day.filter(e => e.kind === 'feed'), bottles = feeds.filter(e => e.src === 'bottle');
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
@@ -37,6 +38,8 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     longest: inP.reduce((b, iv) => !b || iv[1] - iv[0] > b[1] - b[0] ? iv : b, null),
     // Tempo no colo: anotado no Dormiu ou no Acordou; um sono com os dois soma os dois.
     lapMs: day.reduce((s, e) => s + (e.lap_min || 0), 0) * MIN, laps: day.filter(e => e.lap_min).length,
+    // Pegou no sono sozinha: quantas vezes foi marcado, sem "de tantos sonos" (a marca é opcional).
+    alone: day.filter(e => e.kind === 'sleep' && e.self_settled).length, aloneText: aloneText(sex),
     diapers: day.filter(e => e.kind === 'diaper').length, poos: day.filter(e => e.kind === 'diaper' && e.poo).length,
     pumpMl: on('pump') ? day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0) : 0,
     doses: on('med') ? day.filter(e => e.kind === 'med' && !e.skipped).length : 0,
@@ -57,7 +60,7 @@ function lines(s) {
   const out = [];
   const feedBits = [s.bottleMl ? liters(s.bottleMl) + ' na mamadeira' : '', s.breastMs ? hours(s.breastMs) + ' no peito' : ''].filter(Boolean);
   if (s.feeds) out.push(['feed', plural(s.feeds, 'mamada', 'mamadas') + (feedBits.length ? ': ' + feedBits.join(' e ') : '')]);
-  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.sleepDay ? ' (' + dur(s.sleepDay) + ' por dia)' : '') + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '') + (s.laps ? '; ' + hours(s.lapMs) + ' no colo, em ' + plural(s.laps, 'sono', 'sonos') : '')]);
+  if (s.slept) out.push(['sleep', hours(s.slept) + ' de sono' + (s.sleepDay ? ' (' + dur(s.sleepDay) + ' por dia)' : '') + (s.longest ? '; o maior sono seguido foi de ' + dur(s.longest[1] - s.longest[0]) : '') + (s.laps ? '; ' + hours(s.lapMs) + ' no colo, em ' + plural(s.laps, 'sono', 'sonos') : '') + (s.alone ? '; ' + s.aloneText + ' ' + plural(s.alone, 'vez', 'vezes') : '')]);
   if (s.diapers) out.push(['diaper', plural(s.diapers, 'fralda', 'fraldas') + ', ' + s.poos + ' com cocô']);
   if (s.pumpMl) out.push(['pump', liters(s.pumpMl) + ' de leite ordenhado']);
   if (s.doses) out.push(['med', plural(s.doses, 'dose de remédio dada', 'doses de remédio dadas')]);
@@ -94,6 +97,7 @@ export function monthHtml(s, { heading }) {
   const extra = [];
   if (s.napDay) extra.push(['Sono de dia', dur(s.napDay) + ' por dia, das 6h às 18h']);
   if (s.laps) extra.push(['Sono no colo', hours(s.lapMs) + ' em ' + plural(s.laps, 'sono', 'sonos')]);
+  if (s.alone) extra.push(['P' + s.aloneText.slice(1), plural(s.alone, 'vez', 'vezes')]);
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);
   if (s.care.length) extra.push(['Cuidados', careText(s)]);
   if (s.wTo) extra.push(['Peso', (s.wFrom ? kg(s.wFrom.grams) + ' → ' : '') + kg(s.wTo.grams)]);
@@ -109,26 +113,28 @@ export function shareHtml(text, { heading = 'Mandar para a família', note = '' 
     <p class="foot">Só soma o que foi registrado no Soneca.</p></div>`;
 }
 
-// Como foi a divisão de tarefas: as mamadas no peito em destaque, sem nome (o app sabe quem anotou,
-// não quem amamentou), e três títulos de brincadeira para quem mais anotou cada cuidado. Só cuidados:
-// sintomas, vômito e remédio não entram. null quando só uma pessoa registrou no período.
+// Como foi a divisão de tarefas: as mamadas no peito em destaque, sem nome (o peito não tem quem fez),
+// e três títulos de brincadeira para quem mais fez cada cuidado. Conta quem fez; sem quem fez, quem
+// anotou. O sono que pegou sozinho não conta para ninguém. Só cuidados: sintomas, vômito e remédio não
+// entram. null quando uma pessoa só fez tudo no período.
 const TITLES = [
   { k: 'diaper', title: 'Campeão do Cocô', unit: ['fralda', 'fraldas'], icon: 'diaper', is: e => e.kind === 'diaper' },
-  { k: 'sleep', title: 'Hipnotizador de Bebê', unit: ['soninho', 'soninhos'], icon: 'sleep', is: e => e.kind === 'sleep' },
+  { k: 'sleep', title: 'Hipnotizador de Bebê', unit: ['soninho', 'soninhos'], icon: 'sleep', is: e => e.kind === 'sleep' && !e.self_settled },
   { k: 'feed', title: 'Garçom de Leite', unit: ['mamadeira', 'mamadeiras'], icon: 'feed', is: e => e.kind === 'feed' && e.src === 'bottle' },
 ];
 const MIN_COUNT = 3; // cada título precisa de pelo menos 3 registros de quem ganhou
 const names = l => l.length === 1 ? l[0] : l.slice(0, -1).join(', ') + ' e ' + l.at(-1);
+const doer = e => e.done_by || e.author_id;
 
-// name(author_id): o primeiro nome de quem anotou.
+// name(id): o primeiro nome de quem fez.
 export function division({ a, z, evs, now, name }) {
   const end = Math.min(z, now), day = evs.filter(e => e.t >= a && e.t < end);
-  if (new Set(day.map(e => e.author_id).filter(Boolean)).size < 2) return null;
+  if (new Set(day.map(doer).filter(Boolean)).size < 2) return null;
   const breast = day.filter(e => e.kind === 'feed' && e.src === 'breast');
   const titles = [];
   for (const t of TITLES) {
     const n = new Map();
-    for (const e of day) if (e.author_id && t.is(e)) n.set(e.author_id, (n.get(e.author_id) || 0) + 1);
+    for (const e of day) if (doer(e) && t.is(e)) n.set(doer(e), (n.get(doer(e)) || 0) + 1);
     const counts = [...new Set(n.values())].sort((x, y) => y - x);
     if (!counts.length || counts[0] < MIN_COUNT) continue;
     const who = c => [...n].filter(([, v]) => v === c).map(([id]) => name(id)).sort((x, y) => x.localeCompare(y, 'pt-BR'));

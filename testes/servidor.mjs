@@ -7,6 +7,7 @@
 //   noites        noites variadas (longas, com 3 despertares e comuns) para o cartão da aba Mês
 //   nascimento    rotina desde o nascimento (97 dias), para a aba Mês voltar até julho
 //   sem-nascimento   o mesmo, sem a data de nascimento anotada
+//   quem-fez      registros que outra pessoa fez e sonos em que a Helena pegou no sono sozinha
 //   app-convite   a mesma conta, no "app do iPhone" aberto pelo link de convite (Universal Link)
 import http from 'node:http';
 import fs from 'node:fs';
