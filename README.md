@@ -323,6 +323,15 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     02/11: "Primeiro sono: 21:00" no lugar de "Hora de dormir", na noite sem sono de mais de 3 h.
 18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
     discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
+19. **Quem fez, diferente de quem anotou** (Patrick, 02/11). Decidido em 02/11: só membros da família
+    (sem babá ou avó sem conta); em Mamada, Ordenha, Sono, Fralda, Cuidados e Remédio (sintomas, vômito e
+    Outro ficam sem); começa em quem anota; a Divisão de tarefas passa a contar quem fez (registro sem
+    escolha conta para quem anotou, então os meses antigos não mudam). Pede SQL novo (coluna no
+    registro). Prévia em aprovação: https://claude.ai/artifact/8sce5SbXDnp8FCLMS8eggV
+20. **Pegou no sono sozinha** (Patrick, 02/11): marcar no "Dormiu" que o bebê adormeceu sem colo, sem
+    ninar e sem peito. Decidido em 02/11: aparece na linha do registro e no resumo da Semana e do Mês
+    (e no texto para a família), como o sono no colo; fora do relatório do pediatra e de "Como foram as
+    noites". Pede SQL novo. Mesma prévia do item 19.
 
 **Android** (seção "App do Android")
 
