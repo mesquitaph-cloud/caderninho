@@ -52,7 +52,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   > • Relatório em PDF para levar ao pediatra.
 
   Aviso "no deobfuscation file" ignorado: a compilação não ofusca o código (`minifyEnabled false`).
-- **Pedido de avaliação nas lojas (01/11, ramo `claude/avaliacao-lojas`):** a janela do próprio celular
+- **Pedido de avaliação nas lojas (01/11, no `main` pelo #54; vai na 1.0.2; pendências no item 23):** a janela do próprio celular
   (plugin `@capawesome/capacitor-app-review`; a Apple não aceita janela nossa, e o Google proíbe perguntar
   "está gostando?" antes). Pede logo depois de um registro de rotina (mamada, ordenha, sono, fralda), entre
   8h e 17h (o Patrick, 01/11: nunca entre 17h e 7h), para quem anotou pelo menos 7 dias atrás e em 5 dias
@@ -347,6 +347,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
     do quadro Sono de "Média por dia", antes do maior sono seguido ("de dia: 3h50 · maior sono seguido:
     5h40"). Falta decidir se vai também para o resumo para mandar (Semana e Mês).
+23. **Pedido de avaliação na App Store e na Play Store** (Patrick, 02/11). A janela do próprio celular
+    já está no `main` pelo #54 e vai na 1.0.2 (regras em "Onde paramos"). Falta: (a) a linha "Avaliar o
+    Soneca" nos Ajustes, que abre a página da loja (prévia antes de programar); (b) conferir depois do
+    lançamento que a janela aparece: no Android só com o app baixado da Play Store, e no iPhone o
+    TestFlight não mostra a janela de verdade; (c) acompanhar as notas e responder as avaliações nas duas
+    lojas.
 
 **Android** (seção "App do Android")
 
