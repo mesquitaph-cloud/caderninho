@@ -1367,6 +1367,11 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 - **Aviso da hora da rotina da noite** (Patrick, 02/11): a família escolhe a que horas começa a rotina
   da noite (banho, mamada, dormir) e o app avisa no celular. Pode ser aviso local, como o do remédio,
   sem servidor. A decidir: quem escolhe a hora (cada pessoa ou a família), se vale todo dia e o texto.
+- **Troféu de independência** (Patrick, 02/11): um título na Divisão de tarefas, ou perto dela, quando
+  o bebê pega no sono sozinho em mais de 50% das vezes (depende do item 19 e 20). A decidir: a base
+  dos 50% (todos os "Dormiu" do período, contando o sono sem a marca como não sozinho, embora o resumo
+  diga só "5 vezes" porque a marca é opcional), um mínimo de sonos no período, onde aparece e o texto.
+  Cuidado para o troféu não virar meta: o Soneca só junta o que foi anotado, sem avaliar o bebê.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 
