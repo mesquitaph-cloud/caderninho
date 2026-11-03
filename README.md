@@ -342,10 +342,11 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
     pode virar lista de cobrança nem gerar ansiedade em quem ainda não viu o marco; com que frequência;
     e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também "Lembrete
     para usar o app" em "Ideias para depois".
-22. **Sono de dia na Semana** (Patrick, 02/11): a média por dia dos sonos que começam entre 6h e 18h,
-    como já existe na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. A decidir na
-    prévia: onde entra no painel da semana (no quadro "Sono" de "Média por dia", no lugar ou ao lado do
-    "maior sono seguido", ou em "Nestes 7 dias") e se vai também para o resumo da semana para mandar.
+22. **Sono de dia na Semana** (Patrick, 02/11; em PR): a média por dia dos sonos que começam entre 6h
+    e 18h, como na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. Decidido em
+    02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
+    do quadro Sono de "Média por dia", antes do maior sono seguido ("de dia: 3h50 · maior sono seguido:
+    5h40"). Falta decidir se vai também para o resumo para mandar (Semana e Mês).
 
 **Android** (seção "App do Android")
 
