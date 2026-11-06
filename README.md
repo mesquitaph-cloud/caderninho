@@ -9,7 +9,7 @@ linha do tempo compartilhada. App do iPhone (App Store) e do Android (teste fech
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
-## Próximos passos (atualizado em 30/10)
+## Próximos passos (atualizado em 06/11)
 
 Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão
 da Apple em 14/10 e **aprovado** (registrado em 27/10); a publicação é manual. No Android, o teste fechado
@@ -113,9 +113,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   como versão 10 no teste fechado e conferir a mamada na tela de bloqueio, sem som. Notas propostas (não
   aprovadas): "Convites mais fáceis, registros de outro dia, cronômetro da mamada com a tela de bloqueio e
   aviso na hora do remédio, mesmo com o app fechado."
-- **Testar no celular de verdade:** aviso do remédio (iPhone e Android) e voltar ao app sem tela vazia.
-  Depois da próxima compilação: a Política e os Termos abrindo no navegador do celular (#49) e o zoom com
-  duplo toque (#50).
+- **Testar no celular de verdade** (juntado em 06/11): aviso do remédio (iPhone e Android), voltar ao
+  app sem tela vazia, a Política e os Termos no navegador do celular (#49), o zoom com duplo toque (#50),
+  "Pausar" na tela de bloqueio (#51, iPhone e Android) e a janela de avaliação das lojas (#54, item 23).
 
 **Agora que a Apple aprovou**
 
@@ -150,238 +150,102 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Próxima versão do app**
 
-1. **Aviso na hora do remédio, mesmo com o app fechado** (pedido do Patrick em 14/10). Hoje o lembrete só
-   aparece com o app aberto (cartão da tela inicial). **Prévia aprovada em 28/10**
-   (https://claude.ai/artifact/UExfMb9bYN9nLYd2E8Cq1S): aviso local, agendado pelo próprio celular, sem
-   servidor e sem mudar o banco; só no app (o site não avisa). Título "Hora do remédio de Lia"; texto
-   "Amoxicilina · 5 ml · dose das 14:00"; na hora exata, com o som padrão, sem botões; tocar abre a dose.
-   Chave "Ativar notificações de remédios" no alto de "Remédios e horários", só naquele celular, ligada
-   para quem programa o remédio. Canal do Android "Hora do remédio". "Só quando precisar" não avisa.
-   Limite aceito: se outra pessoa já deu a dose e o app deste celular estava fechado, o aviso toca mesmo
-   assim (para evitar, seria preciso aviso pelo servidor, que fica para depois).
-   Permissão negada: "Permita as notificações do Soneca nas configurações do celular." (aprovado em 28/10).
-   Programado no PR #43, ainda sem teste em celular de verdade.
-2. **Links de convite e de indicação abrindo o app:** quem não tem o app cai numa página do Soneca em
-   `soneca.app.br` com o botão da App Store (decidido em 12/10; prévia antes de programar).
-3. ~~**Remetente próprio dos e-mails**~~ **(feito, 30/10):** os e-mails do login saem pelo Resend, do
-   domínio `soneca.app.br` (SMTP do Supabase conferido pelo Patrick). DNS conferido em 30/10: SPF e DKIM
-   do Resend e DMARC `p=none`; sem MX no domínio principal, então não dá para responder a esses e-mails.
-   O Supabase segue no limite de 30 e-mails de login por hora (mantido de propósito).
-4. **Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
-   semana e tempo desde a última mamada (seção "Ideias para depois").
-5. **Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
-   gera convite, e fica guardado quem convidou cada pessoa. Hoje só quem criou a família convida (banco,
-   app e Termos, seção 4). Pede SQL novo, prévia da tela da Família e versão nova dos Termos e da Política.
-6. **Passar a família para outro membro** (decidido pelo Patrick em 16/10, ainda não começar): quem criou
-   a família entrega o controle a outro membro e pode sair sem apagar. Hoje só tem "Apagar família"; a
-   família só passa adiante se quem criou apagar a conta. Mesmos passos do item 5, e junto com ele.
-7. **Anotar registro em outro dia** (Bruno, 16/10): nenhum registro tem campo de dia, e o remédio só
-   mostra as doses de hoje. Prévia de "Hoje / Ontem / Outro dia" junto do relógio antes de programar.
-8. **Aviso de versão nova** (pedido do Patrick em 16/10): quando sair uma versão nova do app, avisar quem
-   está com a antiga para atualizar. O convite do Bruno só funcionou depois de atualizar o TestFlight. A
-   decidir antes de programar: de onde o app sabe qual é a versão mais nova (banco ou loja), se o aviso
-   pode ser fechado ou bloqueia o app quando a versão antiga quebra algo, e o texto exato (prévia antes).
-9. **"Indicar o Soneca" com o link certo** (Patrick, 16/10, para os próximos PRs): no app, o link de
-   indicar ainda não sai certo. Hoje leva a `https://soneca.app.br/`; quando o app estiver na loja, deve
-   levar à App Store (e à Play Store no Android), ou à página do item 2. **Precisa ser feito (Patrick,
-   29/10).** Conferido em 29/10: a tela de indicar mostra `location.host` (`app.js`), que dentro do app é
-   "localhost". **30/10: esperar o Android estar na Play Store** para o link ter para onde ir (Patrick).
-   **01/11 (PR #52):** a tela mostra `soneca.app.br`, e o link continua `https://soneca.app.br/`, que desde
-   o item 14 é a página das lojas (o app não precisa mudar quando entrar a Play Store, só a página). Texto
-   aprovado pelo Patrick: "Conhece o Soneca? É um app para anotar a rotina do bebê (mamadas, sono,
-   fraldas) numa linha do tempo que toda a família vê junto. Baixe pelo link, entre com seu e-mail e crie
-   a sua família." Testado no Soneca de teste (cenário `app-politica`), de dia e de noite. Vai na
-   compilação de 02/11.
-10. **Convite que abre no Safari não chega ao app** (Bruno e Ca, 17/10; o mais urgente da lista): o link
-    `soneca.app.br/?convite=...` abre no navegador, porque o app ainda não tem Universal Links (item 2).
-    O convite fica guardado no Safari, não no app; quem abre o app depois cai em "Criar família", como se
-    fosse um acesso novo, e não tem como entrar na família por ali. Correção rápida, para a 1.0.1, sem
-    esperar o item 2: na tela "Criar família", um "Tenho um convite" para colar o link recebido (prévia do
-    texto antes). Depois, o item 2 resolve de vez. Enquanto isso, o caminho é aceitar o convite pelo site
-    e entrar no app com o **mesmo e-mail**: entrar com a Apple usando "Ocultar meu e-mail" ou com outro
-    Google cria outra conta, sem a família.
-    **17/10, ramo `claude/backlog-17-10`:** o link de convite passa a abrir o app do iPhone (arquivo
-    `.well-known/apple-app-site-association` no site, "Associated Domains" no app e o plugin App do
-    Capacitor, que entrega o convite ao app aberto ou fechado). Testado com o Soneca de teste
-    (`testes/`, cenário `app-convite`). **Antes da próxima compilação:** no portal da Apple, em
-    Certificates, Identifiers & Profiles → Identifiers → `br.app.soneca`, marcar "Associated Domains" e
-    salvar; sem isso o Codemagic falha na assinatura. Só funciona depois que o `main` (com o arquivo) for
-    publicado na Vercel. **Android:** falta o `assetlinks.json` com a impressão digital SHA-256 da chave de
-    assinatura do app (Play Console → Integridade do app) e o filtro de links no `AndroidManifest.xml`, no
-    ramo do Android. Prévia do "Recebeu um convite?" e da correção de "família Família" (aparece quando o
-    nome já começa com "Família"): https://claude.ai/artifact/NjChTK6fonBHadovmJ1zz3
-    **27/10:** textos aprovados pelo Patrick e programados: "Recebeu um convite?" na tela Criar família
-    (aceita o link inteiro, sem `https://` ou só o código) e "Carol convidou você para a Família Andrade."
-    Testado no Soneca de teste (cenário `sem-familia`), de dia e de noite. Vai na 1.0.1.
-11. **Sono que nunca terminou** (Bruno, 17/10): ficou um "Dormiu" sem "Acordou" e o bebê apareceu dormindo
-    nos dias 11, 12 e 13. Não dava para anotar o "Acordou" no dia certo (o relógio só volta até ontem; é o
-    item 7), então o Bruno apagou o "Dormiu". A decidir antes de programar: a partir de quantas horas o
-    app pergunta "Ainda dormindo?" e oferece anotar a hora que acordou, e se um sono assim longo fica fora
-    das médias até ser corrigido. Prévia antes. Junto com o item 7. Reproduzido no Soneca de teste
-    (cenário `sono-aberto`: "Dormindo há 6 dias"). Prévias dos itens 7, 11, 12 e 13 no mesmo artefato
-    do item 10. **Decidido em 27/10:** 14 horas; o sono acima disso fica fora das médias até ser
-    corrigido; textos da prévia aprovados. Item 7: até 30 dias para trás; "Hoje", "Ontem", "Outro dia" e
-    "Dia" aprovados. **Programados em 27/10** e testados no Soneca de teste (cenário `sono-aberto`):
-    "Hoje / Ontem / Outro dia" em todos os registros (fora a marcação de dose do remédio programado, que
-    segue a dose do dia); "Ainda dormindo?" no lugar de "Dormindo há…" depois de 14 horas, com "Anotar
-    quando acordou" abrindo o Sono no dia do "Dormiu" e "Apagar esse 'Dormiu'" com "Desfazer".
-12. **Cronômetro da mamada** (Ca, 17/10): tocar em "começar" em cada peito e o app contar os minutos
-    sozinho, em vez de digitar um tempo aproximado. Hoje a mamada só tem os minutos de cada peito digitados.
-    A decidir: o que acontece se o app fechar no meio (o tempo segue contando pela hora de início, que
-    fica guardada), troca de peito, pausa, e quem mais da família vê a mamada em andamento. Prévia antes.
-    **Decidido em 27/10:** a mamada em andamento fica só no celular de quem começou (sem SQL novo). Textos
-    da prévia aprovados pelo Patrick em 28/10. **Prévia completa aprovada em 28/10**
-    (https://claude.ai/artifact/Y9mtKm7CL8woD3NwdeopXs): cada peito é um botão que começa ou pausa o seu
-    cronômetro, e só um conta por vez; "tocar para começar", "Descartar mamada", "Mamada descartada" (com
-    "Desfazer"), "Mamada pausada", "mamando" e "pausada" no botão Mamada; faixa menta em cima dos botões;
-    cada peito arredondado para o minuto mais próximo, e o que ficou menos de 30 segundos não é gravado;
-    depois de 2 horas contando, o cronômetro pausa sozinho (número do Patrick, não de estudo); com o bebê
-    "Dormindo", o app não marca "Acordou" sozinho.
-13. **Cronômetro na tela de bloqueio** (Ca, 17/10; ela usava assim no Napper): depois do item 12, mostrar
-    a mamada em andamento na tela bloqueada, para trocar de peito ou terminar sem abrir o app. No iPhone é
-    a Atividade ao Vivo (código nativo novo, fora do site, e um plugin do Capacitor); no Android, uma
-    notificação fixa com o tempo correndo. É a parte mais trabalhosa da lista. **Decidido em 27/10:** fazer
-    já, junto com o item 12 (o Patrick não quis esperar a Ca usar o 12 antes). Textos da tela de bloqueio
-    aprovados em 28/10 ("Soneca · Mamada", "começou 19h05", "no direito", "Trocar de peito", "Terminar"),
-    e com a mamada pausada "Mamada pausada" e "Continuar" (volta a contar no último peito).
-14. **Tirar do ar o Soneca pelo site, deixando só os apps** (decidido em 10/10, para o backlog em 27/10).
-    O endereço `soneca.app.br` continua, mas sem o app: a página inicial vira a do item 2, com os botões da
-    App Store e da Play Store. Ficam no ar `/privacidade`, `/termos`, `/apagar-conta` (exigência do Google)
-    e o `.well-known/apple-app-site-association` (sem ele, o link de convite não abre o app).
-    **29/10: o Patrick decidiu tirar já**, sem esperar o Android na Play Store (quem tem Android e entra
-    pelo site fica sem o Soneca até a loja). Ainda antes: a página do item 2 (prévia), ver pelo banco
-    quantas famílias ainda entram pelo site e o aviso a elas (texto a aprovar).
-    **30/10: o Patrick confirmou "pode tirar"**, sem contagem nem aviso antes. Ramo
-    `claude/site-so-lojas-pr`.
-    **30/10:** contagem no banco (sessões ativas, pelo navegador que entrou): nos últimos 30 dias, 8
-    pessoas abriram o Soneca pelo navegador, 7 delas também usam o app; nenhuma família ficaria sem o
-    Soneca. Página das lojas aprovada pelo Patrick (prévia: https://claude.ai/artifact/2xxBq3uyk3oLmtXEr4pzSW)
-    e programada em `inicio/`: a Vercel mostra essa página em `/` (`vercel.json`) e deixa de publicar os
-    arquivos do app (`.vercelignore`); os apps continuam iguais. Com `?convite=`, a página mostra os passos
-    do convite. Selo oficial da App Store em português (preto de dia, branco de noite), link
-    `https://apps.apple.com/br/app/id6821448149`. **Só juntar ao `main` depois de publicar o app na App
-    Store e de a 1.0.1 ser aprovada** (sem ela, quem recebe um convite não consegue entrar na família).
-    **Quando o Soneca estiver na Play Store: atualizar a página** (`inicio/index.html`), trocando a linha
-    "No Android, o Soneca chega ao Google Play em breve." pelo selo oficial do Google Play, levando a
-    `https://play.google.com/store/apps/details?id=br.app.soneca`.
-    **30/10: a Apple aprovou a 1.0.1** (Patrick); PR #47 atualizado com o `main` (#48 a #50).
-    **30/10: no ar.** A 1.0.1 foi liberada na App Store e o #47 entrou no `main`. Conferido em
-    `soneca.app.br`: a página das lojas em `/` (também com `?convite=`), e `/index.html` leva a `/`.
-    `/privacidade`, `/termos`, `/apagar-conta` e os dois arquivos do `.well-known` continuam no ar.
-    `/app.js`, `/config.js` e `/vendor/` dão 404. Para voltar atrás: reverter o #47.
-15. **Zoom no gráfico do dia ou da semana** (Patrick, 29/10): aproximar um trecho do gráfico para ver os
-    registros de perto. A decidir antes de programar: em qual gráfico, como se aproxima (gesto de pinça ou
-    botão) e até quanto. Prévia antes. **30/10:** no gráfico do dia e no da semana, com duplo toque
-    (Patrick); prévia antes de programar. **No `main` em 30/10 (#50)**; falta conferir no celular.
-16. **Pausar a mamada num peito, no app e na tela de bloqueio** (Patrick, 31/10): parar o cronômetro do
-    peito que está contando para retomar logo depois. Hoje, no app, a pausa já existe (tocar de novo no
-    peito que conta), mas o botão só diz "contando", sem dizer que um toque pausa. Na tela de bloqueio,
-    com a mamada contando, só há "Trocar de peito" e "Terminar"; "Continuar" só aparece quando ela já
-    está pausada (pelo app ou pelas 2 horas). A decidir antes de programar: o texto do botão de pausar
-    na tela de bloqueio (cabem três botões no iPhone e no Android?) e se o peito que conta no app ganha
-    "tocar para pausar". Prévia antes. Mexe no `MamadaWidget.swift`/`MamadaShared.swift` (iPhone),
-    `Mamada.java`/`MamadaReceiver.java` (Android) e `app.js`, então vai numa versão nova dos apps.
-    **31/10: prévia aprovada** (https://claude.ai/artifact/Gky9uZiS1NF9gFbXSr5xau): no app, o peito que
-    conta diz "tocar para pausar" no lugar de "contando"; na tela de bloqueio, com a mamada contando,
-    "Pausar" na frente. No iPhone os botões ficam "Pausar", "Trocar" e "Terminar" ("Trocar de peito" não
-    cabe com três); no Android, "Pausar", "Trocar de peito" e "Terminar". Pausada, segue igual
-    ("Continuar" e "Terminar"). **Programado em 31/10** (ramo `claude/pausar-mamada`); o texto do app
-    testado no Soneca de teste. Falta compilar e testar a tela de bloqueio no iPhone e no Android.
-17. **"Como foram as noites", no fim da aba Mês** (Patrick, 01/11: testar o app fazendo análises, sem IA).
-    Decidido com o Patrick, pergunta por pergunta: comparar **grupos fixos**, lado a lado, sem buscar
-    associações (com ~30 noites, procurar combinações acharia padrões por acaso). Noite é o sono que começa
-    entre 18h e 6h; madrugada, 0h às 6h (despertar = "acordou" seguido de outro "dormiu"). Dois grupos: as
-    até 7 noites de maior sono seguido, só as de 6 h ou mais; e as noites com 2 ou mais despertares. Cada
-    um contra as outras noites, e cada lado precisa de 3 noites, senão só a contagem. Linhas em contagem
-    com porcentagem e barra ("5 de 7 (71%)"): dormiu depois das 20h, banho nas 3 h antes, mamou menos de
-    2 h antes, última soneca terminando 2 h ou mais antes, mamadeira, peito e sono de dia acima da média
-    do mês (média escrita na linha). Linha sem registro num dos lados não aparece. Remédio, sintomas e
-    vômito ficam de fora. Prévia aprovada em 01/11 (https://claude.ai/artifact/8rsozCzxU6Xvv1bMyW721b).
-    **Programado em 01/11** (`noites.js`, PR próprio), testado no Soneca de teste (cenário `noites`), de
-    dia e de noite. Dois textos que não estavam na prévia, aprovados pelo Patrick em 01/11: "Dormiu 6 horas seguidas
-    ou mais em X de N noites. São poucas as outras para comparar." e "Ainda são poucas noites com 2 ou
-    mais despertares para comparar: X de N."
-    **Correção em 02/11** (o Patrick viu que não batia com o sono da Marina): a hora de dormir era o
-    primeiro sono depois das 18h, e o cochilo do começo da noite virava a hora de dormir em quase toda
-    noite, o que falseava banho, mamada e soneca "antes de dormir". Agora é o primeiro sono de mais de
-    3 h que começa entre 18h e 6h; o despertar conta da hora de dormir às 6h (antes, só de 0h às 6h); e
-    a noite sem sono de mais de 3 h fica fora das linhas de "antes de dormir". As duas definições
-    aparecem escritas no cartão. Prévia aprovada em 02/11: https://claude.ai/artifact/WPDLkEEwTS78BkJ3HbGwZL
-    **Segunda mudança em 02/11** (mesma prévia, versão 3): o primeiro grupo vira todas as noites de 6 h
-    seguidas ou mais contra as de menos de 6 h (o limite de 7 deixava 15 noites de 6 h da Marina entre as
-    "outras"). O grupo dos despertares deixa de comparar e resume os despertares do mês: tempo médio até
-    voltar a dormir, mamou durante o despertar e sintoma anotado durante o despertar, com o nome de cada
-    sintoma (botão Sintomas e vômito). O Patrick escolheu mostrar o nome sabendo que fica mais perto de
-    sugerir causa; a decisão de 01/11 de deixar sintomas de fora ficou só para as linhas de "antes de dormir".
-    **Terceira mudança em 02/11** (pedidos da Carol): "Os despertares" ganha "Noites com despertar" (X de N)
-    e "Média nas noites com despertar" (por noite, só nas noites com despertar). Grupo novo no fim, "As
-    noites com mais despertares e o que veio antes", no formato de "Os maiores sonos": as 3 noites com mais
-    despertares (empate: a mais recente primeiro), com hora de dormir, última mamada e último cocô antes;
-    tocar abre o dia em que a noite começou. No resumo do mês, a linha "Sono de dia" (média por dia dos
-    sonos que começam entre 6h e 18h); a mensagem para a família não muda. Prévia aprovada em 02/11:
-    https://claude.ai/artifact/W9ZLLSQzxCtDCrJ5JxEzoq. Um texto fora da prévia, aprovado pelo Patrick em
-    02/11: "Primeiro sono: 21:00" no lugar de "Hora de dormir", na noite sem sono de mais de 3 h.
-18. **A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
-    discutir depois do item 17 (é saúde, não rotina: cuidado para o cartão não sugerir causa).
-19. **Quem fez, diferente de quem anotou** (Patrick, 02/11). Decidido em 02/11: só membros da família
-    (sem babá ou avó sem conta); opcional, sem ninguém marcado de saída (sem escolha, conta quem
-    anotou); na mamadeira, no "Dormiu", na Fralda, em Cuidados e no Remédio ("Quem deu"). Não têm: peito
-    e ordenha (só quem amamenta faz), "Acordou", sono marcado como "Pegou no sono sozinha", sintomas,
-    vômito e Outro. A Divisão de tarefas passa a contar quem fez (registro sem quem fez conta para quem
-    anotou, então os meses antigos não mudam). Prévia v3 aprovada em 02/11:
-    https://claude.ai/artifact/8sce5SbXDnp8FCLMS8eggV
-20. **Pegou no sono sozinha** (Patrick, 02/11): marcar no "Dormiu" que o bebê adormeceu sem colo, sem
-    ninar e sem peito. Opcional. Decidido em 02/11: marcado, o "Quem fez" e o tempo no colo somem (por
-    definição, ninguém fez dormir nem segurou no colo). O "Acordou" que fecha esse sono também fica sem
-    o colo (escolha da sessão, a recomendada; o Patrick não chegou a responder). Aparece na linha do
-    registro e no resumo da Semana e do Mês (e no texto para a família), como o sono no colo; fora do
-    relatório do pediatra e de "Como foram as noites". O Hipnotizador de Bebê não conta esse sono para
-    ninguém. Mesma prévia do item 19.
+Limpo em 06/11: o que já está no `main` foi para "Feito recentemente". Os números continuam os
+mesmos, porque o texto cita os itens pelo número.
 
-    **Itens 19 e 20 programados em 02/11** (ramo `claude/quem-fez-sozinha`), testados no Soneca de teste
-    (cenário `quem-fez`), de dia e de noite, no PR #65. `supabase/022_quem_fez_e_sozinha.sql` rodado pelo
-    Patrick em 02/11 (colunas, travas, gatilho, `member_left` e permissões conferidos pelo conector). Era
-    o passo antes de juntar ao `main`:
-    `supabase/022_quem_fez_e_sozinha.sql` no SQL Editor (colunas `done_by` e `self_settled`, travas e
-    permissões). Sem ele, o app novo salva o resto do registro, mas não quem fez nem o "sozinha". No
-    iPhone e no Android, só chega com a próxima compilação.
-21. **Notificações que trazem a família de volta** (Patrick, 02/11). Duas ideias: (a) pontos
-    interessantes do desenvolvimento da criança para a idade dela; (b) lembrar de ver o resumo da
-    semana. A decidir: de onde vêm os marcos (fonte citada, como os da SBP ou do CDC) e o tom, que não
-    pode virar lista de cobrança nem gerar ansiedade em quem ainda não viu o marco; com que frequência;
-    e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também o item 30.
-22. **Sono de dia na Semana** (Patrick, 02/11; em PR): a média por dia dos sonos que começam entre 6h
-    e 18h, como na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. Decidido em
-    02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
-    do quadro Sono de "Média por dia", antes do maior sono seguido ("de dia: 3h50 · maior sono seguido:
-    5h40"). Falta decidir se vai também para o resumo para mandar (Semana e Mês).
-23. **Pedido de avaliação na App Store e na Play Store** (Patrick, 02/11). A janela do próprio celular
-    já está no `main` pelo #54 e vai na 1.0.2 (regras em "Onde paramos"). Falta: (a) a linha "Avaliar o
-    Soneca" nos Ajustes, que abre a página da loja (prévia antes de programar); (b) conferir depois do
-    lançamento que a janela aparece: no Android só com o app baixado da Play Store, e no iPhone o
-    TestFlight não mostra a janela de verdade; (c) acompanhar as notas e responder as avaliações nas duas
-    lojas.
-24. **Horários dos despertares em "Como foram as noites"** (Patrick, 02/11): no resumo da aba Mês, no
-    grupo dos despertares, mostrar os horários em que o bebê acordou à noite. A decidir (com prévia): em
-    que linha ou grupo entram e como mostrar um mês inteiro de horários sem virar lista longa.
-25. **Limpar a tela inicial de botões** (Patrick, 03/11). A decidir (com prévia): quais botões saem ou
-    se juntam e para onde vão. Hoje a família já pode desligar botões em Família › Botões.
-26. **Melhorar a experiência dos relatórios** (Patrick, 03/11). A decidir: o que hoje atrapalha, na aba
-    Mês e no relatório para o pediatra.
-27. **Tirar o relatório sem ficar preso à tela do mês** (Patrick, 03/11): gerar e mandar o relatório
-    por conta própria, em vez de ele já estar dentro da aba Mês. A decidir: que período se escolhe e em
-    que formato sai (PDF, texto).
-28. **Calendário de vacinas** (Felipe Boin, 03/11): uma aba com as vacinas por idade. A decidir: a fonte
-    (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
-    se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas.
-29. **Linha de "tarefas diárias" na tela inicial** (Felipe Boin, 03/11): tummy time, banho etc., para
-    marcar no dia. A decidir: se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho,
-    banho de sol) mostrados como linha no alto; e quais tarefas.
-30. **Aviso para anotar depois de X horas sem registro** (Patrick, 03/11; antes "Lembrete para usar o
-    app", em "Ideias para depois"): lembrar os pais de anotar quando passam X horas sem nenhum registro.
-    A decidir: quantas horas (e se a família escolhe), se não avisa de madrugada, e se conta só o que
-    esta pessoa anotou ou o da família toda. Aviso agendado pelo próprio celular, como o do remédio, não
-    sabe o que os outros anotaram com o app fechado; para isso, aviso pelo servidor.
+- **4 · Cartão do dia, sem IA** (estava no plano do lançamento): sono nas últimas 24 h comparado à média da
+  semana e tempo desde a última mamada (seção "Ideias para depois").
+- **5 · Outros membros também convidam** (decidido pelo Patrick em 16/10, ainda não começar): qualquer membro
+  gera convite, e fica guardado quem convidou cada pessoa. Hoje só quem criou a família convida (banco,
+  app e Termos, seção 4). Pede SQL novo, prévia da tela da Família e versão nova dos Termos e da Política.
+- **6 · Passar a família para outro membro** (decidido pelo Patrick em 16/10, ainda não começar): quem criou
+  a família entrega o controle a outro membro e pode sair sem apagar. Hoje só tem "Apagar família"; a
+  família só passa adiante se quem criou apagar a conta. Mesmos passos do item 5, e junto com ele.
+- **8 · Aviso de versão nova** (pedido do Patrick em 16/10): quando sair uma versão nova do app, avisar quem
+  está com a antiga para atualizar. O convite do Bruno só funcionou depois de atualizar o TestFlight. A
+  decidir antes de programar: de onde o app sabe qual é a versão mais nova (banco ou loja), se o aviso
+  pode ser fechado ou bloqueia o app quando a versão antiga quebra algo, e o texto exato (prévia antes).
+- **18 · A mesma comparação para os vômitos** (Patrick, 01/11): o que veio antes de cada vômito do mês. A
+  discutir agora que o item 17 está feito (é saúde, não rotina: cuidado para o cartão não sugerir causa).
+- **21 · Notificações que trazem a família de volta** (Patrick, 02/11). Duas ideias: (a) pontos
+  interessantes do desenvolvimento da criança para a idade dela; (b) lembrar de ver o resumo da
+  semana. A decidir: de onde vêm os marcos (fonte citada, como os da SBP ou do CDC) e o tom, que não
+  pode virar lista de cobrança nem gerar ansiedade em quem ainda não viu o marco; com que frequência;
+  e o horário. As duas podem ser aviso local, como o do remédio, sem servidor. Ver também o item 30.
+- **22 · Sono de dia na Semana** (Patrick, 02/11; no `main` pelo #64): a média por dia dos sonos que começam entre 6h
+  e 18h, como na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. Decidido em
+  02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
+  do quadro Sono de "Média por dia", antes do maior sono seguido ("de dia: 3h50 · maior sono seguido:
+  5h40"). Falta decidir se vai também para o resumo para mandar (Semana e Mês).
+- **23 · Pedido de avaliação na App Store e na Play Store** (Patrick, 02/11). A janela do próprio celular
+  já está no `main` pelo #54 e vai na 1.0.2 (regras em "Onde paramos"). Falta: (a) a linha "Avaliar o
+  Soneca" nos Ajustes, que abre a página da loja (prévia antes de programar); (b) conferir depois do
+  lançamento que a janela aparece: no Android só com o app baixado da Play Store, e no iPhone o
+  TestFlight não mostra a janela de verdade; (c) acompanhar as notas e responder as avaliações nas duas
+  lojas.
+- **24 · Horários dos despertares em "Como foram as noites"** (Patrick, 02/11): no resumo da aba Mês, no
+  grupo dos despertares, mostrar os horários em que o bebê acordou à noite. A decidir (com prévia): em
+  que linha ou grupo entram e como mostrar um mês inteiro de horários sem virar lista longa.
+- **25 · Limpar a tela inicial de botões** (Patrick, 03/11). A decidir (com prévia): quais botões saem ou
+  se juntam e para onde vão. Hoje a família já pode desligar botões em Família › Botões.
+- **26 · Melhorar a experiência dos relatórios** (Patrick, 03/11). A decidir: o que hoje atrapalha, na aba
+  Mês e no relatório para o pediatra.
+- **27 · Tirar o relatório sem ficar preso à tela do mês** (Patrick, 03/11): gerar e mandar o relatório
+  por conta própria, em vez de ele já estar dentro da aba Mês. A decidir: que período se escolhe e em
+  que formato sai (PDF, texto).
+- **28 · Calendário de vacinas** (Felipe Boin, 03/11): uma aba com as vacinas por idade. A decidir: a fonte
+  (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
+  se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas.
+- **29 · Linha de "tarefas diárias" na tela inicial** (Felipe Boin, 03/11): tummy time, banho etc., para
+  marcar no dia. A decidir: se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho,
+  banho de sol) mostrados como linha no alto; e quais tarefas.
+- **30 · Aviso para anotar depois de X horas sem registro** (Patrick, 03/11; antes "Lembrete para usar o
+  app", em "Ideias para depois"): lembrar os pais de anotar e ajudar quem é novo a começar.
+  **Decidido em 04/11 (fase 1, sem servidor, aviso local como o do remédio; prévia antes de programar):**
+    - Aviso depois de **3 horas fixas** sem registro feito **neste celular**; cada registro remarca.
+    - **Silêncio das 18h às 7h.** O aviso que cairia no silêncio não toca (não passa para a manhã).
+    - Nos Ajustes, só uma chave de ligar e desligar.
+    - **Permissão** pedida depois do primeiro registro, com um cartão curto antes da janela do sistema.
+      Quem já deu a permissão para o remédio não é perguntado de novo.
+    - **Primeira semana**, só para quem é novo: aviso no dia 1 às 17h (como foi o primeiro dia), no
+      dia 3 (a semana já dá para ver) e no dia 7 (resumo da semana). No dia de um desses, o de 3 horas
+      não toca.
+    - **Três avisos ignorados seguidos** (nenhum registro depois) desligam a chave; só volta se a pessoa
+      ligar de novo.
+    - **Primeiro registro:** o cartão "Tudo pronto" pergunta quando foi a última mamada (horário
+      digitado, peito opcional).
+    - Sem culpa nem contagem de dias seguidos no texto. Medir no Funil: registro em 24 h e ativo após 7 dias.
+  **Fase 2 (servidor, depois):** aviso que conta o que a família toda anotou e e-mail para quem criou
+  a conta e nunca anotou.
+- **31 · Ajustar a tela Respostas do pediatra** (Patrick, 06/11). A decidir (com prévia): o que mudar.
+- **32 · Botão de salvar do Sono muito para baixo** (Patrick, 06/11): reorganizar as telas de registro
+  para melhorar o uso, a começar pelo Sono. A decidir (com prévia): o que sobe, o que se junta.
+- **33 · Adicionar "soneca"** (Patrick, 06/11). A decidir: se é um tipo de sono (soneca de dia × sono da
+  noite) e como aparece nos resumos.
+- **34 · Sono "todo no colo"** (Patrick, 06/11): uma opção para marcar que o sono inteiro foi no colo, sem
+  digitar o tempo em "Quanto tempo no colo".
+- **35 · Aviso para chamar alguém para a família** (Patrick, 06/11): quando só uma pessoa usa a família,
+  lembrar que dá para convidar alguém para dividir o cuidado. A decidir (com prévia): onde e quando o
+  aviso aparece, quantas vezes, e o texto, sem cobrança.
+- **36 · Sensação de app premium** (Patrick, 06/11). Seis frentes, cada uma com prévia antes de programar:
+    - **Transições e animações:** as telas deslizam ao abrir e fechar, e os toques têm resposta visual
+      (como o check animado da dose, #60). Sem atrasar o registro (uso às 3h da manhã).
+    - **Nenhuma tela vazia:** toda lista sem registro mostra imagem e uma frase do que fazer (capivara
+      só nas telas de rotina).
+    - **Vibração leve (haptic)** ao salvar um registro, trocar de peito e terminar a mamada. Pede o
+      plugin `@capacitor/haptics`: só chega com compilação nova.
+    - **Pacote de ícones único** no traço fino arredondado que o Soneca já usa (ex.: Lucide), para os
+      ícones novos não destoarem.
+    - **Referência no Mobbin** (telas de apps reais) antes de cada prévia; é pago, vale assinar um mês.
+    - **Onboarding:** as primeiras telas de quem acabou de baixar. Liga com o cartão "Tudo pronto" do
+      item 30 e com as boas-vindas do #48.
+- **37 · Registros mais usados, no Funil do Soneca** (Patrick, 06/11): uma tela nova no Funil
+  (https://claude.ai/artifact/PwVB7Tj5Fp8x3U6hWm1aYF) com os tipos de registro que as famílias mais
+  fazem (mamada, ordenha, sono, fralda, remédio, cuidados etc.), para ver o que é usado, o que não é, e
+  melhorar em cima disso. Só contagens pelo conector, sem ler o conteúdo dos registros; fora a conta do
+  revisor da Apple, como no resto do Funil. A decidir: o período (7 dias, 30 dias), se conta registros
+  ou famílias que usam cada tipo, e se separa por semana de uso. Liga com os itens 25 (limpar a tela
+  inicial) e 29 (tarefas diárias).
 
 **Android** (seção "App do Android")
 
@@ -1257,6 +1121,13 @@ intervalo do só quando precisar, programar e editar remédio, linha do tempo e 
 
 ## Feito recentemente
 
+- **06/11, itens do backlog que já estão no `main`** (texto completo de cada um no README do commit
+  `a843e3b`): 1 aviso do remédio com o app fechado (#43); 2 e 10 convite e indicação abrindo o app
+  (#40, Universal Links e página das lojas); 3 remetente próprio dos e-mails (Resend, 30/10); 7
+  registro em outro dia e 11 "Ainda dormindo?" (27/10); 9 Indicar o Soneca com o link certo (#52); 12
+  e 13 cronômetro da mamada e tela de bloqueio (#41, #42, #45, #46); 14 site só com a página das lojas
+  (#47); 15 zoom nos gráficos (#50); 16 pausar a mamada (#51); 17 "Como foram as noites" (#55, #59,
+  #62, #63); 19 quem fez e 20 pegou no sono sozinha (#65, SQL 022).
 - **25/09, peito na mamada e ordenha:** no ar. Prévia usada para decidir:
   https://claude.ai/artifact/RM2MDniYfSfwCAZciyz9py. Banco: `supabase/004_peito_e_ordenha.sql`.
 - **25/09, `supabase/003_endurece_colunas.sql` rodado:** quem está logado só grava nas colunas que o
