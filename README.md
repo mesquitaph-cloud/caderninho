@@ -246,6 +246,11 @@ mesmos, porque o texto cita os itens pelo número.
   revisor da Apple, como no resto do Funil. A decidir: o período (7 dias, 30 dias), se conta registros
   ou famílias que usam cada tipo, e se separa por semana de uso. Liga com os itens 25 (limpar a tela
   inicial) e 29 (tarefas diárias).
+- **38 · Foto do bebê no lugar da inicial** (Patrick, 06/11): hoje o círculo no alto mostra a inicial
+  ("H"). Liberar uma foto, que aparece no topo da tela inicial, que agora fica preso ao rolar (prévia
+  https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE), e na aba do bebê. A decidir: onde a foto fica
+  guardada (Storage do Supabase, com regra de acesso só para a família), tamanho máximo, e se entra na
+  Política (foto do bebê é dado pessoal; LGPD). Pede SQL novo e plugin de câmera/galeria no app.
 
 **Android** (seção "App do Android")
 
