@@ -1095,7 +1095,7 @@ async function ftFinish() {
   ftSet(null); render();
   const row = await addEntry(ev);
   if (!row) { ftSet(t); return render(); }
-  toast(savedText(ev), () => deleteEntry(row.id));
+  toast(savedText(ev, true), () => deleteEntry(row.id));
 }
 function ftDiscard(t = ftGet()) {
   if (!t) return;
@@ -1248,9 +1248,29 @@ function drawEntry() {
   if (S.edit) h += '<button class="del" data-act="del">Apagar registro</button>';
   openPanel(h);
 }
-// Um pouco de humor só na fralda: o cocô gigante e o alerta marrom ganham mensagem própria.
-const savedText = ev => ev.poo_alert ? 'Alerta marrom às ' + hm(ev.t) + '. Coragem!'
-  : ev.poo_size === 'gigante' ? 'Salvo às ' + hm(ev.t) + '. Que fralda!' : 'Salvo às ' + hm(ev.t);
+// Um pouco de humor só na rotina. O cocô gigante e o alerta marrom têm frase sempre; nos outros registros
+// novos da rotina, uma frase sorteada a cada 3 (nunca a mesma duas vezes seguidas). Remédio, sintomas,
+// vômito, peso e os cuidados fora o banho ficam só com "Salvo". Editar não ganha frase.
+const CHEER = {
+  feed: ['Barriguinha cheia.', 'Mais uma pra conta.', 'Leite servido.'],
+  pump: ['Estoque reforçado.'],
+  sleep: ['Shhh…', 'Bons sonhos.', 'Silêncio na casa.'],
+  wake: ['Tô vivo, gente!', 'De volta ao mundo.'],
+  pee: ['Bebê sequinho.', 'Troca feita.'],
+  poo: ['Missão cumprida.'],
+  bath: ['Cheirinho de bebê.'],
+};
+function cheer(ev) {
+  const list = CHEER[ev.kind === 'diaper' ? (ev.poo ? 'poo' : 'pee') : ev.kind];
+  if (!list || ++cheer.n % 3) return '';
+  const opts = list.length > 1 ? list.filter(p => p !== cheer.last) : list;
+  cheer.last = opts[Math.floor(Math.random() * opts.length)];
+  return '. ' + cheer.last;
+}
+cheer.n = 0;
+const savedText = (ev, fresh) => ev.poo_alert ? 'Alerta marrom às ' + hm(ev.t) + '. Coragem!'
+  : ev.poo_size === 'gigante' ? 'Salvo às ' + hm(ev.t) + '. Que fralda!'
+  : 'Salvo às ' + hm(ev.t) + (fresh ? cheer(ev) : '');
 function computeT() {
   const [H, M] = (S.time || hm(Date.now())).split(':').map(Number);
   let t = S.base + H * HOUR + M * MIN;
@@ -1331,7 +1351,7 @@ async function saveEntry(btn) {
   const row = await addEntry(ev);
   if (!row) return busy(btn, false);
   if (fromTimer) ftSet(null);
-  closeSheet(); toast(savedText(ev), () => deleteEntry(row.id));
+  closeSheet(); toast(savedText(ev, true), () => deleteEntry(row.id));
 }
 
 /* ---------- últimos 3 dias de um botão ---------- */
@@ -2615,7 +2635,7 @@ $('strip').addEventListener('click', async e => {
   if (a === 'open') return openEntry('feed');
   if (a === 'wake') {
     const row = await addEntry({ kind: 'wake', t: Date.now() });
-    if (row) toast('Acordou às ' + hm(Date.parse(row.at)), () => deleteEntry(row.id));
+    if (row) toast('Acordou às ' + hm(Date.parse(row.at)) + cheer({ kind: 'wake' }), () => deleteEntry(row.id));
   }
 });
 $('strip').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.dataset.strip === 'open') { e.preventDefault(); openEntry('feed'); } });
