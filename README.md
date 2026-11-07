@@ -258,7 +258,9 @@ mesmos, porque o texto cita os itens pelo número.
   ordenha. Hoje a Mamada sempre pergunta "Peito" ou "Mamadeira", e só o botão Ordenha dá para desligar
   (Família › Botões). A decidir (com prévia): onde fica a opção (cadastro do bebê, Família › Botões ou
   pergunta nas boas-vindas); se a Mamada abre direto na mamadeira; o que some dos resumos e do relatório
-  do pediatra; e o texto, neutro, sem julgar quem não amamenta.
+  do pediatra; e o texto, neutro, sem julgar quem não amamenta. Junto: na mamadeira, marcar se é leite
+  materno ou fórmula (vale também para quem amamenta e dá leite ordenhado). A decidir: se a escolha
+  fica lembrada da última mamadeira; e se resumos e relatório separam os ml de cada um.
 - **41 · Média por dia da mamadeira e das fraldas no resumo do Mês** (Patrick, 07/11): nos quadros
   "Na mamadeira" e "Fraldas" da aba Mês, a média por dia em destaque e o total do mês menor embaixo, como
   o quadro "Sono por dia" já faz (`monthHtml` em `report.js`). Hoje o destaque é o total (ex.: "18,2 L",
