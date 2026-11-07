@@ -794,3 +794,87 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .chk input:focus-visible+.box{outline:2px solid var(--accent);outline-offset:2px}
 .chk a{color:var(--link);font-weight:500;text-underline-offset:2px}
 a.li{color:inherit;text-decoration:none}
+
+/* ---------- Tela inicial de 06/11 (prévia aprovada: https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE) ---------- */
+/* O cartão do bebê fica preso no alto, com os cantos de baixo arredondados */
+.hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-12px -16px 0;padding:14px 16px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
+body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
+/* A data com as setas à esquerda e Dia | Semana | Mês, pequeno, à direita */
+#paneHome .daynav{flex-wrap:wrap;gap:6px}
+#paneHome .daynav .mid{gap:0;min-width:0}
+#paneHome .daynav .arr{width:28px;height:30px}
+#paneHome .dtitle{font-size:15px;padding:6px 5px;gap:5px}
+#paneHome .dtitle svg{width:16px;height:16px}
+#paneHome .views{display:flex;margin:0 0 0 auto;gap:2px;padding:3px;border-radius:12px}
+#paneHome .views button{padding:5px 8px;border-radius:9px;font-size:13px}
+#paneHome{padding-bottom:calc(var(--dockh,96px) + 10px)}
+/* Botões de registro, presos em cima das abas, numa linha só */
+.dock{position:fixed;left:0;right:0;bottom:var(--tabh,64px);z-index:4;background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px 12px}
+.din{max-width:480px;margin:0 auto;position:relative}
+.btns{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:7px;position:relative;z-index:1}
+.din.on .btns{padding-top:10px}
+.rb{position:relative;border-radius:16px;padding:9px 2px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.rb svg{width:22px;height:22px}
+.rb b{font-weight:500;font-size:12.5px;line-height:1.1;color:var(--ink);text-align:center;overflow-wrap:anywhere}
+.rb.k-feed svg,.rb.k-pump svg{color:var(--c-feed)}.rb.k-sleep svg{color:var(--c-sleep)}.rb.k-diaper svg{color:var(--c-diaper)}
+.rb.k-med svg,.rb.k-symptom svg{color:var(--c-med)}.rb.k-care svg{color:var(--c-care)}.rb.k-other svg{color:var(--other-ink)}
+@media (prefers-reduced-motion:no-preference){.rb{transition:transform .12s cubic-bezier(.3,.7,.2,1)}.rb:active{transform:scale(.93)}}
+/* A faixa do sono ou da mamada: sai do botão dela, ligada por uma emenda curva */
+.ext{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;padding:12px 12px 12px 14px;min-height:84px}
+.ext .capi{width:84px;height:auto;flex:none;fill:none;stroke:currentColor;stroke-width:2.3px;stroke-linecap:round;stroke-linejoin:round}
+.ext .fi{width:84px;flex:none;display:grid;place-items:center}.ext .fi svg{width:44px;height:44px}
+.ext .tx{flex:none;display:flex;flex-direction:column;gap:1px;min-width:0;white-space:nowrap}
+.ext small{font-size:13px}.ext small.sd{opacity:.85}
+.ext .t{font-family:var(--display);font-weight:500;font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
+.spill{background:var(--surface);color:inherit;border-radius:999px;padding:9px 16px;font-weight:500;font-size:15px;flex:none}
+.ext.k-feed{cursor:pointer}
+.rb.joined{border-top-left-radius:0;border-top-right-radius:0}
+.neck{position:absolute;left:0;right:0;top:-10px;height:12px;background:var(--kbg);pointer-events:none}
+.neck i{position:absolute;top:0;width:10px;height:10px}
+.neck .l{left:-10px;background:radial-gradient(circle at 0 100%,transparent 9.5px,var(--kbg) 10px)}
+.neck .r{right:-10px;background:radial-gradient(circle at 100% 100%,transparent 9.5px,var(--kbg) 10px)}
+/* O primeiro botão da linha (Mamada): a faixa desce reta pela borda esquerda, sem curva para fora */
+.rb.jl .neck .l{display:none}
+.din:has(.rb.jl) .ext{border-bottom-left-radius:0}
+.din.pre .ext,.din.pre .neck{visibility:hidden}
+.shape{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:0}
+.shape.s-sleep path{fill:var(--sleep)}.shape.s-feed path{fill:var(--feed)}
+/* Outros: a linha com os outros registros, logo acima dos botões */
+.popscrim{position:fixed;inset:0;background:var(--scrim);z-index:6}
+body.pop-open .dock{z-index:7}
+body.pop-open .ext,body.pop-open .neck{opacity:0}
+body.pop-open .rb.joined{border-top-left-radius:16px;border-top-right-radius:16px}
+body.pop-open #grid [data-k="more"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.pop{position:fixed;left:0;right:0;z-index:8;padding:0 12px}
+.pin{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:7px}
+.pin .rb{box-shadow:0 6px 16px -8px var(--scrim)}
+@media (prefers-reduced-motion:no-preference){
+  .pin .rb{animation:popin .3s cubic-bezier(.3,.7,.2,1) backwards}
+  .pin .rb:nth-child(1){animation-delay:.12s}.pin .rb:nth-child(2){animation-delay:.08s}.pin .rb:nth-child(3){animation-delay:.04s}
+  @keyframes popin{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+}
+/* Telas curtas do Sono e da Mamada: "Outras opções" e "Horário" recolhidos, o botão grande no pé */
+.orow{display:flex;align-items:center;gap:10px;width:100%;background:var(--surface2);border-radius:16px;padding:14px;font-size:16px;text-align:left;color:var(--ink)}
+.orow>span:first-child{flex:1}
+.orow .cv{font-style:normal;color:var(--muted);font-size:22px;line-height:1}
+.orow .v{font-family:var(--display);font-weight:500;font-size:18px;font-variant-numeric:tabular-nums}
+.orow .pen{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface);color:var(--muted)}
+.orow .pen svg{width:15px;height:15px}
+.orow.tm.open .pen{background:var(--sleep);color:var(--sleep-ink)}
+@media (prefers-reduced-motion:no-preference){.orow .cv{transition:transform .2s}.ofold{animation:ofold .22s cubic-bezier(.3,.7,.2,1)}@keyframes ofold{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}}
+.orow.open .cv{transform:rotate(90deg)}
+.ofold{display:flex;flex-direction:column;gap:12px}
+.sfoot{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));margin:0 -16px calc(-18px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.sgo{display:flex;align-items:center;justify-content:center;gap:9px;width:100%}
+.sgo svg{width:22px;height:22px}
+/* Mamadeira: os atalhos de ml e, ao lado de 150 e 180, o campo com − e + */
+.mlg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.mlg .opt{padding:10px 0;text-align:center;font-size:15px}
+.mlg .opt.on{background:var(--feed);color:var(--feed-ink)}
+.mls{grid-column:span 2;display:flex;align-items:center;gap:4px;border:1.5px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
+.mls label{flex:1;display:flex;align-items:baseline;justify-content:center;gap:3px;min-width:0}
+.mls input{width:3.2ch;border:none;background:none;text-align:right;font-family:var(--display);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);padding:0}
+.mls em{font-style:normal;color:var(--muted);font-size:13px}
+.mls button{width:34px;height:34px;border-radius:50%;background:var(--surface2);font-size:18px;color:var(--ink);flex:none}
+.sgo.k-sleep{background:var(--sleep);color:var(--sleep-ink)}.sgo.k-sleep svg{color:var(--c-sleep)}
+.sgo.k-feed{background:var(--feed);color:var(--feed-ink)}.sgo.k-feed svg{color:var(--c-feed)}
