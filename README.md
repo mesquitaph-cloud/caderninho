@@ -1351,6 +1351,12 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   dos 50% (todos os "Dormiu" do período, contando o sono sem a marca como não sozinho, embora o resumo
   diga só "5 vezes" porque a marca é opcional), um mínimo de sonos no período, onde aparece e o texto.
   Cuidado para o troféu não virar meta: o Soneca só junta o que foi anotado, sem avaliar o bebê.
+- **Tela de estatísticas do bebê** (Patrick, 07/11), como a do Baby Tracker: tendências e números
+  de cada registro ao longo do tempo (sono por dia, mamadas por dia, fraldas, ordenha), em gráficos
+  por semana e por mês. Parte já existe nas abas Semana e Mês; a decidir se vira uma tela própria ou
+  se cresce dentro delas, quais números entram e o período (7 dias, 30 dias, desde o nascimento).
+  Mesmo cuidado do cartão "como está o bebê": mostrar o que foi anotado, sem "normal" ou "abaixo do
+  esperado". Prévia num artefato antes de programar.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 
