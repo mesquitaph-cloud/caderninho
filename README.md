@@ -176,13 +176,18 @@ mesmos, porque o texto cita os itens pelo número.
   e 18h, como na aba Mês (`napDay` em `report.js`), nos mesmos dias da média de sono. Decidido em
   02/11 (opção A da prévia https://claude.ai/artifact/3JKSvqGERARiwZcZ8mBBzh): entra na linha pequena
   do quadro Sono de "Média por dia", antes do maior sono seguido ("de dia: 3h50 · maior sono seguido:
-  5h40"). Falta decidir se vai também para o resumo para mandar (Semana e Mês).
+  5h40"). **Fechado em 07/11 (Patrick): não entra no resumo para mandar.**
 - **23 · Pedido de avaliação na App Store e na Play Store** (Patrick, 02/11). A janela do próprio celular
-  já está no `main` pelo #54 e vai na 1.0.2 (regras em "Onde paramos"). Falta: (a) a linha "Avaliar o
-  Soneca" nos Ajustes, que abre a página da loja (prévia antes de programar); (b) conferir depois do
-  lançamento que a janela aparece: no Android só com o app baixado da Play Store, e no iPhone o
-  TestFlight não mostra a janela de verdade; (c) acompanhar as notas e responder as avaliações nas duas
-  lojas.
+  já está no `main` pelo #54. **Feito em 07/11 no ramo `claude/avisos-0711`** (prévia aprovada:
+  https://claude.ai/artifact/NUgYtwRwXfdQ3MBCGjiiJL): no Perfil, nos dois celulares, a linha "Avaliar o
+  Soneca na App Store" (ou "na Play Store"), com o texto do Patrick embaixo: "O Soneca é feito pelos pais
+  da Marina, e sua avaliação seria muito importante para nós!". No Android, um popup no meio da tela com o
+  mesmo texto, "Avaliar na Play Store" e "Agora não", no lugar da janela do Google (o Google não aceita
+  pergunta nossa antes da janela dele, e pede que botão nosso leve à loja). Mesma regra da janela: depois
+  de registro de rotina, 8h às 17h, 7 dias e 5 dias diferentes; "Agora não" volta em 60 dias, "Avaliar"
+  não pede mais. No iPhone, só a janela da Apple: a regra 5.6.1 da Apple não aceita pedido próprio
+  ("we will disallow custom review prompts"). Falta: (b) conferir depois do lançamento que a janela e o
+  popup aparecem e que o link abre a loja; (c) acompanhar as notas e responder as avaliações.
 - **24 · Horários dos despertares em "Como foram as noites"** (Patrick, 02/11): no resumo da aba Mês, no
   grupo dos despertares, mostrar os horários em que o bebê acordou à noite. A decidir (com prévia): em
   que linha ou grupo entram e como mostrar um mês inteiro de horários sem virar lista longa.
@@ -208,9 +213,10 @@ mesmos, porque o texto cita os itens pelo número.
   **Decidido em 04/11 (fase 1, sem servidor, aviso local como o do remédio; prévia antes de programar):**
     - Aviso depois de **3 horas fixas** sem registro feito **neste celular**; cada registro remarca.
     - **Silêncio das 18h às 7h.** O aviso que cairia no silêncio não toca (não passa para a manhã).
-    - Nos Ajustes, só uma chave de ligar e desligar.
-    - **Permissão** pedida depois do primeiro registro, com um cartão curto antes da janela do sistema.
-      Quem já deu a permissão para o remédio não é perguntado de novo.
+    - No Perfil, só uma chave de ligar e desligar. **Mudado em 07/11 (Patrick): vem ligada e não se
+      pergunta nada;** quem não quiser desliga no Perfil.
+    - **Permissão:** só a janela do próprio celular, uma vez, logo depois de um registro (sem cartão
+      nosso). Quem já deu a permissão para o remédio não vê nada. Negada, a chave fica desligada.
     - **Primeira semana**, só para quem é novo: aviso no dia 1 às 17h (como foi o primeiro dia), no
       dia 3 (a semana já dá para ver) e no dia 7 (resumo da semana). No dia de um desses, o de 3 horas
       não toca.
@@ -219,6 +225,25 @@ mesmos, porque o texto cita os itens pelo número.
     - **Primeiro registro:** o cartão "Tudo pronto" pergunta quando foi a última mamada (horário
       digitado, peito opcional).
     - Sem culpa nem contagem de dias seguidos no texto. Medir no Funil: registro em 24 h e ativo após 7 dias.
+  **Fase 1 feita em 07/11 no ramo `claude/avisos-0711`** (prévia aprovada:
+  https://claude.ai/artifact/NUgYtwRwXfdQ3MBCGjiiJL). Como ficou:
+    - A cada registro feito no celular, o app marca três avisos, de 3 em 3 horas; os que cairiam entre
+      18h e 7h não tocam (a conta continua pela grade de 3 horas: um registro às 17h44 dá avisos às 8h44,
+      11h44 e 14h44 do dia seguinte). Os três passarem sem registro desliga a chave, e o Perfil diz
+      "Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser."
+    - Textos aprovados: "Como vai a Helena?" / "Se teve mamada, sono ou fralda, dá para anotar com o
+      horário certo."; dia 1, "O primeiro dia da Helena no Soneca" / "Veja na tela Hoje tudo o que foi
+      anotado."; dia 3, "A semana da Helena já aparece" / "Na aba Semana, os dias lado a lado: sono,
+      mamadas e fraldas."; dia 7, "O resumo da semana da Helena" / "Sono, mamadas e fraldas dos últimos 7
+      dias, para ver e mandar para a família." Tocar no do dia 3 ou 7 abre a Semana.
+    - Os dias 1, 3 e 7 contam do primeiro registro neste celular (dia 1 só se foi antes das 17h), e só
+      para quem não tinha registro próprio antes desta versão. Quem já usa recebe só o de 3 horas.
+    - No Android, canal "Lembrete para anotar", separado de "Hora do remédio". Sair da conta cancela
+      os lembretes. No site, nada muda.
+    - O cartão "Tudo pronto" pergunta a última mamada (horário, peito opcional) e salva o primeiro
+      registro dali. Regra do cartão: só para quem criou a família (desde 30/10), enquanto o bebê não tem
+      registro; some com o primeiro registro, "Pular" ou o ×.
+    - Teste: `testes/servidor.mjs` com o cenário `app-lembrete` (app do Android de mentira, família nova).
   **Fase 2 (servidor, depois):** aviso que conta o que a família toda anotou e e-mail para quem criou
   a conta e nunca anotou.
 - **31 · Ajustar a tela Respostas do pediatra** (Patrick, 06/11). A decidir (com prévia): o que mudar.
@@ -272,11 +297,11 @@ mesmos, porque o texto cita os itens pelo número.
   identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
   app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
   prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
-- **43 · Aviso de "Salvo" no alto da tela** (Patrick, 07/11; feito em 07/11 no branch `claude/aviso-salvo`):
+- **43 · Aviso de "Salvo" no alto da tela** (Patrick, 07/11; no `main` pelo #70):
   o aviso (`toast` em `app.js`) saiu de cima dos botões de registro e desce no alto, por cima do cartão do
   bebê. Vale para todos os avisos, inclusive os de erro. Mesma pílula, mesmo tempo (1,8 s, ou 5 s com
   "Desfazer"). Prévia aprovada: https://claude.ai/artifact/2G8ffvXrkyW6MRdUf93B7Z
-- **44 · Frases de incentivo** (Patrick, 07/11; feito em 07/11 no mesmo branch): em 1 de cada 3 registros
+- **44 · Frases de incentivo** (Patrick, 07/11; no `main` pelo #70): em 1 de cada 3 registros
   novos da rotina, uma frase sorteada depois do horário, nunca a mesma duas vezes seguidas ("Salvo às
   14:48. Barriguinha cheia."). Editar não ganha frase. Frases aprovadas (`CHEER` em `app.js`):
     - Mamada: Barriguinha cheia. · Mais uma pra conta. · Leite servido.
@@ -291,8 +316,10 @@ mesmos, porque o texto cita os itens pelo número.
 - **45 · Remédio dado tira a notificação** (Patrick, 07/11): ao marcar a dose como dada, o aviso que já
   chegou continua na central de notificações do celular. Hoje o app só cancela os avisos que ainda não
   tocaram (`medNotif.cancel` em `app.js`); falta apagar também o que já foi entregue daquela dose
-  (`removeDeliveredNotifications` do plugin de avisos locais). Vale também para "Pular". Testar no
-  iPhone e no Android, com o app aberto e fechado.
+  (`removeDeliveredNotifications` do plugin de avisos locais). Vale também para "Pular". **Feito em 07/11
+  no ramo `claude/avisos-0711`:** a cada redesenho, o app tira da central os avisos já tocados das doses
+  marcadas (por quem for) nos últimos 3 dias, achados pelo número do aviso. Testar no iPhone e no
+  Android, com o app aberto e fechado.
 - **46 · O app muda com a idade do bebê** (Patrick, 07/11): botões, resumos e frases acompanham a fase
   (ex.: recém-nascido × bebê que já come papinha). A decidir: o que muda em cada fase, por que fonte se
   definem as idades, e se a família pode desfazer a mudança. Liga com "fases até 5 anos" (Ideias para
@@ -1351,6 +1378,12 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   dos 50% (todos os "Dormiu" do período, contando o sono sem a marca como não sozinho, embora o resumo
   diga só "5 vezes" porque a marca é opcional), um mínimo de sonos no período, onde aparece e o texto.
   Cuidado para o troféu não virar meta: o Soneca só junta o que foi anotado, sem avaliar o bebê.
+- **Tela de estatísticas do bebê** (Patrick, 07/11), como a do Baby Tracker: tendências e números
+  de cada registro ao longo do tempo (sono por dia, mamadas por dia, fraldas, ordenha), em gráficos
+  por semana e por mês. Parte já existe nas abas Semana e Mês; a decidir se vira uma tela própria ou
+  se cresce dentro delas, quais números entram e o período (7 dias, 30 dias, desde o nascimento).
+  Mesmo cuidado do cartão "como está o bebê": mostrar o que foi anotado, sem "normal" ou "abaixo do
+  esperado". Prévia num artefato antes de programar.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 

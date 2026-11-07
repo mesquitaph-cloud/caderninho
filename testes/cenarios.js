@@ -126,6 +126,31 @@ if (CEN === 'app-remedio') {
     created_by: U.me, created_at: new Date(NOW - 2 * DAY).toISOString() });
 }
 
+// "app-lembrete" (07/11): o app do Android com a família nova do "bv-nova" (a Ana e o Pedro, sem registros),
+// para o cartão "Tudo pronto" e o lembrete de 3 horas. "app-avaliar": o mesmo app com a rotina da Carol,
+// para o pedido de avaliação. Os avisos agendados ficam em window.avisos; os que já tocaram, em
+// window.tocados; a janela de permissão, em window.permissoes (quantas vezes apareceu).
+if (CEN === 'app-lembrete' || CEN === 'app-avaliar') {
+  const real = window.Capacitor, perm = { display: 'prompt' };
+  window.avisos = []; window.tocados = []; window.permissoes = 0; window.avaliacoes = [];
+  const LN = {
+    checkPermissions: async () => ({ ...perm }),
+    requestPermissions: async () => { window.permissoes++; perm.display = 'granted'; return { ...perm }; },
+    createChannel: async c => { (window.canais ||= []).push(c); },
+    getPending: async () => ({ notifications: window.avisos.map(n => ({ ...n })) }),
+    getDeliveredNotifications: async () => ({ notifications: window.tocados.map(n => ({ ...n })) }),
+    removeDeliveredNotifications: async ({ notifications }) => { const ids = new Set(notifications.map(n => +n.id)); window.tocados = window.tocados.filter(n => !ids.has(+n.id)); },
+    schedule: async ({ notifications }) => { window.avisos.push(...notifications); return { notifications }; },
+    cancel: async ({ notifications }) => { const ids = new Set(notifications.map(n => n.id)); window.avisos = window.avisos.filter(n => !ids.has(n.id)); },
+    addListener: () => ({ remove() {} }),
+  };
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'android',
+    registerPlugin: name => name === 'LocalNotifications' ? LN
+      : name === 'AppReview' ? { requestReview: async () => { window.avaliacoes.push(new Date().toISOString()); } }
+      : name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+}
+
 // "app-avaliacao": finge o app do iPhone; cada pedido de avaliação na loja entra em window.avaliacoes.
 if (CEN === 'app-avaliacao') {
   const real = window.Capacitor;
@@ -155,7 +180,7 @@ if (CEN === 'sem-familia' || CEN === 'app-convite') {
 // Boas-vindas (30/10). "bv-nova": a Ana acabou de criar a Família Souza, com o Pedro e nenhum registro,
 // só com Mamada, Sono e Fralda. "bv-convidado": o Pedro acabou de entrar na Família Andrade por convite.
 // "bv-dias": a Carol, sozinha na família, entrou há 4 dias, com Ordenha e Cuidados desligados.
-if (CEN === 'bv-nova') {
+if (CEN === 'bv-nova' || CEN === 'app-lembrete') {
   ME = 'u-ana';
   T.profiles.push({ id: ME, display_name: 'Ana' });
   T.families = [{ id: 'f-2', name: 'Família Souza', creator_id: ME, created_at: new Date().toISOString() }];

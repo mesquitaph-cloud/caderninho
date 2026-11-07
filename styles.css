@@ -661,6 +661,14 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 .cbox h3{margin:0;font-family:var(--display);font-weight:500;font-size:19px;text-wrap:balance}
 .cbox p{margin:0;color:var(--muted)}
 .cbox .row2{margin-top:10px}
+/* Pedido de avaliação no Android (item 23): o texto no meio, o botão da loja e "Agora não" */
+.cbox.rate{text-align:center;gap:12px;padding:24px 20px 12px}
+.cbox.rate p{color:var(--ink);font-family:var(--display);font-size:18px;font-weight:500;text-wrap:balance}
+.cbox.rate .save{display:block;text-decoration:none;font-size:17px}
+.cbox.rate .link{align-self:center}
+/* Cartão "Tudo pronto": a última mamada (item 30) */
+.bv .bvside{background:none}.bv .bvside .opt{flex:1}
+.bv .err{margin:0}
 .go-del{background:var(--danger);color:var(--on-danger);border-radius:14px;padding:12px;font-weight:500}
 .go-del:disabled{opacity:.6}
 /* Últimos 3 dias de um botão */
