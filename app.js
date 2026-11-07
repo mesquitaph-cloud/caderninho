@@ -1569,11 +1569,15 @@ function nowDose(m) {
 
 // Marcar (ou pular) uma dose. Se outra pessoa marcou antes, addEntry avisa e recarrega. by: quem deu,
 // quando foi escolhido (só vai quando há, para salvar mesmo sem o 022).
+// Vibração bem curta quando a dose fica marcada: o toque leve do sistema. Se falhar, segue sem vibrar.
+const haptics = NATIVE ? window.Capacitor.registerPlugin('Haptics') : null;
+const buzz = () => haptics?.impact({ style: 'LIGHT' }).catch(() => {});
 async function giveDose(id, t, note, skipped, by) {
   const d = doseById(id); if (!d) return;
   const row = await addEntry({ kind: 'med', t, medicine_id: d.m.id, med_name: d.m.name, med_amount: d.m.amount,
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null, ...(by ? { done_by: by } : {}) });
   if (!row) return;
+  if (!skipped) buzz();
   if (S?.mode === 'meds') { drawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
   const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
     : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
@@ -1584,6 +1588,7 @@ async function prnNow(mid) {
   const m = st.meds.find(x => x.id === mid); if (!m) return;
   const row = await addEntry({ kind: 'med', t: Date.now(), medicine_id: m.id, med_name: m.name, med_amount: m.amount });
   if (!row) return;
+  buzz();
   if (S?.mode === 'meds') drawMeds();
   toast('Dose de ' + m.name + ' marcada às ' + hm(Date.parse(row.at)), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
 }
