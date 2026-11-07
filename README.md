@@ -292,6 +292,16 @@ mesmos, porque o texto cita os itens pelo número.
   divisão de tarefas no resumo. A decidir (com prévia): onde se escolhe (boas-vindas ou Perfil), as
   opções além de pai e mãe (avó, babá, duas mães, dois pais), e se pede coluna nova no banco (SQL novo).
 
+**Marketing**
+
+- **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
+  entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
+  que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
+  subtítulo, palavras-chave, descrição, notas), a página `soneca.app.br` e conteúdo escrito sobre rotina
+  do bebê. Também a decidir: o que dá para automatizar (relatório das buscas que trazem gente, teste de
+  textos da loja, publicação de conteúdo) e quanto custa em horas por semana. Liga com o Meta Ads e com
+  os Reels.
+
 **Android** (seção "App do Android")
 
 - Play Store: acesso à produção liberado; versão 14 (1.0.2) na revisão da produção desde 02/11 (só
