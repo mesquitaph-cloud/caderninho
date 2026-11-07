@@ -308,6 +308,10 @@ mesmos, porque o texto cita os itens pelo número.
   última consulta", além do último peso); e se pede tabela nova no banco (SQL novo). Tom neutro, sem
   cobrar consulta que a família não marcou. Liga com o item 28 (vacinas, muitas vezes na mesma ida) e
   com os itens 26 e 27 (relatórios).
+- **50 · Perímetro cefálico** (Patrick, 07/11): anotar a medida da cabeça junto com o peso e o
+  comprimento em "Anotar medida", com a curva da OMS (perímetro cefálico por idade, 0 a 5 anos, menina
+  e menino) na aba do bebê e no relatório para o pediatra. A decidir (com prévia): se vira uma terceira
+  aba ao lado de Peso e Comprimento; e a coluna nova no banco (SQL novo).
 
 **Marketing**
 
