@@ -3,7 +3,7 @@
 // quando o bebê tem nascimento e menina ou menino anotados. Só mostra as linhas e os pontos: não diz
 // se o bebê está acima ou abaixo de nada. Os seis marcos motores da OMS e a média de sono e de fraldas
 // ganham a faixa de referência para a idade, do mesmo jeito: a faixa e o ponto, sem avaliar.
-import { DAY, esc, dur, ageText, fullDate, shortDate } from './util.js';
+import { DAY, esc, dur, ageText, fullDate, shortDate, n1 as n1x } from './util.js';
 import { WHO } from './who.js';
 
 // Sugestões para anotar um marco. Os motores levam os nomes dos marcos da OMS, para cair na faixa.
@@ -23,7 +23,8 @@ const monthsOn = (birth, ymd) => ((ymd ? new Date(ymd + 'T00:00') : new Date()) 
 // no dia em que cada marco foi anotado.
 export function motorChart(birth, milestones) {
   const W = 340, L = 6, R = 12, T = 6, rowH = 36, H = T + MOTOR.length * rowH + 26, x = m => +(L + Math.min(18, m) / 18 * (W - L - R)).toFixed(1);
-  const now = birth ? monthsOn(birth) : null;
+  // Nascimento no futuro (a data prevista do parto): sem a linha de hoje.
+  const now = birth && monthsOn(birth) >= 0 ? monthsOn(birth) : null;
   let s = `<svg class="chart mchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc('Faixas da OMS para seis marcos motores, de 0 a 18 meses' + (now != null && now <= 18 ? '; hoje, ' + ageText(birth) : ''))}">`;
   const ticks = [0, 3, 6, 9, 12, 15, 18];
   for (const m of ticks) s += `<text class="ax" x="${x(m)}" y="${H - 8}" text-anchor="${m ? m === 18 ? 'end' : 'middle' : 'start'}">${m ? m + 'm' : '0'}</text>`;
@@ -48,7 +49,7 @@ function refBar(min, max, lo, hi, v, cls, ticks, unit, aria) {
     + `<rect class="mb" x="${x(lo)}" y="7" width="${(x(hi) - x(lo)).toFixed(1)}" height="12" rx="6"/><circle class="${cls}" cx="${x(v)}" cy="13" r="6"/>`
     + ticks.map((t, i) => `<text class="ax" x="${x(t)}" y="32" text-anchor="${i ? i === ticks.length - 1 ? 'end' : 'middle' : 'start'}">${t}${t === ticks.at(-1) ? unit : ''}</text>`).join('') + '</svg>';
 }
-const nf = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const nf = n1x;
 // "Para a idade de Marina": a média de sono e de fraldas com xixi por dia ao lado da referência.
 // at: o último dia do período ("aaaa-mm-dd"), para a idade. sleep em ms e pee por dia, ou null sem dias.
 // Vazio sem o nascimento, sem dias com registro ou fora das idades com referência.

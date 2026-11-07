@@ -42,6 +42,12 @@ export const MESES_L = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','J
 export const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
 export const pad = n => String(n).padStart(2, '0');
+// "2026-10-01": o dia de um momento, no fuso do celular.
+export const localDate = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+// "1,5": número com no máximo uma casa, como se lê em português.
+export const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+export const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+export const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function startOfDay(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); }
 // Pelo calendário, e não somando 24h: o dia pode ter 23h ou 25h quando muda o horário.
 export function addDays(d0, n) { const d = new Date(d0); d.setDate(d.getDate() + n); return startOfDay(d.getTime()); }
@@ -77,6 +83,8 @@ export function rangeTitle(a, z) {
 export function ageText(birth, at) {
   if (!birth) return '';
   const b = new Date(birth + 'T00:00'), n = at ? new Date(at + 'T00:00') : new Date();
+  // Nascimento depois do dia pedido (a data prevista do parto, por exemplo): ainda não tem idade.
+  if (startOfDay(n) < b.getTime()) return '';
   let m = (n.getFullYear() - b.getFullYear()) * 12 + n.getMonth() - b.getMonth();
   if (n.getDate() < b.getDate()) m--;
   if (m <= 0) { const t = Math.floor((startOfDay(n) - b.getTime()) / DAY); return t === 1 ? '1 dia' : t + ' dias'; }
@@ -85,18 +93,33 @@ export function ageText(birth, at) {
   return (m === 1 ? '1 mês' : m + ' meses') + (d ? ' e ' + (d === 1 ? '1 dia' : d + ' dias') : '');
 }
 
-// Sono = intervalo entre um "dormiu" e o "acordou" seguinte.
+// Sono = intervalo entre um "dormiu" e o "acordou" seguinte. Um "Dormiu" sem "Acordou" há mais de
+// 14 horas (decidido em 27/10) foi esquecido: um "Dormiu" novo depois disso começa outro sono, em vez
+// de o próximo "Acordou" fechar um sono de um dia inteiro.
+export const LONG_SLEEP = 14 * HOUR;
+// O "Dormiu" em aberto quando chega o registro e (sono: o início, ou null).
+const nextOpen = (start, e) => e.kind === 'sleep' ? (start === null || e.t - start > LONG_SLEEP ? e.t : start) : e.kind === 'wake' ? null : start;
 export function sleepIntervals(evs) {
   const out = []; let start = null;
   for (const e of evs) {
-    if (e.kind === 'sleep') { if (start === null) start = e.t; }
-    else if (e.kind === 'wake' && start !== null) { out.push([start, e.t]); start = null; }
+    if (e.kind === 'wake' && start !== null) out.push([start, e.t]);
+    start = nextOpen(start, e);
   }
   return { out, open: start };
 }
+// O início do sono que cada "Acordou" fecha, calculado uma vez por lista (a lista é refeita a cada
+// redesenho, então o cache vai junto com ela).
+const wakeStarts = new WeakMap();
 function sleepBefore(evs, wake) {
-  let s = null;
-  for (const e of evs) { if (e.t >= wake.t) break; if (e.kind === 'sleep') s = s ?? e.t; if (e.kind === 'wake') s = null; }
+  let m = wakeStarts.get(evs);
+  if (!m) {
+    m = new Map(); let s = null;
+    for (const e of evs) { if (e.kind === 'wake') m.set(e, s); s = nextOpen(s, e); }
+    wakeStarts.set(evs, m);
+  }
+  if (m.has(wake)) return m.get(wake);
+  let s = null;   // registro que não está na lista (uma cópia, por exemplo)
+  for (const e of evs) { if (e.t >= wake.t) break; s = nextOpen(s, e); }
   return s;
 }
 // Sintomas: o que a família marca no botão Sintomas. Vômito também está lá, mas grava o registro

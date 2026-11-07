@@ -1,18 +1,14 @@
 // Relatório para pediatra: o que a família leva à consulta, numa folha A4 que vira PDF pelo imprimir
 // do celular, e o mesmo em texto para copiar. Só junta o que foi registrado; não avalia o bebê nem
 // compara com outros bebês. A folha é sempre clara, mesmo com o app no escuro.
-import { MIN, HOUR, DAY, startOfDay, addDays, hm, dur, esc, ageText, label } from './util.js';
+import { MIN, HOUR, DAY, startOfDay, addDays, hm, dur, esc, ageText, label, pad as p2, n1, plural, MESES as MES, MESES_L, DIAS } from './util.js';
 import { kg, cmText, growthChart, growthWindow } from './growth.js';
 
-const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const DIA = ['dom','seg','ter','qua','qui','sex','sáb'];
-const p2 = n => String(n).padStart(2, '0');
+const MESES = MESES_L.map(m => m.toLowerCase()), DIA = DIAS.map(d => d.toLowerCase());
+// Momento (ms) vira "01/10"; o dia "2026-10-01" também vira "01/10".
 const ddmm = t => { const d = new Date(t); return p2(d.getDate()) + '/' + p2(d.getMonth() + 1); };
 const ymdDdmm = ymd => ymd.slice(8, 10) + '/' + ymd.slice(5, 7);
 const ymdFull = ymd => ymdDdmm(ymd) + '/' + ymd.slice(0, 4);
-const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
 // "2h05" vira "2 h 05" na folha, mais fácil de ler impresso; de 24 h para cima, só as horas ("26 h").
 const hours = ms => ms >= DAY ? Math.round(ms / HOUR) + ' h' : dur(ms).replace(/^(\d+)h(\d\d)$/, '$1 h $2').replace(/ h 00$/, ' h');
 const ageAt = (birth, ymd) => !birth || ymd < birth ? '' : ymd === birth ? 'ao nascer' : ageText(birth, ymd);
@@ -35,9 +31,11 @@ export function reportStats({ a, now, evs, sleeps, on }) {
   const today = startOfDay(now), days = [];
   for (let d = a; d <= today; d = addDays(d, 1)) days.push(d);
   const inP = evs.filter(e => e.t >= a && e.t <= now);
-  const full = days.filter(d => d < today && evs.some(e => e.t >= d && e.t < addDays(d, 1)));
-  const inFull = e => full.some(d => e.t >= d && e.t < addDays(d, 1));
-  const fe = evs.filter(e => inFull(e)), n = full.length;
+  // O dia de cada registro do período, calculado uma vez (antes, cada registro era comparado com cada dia).
+  const dayOf = new Map(); for (const e of evs) if (e.t >= a && e.t < today) dayOf.set(e, startOfDay(e.t));
+  const withEntries = new Set(dayOf.values());
+  const full = days.filter(d => d < today && withEntries.has(d)), fullSet = new Set(full);
+  const fe = evs.filter(e => fullSet.has(dayOf.get(e))), n = full.length;
   const feeds = fe.filter(e => e.kind === 'feed'), bottles = feeds.filter(e => e.src === 'bottle');
   const bottleMl = bottles.reduce((s, e) => s + (e.ml || 0), 0), bottlesMl = bottles.filter(e => e.ml);
   const slept = full.reduce((s, d) => s + sleeps.reduce((x, [p, q]) => x + Math.max(0, Math.min(q, addDays(d, 1)) - Math.max(p, d)), 0), 0);
