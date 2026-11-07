@@ -414,7 +414,10 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 .save{background:var(--accent);color:var(--on-accent);border-radius:16px;padding:16px;font-size:18px;font-weight:500;font-family:var(--display)}
 .del{color:var(--danger);font-weight:500;padding:10px}
 .err{color:var(--danger);font-size:14px;font-weight:500}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 8px 8px 18px;border-radius:999px;font-weight:500;font-size:14px;z-index:20;display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100vw - 24px);text-align:center}.toast button{white-space:nowrap}.toast:not(:has(button)){padding-right:18px}.toast button{color:inherit;text-decoration:underline;text-underline-offset:3px;padding:6px 12px;font-weight:500}
+@media (prefers-reduced-motion:no-preference){.toast:not([hidden]){animation:toastIn .22s ease-out}}
+@keyframes toastIn{from{transform:translate(-50%,-14px);opacity:0}to{transform:translateX(-50%);opacity:1}}
+/* Aviso de salvo e de erro: no alto, por cima do cartão do bebê, para não cobrir os botões de registro */
+.toast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 8px 8px 18px;border-radius:999px;font-weight:500;font-size:14px;z-index:20;box-shadow:0 6px 18px var(--scrim);display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100vw - 24px);text-align:center}.toast button{white-space:nowrap}.toast:not(:has(button)){padding-right:18px}.toast button{color:inherit;text-decoration:underline;text-underline-offset:3px;padding:6px 12px;font-weight:500}
 @media (prefers-reduced-motion:no-preference){.views button,.flt,.met{transition:background .15s,color .15s}}
 @media (prefers-reduced-motion:reduce){.act{transition:none}}
 /* ---------- Telas de entrada e configurações ---------- */
@@ -513,7 +516,6 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 .tabbar [aria-current="page"] .mini{background:var(--feed-ink);color:var(--feed)}
 @media (prefers-reduced-motion:no-preference){.tabbar .ic{transition:background .15s}}
 /* O aviso de salvo fica acima da barra */
-body:has(#scrMain:not([hidden])) .toast{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 /* Título das abas; na do bebê, é um botão que rola até Nome e nascimento */
 .ptitle{display:flex;flex-direction:column;gap:2px}
 .ptitle h2{font-family:var(--display);font-weight:500;font-size:24px;margin:0;line-height:1.15;overflow-wrap:anywhere}

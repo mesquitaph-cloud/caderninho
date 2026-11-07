@@ -271,15 +271,22 @@ mesmos, porque o texto cita os itens pelo número.
   identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
   app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
   prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
-- **43 · Aviso de "Salvo" em cima dos botões** (Patrick, 07/11): a etiqueta que aparece depois de
-  salvar (`toast` em `app.js`) cobre os botões da tela inicial. Trocar de lugar. A decidir (com prévia):
-  onde fica (alto da tela, logo abaixo do cartão, ou sobre a barra de abas) sem esconder nada que se
-  toca logo depois de salvar.
-- **44 · Mensagens de incentivo melhores** (Patrick, 07/11): hoje só a fralda gigante e o alerta marrom
-  têm frase ("Que fralda!", "Coragem!"); o resto diz só "Salvo". Ideia do Patrick como exemplo: "Mais um
-  xixi pra conta do papai". A decidir (com prévia e cada frase aprovada palavra por palavra): para quais
-  registros, quantas frases variam, com que frequência aparecem (humor raro, como pede a identidade) e
-  só na rotina, nunca em remédio, febre ou sintomas. Liga com o item 47, que diria se é "papai" ou "mamãe".
+- **43 · Aviso de "Salvo" no alto da tela** (Patrick, 07/11; feito em 07/11 no branch `claude/aviso-salvo`):
+  o aviso (`toast` em `app.js`) saiu de cima dos botões de registro e desce no alto, por cima do cartão do
+  bebê. Vale para todos os avisos, inclusive os de erro. Mesma pílula, mesmo tempo (1,8 s, ou 5 s com
+  "Desfazer"). Prévia aprovada: https://claude.ai/artifact/2G8ffvXrkyW6MRdUf93B7Z
+- **44 · Frases de incentivo** (Patrick, 07/11; feito em 07/11 no mesmo branch): em 1 de cada 3 registros
+  novos da rotina, uma frase sorteada depois do horário, nunca a mesma duas vezes seguidas ("Salvo às
+  14:48. Barriguinha cheia."). Editar não ganha frase. Frases aprovadas (`CHEER` em `app.js`):
+    - Mamada: Barriguinha cheia. · Mais uma pra conta. · Leite servido.
+    - Ordenha: Estoque reforçado.
+    - Dormiu: Shhh… · Bons sonhos. · Silêncio na casa.
+    - Acordou: Tô vivo, gente! · De volta ao mundo.
+    - Fralda com xixi: Bebê sequinho. · Troca feita. Com cocô: Missão cumprida.
+    - Banho: Cheirinho de bebê.
+    - Cocô gigante e alerta marrom continuam sempre com "Que fralda!" e "Coragem!".
+    - Sem frase: remédio, febre, sintomas, vômito, peso e os outros cuidados.
+  Frases com "papai" ou "mamãe" ficam para depois do item 47.
 - **45 · Remédio dado tira a notificação** (Patrick, 07/11): ao marcar a dose como dada, o aviso que já
   chegou continua na central de notificações do celular. Hoje o app só cancela os avisos que ainda não
   tocaram (`medNotif.cancel` em `app.js`); falta apagar também o que já foi entregue daquela dose
