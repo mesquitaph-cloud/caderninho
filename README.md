@@ -269,6 +269,28 @@ mesmos, porque o texto cita os itens pelo número.
   identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
   app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
   prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
+- **43 · Aviso de "Salvo" em cima dos botões** (Patrick, 07/11): a etiqueta que aparece depois de
+  salvar (`toast` em `app.js`) cobre os botões da tela inicial. Trocar de lugar. A decidir (com prévia):
+  onde fica (alto da tela, logo abaixo do cartão, ou sobre a barra de abas) sem esconder nada que se
+  toca logo depois de salvar.
+- **44 · Mensagens de incentivo melhores** (Patrick, 07/11): hoje só a fralda gigante e o alerta marrom
+  têm frase ("Que fralda!", "Coragem!"); o resto diz só "Salvo". Ideia do Patrick como exemplo: "Mais um
+  xixi pra conta do papai". A decidir (com prévia e cada frase aprovada palavra por palavra): para quais
+  registros, quantas frases variam, com que frequência aparecem (humor raro, como pede a identidade) e
+  só na rotina, nunca em remédio, febre ou sintomas. Liga com o item 47, que diria se é "papai" ou "mamãe".
+- **45 · Remédio dado tira a notificação** (Patrick, 07/11): ao marcar a dose como dada, o aviso que já
+  chegou continua na central de notificações do celular. Hoje o app só cancela os avisos que ainda não
+  tocaram (`medNotif.cancel` em `app.js`); falta apagar também o que já foi entregue daquela dose
+  (`removeDeliveredNotifications` do plugin de avisos locais). Vale também para "Pular". Testar no
+  iPhone e no Android, com o app aberto e fechado.
+- **46 · O app muda com a idade do bebê** (Patrick, 07/11): botões, resumos e frases acompanham a fase
+  (ex.: recém-nascido × bebê que já come papinha). A decidir: o que muda em cada fase, por que fonte se
+  definem as idades, e se a família pode desfazer a mudança. Liga com "fases até 5 anos" (Ideias para
+  depois) e com os itens 21 (marcos) e 25 (limpar a tela inicial).
+- **47 · Quem está usando: pai ou mãe fixo** (Patrick, 07/11): cada pessoa marca uma vez, no perfil, se
+  é o pai, a mãe ou outro cuidador, em vez de o app não saber quem é. Serve às frases do item 44 e à
+  divisão de tarefas no resumo. A decidir (com prévia): onde se escolhe (boas-vindas ou Perfil), as
+  opções além de pai e mãe (avó, babá, duas mães, dois pais), e se pede coluna nova no banco (SQL novo).
 
 **Android** (seção "App do Android")
 
