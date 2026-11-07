@@ -1,7 +1,8 @@
 import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
-         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE, aloneText } from './util.js';
+         sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE, aloneText,
+         LONG_SLEEP, localDate, reduceMotion } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
@@ -509,7 +510,16 @@ function subscribe(fid) {
 }
 
 /* ---------- tela do dia ---------- */
-const sortedEntries = () => [...st.entries.values()].sort((a, b) => a.t - b.t);
+// Os registros em ordem de horário. Um redesenho pede várias vezes: ordena uma vez e vale até o fim dele.
+// Quem usa não pode mexer na lista (só filter, slice, map).
+let sortedC = null;
+function sortedEntries() {
+  if (sortedC?.map === st.entries && sortedC.n === st.entries.size) return sortedC.list;
+  const list = [...st.entries.values()].sort((a, b) => a.t - b.t);
+  sortedC = { map: st.entries, n: st.entries.size, list };
+  queueMicrotask(() => { sortedC = null; });
+  return list;
+}
 // Primeiro dia que dá para ver: o app carrega os últimos 60 dias.
 const firstDay = () => addDays(startOfDay(Date.now()), -(KEEP_DAYS - 1));
 // Resumo do mês: do mês do nascimento (sem a data anotada, do mês do cadastro) até o atual; o mês
@@ -541,7 +551,7 @@ function goTab(t, anchor) {
   render();
   if (anchor) spotlight(anchor);
 }
-const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+const smooth = () => reduceMotion() ? 'auto' : 'smooth';
 // Rola até a seção e deixa ela em destaque por um instante.
 function spotlight(id) {
   const el = $(id); if (!el) return;
@@ -553,7 +563,6 @@ const babyChips = () => st.babies.map(x => `<button data-baby="${esc(x.id)}" cla
 
 // Sono que nunca terminou (Bruno, 17/10): um "Dormiu" sem "Acordou" há mais de 14 horas (decidido em
 // 27/10) vira a pergunta "Ainda dormindo?" e fica fora dos gráficos e das médias até alguém corrigir.
-const LONG_SLEEP = 14 * HOUR;
 const liveOpen = (open, now) => open !== null && now - open > LONG_SLEEP ? null : open;
 const DIAS_LONGOS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
@@ -750,7 +759,6 @@ function symptomSub(last, now) {
 }
 const rowKeys = () => [...FIXED, ...(isOn('pump') ? ['pump'] : []), 'more'];
 const popKeys = () => [...['med', 'symptom', 'care'].filter(isOn), 'other'];
-const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function renderGrid(last, open, now, joined) {
   // Há quanto tempo, só para o leitor de tela: na tela, a linha do tempo logo acima já mostra a hora.
   const sub = k => {
@@ -1102,7 +1110,7 @@ $('ask').addEventListener('click', async e => {
 // "Dormiu, hoje às 13h05": o registro na caixa de apagar.
 const askWhen = t => { const d = new Date(t), d0 = startOfDay(Date.now()), day = startOfDay(t);
   return (day === d0 ? 'hoje' : day === addDays(d0, -1) ? 'ontem' : pad(d.getDate()) + '/' + pad(d.getMonth() + 1)) + ' às ' + pad(d.getHours()) + 'h' + pad(d.getMinutes()); };
-const ddmm = ymd => ymd.slice(8, 10) + '/' + ymd.slice(5, 7);
+const ymdDdmm = ymd => ymd.slice(8, 10) + '/' + ymd.slice(5, 7);   // "2026-10-01" vira "01/10"
 const head = t => `<div class="grab"></div><div class="shead"><h3>${esc(t)}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
 const opt = (txt, on, act, val, big) => `<button class="opt${big ? ' big' : ''}${on ? ' on' : ''}" data-act="${act}" data-val="${val}">${txt}</button>`;
 const mlBlock = k => `<div><div class="lbl">Quantidade</div><div class="seg k-${k}" style="background:none;margin-bottom:10px">${[30,60,90,120,150,180].map(v => opt(v + ' ml', +S.ml === v, 'ml', v)).join('')}</div>
@@ -1122,7 +1130,11 @@ function byHtml(k, lbl) {
 // O "Dormiu" que um "Acordou" às t fecha: o primeiro depois do último "Acordou", como em sleepIntervals.
 function sleepOf(t) {
   let s = null;
-  for (const e of sortedEntries()) { if (e.t >= t) break; if (e.kind === 'sleep') s = s ?? e; if (e.kind === 'wake') s = null; }
+  for (const e of sortedEntries()) {
+    if (e.t >= t) break;
+    if (e.kind === 'sleep' && (!s || e.t - s.t > LONG_SLEEP)) s = e;
+    if (e.kind === 'wake') s = null;
+  }
   return s;
 }
 // O tempo no colo some no sono que pegou sozinho: no "Dormiu" marcado e no "Acordou" que fecha esse sono.
@@ -1227,7 +1239,8 @@ setInterval(() => {
 function openEntry(k, edit) {
   if (!st.baby) return babySheet(null);
   if (k === 'med' && !edit) return medsSheet();
-  const { open } = sleepIntervals(sortedEntries());
+  // Um "Dormiu" esquecido (mais de 14 h) não conta: o Sono abre em "Dormiu agora", como na tela inicial.
+  const open = liveOpen(sleepIntervals(sortedEntries()).open, Date.now());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
   S = { mode: 'entry', k: k === 'wake' ? 'sleep' : CARE[k] ? 'care' : k, edit, ck: CARE[k] && k !== 'care' || edit?.kind === 'care' ? k : null, base: startOfDay(t), time: hm(t),
         src: edit ? (edit.src || '') : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
@@ -1250,7 +1263,7 @@ const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
 const orow = (act, txt, open) => `<button class="orow${open ? ' open' : ''}" data-act="${act}" aria-expanded="${open}"><span>${txt}</span><i class="cv" aria-hidden="true">›</i></button>`;
 function timeRow(k) {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
-  const day = S.other || d0 < addDays(t0, -1) ? ddmm(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
+  const day = S.other || d0 < addDays(t0, -1) ? ymdDdmm(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   let h = `<button class="orow tm${S.openT ? ' open' : ''}" data-act="openT" aria-expanded="${S.openT}" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (S.openT) {
     h += `<div class="ofold">${daySeg()}`;
@@ -1561,7 +1574,6 @@ const SOON = HOUR;   // uma hora antes, a dose aparece na tela inicial com a cai
 const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
 const EVERY = [4, 6, 8, 12];
 const MED_RULE = '<p class="dim">Só a família programa. O Soneca lembra os horários; não sugere remédio nem dose.</p>';
-const localDate = t => { const d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
 const dayOf = ymd => startOfDay(new Date(ymd + 'T00:00').getTime());
 const atTime = (d0, hhmm) => { const d = new Date(d0), [H, M] = hhmm.split(':').map(Number); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), H, M).getTime(); };
 const medTimes = m => (m.times || []).map(x => x.slice(0, 5)).sort();
@@ -1590,9 +1602,19 @@ const dayWord = t => { const d0 = startOfDay(t), t0 = startOfDay(Date.now()); re
 
 // As doses com horário entre a e z, com o estado de cada uma. Horário de antes de o remédio ser
 // programado não conta: quem programa às 8h40 um remédio de 6 em 6 horas não tem a dose das 7h.
+// As doses marcadas, por "remédio@horário". Um redesenho pergunta várias vezes (cartão, botão, lista):
+// monta uma vez e vale até o fim desse redesenho. Os registros só mudam depois de um await, já em outro.
+let markedC = null;
+function markedDoses() {
+  if (markedC?.map === st.entries && markedC.n === st.entries.size) return markedC.m;
+  const m = new Map();
+  for (const e of st.entries.values()) if (e.kind === 'med' && e.dose_at) m.set(e.medicine_id + '@' + Date.parse(e.dose_at), e);
+  markedC = { map: st.entries, n: st.entries.size, m };
+  queueMicrotask(() => { markedC = null; });
+  return m;
+}
 function dosesFrom(a, z) {
-  const marked = new Map();
-  for (const e of st.entries.values()) if (e.kind === 'med' && e.dose_at) marked.set(e.medicine_id + '@' + Date.parse(e.dose_at), e);
+  const marked = markedDoses();
   const now = Date.now(), out = [];
   for (let d0 = startOfDay(a); d0 < z; d0 = addDays(d0, 1))
     for (const m of st.meds) if (medOn(m, d0)) for (const hhmm of medTimes(m)) {
@@ -1638,7 +1660,7 @@ function homeDoses() {
 // Marcar ou pular na tela inicial: a linha dá o check na hora, fica meio segundo e encolhe. Enquanto
 // isso o cartão não é redesenhado (medsBusy); se não salvar, ele volta como estava.
 let medsBusy = 0;
-const pause = ms => new Promise(r => setTimeout(r, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms));
+const pause = ms => new Promise(r => setTimeout(r, reduceMotion() ? 0 : ms));
 async function markHome(b, skipped) {
   const row = b.closest('.dose'); if (!row || row.classList.contains('done') || row.classList.contains('skip')) return;
   const ck = row.querySelector('.ck'), stx = row.querySelector('.st');
@@ -2195,7 +2217,7 @@ function medPlan(id) {
 function reportArgs() {
   const now = Date.now(), a = reportStart(), evs = sortedEntries(), { out, open } = sleepIntervals(evs);
   const sleeps = liveOpen(open, now) === null ? out : [...out, [open, now]];
-  return { baby: st.baby, a, now, evs, sleeps, stats: reportStats({ a, now, evs, sleeps, on: isOn }), weights: st.weights, milestones: st.milestones,
+  return { baby: st.baby, a, now, evs, sleeps, stats: reportStats({ a, now, evs, sleeps, on: isOn }), weights: st.weights, lengths: st.lengths, milestones: st.milestones,
            questions: st.questionsOk ? openQuestions() : [], parts: RP.parts, medPlan };
 }
 function reportSheet() { S = { mode: 'report' }; drawReport(); $('sheet').scrollTop = 0; }
@@ -2321,7 +2343,7 @@ function growthAction(a, v, btn) {
     const e = S.edit, w = S.mode === 'weight';
     // "Peso de 5,4 kg, 12/10" ou "Firmou a cabeça, 23/10".
     const what = !w ? e.title : e.grams && e.cm ? 'Peso de ' + kg(e.grams) + ' e comprimento de ' + cmText(e.cm) : e.grams ? 'Peso de ' + kg(e.grams) : 'Comprimento de ' + cmText(e.cm);
-    return askConfirm(w ? 'Apagar esta medida?' : 'Apagar este marco?', what + ', ' + ddmm(e[LOG[S.mode].day]) + '. Não dá para desfazer.', 'Apagar', delLog);
+    return askConfirm(w ? 'Apagar esta medida?' : 'Apagar este marco?', what + ', ' + ymdDdmm(e[LOG[S.mode].day]) + '. Não dá para desfazer.', 'Apagar', delLog);
   }
 }
 
@@ -2790,7 +2812,10 @@ $('oldWake').onclick = () => {
 };
 $('oldDel').onclick = async () => {
   const e = oldSleep(); if (!e || !await deleteEntry(e.id)) return;
-  toast('Registro apagado', () => addEntry({ kind: 'sleep', t: e.t, note: e.note }));
+  // Desfazer devolve o "Dormiu" inteiro: colo, sozinho e quem fez (só os que tinha, para salvar sem o 020/022).
+  const back = { kind: 'sleep', t: e.t, note: e.note };
+  for (const k of ['lap_min', 'self_settled', 'done_by']) if (e[k] != null) back[k] = e[k];
+  toast('Registro apagado', () => addEntry(back));
 };
 $('meds').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
@@ -2881,7 +2906,7 @@ $('monthView').addEventListener('click', e => {
 // Painel da semana: filtro, métrica e tocar num dia para abrir a linha do tempo dele.
 function openDay(d0) {
   st.viewDay = d0; st.view = 'day'; render();
-  $('dayTitle').closest('.daynav').scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  $('dayTitle').closest('.daynav').scrollIntoView({ block: 'start', behavior: smooth() });
 }
 $('weekView').addEventListener('click', e => {
   const sh = e.target.closest('[data-share]'); if (sh) return shareReport(sh.dataset.share);
@@ -2911,11 +2936,18 @@ $('rpBack').onclick = closeReportView;
 $('rpPrint').onclick = printReport;
 
 // Ao voltar para o app depois de um tempo, recarrega os registros (a conexão ao vivo pode ter caído).
+// Uma olhada rápida em outro app (menos de 1 minuto) não recarrega: o canal ao vivo segue valendo.
+const RELOAD_AFTER = MIN;
+let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) ftSync();
-  if (!document.hidden && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
+  if (document.hidden) { hiddenAt = Date.now(); return; }
+  ftSync();
+  if (Date.now() - hiddenAt < RELOAD_AFTER) return render();
+  if (st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
-setInterval(refresh, 30000);
+// A cada 30 segundos, a tela Hoje atualiza o "há quanto tempo" e as doses. As outras abas não: redesenhar
+// a aba do bebê no meio de um arrasto no gráfico de peso cortava o gesto.
+setInterval(() => { if (st.tab === 'home') refresh(); }, 30000);
 
 // Puxar para atualizar (Patrick, 07/11): no alto da aba Hoje, puxar para baixo e soltar depois de 80 px.
 // A tela desce com o dedo e, enquanto busca, fica 76 px abaixo; no vão, a capivara (só as bordas) se

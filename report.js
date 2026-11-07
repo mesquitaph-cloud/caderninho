@@ -1,14 +1,12 @@
 // Resumo para mandar à família: os totais de uma semana ou de um mês, em tela e em texto para
 // compartilhar. Só soma o que foi registrado; celebra o cuidado, não avalia o bebê. Segue os botões
 // da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
-import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays, aloneText } from './util.js';
+import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays, aloneText, n1, plural, localDate as ymd } from './util.js';
 import { kg } from './growth.js';
 
-const n1 = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const liters = ml => ml >= 1000 ? n1(ml / 1000) + ' L' : ml + ' ml';
+// No resumo para a família, de 10 h para cima só as horas redondas (o relatório do pediatra tem o seu).
 const hours = ms => ms >= 10 * HOUR ? Math.round(ms / HOUR) + ' h' : dur(ms);
-const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
-const ymd = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
 const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos'], nasal: ['lavagem nasal', 'lavagens nasais'],
                      tummy: ['tummy time', 'tummy times'], sunbath: ['banho de sol', 'banhos de sol'], care: ['outro cuidado', 'outros cuidados'] };

@@ -1,6 +1,6 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia o bebê. A referência para a idade vem pronta em "ref".
-import { MIN, HOUR, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE } from './util.js';
+import { MIN, HOUR, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE, n1 } from './util.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 // Mamadeira é o leite dado na mamadeira, em ml; só aparece se a semana tiver alguma com ml.
@@ -190,7 +190,7 @@ function barChart(all, now, metric) {
   return s + '</svg>';
 }
 
-const nf = v => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+const nf = n1;
 const span = ([a, z]) => dur(z - a) + ' · ' + shortDay(startOfDay(a)) + ', das ' + hm(a) + ' às ' + hm(z);
 // Intervalo que pode passar de um dia: "1 dia e 5h · de seg 21, 07:30 a ter 22, 12:40".
 function durLong(ms) {
