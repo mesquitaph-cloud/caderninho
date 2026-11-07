@@ -128,7 +128,8 @@
 <div id="scrMain" hidden>
 <!-- Hoje: os registros do dia a dia -->
 <div class="wrap" id="paneHome">
-  <header>
+  <!-- O cartão do bebê fica preso no alto enquanto a tela rola -->
+  <header class="hcard">
     <button class="baby" id="babyBtn" aria-label="Abrir a aba do bebê: peso, remédios e marcos">
       <div class="av" id="babyInitial">B</div>
       <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
@@ -136,37 +137,31 @@
   </header>
   <div class="babies" id="babyTabs" hidden></div>
 
-  <div class="sleeping" id="sleepBanner" hidden>
-    <!-- A capivara dormindo: só aqui e nas telas de rotina, nunca nas de saúde -->
-    <svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>
-    <div><small>Dormindo há</small><span class="t" id="sleepFor">0 min</span></div>
-    <button class="pill" id="wakeBtn">Acordou</button>
+  <!-- "Ainda dormindo?": o "Dormiu" passou de 14 horas. O sono em andamento fica na faixa em cima dos botões. -->
+  <div class="sleeping old" id="sleepBanner" hidden>
     <div class="sold"><span class="t">Ainda dormindo?</span><p id="sleepOldTxt"></p>
       <div class="sbtns"><button class="pill" id="oldWake">Anotar quando acordou</button><button class="pill alt" id="oldDel">Apagar esse "Dormiu"</button></div></div>
-  </div>
-
-  <!-- Mamada com o cronômetro aberto: tocar abre o cronômetro; "Terminar" salva -->
-  <div class="feeding" id="feedBanner" hidden>
-    <button class="fopen" id="feedOpen" aria-label="Abrir o cronômetro da mamada"><small id="feedLbl">Mamando há</small><span class="t" id="feedFor">0 min</span><small id="feedSub"></small></button>
-    <button class="pill" id="feedEnd">Terminar</button>
   </div>
 
   <section class="meds" id="meds" hidden aria-label="Remédios"></section>
 
   <!-- Boas-vindas: um cartão por vez, para quem acabou de entrar na família (app.js, renderBv) -->
   <div class="bvslot" id="bvTop"></div>
-  <div class="grid" id="grid"></div>
   <div class="bvslot" id="bvMid"></div>
 
-  <div class="views" role="tablist" aria-label="Ver por">
-    <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>
-    <button role="tab" id="tabWeek" aria-selected="false" aria-controls="weekView" data-view="week">Semana</button>
-    <button role="tab" id="tabMonth" aria-selected="false" aria-controls="monthView" data-view="month">Mês</button>
-  </div>
+  <!-- A data com as setas, e Dia | Semana | Mês ao lado -->
   <div class="daynav">
-    <button class="arr" id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <div class="mid"><h2><button class="dtitle" id="dayTitle"><span id="dayText">Hoje</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button></h2><button class="today" id="toToday" hidden>Hoje</button></div>
-    <button class="arr" id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    <div class="mid">
+      <button class="arr" id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <h2><button class="dtitle" id="dayTitle"><span id="dayText">Hoje</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button></h2>
+      <button class="arr" id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="today" id="toToday" hidden>Hoje</button>
+    </div>
+    <div class="views" role="tablist" aria-label="Ver por">
+      <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>
+      <button role="tab" id="tabWeek" aria-selected="false" aria-controls="weekView" data-view="week">Semana</button>
+      <button role="tab" id="tabMonth" aria-selected="false" aria-controls="monthView" data-view="month">Mês</button>
+    </div>
   </div>
   <div class="view" id="dayView" role="tabpanel" aria-labelledby="tabDay">
     <div id="summary"></div>
@@ -176,6 +171,14 @@
   <div class="view" id="weekView" role="tabpanel" aria-labelledby="tabWeek" hidden></div>
   <div class="view" id="monthView" role="tabpanel" aria-labelledby="tabMonth" hidden></div>
 </div>
+<!-- Botões de registro, presos em cima das abas. A faixa do sono ou da mamada em andamento sai do botão
+     dela (app.js, renderStrip); Outros abre uma linha com os outros registros logo acima. -->
+<div class="dock" id="dock" hidden><div class="din" id="din">
+  <div class="strip" id="strip"></div>
+  <div class="btns" id="grid"></div>
+</div></div>
+<div class="popscrim" id="popScrim" hidden></div>
+<div class="pop" id="pop" role="dialog" aria-label="Outros registros" hidden><div class="pin" id="popIn"></div></div>
 <!-- Aba do bebê, Família e Perfil: desenhadas pelo app.js -->
 <div class="wrap pane" id="paneBaby" hidden></div>
 <div class="wrap pane" id="paneFamily" hidden></div>
