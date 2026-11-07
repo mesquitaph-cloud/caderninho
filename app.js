@@ -31,8 +31,6 @@ const st = {
   questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
   questionsOk: true,           // falso se não deu para carregar (por exemplo, antes do 010)
   settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
-  settingsOk: true,            // falso se não deu para carregar (por exemplo, antes do 008)
-  settingsCh: null,
   tab: 'home',                 // aba aberta na barra de baixo: 'home' (Hoje), 'baby', 'family' ou 'profile'
   view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
@@ -361,8 +359,6 @@ $('fCreate').addEventListener('submit', async e => {
   const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
   if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
   await addConsent('baby', { family_id: fid });
-  // Família nova começa só com Mamada, Sono e Fralda (30/10); os outros ela liga em Editar.
-  await sb.from('family_settings').upsert({ family_id: fid, hidden_kinds: OPTIONAL }, { onConflict: 'family_id' });
   $('fCreate').reset(); await loadFamilies(); openFamily(fid);
 });
 $('cancelCreate').onclick = () => { show('scrMain'); };
@@ -384,7 +380,7 @@ async function openFamily(fid) {
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
   subscribe(fid);
-  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions(), loadSettings(fid)]);
+  await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]);
   st.tab = 'home'; FP.invite = null;
   show('scrMain'); render(); ftSync(); openAlertDose();
 }
@@ -492,19 +488,6 @@ async function loadQuestions() {
 }
 // Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
 // dos registros poderia derrubar a sincronização de tudo.
-async function loadSettings(fid) {
-  const { data, error } = await sb.from('family_settings').select('hidden_kinds').eq('family_id', fid).maybeSingle();
-  st.settingsOk = !error;
-  st.settings = { hidden: data?.hidden_kinds || [] };
-  if (st.settingsCh) { sb.removeChannel(st.settingsCh); st.settingsCh = null; }
-  if (error) return;
-  st.settingsCh = sb.channel('botoes-' + fid)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'family_settings', filter: 'family_id=eq.' + fid }, p => {
-      if (p.new?.family_id !== st.family?.id) return;
-      st.settings = { hidden: p.new.hidden_kinds || [] }; refresh();
-    })
-    .subscribe();
-}
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
 function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
 
@@ -591,6 +574,7 @@ function renderHome() {
   $('sleepBanner').hidden = !old;
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
   renderDock(last, open, now);
+  renderLast(last, open, now);
   renderMeds();
 
   const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
@@ -668,10 +652,35 @@ function renderHome() {
   enterFresh();
 }
 
+// Há quanto tempo (Patrick, 07/11; prévia https://claude.ai/artifact/8uHTiptEmsVdo7KzRgdbxi): última
+// mamada (do começo dela), sono e fralda, logo acima do gráfico. Fala de agora, por isso fica em Dia,
+// Semana e Mês. Ao rolar, gruda embaixo do cartão do bebê e os dois viram um cartão só.
+function renderLast(last, open, now) {
+  const el = $('lastRow'), b = st.baby;
+  const f = last(['feed']), w = last(['wake']), d = last(['diaper']), t = ftGet();
+  el.hidden = !b || (!f && !w && !d && open === null && !t);
+  if (el.hidden) return;
+  const cell = (k, lbl, val) => `<div class="lc"><span class="ic k-${k}">${ICON[k]}</span><span><small>${lbl}</small><b>${val}</b></span></div>`;
+  const since = x => x ? ago(x) : 'sem registro';
+  el.innerHTML = (t ? cell('feed', 'Mamando', ago(t.start)) : cell('feed', 'Última mamada', since(f?.t)))
+    + (open !== null ? cell('sleep', 'Dormindo', ago(open)) : cell('sleep', 'Acordou', since(w?.t)))
+    + cell('diaper', 'Última fralda', since(d?.t));
+  stickLast();
+}
+// A faixa grudou no cartão do bebê? Então os dois viram um cartão só.
+function stickLast() {
+  const el = $('lastRow'), hc = document.querySelector('#paneHome .hcard');
+  if (!hc) return;
+  document.documentElement.style.setProperty('--hch', hc.offsetHeight + 'px');
+  const stuck = !el.hidden && !$('paneHome').hidden && el.getBoundingClientRect().top <= hc.getBoundingClientRect().bottom + 1;
+  $('paneHome').classList.toggle('lstuck', stuck);
+}
+addEventListener('scroll', stickLast, { passive: true });
+addEventListener('resize', stickLast);
+
 /* ---------- boas-vindas ---------- */
 // Cartões para quem acabou de entrar numa família, um de cada vez e na ordem: boas-vindas (quem criou)
-// ou "Você entrou" (quem veio por convite), o convite, os botões (a partir do 2º dia) e a semana (com 3
-// dias de registros). Visto ou pulado, não volta; a marca fica neste celular, uma por família. Só para
+// ou "Você entrou" (quem veio por convite), o convite e a semana (com 3 dias de registros). Visto ou pulado, não volta; a marca fica neste celular, uma por família. Só para
 // quem entrou na família a partir de BV_DESDE: quem já usava o Soneca não vê nada novo.
 // Os testes (testes/cenarios.js) mudam a data por window.testeBvDesde.
 const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
@@ -691,7 +700,6 @@ function bvCard() {
   if (creator && st.members.length < 2 && !done.includes('convite')) return 'convite';
   const j0 = startOfDay(joined);
   if (!evs.length || j0 >= startOfDay(Date.now())) return null;
-  if (!done.includes('botoes') && OPTIONAL.some(k => !isOn(k))) return 'botoes';
   const days = new Set(evs.filter(e => e.t >= j0).map(e => startOfDay(e.t)));
   return days.size >= 3 && !done.includes('semana') ? 'semana' : null;
 }
@@ -706,8 +714,7 @@ function renderBv() {
     : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(st.family.name)}</h3></div>`
       + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
     : '';
-  $('bvMid').innerHTML = k === 'botoes' ? card(x + '<h3>Escolha os botões da família</h3><p>Além de Mamada, Sono e Fralda, dá para ligar Remédio, Sintomas, Ordenha e Cuidados (banho, massagem, lavagem nasal e outros). Vale para todos da família.</p>' + go('Escolher botões', 'Agora não'))
-    : k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
+  $('bvMid').innerHTML = k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
     : '';
   $('bvEnd').innerHTML = k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '';
   // Enquanto o cartão fala dela, a aba Semana fica com a borda caramelo.
@@ -718,7 +725,6 @@ $('paneHome').addEventListener('click', e => {
   const k = b.dataset.bv || b.dataset.bvgo; bvSkip(k);
   if (!b.dataset.bvgo || k === 'entrou') return render();
   if (k === 'convite') return goTab('family', 'famMembers');
-  if (k === 'botoes') return goTab('family', 'famButtons');
   if (k === 'semana') { st.view = 'week'; st.weekEnd = startOfDay(Date.now()); render(); }
 });
 
@@ -726,19 +732,16 @@ $('paneHome').addEventListener('click', e => {
 // Os botões ficam presos embaixo, em cima das abas, numa linha só (prévia aprovada em 06/11:
 // https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE): Mamada, Sono, Fralda, Ordenha (se a família ligou) e
 // Outros. Outros abre, logo acima, uma linha com Remédio, Sintomas e Cuidados (os que a família ligou) e
-// Anotação livre. Um toque anota; segurar abre os últimos 3 dias daquele registro. A família escolhe os
-// botões em Família › Botões da tela inicial; sem nada salvo, todos aparecem.
+// Anotação livre. Um toque anota; segurar abre os últimos 3 dias daquele registro. Desde 07/11 toda família
+// tem os mesmos botões (saiu Família › Botões da tela inicial).
 const BTN = {
   feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
   med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'], care: ['Cuidados', 'k-care'],
 };
-const FIXED = ['feed', 'sleep', 'diaper'], OPTIONAL = ['med', 'symptom', 'pump', 'care'];
-// Cuidados era três botões (Massagem, Banho, Lavagem nasal): fica desligado só se a família desligou
-// Cuidados ou, antes, os três.
-const OLD_CARE = ['massage', 'bath', 'nasal'];
-const isOn = k => k === 'care'
-  ? !st.settings.hidden.includes('care') && !OLD_CARE.every(x => st.settings.hidden.includes(x))
-  : !st.settings.hidden.includes(k);
+const FIXED = ['feed', 'sleep', 'diaper'];
+// Todos os registros ligados para todas as famílias (Patrick, 07/11). Fica a função para os resumos e
+// gráficos, que perguntam por ela; o que as versões antigas guardaram em family_settings não vale mais.
+const isOn = () => true;
 // O último sintoma de hoje, para o leitor de tela: "febre há 2h". Vômito conta como sintoma.
 function symptomSub(last, now) {
   const e = last(['symptom', 'vomit']);
@@ -770,12 +773,12 @@ function renderGrid(last, open, now, joined) {
 }
 // Outros: a linha com os outros registros, do mesmo tamanho, logo acima dos botões; um toque fora fecha.
 function openPop() {
-  const ks = popKeys(), bt = $('grid').getBoundingClientRect();
+  const ks = popKeys(), bt = $('grid').querySelector('.rb').getBoundingClientRect();
   $('popIn').style.setProperty('--n', rowKeys().length);
   $('popIn').innerHTML = ks.map(k => k === 'other'
-    ? `<button class="rb k-other" data-k="other">${ICON.edit}<b>Anotação livre</b></button>`
+    ? `<button class="rb k-other" data-k="other">${ICON.edit}<b>Livre</b></button>`
     : `<button class="rb ${BTN[k][1]}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}. Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b></button>`).join('');
-  $('pop').style.bottom = (window.innerHeight - bt.top + 2) + 'px';
+  $('pop').style.bottom = (window.innerHeight - bt.top + 12) + 'px';
   $('pop').hidden = $('popScrim').hidden = false;
   document.body.classList.add('pop-open');
   document.querySelector('#grid [data-k="more"]')?.setAttribute('aria-expanded', 'true');
@@ -895,30 +898,8 @@ function enterFresh() {
   }, 40);
 }
 
-// Família › Botões da tela inicial: liga ou desliga os botões. Cada toque salva na hora, um de cada vez.
 // O nome de cada botão no "Anotar…" e no título dos últimos 3 dias.
 const ADD = { feed: 'mamada', sleep: 'sono', diaper: 'fralda', med: 'remédio', symptom: 'sintoma', pump: 'ordenha', care: 'cuidado' };
-function buttonsHtml() {
-  let h = '<div class="sec" id="famButtons"><h4>Botões da tela inicial</h4><p class="dim">Mamada, Sono, Fralda e Outros aparecem sempre. Os outros valem para toda a família.</p>';
-  if (!st.settingsOk) h += '<div class="soft">Não foi possível carregar os botões da família. Confira a conexão e abra de novo.</div>';
-  h += OPTIONAL.map(k => { const on = isOn(k);
-    return `<button class="li tg" role="switch" aria-checked="${on}" data-act="tgBtn" data-val="${k}"${st.settingsOk ? '' : ' disabled'}><span>${BTN[k][0]}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`; }).join('');
-  if (!isOn('med') && st.meds.length) h += '<p class="dim">Os remédios programados continuam: o cartão aparece na hora da dose, e a lista fica na aba do bebê.</p>';
-  if (!isOn('symptom')) h += '<p class="dim">Sem Sintomas, o vômito também sai da tela inicial; os registros antigos continuam na linha do tempo.</p>';
-  return h + '</div>';
-}
-let btnSave = Promise.resolve();
-function toggleBtn(k) {
-  const off = k === 'care' ? ['care', ...OLD_CARE] : [k];
-  const hidden = isOn(k) ? [...st.settings.hidden, k] : st.settings.hidden.filter(x => !off.includes(x));
-  st.settings = { hidden }; render();
-  btnSave = btnSave.then(async () => {
-    const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, hidden_kinds: st.settings.hidden }, { onConflict: 'family_id' });
-    if (!error) return;
-    toast('Não foi possível salvar. Confira a conexão.');
-    await loadSettings(st.family.id); render();
-  });
-}
 
 /* ---------- gravar registros ---------- */
 // As colunas do sintoma só vão no sintoma, e as do tamanho do cocô só quando há tamanho ou alerta:
@@ -2277,7 +2258,6 @@ function drawFamilyPane() {
   h += '</div><div class="sec"><h4>Bebês</h4>' +
     st.babies.map(b => `<button class="li tg" data-act="openBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(ageText(b.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
     '<button class="ghost" data-act="addBaby">+ Adicionar bebê</button></div>';
-  h += buttonsHtml();
   h += creator
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
@@ -2470,7 +2450,6 @@ async function paneAction(a, v, btn) {
   // Família
   if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
   if (a === 'famName') return famNameSheet();
-  if (a === 'tgBtn') return toggleBtn(v);
   if (a === 'invite') {
     busy(btn, true);
     const { data, error } = await sb.from('invites').insert({ family_id: f.id }).select('token').single();
@@ -2772,6 +2751,47 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
 setInterval(refresh, 30000);
+
+// Puxar para atualizar (Patrick, 07/11): no alto da aba Hoje, puxar para baixo e soltar depois de 80 px.
+// A tela desce com o dedo e, enquanto busca, fica 76 px abaixo; no vão, a capivara (só as bordas) se
+// desenha conforme puxa e, ao soltar, um traço corre pela borda dela até terminar.
+const PULL = 80, HOLD = 76;
+$('ptr').innerHTML = '<svg viewBox="0 0 120 70">' + ['bg', 'fg'].map(c => `<g class="${c}">${[...CAPI.matchAll(/ d="([^"]+)"/g)].map(m => `<path pathLength="100" d="${m[1]}"/>`).join('')}</g>`).join('') + '</svg>';
+let pull = null, pulling = false;
+const canPull = () => st.tab === 'home' && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden && $('pop').hidden && window.scrollY <= 0;
+function pullShow(d) {
+  const p = $('ptr'), r = document.documentElement.style;
+  p.hidden = false; r.setProperty('--pk', Math.min(1, d / PULL)); r.setProperty('--pd', Math.min(d, 130) + 'px');
+  document.body.classList.add('pulling');
+}
+async function pullHide() {
+  const r = document.documentElement.style;
+  document.body.classList.add('pull-back'); r.setProperty('--pd', '0px'); r.setProperty('--pk', 0);
+  await wait(250);
+  document.body.classList.remove('pulling', 'pull-back'); $('ptr').classList.remove('spin'); $('ptr').hidden = true;
+}
+addEventListener('touchstart', e => {
+  if (pulling || e.touches.length !== 1 || !canPull() || e.target.closest('#dock,#pop,#tabbar,.sheet')) return (pull = null);
+  pull = { x: e.touches[0].clientX, y: e.touches[0].clientY, d: 0 };
+}, { passive: true });
+addEventListener('touchmove', e => {
+  if (!pull) return;
+  const dx = e.touches[0].clientX - pull.x, dy = e.touches[0].clientY - pull.y;
+  // Puxou para o lado (gráfico ampliado) ou a tela já rolou: não é atualizar.
+  if (pull.d === 0 && (Math.abs(dx) > Math.abs(dy) || dy < 0 || window.scrollY > 0)) { pull = null; return; }
+  pull.d = Math.max(0, dy * .65); if (pull.d > 4) { document.body.classList.remove('pull-back'); pullShow(pull.d); }
+}, { passive: true });
+addEventListener('touchend', async () => {
+  if (!pull) return; const d = pull.d; pull = null;
+  if (d < PULL) return pullHide();
+  pulling = true; document.body.classList.add('pull-back'); $('ptr').classList.add('spin'); pullShow(HOLD);
+  document.documentElement.style.setProperty('--pk', 1);
+  const t0 = Date.now();
+  try { await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render(); } catch {}
+  await wait(Math.max(0, 1100 - (Date.now() - t0)));   // o bastante para ver a capivara dar uma volta
+  await pullHide(); pulling = false;
+});
+addEventListener('touchcancel', () => { if (pull) { pull = null; pullHide(); } });
 
 // Aparência escolhida em Perfil (claro ou escuro); sem escolha, segue o celular.
 const savedTheme = lsGet('cad-theme'); if (savedTheme) document.documentElement.dataset.theme = savedTheme;
