@@ -259,6 +259,16 @@ mesmos, porque o texto cita os itens pelo número.
   (Família › Botões). A decidir (com prévia): onde fica a opção (cadastro do bebê, Família › Botões ou
   pergunta nas boas-vindas); se a Mamada abre direto na mamadeira; o que some dos resumos e do relatório
   do pediatra; e o texto, neutro, sem julgar quem não amamenta.
+- **41 · Média por dia da mamadeira e das fraldas no resumo do Mês** (Patrick, 07/11): nos quadros
+  "Na mamadeira" e "Fraldas" da aba Mês, a média por dia em destaque e o total do mês menor embaixo, como
+  o quadro "Sono por dia" já faz (`monthHtml` em `report.js`). Hoje o destaque é o total (ex.: "18,2 L",
+  "em 120 mamadeiras"; "164", "52 com cocô"). A decidir (com prévia): os mesmos dias que a média do sono
+  usa (só dias terminados); o que fica na linha pequena (total, número de mamadeiras, fraldas com cocô);
+  e se muda também a Semana e o resumo para mandar à família.
+- **42 · Logo do Soneca no relatório para o pediatra** (Patrick, 07/11). Cuidado com a regra da
+  identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
+  app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
+  prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
 
 **Android** (seção "App do Android")
 
