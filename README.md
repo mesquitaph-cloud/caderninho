@@ -254,6 +254,11 @@ mesmos, porque o texto cita os itens pelo número.
   https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE), e na aba do bebê. A decidir: onde a foto fica
   guardada (Storage do Supabase, com regra de acesso só para a família), tamanho máximo, e se entra na
   Política (foto do bebê é dado pessoal; LGPD). Pede SQL novo e plugin de câmera/galeria no app.
+- **40 · Família que não amamenta no peito** (Patrick, 07/11): uma opção para esconder o peito e a
+  ordenha. Hoje a Mamada sempre pergunta "Peito" ou "Mamadeira", e só o botão Ordenha dá para desligar
+  (Família › Botões). A decidir (com prévia): onde fica a opção (cadastro do bebê, Família › Botões ou
+  pergunta nas boas-vindas); se a Mamada abre direto na mamadeira; o que some dos resumos e do relatório
+  do pediatra; e o texto, neutro, sem julgar quem não amamenta.
 
 **Android** (seção "App do Android")
 
