@@ -196,9 +196,12 @@ mesmos, porque o texto cita os itens pelo número.
 - **28 · Calendário de vacinas** (Felipe Boin, 03/11): uma aba com as vacinas por idade. A decidir: a fonte
   (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
   se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas.
-- **29 · Linha de "tarefas diárias" na tela inicial** (Felipe Boin, 03/11): tummy time, banho etc., para
-  marcar no dia. A decidir: se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho,
-  banho de sol) mostrados como linha no alto; e quais tarefas.
+- **29 · Tarefas: a rotina do bebê programada** (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
+  antigo item 39): a família programa a rotina do dia (horários de banho, tummy time, banho de sol etc.),
+  e uma linha de "tarefas diárias" na tela inicial mostra o que vem a seguir, para marcar no dia. A
+  decidir (com prévia): se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho, banho
+  de sol) mostrados como linha no alto; quais tarefas; se vira aviso no horário, como o do remédio; e o
+  tom, sem cobrança. Liga com o item 30 (avisos).
 - **30 · Aviso para anotar depois de X horas sem registro** (Patrick, 03/11; antes "Lembrete para usar o
   app", em "Ideias para depois"): lembrar os pais de anotar e ajudar quem é novo a começar.
   **Decidido em 04/11 (fase 1, sem servidor, aviso local como o do remédio; prévia antes de programar):**
@@ -251,10 +254,6 @@ mesmos, porque o texto cita os itens pelo número.
   https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE), e na aba do bebê. A decidir: onde a foto fica
   guardada (Storage do Supabase, com regra de acesso só para a família), tamanho máximo, e se entra na
   Política (foto do bebê é dado pessoal; LGPD). Pede SQL novo e plugin de câmera/galeria no app.
-- **39 · Tarefas: programar a rotina do bebê** (Patrick, 07/11): a família monta a rotina do dia
-  (horários de banho, tummy time, banho de sol etc.) e o Soneca mostra o que vem a seguir. A decidir
-  (com prévia): se vira aviso no horário, como o do remédio; se as tarefas são os Cuidados que já
-  existem; e o tom, sem cobrança. Liga com o item 29 (tarefas diárias) e com o 30 (avisos).
 
 **Android** (seção "App do Android")
 
