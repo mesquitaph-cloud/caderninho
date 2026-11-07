@@ -402,7 +402,7 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 /* Fralda com cocô: o tamanho e, em destaque, o alerta marrom (vazou da fralda) */
 .psize{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 .psize .opt{padding:11px 0;font-size:clamp(12.5px,4vw,15px);letter-spacing:-.01em}
-.psize .opt.on{border-color:var(--poo-ink);background:var(--poo-bg);color:var(--poo-ink)}
+.psize .opt.on{border-color:var(--diaper-ink);background:var(--diaper);color:var(--diaper-ink)}
 .brown{margin-top:8px;width:100%;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:2px dashed var(--poo-ink);color:var(--poo-ink);background:var(--surface);text-align:left}
 .brown svg{width:24px;height:24px}
 .brown b{font-family:var(--display);font-weight:500;font-size:18px;display:block;line-height:1.1}
@@ -863,16 +863,26 @@ body.pop-open #grid [data-k="more"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .orow .pen{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface);color:var(--muted)}
 .orow .pen svg{width:15px;height:15px}
 .orow.tm.open .pen{background:var(--sleep);color:var(--sleep-ink)}
+/* O horário sozinho, sem a palavra "Horário" (07/11): no centro da linha, com o lápis ao lado */
+.orow.tm{display:grid;grid-template-columns:1fr auto 1fr;background:none;padding:4px 14px}
+.orow.tm .v{grid-column:2;font-size:22px}
+.orow.tm .pen{grid-column:3;justify-self:start;margin-left:8px;background:var(--surface2)}
 @media (prefers-reduced-motion:no-preference){.orow .cv{transition:transform .2s}.ofold{animation:ofold .22s cubic-bezier(.3,.7,.2,1)}@keyframes ofold{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}}
 .orow.open .cv{transform:rotate(90deg)}
 .ofold{display:flex;flex-direction:column;gap:12px}
 .sfoot{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));margin:0 -16px calc(-18px - env(safe-area-inset-bottom,0px));padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-.sgo{display:flex;align-items:center;justify-content:center;gap:9px;width:100%}
+.sgo{display:flex;align-items:center;justify-content:center;width:100%;position:relative;overflow:hidden}
+.sgo .sgi{display:flex;align-items:center;justify-content:center;gap:9px}
+.sgo:disabled{opacity:1}
+/* Salvou: o texto gira e vira a lua (Sono) ou o check (Fralda, Ordenha) */
+.sgo .sgok{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.sgo .sgok svg{width:30px;height:30px;color:currentColor}
 .sgo svg{width:22px;height:22px}
 /* Mamadeira: os atalhos de ml e, ao lado de 150 e 180, o campo com − e + */
 .mlg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .mlg .opt{padding:10px 0;text-align:center;font-size:15px}
 .mlg .opt.on{background:var(--feed);color:var(--feed-ink)}
+.mlg.k-pump .opt.on{background:var(--pump);color:var(--pump-ink)}
 .mls{grid-column:span 2;display:flex;align-items:center;gap:4px;border:1.5px solid var(--line);border-radius:999px;padding:3px;background:var(--surface)}
 .mls label{flex:1;display:flex;align-items:baseline;justify-content:center;gap:3px;min-width:0}
 .mls input{width:3.2ch;border:none;background:none;text-align:right;font-family:var(--display);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--ink);padding:0}
@@ -880,6 +890,16 @@ body.pop-open #grid [data-k="more"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .mls button{width:34px;height:34px;border-radius:50%;background:var(--surface2);font-size:18px;color:var(--ink);flex:none}
 .sgo.k-sleep{background:var(--sleep);color:var(--sleep-ink)}.sgo.k-sleep svg{color:var(--c-sleep)}
 .sgo.k-feed{background:var(--feed);color:var(--feed-ink)}.sgo.k-feed svg{color:var(--c-feed)}
+.sgo.k-diaper{background:var(--diaper);color:var(--diaper-ink)}.sgo.k-diaper svg{color:var(--c-diaper)}
+.sgo.k-pump{background:var(--pump);color:var(--pump-ink)}.sgo.k-pump svg{color:var(--c-pump)}
+.sgo .sgok svg{color:currentColor}
+/* O botão vira a tela (07/11): a forma que cresce do botão até a tela e volta, por cima de tudo, e o
+   escurecido que some por baixo dos botões enquanto isso */
+.morph{position:fixed;z-index:12;pointer-events:none;overflow:hidden;display:grid;place-items:start center}
+.morph .mi{display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:9px;color:var(--ink)}
+.morph .mi svg{width:22px;height:22px}
+.morph .mi b{font-weight:500;font-size:12.5px;line-height:1.1}
+.scrimfx{position:fixed;inset:0;background:var(--scrim);z-index:3;pointer-events:none}
 
 /* ---------- Ajustes de 07/11 (prévia aprovada: https://claude.ai/artifact/8uHTiptEmsVdo7KzRgdbxi) ---------- */
 /* Há quanto tempo: logo acima do gráfico; ao grudar no cartão do bebê, os dois viram um cartão só */

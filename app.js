@@ -810,7 +810,8 @@ function renderDock(last, open, now) {
   renderGrid(last, open, now, want);
   $('strip').innerHTML = want ? stripHtml(want, open, now) : '';
   $('din').classList.toggle('on', !!want);
-  if (opening) openStrip();
+  // Com a tela de registro aberta (ou fechando), a faixa espera escondida: a tela encolhe até ela.
+  if (opening) { if (closing || (S && !$('sheet').hidden)) $('din').classList.add('pre'); else openStrip(); }
   dockSize();
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -971,8 +972,117 @@ const LAP_CHIPS = [10, 20, 30, 60];
 // Atalhos embaixo do relógio: agora ou tantos minutos antes do horário que está nele.
 const QUICK_TIME = '<div class="time quick"><button class="small" data-act="now">Agora</button>'
   + [5, 10, 30].map(m => `<button class="small" data-act="back" data-val="${m}">−${m} min</button>`).join('') + '</div>';
-function openPanel(html) { $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html; }
-function closeSheet() { S = null; $('scrim').hidden = true; $('sheet').hidden = true; render(); }
+function openPanel(html) {
+  const from = sheetFrom, was = !$('sheet').hidden; sheetFrom = null;
+  $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
+  if (was) return;
+  sheetK = from ? from.home : null; stripAtOpen = stripK;
+  if (from && !reduceMotion()) growSheet(from);
+}
+function closeSheet() {
+  const sh = $('sheet'), k = sheetK, anim = !sh.hidden && k && !reduceMotion() && !$('dock').hidden;
+  const r = anim ? sh.getBoundingClientRect() : null, surf = anim ? getComputedStyle(sh).backgroundColor : '';
+  sheetK = null; closing = !!anim;
+  S = null; $('scrim').hidden = true; sh.hidden = true; render(); closing = false;
+  // A faixa do sono ou da mamada que começou com a tela aberta esperou escondida: a tela encolhe até
+  // ela (quando é o mesmo registro) ou ela sai do botão como antes.
+  if ($('din').classList.contains('pre') && !stripBusy && stripK && stripK !== stripAtOpen) {
+    if (anim && k === stripK) return shrinkToStrip(r, surf);
+    $('din').classList.remove('pre'); openStrip();
+  }
+  if (anim) shrinkToBtn(r, surf, k);
+}
+
+/* ---------- o botão vira a tela (prévia aprovada em 07/11) ---------- */
+// Tocar num botão de registro: a cor do botão cresce até a tela de salvar (menos de 0,2 s) e clareia até o
+// fundo dela; fechar faz o caminho de volta. Os botões de Outros voltam para o Outros.
+let sheetFrom = null, sheetK = null, stripAtOpen = null, closing = false;
+const M_EASE = 'cubic-bezier(.3,.7,.2,1)';
+const boxOf = r => ({ left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+// O que a tela precisa do botão: onde ele está, a cor, o ícone e o nome, e para qual botão ela volta.
+function fromBtn(b, home) {
+  const cs = getComputedStyle(b), svg = b.querySelector('svg');
+  return { rect: b.getBoundingClientRect(), bg: cs.backgroundColor, ic: svg ? getComputedStyle(svg).color : '', html: (svg?.outerHTML || '') + (b.querySelector('b')?.outerHTML || ''), home };
+}
+function morphEl(html, ic) {
+  const m = document.createElement('div'); m.className = 'morph';
+  if (html) { m.innerHTML = `<span class="mi">${html}</span>`; const s = m.querySelector('svg'); if (s) s.style.color = ic; }
+  document.body.appendChild(m); return m;
+}
+function scrimFx(a, z, ms) {
+  const f = document.createElement('div'); f.className = 'scrimfx'; document.body.appendChild(f);
+  f.animate([{ opacity: a }, { opacity: z }], { duration: ms, easing: a ? 'ease-in' : 'ease-out', fill: 'forwards' }).finished.catch(() => {}).then(() => f.remove());
+}
+async function growSheet(from) {
+  const sh = $('sheet'), r = sh.getBoundingClientRect(), surf = getComputedStyle(sh).backgroundColor, ms = 180;
+  sh.style.visibility = 'hidden'; $('scrim').style.opacity = 0;
+  const m = morphEl(from.html, from.ic);
+  $('scrim').animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms, easing: 'ease-out' });
+  m.querySelector('.mi')?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, fill: 'forwards' });
+  try {
+    await m.animate([
+      { ...boxOf(from.rect), borderRadius: '16px', backgroundColor: from.bg },
+      { offset: .55, backgroundColor: from.bg },
+      { ...boxOf(r), borderRadius: '24px 24px 0 0', backgroundColor: surf }
+    ], { duration: ms, easing: M_EASE, fill: 'forwards' }).finished;
+  } catch {}
+  m.remove(); sh.style.visibility = ''; $('scrim').style.opacity = '';
+  for (const c of $('sheetIn').children) c.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 90, easing: M_EASE });
+}
+async function shrinkToBtn(r, surf, k) {
+  const b = document.querySelector(`#grid [data-k="${k}"]`); if (!b) return;
+  const to = fromBtn(b), ms = 150, m = morphEl(to.html, to.ic);
+  scrimFx(1, 0, ms);
+  m.querySelector('.mi')?.animate([{ opacity: 0 }, { offset: .7, opacity: 0 }, { opacity: 1 }], { duration: ms, fill: 'forwards' });
+  try {
+    await m.animate([
+      { ...boxOf(r), borderRadius: '24px 24px 0 0', backgroundColor: surf },
+      { offset: .45, backgroundColor: to.bg },
+      { ...boxOf(to.rect), borderRadius: '16px', backgroundColor: to.bg }
+    ], { duration: ms, easing: M_EASE, fill: 'forwards' }).finished;
+  } catch {}
+  m.remove();
+}
+// Dormiu agora ou um peito tocado: a tela encolhe direto até a faixa que conta o tempo. Dois pedaços saem
+// juntos, um vira a faixa e o outro a ligação até o botão; como um sempre cobre a borda do outro, a forma
+// fica presa ao botão em todos os quadros. Depois aparece o conteúdo da faixa.
+async function shrinkToStrip(r, surf) {
+  const din = $('din'), ext = $('strip').firstElementChild, btn = $('grid').querySelector('.joined');
+  if (!ext || !btn) { din.classList.remove('pre'); return; }
+  stripBusy = true;
+  const e = ext.getBoundingClientRect(), b = btn.getBoundingClientRect(), bg = getComputedStyle(ext).backgroundColor, ms = 180;
+  const first = btn.classList.contains('jl'), kids = [...ext.children];
+  const neck = { left: b.left, top: e.bottom - 18, width: b.width, height: b.top + 2 - (e.bottom - 18) };
+  kids.forEach(c => c.style.opacity = 0);
+  const mA = morphEl(), mB = morphEl();
+  scrimFx(1, 0, ms);
+  const kf = (to, rad) => [{ ...boxOf(r), borderRadius: '24px 24px 0 0', backgroundColor: surf }, { offset: .5, backgroundColor: bg }, { ...boxOf(to), borderRadius: rad, backgroundColor: bg }];
+  try {
+    await Promise.all([
+      mA.animate(kf(e, first ? '18px 18px 18px 0' : '18px'), { duration: ms, easing: M_EASE, fill: 'forwards' }).finished,
+      mB.animate(kf(neck, '0'), { duration: ms, easing: M_EASE, fill: 'forwards' }).finished
+    ]);
+  } catch {}
+  din.classList.remove('pre'); mA.remove(); mB.remove();
+  try { await Promise.all(kids.map(c => c.animate([{ opacity: 0, transform: 'translateY(5px)' }, { opacity: 1, transform: 'none' }], { duration: 90, easing: M_EASE }).finished)); } catch {}
+  kids.forEach(c => c.style.opacity = '');
+  stripBusy = false; render();
+}
+// O botão de salvar confirma (07/11): o texto gira e some, e no lugar gira a lua (Sono) ou o check (Fralda e
+// Ordenha), que cresce um pouco e fica à vista um instante. Uns 0,8 s; o registro salva ao mesmo tempo.
+function confirmSave(btn, icon) {
+  const sgi = btn.querySelector('.sgi'); if (!sgi || reduceMotion()) return null;
+  btn.insertAdjacentHTML('beforeend', `<span class="sgok" aria-hidden="true">${icon}</span>`);
+  const ok = btn.lastElementChild; ok.style.opacity = 0;
+  const as = [];
+  const done = (async () => {
+    as.push(sgi.animate([{ transform: 'none', opacity: 1 }, { transform: 'rotate(120deg) scale(.5)', opacity: 0 }], { duration: 200, easing: 'ease-in', fill: 'forwards' }));
+    await as[0].finished; ok.style.opacity = '';
+    as.push(ok.animate([{ transform: 'rotate(-120deg) scale(.4)', opacity: 0 }, { offset: .65, transform: 'rotate(0deg) scale(1.3)', opacity: 1 }, { transform: 'rotate(0deg) scale(1.15)', opacity: 1 }], { duration: 380, easing: M_EASE, fill: 'forwards' }));
+    await as[1].finished; await new Promise(res => setTimeout(res, 250));
+  })().catch(() => {});
+  return { done, cancel: () => { as.forEach(a => a.cancel()); ok.remove(); } };
+}
 // Caixa de confirmação para apagar (e sair, remover): o primeiro toque abre a caixa, só o botão de
 // dentro age. Cancelar, Esc ou um toque fora fecham sem fazer nada.
 let askYes = null;
@@ -1128,19 +1238,20 @@ function openEntry(k, edit) {
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '',
         by: edit?.done_by || null, alone: !!edit?.self_settled };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
-  // Sono (com o bebê acordado) e Mamada novos abrem a tela curta.
-  S.compact = !edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed'); S.openO = false; S.openT = false; S.t0 = S.time;
+  // Sono (com o bebê acordado), Mamada, Fralda e Ordenha novos abrem a tela curta.
+  S.compact = !edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump'); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
 const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
-// Telas curtas do Sono e da Mamada (prévia aprovada em 06/11): o caso comum num toque, e o resto em
-// "Outras opções" e "Horário", recolhidos. O botão grande fica no pé, perto do polegar.
+// Telas curtas do Sono e da Mamada (prévia aprovada em 06/11), e da Fralda e da Ordenha (07/11): o caso
+// comum num toque, e o resto em "Outras opções" e no horário, recolhidos. O botão grande fica no pé,
+// perto do polegar. Sem Observação nessas quatro telas (decidido em 07/11).
 const orow = (act, txt, open) => `<button class="orow${open ? ' open' : ''}" data-act="${act}" aria-expanded="${open}"><span>${txt}</span><i class="cv" aria-hidden="true">›</i></button>`;
 function timeRow(k) {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = S.other || d0 < addDays(t0, -1) ? ddmm(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  let h = `<button class="orow tm${S.openT ? ' open' : ''}" data-act="openT" aria-expanded="${S.openT}" aria-label="Horário: ${day}${S.time}. Editar o horário"><span>Horário</span><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  let h = `<button class="orow tm${S.openT ? ' open' : ''}" data-act="openT" aria-expanded="${S.openT}" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (S.openT) {
     h += `<div class="ofold">${daySeg()}`;
     if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
@@ -1148,7 +1259,7 @@ function timeRow(k) {
   }
   return h;
 }
-const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save">${ICON[k]}<span>${txt}</span></button></div>`;
+const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button></div>`;
 function drawSleepCompact() {
   let h = head('Sono') + orow('openO', 'Outras opções', S.openO);
   if (S.openO) {
@@ -1157,7 +1268,7 @@ function drawSleepCompact() {
     if (lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
       <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
     if (canBy()) h += byHtml('sleep', 'Quem fez');
-    h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}"></div>`;
+    h += '</div>';
   }
   h += timeRow('sleep');
   // "Dormiu agora" salva com a hora de agora; mexeu em algo, o botão vira "Salvar".
@@ -1173,8 +1284,7 @@ function drawFeedCompact() {
     h += `<div><div class="lbl">Qual peito</div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="tsides">${ftSidesHtml(null, Date.now())}</div></div>`;
     h += orow('openO', 'Outras opções', S.openO);
     if (S.openO) {
-      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>
-        <input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}"></div>`;
+      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div></div>`;
       h += timeRow('feed') + sfoot('feed', 'Salvar');
     }
     return openPanel(h);
@@ -1186,11 +1296,36 @@ function drawFeedCompact() {
   h += timeRow('feed') + sfoot('feed', 'Salvar');
   openPanel(h);
 }
+// Fralda: Xixi e Cocô; com cocô, o tamanho (sem título) e o alerta marrom.
+function drawDiaperCompact() {
+  let h = head('Fralda') + `<div class="seg k-diaper" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div>`;
+  if (S.poo) h += `<div>${pooHtml()}</div>`;
+  S.wig = false;
+  if (canBy()) { h += orow('openO', 'Outras opções', S.openO); if (S.openO) h += `<div class="ofold">${byHtml('diaper', 'Quem fez')}</div>`; }
+  h += timeRow('diaper') + sfoot('diaper', 'Salvar');
+  openPanel(h);
+}
+// Ordenha: a última ordenha, o peito (opcional, um ou os dois) e os ml, como na mamadeira. Sem "Quem fez"
+// (só quem amamenta faz), então sem Outras opções.
+function drawPumpCompact() {
+  const lp = sortedEntries().findLast(e => e.kind === 'pump');
+  const last = lp ? 'Última ordenha: ' + [lp.ml ? lp.ml + ' ml' : '', SIDE_SHORT[lp.side] || '', ago(lp.t)].filter(Boolean).join(', ') : '';
+  let h = head('Ordenha') + `<div>${last ? `<div class="hint">${esc(last)}</div>` : ''}<div class="seg k-pump" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div></div>`;
+  h += `<div><div class="lbl">Quantidade</div><div class="mlg k-pump" role="group" aria-label="Quantidade" style="background:none">${[30, 60, 90, 120, 150, 180].map(v => opt(v + ' ml', +S.ml === v, 'ml', v)).join('')}
+    <div class="mls"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><label><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em></label><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div></div>`;
+  h += timeRow('pump') + sfoot('pump', 'Salvar');
+  openPanel(h);
+}
+// O tamanho do cocô e, embaixo, o alerta marrom, para quando vazou da fralda.
+const pooHtml = () => `<div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
+    <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>aperte em caso de emergência</small></span></button>`;
 
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
   if (S.compact && k === 'sleep' && S.sk === 'sleep') return drawSleepCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
+  if (S.compact && k === 'diaper') return drawDiaperCompact();
+  if (S.compact && k === 'pump') return drawPumpCompact();
   let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar cuidado' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
@@ -1212,8 +1347,7 @@ function drawEntry() {
   if (k === 'sleep') h += `<div class="seg ${c}" style="background:none">${opt('Dormiu', S.sk === 'sleep', 'sk', 'sleep', 1)}${opt('Acordou', S.sk === 'wake', 'sk', 'wake', 1)}</div>`;
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
-  if (k === 'diaper' && S.poo) h += `<div><div class="lbl">Tamanho do cocô <small>(opcional)</small></div><div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
-    <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>aperte em caso de emergência</small></span></button></div>`;
+  if (k === 'diaper' && S.poo) h += `<div>${pooHtml()}</div>`;
   S.wig = false;   // a sirene balança só no toque que liga o alerta, não a cada redesenho
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
@@ -1241,7 +1375,8 @@ function drawEntry() {
   if (k === 'sleep' && lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
     <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
   if (canBy()) h += byHtml(k, k === 'med' ? 'Quem deu' : 'Quem fez');
-  if (k !== 'other') h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
+  // Sono, Mamada, Fralda e Ordenha não têm Observação (07/11), nem ao editar; a que já existe continua salva.
+  if (!['other', 'sleep', 'feed', 'diaper', 'pump'].includes(k)) h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
   if (k === 'symptom') h += '<p class="dim">O Soneca só anota o que a família marcar; não avalia nem orienta.</p>';
@@ -1328,8 +1463,11 @@ async function saveEntry(btn) {
   busy(btn, true);
   if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast(savedText(ev)); } else busy(btn, false); return; }
   const fromTimer = S.fromTimer && ev.kind === 'feed' && ev.src === 'breast';
+  // Na tela curta do Sono, da Fralda e da Ordenha, o botão confirma enquanto o registro salva.
+  const conf = S.compact && (k === 'sleep' || k === 'diaper' || k === 'pump') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
   const row = await addEntry(ev);
-  if (!row) return busy(btn, false);
+  if (!row) { conf?.cancel(); return busy(btn, false); }
+  await conf?.done;
   if (fromTimer) ftSet(null);
   closeSheet(); toast(savedText(ev), () => deleteEntry(row.id));
 }
@@ -2600,11 +2738,13 @@ $('grid').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b || held) return;
   if (closePop()) return;
   if (b.dataset.k === 'more') return openPop();
-  openEntry(b.dataset.k);
+  sheetFrom = fromBtn(b, b.dataset.k); openEntry(b.dataset.k); sheetFrom = null;
 });
 $('popIn').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b || held) return;
-  closePop(); openEntry(b.dataset.k);
+  // Os de Outros crescem do próprio botão e voltam para o Outros.
+  const from = fromBtn(b, 'more');
+  closePop(); sheetFrom = from; openEntry(b.dataset.k); sheetFrom = null;
 });
 $('popScrim').addEventListener('click', closePop);
 // A faixa: Acordou salva na hora, como antes; na da mamada, Terminar salva e o resto abre o cronômetro.
