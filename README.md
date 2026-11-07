@@ -251,6 +251,10 @@ mesmos, porque o texto cita os itens pelo número.
   https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE), e na aba do bebê. A decidir: onde a foto fica
   guardada (Storage do Supabase, com regra de acesso só para a família), tamanho máximo, e se entra na
   Política (foto do bebê é dado pessoal; LGPD). Pede SQL novo e plugin de câmera/galeria no app.
+- **39 · Tarefas: programar a rotina do bebê** (Patrick, 07/11): a família monta a rotina do dia
+  (horários de banho, tummy time, banho de sol etc.) e o Soneca mostra o que vem a seguir. A decidir
+  (com prévia): se vira aviso no horário, como o do remédio; se as tarefas são os Cuidados que já
+  existem; e o tom, sem cobrança. Liga com o item 29 (tarefas diárias) e com o 30 (avisos).
 
 **Android** (seção "App do Android")
 
