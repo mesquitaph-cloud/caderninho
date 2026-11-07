@@ -195,7 +195,8 @@ mesmos, porque o texto cita os itens pelo número.
   que formato sai (PDF, texto).
 - **28 · Calendário de vacinas** (Felipe Boin, 03/11): uma aba com as vacinas por idade. A decidir: a fonte
   (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
-  se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas.
+  se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas e com
+  o item 49 (data da consulta). Pedido de novo pelo Patrick em 07/11.
 - **29 · Tarefas: a rotina do bebê programada** (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
   antigo item 39): a família programa a rotina do dia (horários de banho, tummy time, banho de sol etc.),
   e uma linha de "tarefas diárias" na tela inicial mostra o que vem a seguir, para marcar no dia. A
@@ -293,6 +294,13 @@ mesmos, porque o texto cita os itens pelo número.
   é o pai, a mãe ou outro cuidador, em vez de o app não saber quem é. Serve às frases do item 44 e à
   divisão de tarefas no resumo. A decidir (com prévia): onde se escolhe (boas-vindas ou Perfil), as
   opções além de pai e mãe (avó, babá, duas mães, dois pais), e se pede coluna nova no banco (SQL novo).
+- **49 · Data da próxima consulta com o pediatra** (Patrick, 07/11): a família anota quando é a
+  próxima consulta e o app lembra perto do dia, junto com as dúvidas que faltam perguntar. A decidir
+  (com prévia): onde fica (aba do bebê, perto do relatório e das dúvidas); se o aviso é notificação e com
+  quanta antecedência; se guarda as consultas passadas (o relatório poderia oferecer o período "desde a
+  última consulta", além do último peso); e se pede tabela nova no banco (SQL novo). Tom neutro, sem
+  cobrar consulta que a família não marcou. Liga com o item 28 (vacinas, muitas vezes na mesma ida) e
+  com os itens 26 e 27 (relatórios).
 
 **Marketing**
 
