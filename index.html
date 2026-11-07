@@ -127,6 +127,7 @@
 <!-- App -->
 <div id="scrMain" hidden>
 <!-- Hoje: os registros do dia a dia -->
+<div class="ptr" id="ptr" aria-hidden="true" hidden></div>
 <div class="wrap" id="paneHome">
   <!-- O cartão do bebê fica preso no alto enquanto a tela rola -->
   <header class="hcard">
@@ -163,6 +164,8 @@
       <button role="tab" id="tabMonth" aria-selected="false" aria-controls="monthView" data-view="month">Mês</button>
     </div>
   </div>
+  <!-- Há quanto tempo: última mamada, sono e fralda. Ao rolar, gruda embaixo do cartão do bebê. -->
+  <div class="last" id="lastRow" role="group" aria-label="Há quanto tempo" hidden></div>
   <div class="view" id="dayView" role="tabpanel" aria-labelledby="tabDay">
     <div id="summary"></div>
     <div class="tl" id="timeline"></div>
