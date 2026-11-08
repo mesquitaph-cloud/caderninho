@@ -1407,7 +1407,7 @@ function openEntry(k, edit) {
 const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
 // Telas curtas do Sono e da Mamada (prévia aprovada em 06/11), e da Fralda e da Ordenha (07/11): o caso
 // comum num toque, e o resto em "Outras opções" e no horário, recolhidos. O botão grande fica no pé,
-// perto do polegar. Sem Observação nessas quatro telas (decidido em 07/11).
+// perto do polegar. Sem Observação no Sono, na Mamada e na Ordenha (07/11); a Fralda tem, em Outras opções (08/11).
 const orow = (act, txt, open) => `<button class="orow${open ? ' open' : ''}" data-act="${act}" aria-expanded="${open}"><span>${txt}</span><i class="cv" aria-hidden="true">›</i></button>`;
 function timeRow(k) {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
@@ -1457,12 +1457,14 @@ function drawFeedCompact() {
   h += timeRow('feed') + sfoot('feed', 'Salvar');
   openPanel(h);
 }
-// Fralda: Xixi e Cocô; com cocô, o tamanho (sem título) e o alerta marrom.
+// Fralda: Xixi e Cocô; com cocô, o tamanho (sem título) e o alerta marrom. Outras opções sempre, por
+// causa da Observação (08/11); o Quem fez só com duas pessoas ou mais.
 function drawDiaperCompact() {
   let h = head('Fralda') + `<div class="seg k-diaper" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div>`;
   if (S.poo) h += `<div>${pooHtml()}</div>`;
   S.wig = false;
-  if (canBy()) { h += orow('openO', 'Outras opções', S.openO); if (S.openO) h += `<div class="ofold">${byHtml('diaper', 'Quem fez')}</div>`; }
+  h += orow('openO', 'Outras opções', S.openO);
+  if (S.openO) h += `<div class="ofold">${canBy() ? byHtml('diaper', 'Quem fez') : ''}${noteField('Observação (opcional)')}</div>`;
   h += timeRow('diaper') + sfoot('diaper', 'Salvar');
   openPanel(h);
 }
@@ -1477,6 +1479,7 @@ function drawPumpCompact() {
   h += timeRow('pump') + sfoot('pump', 'Salvar');
   openPanel(h);
 }
+const noteField = ph => `<input class="field" id="noteIn" maxlength="300" placeholder="${ph}" value="${esc(S.note)}">`;
 // O tamanho do cocô e, embaixo, o alerta marrom, para quando vazou da fralda.
 const pooHtml = () => `<div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
     <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>aperte em caso de emergência</small></span></button>`;
@@ -1536,8 +1539,8 @@ function drawEntry() {
   if (k === 'sleep' && lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
     <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
   if (canBy()) h += byHtml(k, k === 'med' ? 'Quem deu' : 'Quem fez');
-  // Sono, Mamada, Fralda e Ordenha não têm Observação (07/11), nem ao editar; a que já existe continua salva.
-  if (!['other', 'sleep', 'feed', 'diaper', 'pump'].includes(k)) h += `<input class="field" id="noteIn" maxlength="300" placeholder="${(k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)'}" value="${esc(S.note)}">`;
+  // Sono, Mamada e Ordenha não têm Observação (07/11), nem ao editar; a que já existe continua salva.
+  if (!['other', 'sleep', 'feed', 'pump'].includes(k)) h += noteField((k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)');
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
   h += `<button class="save" data-act="save">Salvar</button>`;
   if (k === 'symptom') h += '<p class="dim">O Soneca só anota o que a família marcar; não avalia nem orienta.</p>';
