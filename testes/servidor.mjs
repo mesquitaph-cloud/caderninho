@@ -9,6 +9,7 @@
 //   sem-nascimento   o mesmo, sem a data de nascimento anotada
 //   quem-fez      registros que outra pessoa fez e sonos em que a Helena pegou no sono sozinha
 //   app-convite   a mesma conta, no "app do iPhone" aberto pelo link de convite (Universal Link)
+//   carrossel     a Helena acordada e 3 dúvidas para a consulta, para as fotos do carrossel (relógio às 13h)
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
