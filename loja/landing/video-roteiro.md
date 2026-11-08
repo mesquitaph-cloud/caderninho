@@ -80,6 +80,17 @@ mais contexto do que cabe em poucos segundos.
 
 Capivara traço a traço, "Soneca", "No iPhone e no Android." e os dois selos.
 
+## Capa (imagem parada, 1080 × 1350) · aprovada em 08/11/2026
+
+Aparece no lugar do vídeo enquanto ele carrega, e fica parada se o celular não deixar o vídeo tocar sozinho
+(por exemplo, iPhone em modo de pouca bateria). Por isso precisa explicar sozinha o que o vídeo mostra.
+
+- Fundo do dia; no alto o título **Como o Soneca funciona** e, embaixo dele, a frase de apoio **Da mamada de
+  madrugada à consulta com o pediatra.**
+- Embaixo, o celular desenhado com a foto `01` (tela inicial de dia), saindo cortado pela borda.
+- Sem botão de "play" desenhado: o site põe o dele por cima.
+- PNG e JPG (qualidade 85), para a página usar o mais leve.
+
 ## Capturas para o estúdio
 
 Fotos do app de verdade, 1290 × 2796 px, com os dados de sempre (Helena, 3 meses; família Andrade; quarta,
