@@ -1,7 +1,7 @@
 // Relatório para pediatra: o que a família leva à consulta, numa folha A4 que vira PDF pelo imprimir
 // do celular, e o mesmo em texto para copiar. Só junta o que foi registrado; não avalia o bebê nem
 // compara com outros bebês. A folha é sempre clara, mesmo com o app no escuro.
-import { MIN, HOUR, DAY, startOfDay, addDays, hm, dur, esc, ageText, label, pad as p2, n1, plural, MESES as MES, MESES_L, DIAS } from './util.js';
+import { MIN, HOUR, DAY, startOfDay, addDays, hm, dur, esc, ageText, label, pad as p2, n1, plural, MESES as MES, MESES_L, DIAS, CAPI } from './util.js';
 import { kg, cmText, growthChart, growthWindow } from './growth.js';
 
 const MESES = MESES_L.map(m => m.toLowerCase()), DIA = DIAS.map(d => d.toLowerCase());
@@ -145,7 +145,7 @@ export function reportHtml({ baby, a, now, stats: R, evs, sleeps, weights, lengt
   const today = startOfDay(now), birth = baby.birth_date;
   const td = (v, cls = '') => `<td${cls ? ` class="${cls}"` : ''}>${v}</td>`;
   let h = '<article class="rp-paper">';
-  h += `<header class="rp-head"><div><h1>${esc(baby.name)}</h1><p>${birth ? `Nasceu em ${ymdFull(birth)} · ${esc(ageText(birth))} em ${ddmm(now)}/${new Date(now).getFullYear()}` : 'Sem data de nascimento anotada'}</p></div>`
+  h += `<header class="rp-head"><div><div class="rp-brand">${CAPI}Soneca</div><h1>${esc(baby.name)}</h1><p>${birth ? `Nasceu em ${ymdFull(birth)} · ${esc(ageText(birth))} em ${ddmm(now)}/${new Date(now).getFullYear()}` : 'Sem data de nascimento anotada'}</p></div>`
     + `<div class="rp-per"><b>${esc(periodTitle(a, today))}</b>${plural(R.days.length, 'dia', 'dias')}, até hoje às ${hm(now)}</div></header>`;
 
   if (parts.growth) {
