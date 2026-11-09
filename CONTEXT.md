@@ -113,12 +113,24 @@ incômodo dos dentes ou outro, com o
 que aconteceu escrito. O Soneca só anota; não avalia nem orienta. Fica fora do resumo para mandar.
 _Evite_: doença, diagnóstico, mal-estar, intercorrência
 
-**Cuidado**:
-O que a família escolhe no botão Cuidados: massagem, banho, lavagem nasal, tummy time, banho de sol,
-arroto ou outro. Todos com o horário e uma observação, se quiser. Tummy time e banho de sol podem ter
-quantos minutos duraram; no arroto, marca-se "Pôs para arrotar", "Arrotou" ou os dois, sem tempo; no
-outro, o que foi feito é escrito à mão e é obrigatório.
-_Evite_: atividade, procedimento, atalho
+**Tarefa** (antes "cuidado", até 08/11):
+O que a família escolhe no botão Tarefas: massagem, banho, lavagem nasal, tummy time, banho de sol,
+arroto, pomada ou outra tarefa. Anotada avulsa ("Anotar uma tarefa avulsa") tem o horário e uma
+observação, se quiser. Tummy time e banho de sol podem ter quantos minutos duraram; no arroto, marca-se
+"Pôs para arrotar", "Arrotou" ou os dois, sem tempo; na pomada, quais foram passadas; na outra tarefa, o
+que foi feito é escrito à mão e é obrigatório.
+_Evite_: cuidado (nome antigo), atividade, procedimento, atalho
+
+**Rotina** (09/11):
+As tarefas que a família programa para o bebê, cada uma com o seu "quando": horários fixos, vezes por dia
+ou, só na pomada, na troca de fralda. A de horário fixo aparece em "Hora da tarefa", no alto da tela Hoje,
+na hora marcada. "Tirar da rotina" não apaga o que já foi anotado.
+_Evite_: agenda, lembrete (o lembrete é outra coisa: o aviso para anotar)
+
+**Pomada para assadura**:
+A tarefa das pomadas que a família usa (cada uma pelo nome, como o remédio). Marcada na Fralda, fica ligada
+àquela troca e aparece no histórico logo abaixo dela, com o mesmo horário.
+_Evite_: creme, medicamento
 
 **Tummy time**:
 O tempo do bebê de bruços, acordado. Fica com o nome em inglês, como as famílias falam.
