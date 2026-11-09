@@ -712,18 +712,17 @@ function bvCard() {
   const days = new Set(evs.filter(e => e.t >= j0).map(e => startOfDay(e.t)));
   return days.size >= 3 && !done.includes('semana') ? 'semana' : null;
 }
+// O redesenho de 30 em 30 s só troca o cartão que mudou, para não apagar o que a pessoa digitou nele.
+const bvHtml = {};
+const bvPaint = (id, h) => { if (bvHtml[id] === h) return false; bvHtml[id] = $(id).innerHTML = h; return true; };
 function renderBv() {
   const k = bvCard(), b = st.baby;
   const x = `<button class="x" data-bv="${k}" aria-label="Fechar">×</button>`;
   const go = (label, no) => `<div class="btns"><button class="save" data-bvgo="${k}">${label}</button>${no ? `<button class="link" data-bv="${k}">${no}</button>` : ''}</div>`;
   const card = h => `<div class="card bv">${h}</div>`;
   const nome = b ? esc(b.name) : '';
-  // O cartão "Tudo pronto" tem um campo: o redesenho de 30 em 30 s não pode apagar o horário digitado.
-  if (k === 'ola' && $('bvTop').dataset.k === 'ola') return renderBvRest(k);
-  $('bvTop').dataset.k = k || '';
-  if (k === 'ola') bvSide = null;
   // Item 30 (prévia aprovada em 07/11): o primeiro registro já sai do cartão, com a última mamada.
-  $('bvTop').innerHTML = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
+  const top = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
       + '<p>Para começar: quando foi a última mamada?</p>'
       + '<div><div class="lbl">Horário</div><input class="field bvtime" type="time" id="bvTime" aria-label="Horário da última mamada"></div>'
       + '<div><div class="lbl">Peito (opcional)</div><div class="seg bvside k-feed">'
@@ -734,16 +733,10 @@ function renderBv() {
     : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(st.family.name)}</h3></div>`
       + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
     : '';
-  renderBvRest(k);
-}
-function renderBvRest(k) {
-  const b = st.baby, nome = b ? esc(b.name) : '';
-  const x = `<button class="x" data-bv="${k}" aria-label="Fechar">×</button>`;
-  const go = (label, no) => `<div class="btns"><button class="save" data-bvgo="${k}">${label}</button>${no ? `<button class="link" data-bv="${k}">${no}</button>` : ''}</div>`;
-  const card = h => `<div class="card bv">${h}</div>`;
-  $('bvMid').innerHTML = k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
-    : '';
-  $('bvEnd').innerHTML = k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '';
+  if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
+  bvPaint('bvMid', k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
+    : '');
+  bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '');
   // Enquanto o cartão fala dela, a aba Semana fica com a borda caramelo.
   $('tabWeek').classList.toggle('bvhl', k === 'semana');
 }
@@ -760,7 +753,8 @@ $('paneHome').addEventListener('click', async e => {
   if (f) {
     const v = $('bvTime').value, err = $('bvErr');
     if (!/^\d\d:\d\d$/.test(v)) { err.textContent = 'Informe o horário da última mamada.'; err.hidden = false; return $('bvTime').focus(); }
-    let t = atTime(startOfDay(Date.now()), v); if (t > Date.now()) t = atTime(addDays(startOfDay(Date.now()), -1), v);
+    const now = Date.now(), d0 = startOfDay(now);
+    let t = atTime(d0, v); if (t > now) t = atTime(addDays(d0, -1), v);
     busy(f, true);
     const ok = await addEntry({ kind: 'feed', t, src: bvSide ? 'breast' : null, side: bvSide });
     busy(f, false);
@@ -1022,6 +1016,7 @@ $('ask').addEventListener('click', e => {
 // 3 horas não toca. A permissão do celular é pedida uma vez, logo depois de um registro.
 const REM = 'cad-lembrete', REM_EVERY = 3 * HOUR, REM_N = 3, REM_IDS = [9101, 9102, 9103], ONB_IDS = [9111, 9113, 9117];
 const remOn = () => lsGet(REM) !== '0';
+const remCancel = async () => medNotif?.cancel({ notifications: [...REM_IDS, ...ONB_IDS].map(id => ({ id })) });
 const quietHour = t => { const h = new Date(t).getHours(); return h >= 18 || h < 7; };
 const remSlots = () => { try { return JSON.parse(lsGet('cad-lembrete-at') || '[]'); } catch { return []; } };
 // "Como vai a Helena?", "O primeiro dia do Pedro": o nome com o artigo, quando o sexo está anotado.
@@ -1035,6 +1030,14 @@ function onbList(b) {
     .map(([n, title, body, go], i) => ({ id: ONB_IDS[i], t: atTime(addDays(startOfDay(f), n), '17:00'), title, body, go }))
     .filter(x => x.t > f);
 }
+// A permissão de avisos do celular: pede só se ainda não tem. Devolve se ficou liberada e se a janela apareceu.
+const NOTIF_DENIED = 'Permita as notificações do Soneca nas configurações do celular.';
+const notifGranted = async () => (await medNotif.checkPermissions().catch(() => ({}))).display === 'granted';
+async function notifPerm() {
+  if (await notifGranted()) return { ok: true, asked: false };
+  const p = await medNotif.requestPermissions().catch(() => ({}));
+  return { ok: p.display === 'granted', asked: true };
+}
 // Três avisos passaram sem registro: desliga a chave, e o Perfil explica por quê.
 function remCheck() {
   const s = remSlots();
@@ -1043,10 +1046,10 @@ function remCheck() {
 async function remSync(base) {
   if (!medNotif) return;
   try {
-    await medNotif.cancel({ notifications: [...REM_IDS, ...ONB_IDS].map(id => ({ id })) });
+    await remCancel();
     lsSet('cad-lembrete-at', null);
     const b = st.baby;
-    if (!b || !remOn() || (await medNotif.checkPermissions()).display !== 'granted') return;
+    if (!b || !remOn() || !(await notifGranted())) return;
     if (ANDROID) await medNotif.createChannel({ id: 'lembrete', name: 'Lembrete para anotar', importance: 3, visibility: 1 });
     const now = Date.now(), onb = onbList(b), onbDays = new Set(onb.map(x => startOfDay(x.t)));
     const slots = [];
@@ -1074,9 +1077,8 @@ async function remAfterEntry(e) {
   let asked = false;
   if (remOn() && lsGet('cad-lembrete-pedido') == null) {
     lsSet('cad-lembrete-pedido', '1');
-    let p = await medNotif.checkPermissions().catch(() => ({}));
-    if (p.display !== 'granted') { asked = true; p = await medNotif.requestPermissions().catch(() => ({})); }
-    if (p.display !== 'granted') lsSet(REM, '0');
+    const p = await notifPerm(); asked = p.asked;
+    if (!p.ok) lsSet(REM, '0');
   }
   await remSync(Date.now());
   return asked;
@@ -1084,9 +1086,7 @@ async function remAfterEntry(e) {
 // A chave do Perfil. Ligar pede a permissão se ainda não tem; negada, a chave fica desligada.
 async function setReminder(on) {
   if (on) {
-    let p = await medNotif.checkPermissions().catch(() => ({}));
-    if (p.display !== 'granted') p = await medNotif.requestPermissions().catch(() => ({}));
-    if (p.display !== 'granted') { toast('Permita as notificações do Soneca nas configurações do celular.'); return drawProfilePane(); }
+    if (!(await notifPerm()).ok) { toast(NOTIF_DENIED); return drawProfilePane(); }
   }
   lsSet(REM, on ? '1' : '0'); lsSet('cad-lembrete-auto', null);
   drawProfilePane();
@@ -2030,7 +2030,7 @@ const medAlertsLater = () => { if (medNotif) { clearTimeout(alertTimer); alertTi
 async function medAlertsSync() {
   const b = st.baby; if (!medNotif || !b) return;
   try {
-    const now = Date.now(), ok = alertOn() && (await medNotif.checkPermissions()).display === 'granted';
+    const now = Date.now(), ok = alertOn() && await notifGranted();
     const want = (ok ? dosesFrom(now + 5000, now + ALERT_DAYS * DAY).filter(d => !d.e).slice(0, ALERT_MAX) : []).map(d => alertFor(d, b));
     if (ANDROID && want.length) await medNotif.createChannel({ id: 'remedio', name: 'Hora do remédio', importance: 4, visibility: 1, vibration: true });
     const { notifications: old } = await medNotif.getPending();
@@ -2041,6 +2041,7 @@ async function medAlertsSync() {
     // Item 45: a dose marcada (dada ou pulada), aqui ou por outra pessoa, tira da central de notificações
     // o aviso que já tocou. Achado pelo número do aviso, que o iPhone e o Android devolvem igual.
     const doneIds = new Set(dosesFrom(now - ALERT_DAYS * DAY, now + 5000).filter(d => d.e).map(d => alertFor(d, b).id));
+    if (!doneIds.size) return;
     const { notifications: shown = [] } = await medNotif.getDeliveredNotifications();
     const clear = shown.filter(n => doneIds.has(+n.id));
     if (clear.length) await medNotif.removeDeliveredNotifications({ notifications: clear });
@@ -2057,9 +2058,7 @@ async function setMedAlert(on) {
   if (!medNotif || !st.baby) return;
   const k = alertKey(st.baby.id);
   if (on) {
-    let p = await medNotif.checkPermissions().catch(() => ({}));
-    if (p.display !== 'granted') p = await medNotif.requestPermissions().catch(() => ({}));
-    if (p.display !== 'granted') { lsSet(k, '0'); toast('Permita as notificações do Soneca nas configurações do celular.'); return S?.mode === 'meds' && drawMeds(); }
+    if (!(await notifPerm()).ok) { lsSet(k, '0'); toast(NOTIF_DENIED); return S?.mode === 'meds' && drawMeds(); }
   }
   lsSet(k, on ? '1' : '0');
   if (S?.mode === 'meds') drawMeds();
@@ -2067,8 +2066,11 @@ async function setMedAlert(on) {
 }
 // Tocar no aviso abre a dose. Com o app ainda abrindo, espera a família carregar.
 let alertTap = null;
-medNotif?.addListener('localNotificationActionPerformed', a => { alertTap = a.notification?.extra?.dose ? a.notification.extra : null; openAlertDose(); });
-medNotif?.addListener('localNotificationActionPerformed', a => { const x = a.notification?.extra; if (x?.go) { remTap = x; openRemTap(); } });
+medNotif?.addListener('localNotificationActionPerformed', a => {
+  const x = a.notification?.extra;
+  alertTap = x?.dose ? x : null;
+  if (alertTap) openAlertDose(); else if (x?.go) { remTap = x; openRemTap(); }
+});
 async function openAlertDose() {
   const x = alertTap; if (!x || !st.family || $('scrMain').hidden) return;
   alertTap = null;
@@ -2841,7 +2843,7 @@ async function paneAction(a, v, btn) {
   if (a === 'feedback') return feedbackSheet();
   if (a === 'reminder') return setReminder(!remOn());
   // Fora da conta, nenhum lembrete com o nome do bebê.
-  if (a === 'logout') { await medNotif?.cancel({ notifications: [...REM_IDS, ...ONB_IDS].map(id => ({ id })) }).catch(() => {}); await sb.auth.signOut(); location.href = '/'; }
+  if (a === 'logout') { await remCancel().catch(() => {}); await sb.auth.signOut(); location.href = '/'; }
   if (a === 'delAccount') return accountSheet();
 }
 
