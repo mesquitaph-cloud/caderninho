@@ -726,6 +726,10 @@ addEventListener('resize', stickLast);
 // Os testes (testes/cenarios.js) mudam a data por window.testeBvDesde.
 const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
 const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+// Na faixa do sono, a mesma capivara com dois z acima da cabeça: o pequeno aparece, depois o grande
+// (em cima), e os dois somem juntos (prévia de 08/11). Parados para quem pede menos movimento.
+const CAPI_Z = CAPI.replace('</svg>', '<path class="z z1" vector-effect="non-scaling-stroke" d="M93 4H99L93 10H99"/>'
+  + '<path class="z z2" vector-effect="non-scaling-stroke" d="M103 -14H112L103 -5H112"/></svg>');
 const bvKey = () => 'cad-bv-' + st.family.id;
 const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
 const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
@@ -876,7 +880,7 @@ function closePop() {
 // terminar, estreita e desce de volta para dentro dele. Com as duas ao mesmo tempo, fica a da mamada.
 let stripK = null, stripBusy = false, stripReady = false;
 function stripHtml(k, open, now) {
-  if (k === 'sleep') return `<div class="ext k-sleep">${CAPI}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button></div>`;
+  if (k === 'sleep') return `<div class="ext k-sleep">${CAPI_Z}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button></div>`;
   const t = ftGet();
   return `<div class="ext k-feed" data-strip="open" role="button" tabindex="0" aria-label="Abrir o cronômetro da mamada"><span class="fi">${ICON.feed}</span><span class="tx"><small>${t.run ? 'Mamando há' : 'Mamada pausada'}</small><span class="t" id="stripT">${dur(ftTotal(t, now))}</span><small class="sd">${t.run ? 'no ' + FT_SIDE[t.run] : 'começou às ' + hhmm(t.start)}</small></span><button class="spill" data-strip="end">Terminar</button></div>`;
 }
