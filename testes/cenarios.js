@@ -161,7 +161,7 @@ if (CEN === 'app-convite') {
 
 // "app-remedio": finge o app do Android, com avisos de mentira guardados em window.avisos (pendentes)
 // e window.tocarAviso(n) para fingir o toque. Mais um remédio de 8 em 8 horas.
-if (CEN === 'app-remedio') {
+if (CEN === 'app-remedio' || CEN === 'app-tarefas') {
   const real = window.Capacitor, perm = { display: 'prompt' }, taps = [];
   window.avisos = [];
   window.tocarAviso = n => taps.forEach(f => f({ notification: n }));
@@ -307,6 +307,19 @@ if (CEN === 'sem-coco') {
   add(z, 'diaper', { pee: true, poo: true, poo_size: 'grande' });
 }
 
+// "carrossel" (08/11): fotos do carrossel da página inicial. A Helena acordada há pouco mais de uma hora
+// (para "Acordou há" no alto da tela) e três dúvidas para a consulta. Abrir com o relógio às 13h.
+if (CEN === 'carrossel') {
+  const sl = entries.filter(e => e.kind === 'sleep').pop(), wk = entries.filter(e => e.kind === 'wake').pop();
+  if (sl && (!wk || at(sl) > at(wk))) add(Math.max(at(sl) + 60 * MIN, NOW - 72 * MIN), 'wake');
+  entries.sort((a, b) => at(a) - at(b));
+  T.questions = [
+    { id: 'qc1', family_id: F, baby_id: B, body: 'É normal ficar 3 dias sem cocô?', asked_on: null, answer: null, created_at: new Date(NOW - 6 * DAY).toISOString() },
+    { id: 'qc2', family_id: F, baby_id: B, body: 'Os cochilos da tarde estão curtos, é normal?', asked_on: null, answer: null, created_at: new Date(NOW - 4 * DAY).toISOString() },
+    { id: 'qc3', family_id: F, baby_id: B, body: 'Quando começar a introdução alimentar?', asked_on: null, answer: null, created_at: new Date(NOW - 2 * DAY).toISOString() },
+  ];
+}
+
 const baseClient = createClient;
 createClient = (...a) => {
   const c = baseClient(...a);
@@ -318,3 +331,20 @@ createClient = (...a) => {
   };
   return c;
 };
+
+// "tarefas" e "app-tarefas" (08/11, Tarefas e Pomada): a rotina da Helena com banho de sol às 9h, tummy time
+// 3 vezes por dia e a pomada na troca de fralda (Bepantol e Hipoglós), e a última fralda de hoje com as duas
+// pomadas. "app-tarefas" finge o app do Android, como o "app-remedio" (avisos em window.avisos).
+// "tarefas-vazio": sem nenhuma tarefa programada (a capivara).
+T.routines = T.routines || [];
+if (CEN === 'tarefas' || CEN === 'app-tarefas') {
+  const fam = T.babies[0].family_id, baby = T.babies[0].id, made = new Date(NOW - 5 * DAY).toISOString();
+  T.routines.push(
+    { id: 'r-1', family_id: fam, baby_id: baby, kind: 'sunbath', name: null, schedule: 'fixed', times: ['09:00:00'], per_day: null, items: null, stopped_at: null, created_by: U.me, created_at: made },
+    { id: 'r-2', family_id: fam, baby_id: baby, kind: 'tummy', name: null, schedule: 'count', times: null, per_day: 3, items: null, stopped_at: null, created_by: U.me, created_at: made },
+    { id: 'r-3', family_id: fam, baby_id: baby, kind: 'ointment', name: null, schedule: 'diaper', times: null, per_day: null, items: ['Bepantol', 'Hipoglós'], stopped_at: null, created_by: U.p, created_at: made });
+  const d = T.entries.filter(e => e.kind === 'diaper').at(-1);
+  if (d) T.entries.push({ id: 'oint-1', family_id: fam, baby_id: baby, kind: 'ointment', at: d.at, ointments: ['Bepantol', 'Hipoglós'], diaper_id: d.id,
+                          author_id: d.author_id, created_at: d.at });
+}
+

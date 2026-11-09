@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; base-uri 'self'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Soneca</title>
-<meta name="description" content="Anote mamadas, sono e fraldas num toque, e toda a família vê na hora.">
+<meta name="description" content="O Soneca é um app para pais que ajuda a organizar a rotina do seu bebê. Anote mamadas, sono e fraldas num toque, e a família toda vê na hora.">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">
 <link rel="stylesheet" href="/styles.css">
@@ -13,30 +13,85 @@
 <script src="/inicio/inicio.js" defer></script>
 </head>
 <body>
-<!-- Página pública de soneca.app.br desde que o app saiu do site (item 14 do README). A Vercel mostra
-     esta página em "/" (vercel.json). Com ?convite=..., o inicio.js troca para a parte do convite.
-     O selo do Google Play é o oficial em português, só em preto (o Google não tem versão branca). -->
+<!-- Página pública de soneca.app.br (a Vercel mostra esta página em "/", pelo vercel.json). Ordem aprovada
+     em 08/11/2026: topo com a tela do app, carrossel das dores, vídeo e a apresentação do Patrick.
+     Textos e fotos aprovados estão em loja/landing/. Com ?convite=..., o inicio.js troca o texto do topo
+     pelos passos do convite. Cada foto tem versão de dia e de noite (<picture>, pelo tema do celular). -->
 <main class="ln">
-  <h1 class="brand"><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>Soneca</h1>
+  <div class="ln-brand"><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>Soneca</div>
 
-  <p class="ln-tag" id="lnTag">Anote mamadas, sono e fraldas num toque, e toda a família vê na hora.</p>
-  <div class="ln-inv" id="lnInv" hidden>
-    <p class="ln-invt">Você recebeu um convite para uma família no Soneca.</p>
+  <!-- 1. Topo -->
+  <div class="ln-hero">
+    <div class="ln-copy">
+      <div id="lnTag">
+        <h1>O Soneca é um app para pais que ajuda a organizar a rotina do seu bebê.</h1>
+        <p class="ln-desc">Anote mamadas, sono e fraldas num toque. A família toda vê na hora, e você sabe quando foi a última mamada sem precisar lembrar.</p>
+      </div>
+      <div class="ln-inv" id="lnInv" hidden>
+        <p class="ln-invt">Você recebeu um convite para uma família no Soneca.</p>
+      </div>
+      <ol class="ln-steps" id="lnSteps" hidden><li>Instale o app.</li><li>Toque de novo no link do convite.</li></ol>
+      <div class="ln-badges">
+        <a class="ln-badge" href="https://apps.apple.com/br/app/id6821448149"><picture><source srcset="/inicio/app-store-white.svg" media="(prefers-color-scheme: dark)"><img src="/inicio/app-store-black.svg" alt="Baixar na App Store" width="150" height="50"></picture></a>
+        <a class="ln-badge" href="https://play.google.com/store/apps/details?id=br.app.soneca"><img src="/inicio/google-play.png" alt="Disponível no Google Play" width="168" height="50"></a>
+      </div>
+      <p class="ln-note" id="lnPaste" hidden>Se não abrir, entre no app e cole o link em “Recebeu um convite?”.</p>
+    </div>
+    <div class="ln-phone">
+      <picture><source srcset="/inicio/topo-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/topo-dia.png" alt="Tela inicial do Soneca com a rotina do dia de um bebê" width="1290" height="2526"></picture>
+    </div>
   </div>
-  <ol class="ln-steps" id="lnSteps" hidden><li>Instale o app.</li><li>Toque de novo no link do convite.</li></ol>
 
-  <div class="ln-badges">
-    <a class="ln-badge" href="https://apps.apple.com/br/app/id6821448149"><img class="ln-day" src="/inicio/app-store-black.svg" alt="Baixar na App Store" width="150" height="50"><img class="ln-night" src="/inicio/app-store-white.svg" alt="Baixar na App Store" width="150" height="50"></a>
-    <a class="ln-badge" href="https://play.google.com/store/apps/details?id=br.app.soneca"><img src="/inicio/google-play.png" alt="Disponível no Google Play" width="168" height="50"></a>
-  </div>
-  <p class="ln-note" id="lnPaste" hidden>Se não abrir, entre no app e cole o link em “Recebeu um convite?”.</p>
+  <!-- 2. Carrossel das dores -->
+  <section class="ln-sec" aria-labelledby="lnCarT">
+    <div class="ln-sech">
+      <h2 id="lnCarT">Você já se perguntou isso hoje?</h2>
+      <div class="ln-arrows">
+        <button type="button" id="lnPrev" aria-label="Anterior"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" id="lnNext" aria-label="Próximo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+    <div class="ln-track" id="lnTrack">
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/1-sono-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/1-sono-dia.png" alt="Quanto o bebê dormiu hoje? O Soneca soma as horas de sono do dia." width="1080" height="1350"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/2-janela-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/2-janela-dia.png" alt="Há quanto tempo o bebê acordou, no alto da tela inicial." width="1080" height="1350" loading="lazy"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/3-mamadas-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/3-mamadas-dia.png" alt="Quando foi a última mamada, no alto da tela inicial." width="1080" height="1350" loading="lazy"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/4-fralda-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/4-fralda-dia.png" alt="As fraldas do dia e quem da família anotou cada uma." width="1080" height="1350" loading="lazy"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/5-remedio-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/5-remedio-dia.png" alt="Que horas é o remédio? O aviso do Soneca na hora da dose." width="1080" height="1350" loading="lazy"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/6-pediatra-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/6-pediatra-dia.png" alt="Dúvidas anotadas para levar à consulta com o pediatra." width="1080" height="1350" loading="lazy"></picture></div>
+      <div class="ln-card"><picture><source srcset="/inicio/carrossel/7-familia-noite.png" media="(prefers-color-scheme: dark)"><img src="/inicio/carrossel/7-familia-dia.png" alt="Como foi a divisão de tarefas da família." width="1080" height="1350" loading="lazy"></picture></div>
+    </div>
+    <div class="ln-dots" id="lnDots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </section>
 
-  <div class="ln-box" id="lnSite">
-    <p class="ln-boxt">Usava o Soneca pelo site?</p>
-    <p>Agora ele é só no app. Entre com a mesma conta de antes, Google, Apple ou e-mail, e a família estará lá.</p>
-  </div>
+  <!-- 3. Vídeo (arquivo do próprio site; só baixa quando a pessoa chega nele) -->
+  <section class="ln-sec" aria-labelledby="lnVidT">
+    <div class="ln-sech"><h2 id="lnVidT">Veja o Soneca em uso.</h2></div>
+    <div class="ln-video">
+      <video id="lnVideo" src="/inicio/soneca-video-site.mp4" poster="/inicio/soneca-video-site-capa.jpg" controls muted playsinline preload="none" width="1080" height="1350"></video>
+    </div>
+  </section>
 
-  <p class="legal"><a href="/privacidade">Política de Privacidade</a><a href="/termos">Termos de Uso</a><a href="/apagar-conta">Apagar conta</a></p>
+  <!-- 4. Apresentação do Patrick (texto aprovado em loja/landing/apresentacao.md) -->
+  <section class="ln-sec ln-me" aria-labelledby="lnMeT">
+    <img src="/inicio/patrick.jpg" alt="Patrick Harris de Mesquita" width="520" height="650" loading="lazy">
+    <div>
+      <h2 id="lnMeT">Feito por pais, para pais</h2>
+      <p>Quando a Marina nasceu, a Carol e eu estávamos ficando malucos tentando acompanhar cada momento da rotina. No começo, a Carol anotava tudo no bloco de notas do celular. Foi aí que criei o Soneca, só para nós dois.</p>
+      <p>Ele nos ajudou a entender os horários das sonecas, se ela tinha mamado demais ou de menos naquele dia e há quanto tempo não fazia cocô, o que nos primeiros meses foi bem desafiador.</p>
+      <p>Quando vimos que vários amigos com bebê pequeno tinham o mesmo desafio, colocamos o Soneca à disposição de todos.</p>
+      <p class="ln-sig"><b>Patrick Harris de Mesquita</b>Pai da Marina e médico de família</p>
+      <div class="ln-badges">
+        <a class="ln-badge" href="https://apps.apple.com/br/app/id6821448149"><picture><source srcset="/inicio/app-store-white.svg" media="(prefers-color-scheme: dark)"><img src="/inicio/app-store-black.svg" alt="Baixar na App Store" width="150" height="50"></picture></a>
+        <a class="ln-badge" href="https://play.google.com/store/apps/details?id=br.app.soneca"><img src="/inicio/google-play.png" alt="Disponível no Google Play" width="168" height="50"></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="ln-foot">
+    <p>Patrick Harris de Mesquita · Médico · CRM-SP 192.379 · Medicina de Família e Comunidade · RQE 92.300</p>
+    <p>O Soneca é uma ferramenta educativa e não substitui a avaliação médica.</p>
+    <p class="legal"><a href="/privacidade">Política de Privacidade</a><a href="/termos">Termos de Uso</a><a href="/apagar-conta">Apagar conta</a></p>
+  </footer>
 </main>
 </body>
 </html>

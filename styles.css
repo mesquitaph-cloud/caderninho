@@ -16,7 +16,7 @@
   /* Curvas da OMS no gráfico de crescimento */
   --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
   --scrim:rgba(74,53,34,.38);
-  /* Relatório para pediatra: a folha é sempre clara, mesmo com o app no escuro (vira PDF). Sóbria: as cores do Soneca, sem capivara */
+  /* Relatório para pediatra: a folha é sempre clara, mesmo com o app no escuro (vira PDF). Sóbria: as cores do Soneca; a capivara só no alto, com o nome, em traço marrom */
   --paper:#FFFFFF;--paper-ink:#4A3522;--paper-muted:#826449;--paper-line:#EFE2D2;--paper-soft:#FBF5EC;
   --rp-sleep:#5E97CF;--rp-feed:#2E7350;--rp-diaper:#B8860B;--rp-poo:#5E3A1E;--rp-pump:#2E7350;--rp-sym:#A8423C;--rp-weight:#B8693A;--rp-curve:#CBBBA8;--rp-curve-mid:#9C846C;--rp-band:#F7F0E6;
   --display:"DM Sans",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -95,7 +95,7 @@ button.pl::before{content:"";position:absolute;inset:-6px;border-radius:50%}
 .k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit,.k-symptom{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
 .k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}
 .k-med{--kbg:var(--med);background:var(--med);color:var(--med-ink)}
-.k-care,.k-massage,.k-bath,.k-nasal,.k-tummy,.k-sunbath{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
+.k-care,.k-massage,.k-bath,.k-nasal,.k-tummy,.k-sunbath,.k-burp,.k-ointment{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
 /* Editar: liga e desliga os botões da família */
 .li.tg{width:100%;text-align:left}
 .li.tg:disabled{opacity:.5;cursor:default}
@@ -580,6 +580,9 @@ textarea.field.short{min-height:76px}
 .rp-head h1{font-size:26px;line-height:1.1}
 .rp-head>div:first-child{flex:1 1 260px;min-width:0}
 .rp-head p{margin:2px 0 0;color:var(--paper-muted);font-weight:500}
+/* O logo no alto: a capivara pequena e o nome, na tinta do papel (sai igual no PDF) */
+.rp-brand{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:var(--display);font-weight:500;font-size:17px;line-height:1;letter-spacing:-.02em;color:var(--paper-ink)}
+.rp-brand .capi{width:44px;height:auto;flex:none;stroke:var(--paper-ink);stroke-width:1.6px}
 .rp-per{margin-left:auto;text-align:right;font-size:12.5px;color:var(--paper-muted);font-weight:500}
 .rp-per b{display:block;font-family:var(--display);font-weight:500;font-size:16px;color:var(--paper-ink)}
 .rp-sec{display:flex;flex-direction:column;gap:8px;min-width:0;break-inside:avoid}
@@ -775,22 +778,59 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .nt-defs b{font-weight:500;color:var(--ink)}
 .nt-few{margin:0;background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.4}
 
-/* Página das lojas (inicio/): soneca.app.br sem o app, só com os selos da App Store e do Google Play */
-.ln{max-width:440px;margin:0 auto;min-height:calc(100vh - 52px);display:flex;flex-direction:column;gap:18px;padding-top:max(32px,env(safe-area-inset-top,0px))}
+/* Página das lojas (inicio/): soneca.app.br. Celular: uma coluna. Computador: topo e apresentação em duas. */
+.ln{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;padding-top:max(12px,env(safe-area-inset-top,0px))}
 .ln p{margin:0}
-.ln h1.brand{display:flex;align-items:center;gap:12px;margin:0;font-family:var(--display);font-weight:500;font-size:36px;letter-spacing:-.02em}
-.ln-tag{font-size:19px;line-height:1.35}
+.ln h1,.ln h2{font-family:var(--display);font-weight:500;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.ln-brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:500;font-size:22px}
+.ln-brand .capi{width:46px;height:27px}
+.ln-hero{display:grid;gap:28px;align-items:center;padding-block:28px 56px}
+.ln-copy{display:flex;flex-direction:column;gap:22px;min-width:0}
+.ln-hero h1{font-size:clamp(28px,6.4vw,42px);line-height:1.15}
+.ln-desc{font-size:18px;color:var(--muted);margin-top:14px!important;max-width:34ch}
 .ln-inv{background:var(--feed);color:var(--ink);border-radius:18px;padding:16px}
 .ln-invt{font-family:var(--display);font-weight:500;font-size:18px}
 .ln-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:17px}
-.ln-badges{display:flex;flex-wrap:wrap;gap:12px}
+.ln-badges{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .ln-badge{display:block;border-radius:10px;line-height:0}
-.ln-badge img{height:50px;width:auto}
-.ln-badge .ln-day{display:var(--badge-day)}.ln-badge .ln-night{display:var(--badge-night)}
+.ln-badge img{height:46px;width:auto}
 .ln-note{font-size:15px;color:var(--muted)}
-.ln-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
-.ln-boxt{font-family:var(--display);font-weight:500;font-size:17px}
-.ln .legal{margin-top:auto}
+.ln-phone{justify-self:center;width:min(300px,78vw);border-radius:36px;padding:8px;background:var(--surface);border:1px solid var(--line)}
+.ln-phone img{display:block;width:100%;height:auto;border-radius:28px}
+.ln-sec{padding-block:8px 64px}
+.ln-sech{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:18px}
+.ln-sec h2{font-size:clamp(24px,5vw,32px);line-height:1.2}
+.ln-arrows{display:none;gap:8px;flex:none}
+.ln-arrows button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center}
+.ln-arrows svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ln-track{display:grid;grid-auto-flow:column;grid-auto-columns:min(78%,340px);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding-bottom:6px}
+.ln-track::-webkit-scrollbar{display:none}
+.ln-card{scroll-snap-align:start;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.ln-card img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.ln-dots{display:flex;justify-content:center;gap:7px;margin-top:14px}
+.ln-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.ln-dots i.on{background:var(--muted)}
+.ln-video{max-width:440px;margin:0 auto;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:var(--surface);line-height:0}
+.ln-video video{display:block;width:100%;height:auto;aspect-ratio:4/5}
+.ln-me{display:grid;gap:24px;border-top:1px solid var(--line);padding-top:48px}
+.ln-me>img{display:block;width:100%;max-width:420px;height:auto;aspect-ratio:1/1;object-fit:cover;object-position:50% 20%;border-radius:20px}
+.ln-me>div{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ln-me h2{font-size:28px}
+.ln-me p{font-size:17px;line-height:1.55;max-width:60ch}
+.ln-me .ln-badges{margin-top:8px}
+.ln-sig{margin-top:8px!important;font-size:15px;color:var(--muted)}
+.ln-sig b{display:block;color:var(--ink);font-weight:500;font-size:16px}
+.ln-foot{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+.ln-foot .legal{justify-content:flex-start;margin-top:6px}
+@media (min-width:760px){
+  .ln-hero{grid-template-columns:1.1fr .9fr;gap:48px;padding-block:44px 80px}
+  .ln-arrows{display:flex}
+}
+@media (min-width:700px){
+  .ln-me{grid-template-columns:300px 1fr;gap:44px;align-items:start}
+  .ln-me>img{aspect-ratio:4/5;object-position:50% 50%}
+  .ln-me h2{font-size:34px}
+}
 /* Aceites: o cartão e a caixinha */
 .consent{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .consent b{font-weight:500}
@@ -809,16 +849,26 @@ a.li{color:inherit;text-decoration:none}
 /* O cartão do bebê fica preso no alto, com os cantos de baixo arredondados */
 .hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:18px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
 body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
-/* A data com as setas à esquerda e Dia | Semana | Mês, pequeno, à direita */
+/* A data com as setas e o "Hoje" à esquerda e Dia | Semana | Mês, pequeno, à direita, sempre numa
+   linha (08/11, prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). As datas curtas são de util.js. */
 #paneHome{gap:10px}
-#paneHome .daynav{flex-wrap:wrap;gap:6px}
+#paneHome .daynav{flex-wrap:nowrap;gap:6px}
 #paneHome .daynav h2{display:flex;line-height:1}
 #paneHome .daynav .mid{gap:0;min-width:0}
-#paneHome .daynav .arr{width:28px;height:30px}
-#paneHome .dtitle{font-size:15px;padding:6px 5px;gap:5px}
-#paneHome .dtitle svg{width:16px;height:16px}
-#paneHome .views{display:flex;margin:0 0 0 auto;gap:2px;padding:3px;border-radius:12px}
-#paneHome .views button{padding:5px 8px;border-radius:9px;font-size:13px}
+#paneHome .daynav .arr{width:24px;height:30px;flex:none}
+#paneHome .dtitle{font-size:14px;padding:6px 4px;white-space:nowrap}
+#paneHome .daynav .today{font-size:13px;padding:4px 9px;margin:0 2px;white-space:nowrap}
+#paneHome .views{display:flex;flex:none;margin:0 0 0 auto;gap:2px;padding:3px;border-radius:12px}
+#paneHome .views button{padding:5px 6px;border-radius:9px;font-size:13px}
+/* Celular estreito (iPhone SE e mini, Android de 360px): aperta um pouco mais, para sobrar folga
+   com as datas mais compridas ("Qua, 28 out", "30/10 a 5/11") */
+@media (max-width:400px){
+  #paneHome .daynav{gap:4px}
+  #paneHome .daynav .arr{width:22px}
+  #paneHome .dtitle{padding:6px 3px}
+  #paneHome .daynav .today{padding:4px 7px;margin:0 1px}
+  #paneHome .views button{padding:5px 4px}
+}
 #paneHome{padding-bottom:calc(var(--dockh,96px) + 10px)}
 /* Botões de registro, presos em cima das abas, numa linha só */
 .dock{position:fixed;left:0;right:0;bottom:var(--tabh,64px);z-index:4;background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px 12px}
@@ -833,7 +883,12 @@ body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 au
 @media (prefers-reduced-motion:no-preference){.rb{transition:transform .12s cubic-bezier(.3,.7,.2,1)}.rb:active{transform:scale(.93)}}
 /* A faixa do sono ou da mamada: sai do botão dela, ligada por uma emenda curva */
 .ext{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;padding:12px 12px 12px 14px;min-height:84px}
-.ext .capi{width:84px;height:auto;flex:none;fill:none;stroke:currentColor;stroke-width:2.3px;stroke-linecap:round;stroke-linejoin:round}
+.ext .capi{width:84px;height:auto;flex:none;fill:none;stroke:currentColor;stroke-width:2.3px;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+/* Os dois z da capivara dormindo, acima da cabeça (fora da caixa do desenho): ciclo de 3,2 s */
+.ext .z{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.ext .z1{animation:z1 3.2s ease-in-out infinite}.ext .z2{animation:z2 3.2s ease-in-out infinite}}
+@keyframes z1{0%{opacity:0;transform:translate(0,3px)}18%{opacity:1;transform:translate(0,0)}62%{opacity:1;transform:translate(1px,-1px)}80%,100%{opacity:0;transform:translate(2px,-3px)}}
+@keyframes z2{0%,22%{opacity:0;transform:translate(0,3px)}40%{opacity:1;transform:translate(0,0)}66%{opacity:1;transform:translate(1px,-1px)}84%,100%{opacity:0;transform:translate(2px,-3px)}}
 .ext .fi{width:84px;flex:none;display:grid;place-items:center}.ext .fi svg{width:44px;height:44px}
 .ext .tx{flex:none;display:flex;flex-direction:column;gap:1px;min-width:0;white-space:nowrap}
 .ext small{font-size:13px}.ext small.sd{opacity:.85}
@@ -937,3 +992,57 @@ body.pull-back .ptr{transition:top .25s cubic-bezier(.3,.7,.2,1),opacity .2s}
 .ptr .bg path{stroke:var(--line)}
 .ptr .fg path{stroke:var(--mascot);stroke-dasharray:100;stroke-dashoffset:calc(100 - 100 * var(--pk,0))}
 @media (prefers-reduced-motion:no-preference){.ptr.spin .fg path{stroke-dasharray:30 70;animation:capirun 1.1s linear infinite}@keyframes capirun{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}}
+
+/* ---------- Tarefas (antes Cuidados) e Pomada para assadura, 08/11 ----------
+   Prévias aprovadas: https://claude.ai/artifact/GDAaPiB7wR9iuqMVHfFT8r (rotina) e
+   https://claude.ai/artifact/RzemaHaWMDHAXvoQdw79Zv (pomada na Fralda e no histórico). */
+/* Tarefas usa os componentes do Remédio (cartão no alto, doses, horários), em caramelo no lugar do salmão */
+.cs{--med:var(--care);--med-ink:var(--care-ink);--c-med:var(--c-care)}
+.cs .seg .opt.on{border-color:var(--care-ink);background:var(--care);color:var(--care-ink)}
+/* Lista de marcar das pomadas: o círculo da dose, um ou mais */
+.olist{display:flex;flex-direction:column;gap:4px}
+.oline{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-weight:500;font-size:15px;text-align:left}
+.oline .ck{width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;color:transparent;flex:none}
+.oline .ck svg{width:15px;height:15px}
+.oline.on{background:var(--care);border-color:var(--c-care);color:var(--care-ink)}
+.oline.on .ck{background:var(--care-ink);border-color:var(--care-ink);color:var(--care)}
+/* Fralda sem pomada cadastrada: o aviso que leva à tela da Pomada */
+.ointcfg{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:14px;border:1.5px dashed var(--c-care);background:var(--surface);color:var(--ink);text-align:left;font-weight:500;font-size:15px}
+.ointcfg svg{width:22px;height:22px;color:var(--c-care)}
+.ointcfg .cv{color:var(--muted);font-size:22px;line-height:1;font-style:normal}
+/* Linha do tempo: fralda com pomada, duas linhas e um horário só, no meio delas */
+.rg{display:grid;grid-template-columns:46px 1fr;column-gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0}
+.rg:last-child{border-bottom:none}
+.rg>.h{font-variant-numeric:tabular-nums;font-weight:500;font-size:15px}
+.rg .row.rin{grid-template-columns:34px 1fr;border-bottom:none;padding:4px 0}
+/* A folha Tarefas: a lista logo abaixo do título */
+.tlist{display:flex;flex-direction:column;gap:6px}
+.trow{display:grid;grid-template-columns:40px minmax(0,1fr) auto 14px;align-items:center;gap:10px;width:100%;background:var(--surface2);border-radius:16px;padding:10px 12px 10px 10px;text-align:left}
+.trow .ti,.thero .ti{border-radius:12px;background:var(--care);color:var(--care-ink);display:grid;place-items:center;flex:none}
+.trow .ti{width:40px;height:40px}.trow .ti svg{width:22px;height:22px}
+.trow b{display:block;font-family:var(--display);font-weight:500;font-size:16px;line-height:1.2}
+.trow small{display:block;font-size:13px;color:var(--muted)}
+.trow .tp{font-weight:500;font-size:15px;font-variant-numeric:tabular-nums}
+.trow .tp svg{width:18px;height:18px;color:var(--feed-ink)}
+.trow .cv{color:var(--muted);font-size:22px;line-height:1}
+.dots{display:flex;gap:4px}.dots i{width:10px;height:10px;border-radius:50%;border:1.6px solid var(--c-care)}.dots i.f{background:var(--c-care)}
+/* Sem tarefa programada: só a capivara dormindo, quase da cor do fundo */
+.lake{display:grid;place-items:center;padding:28px 8px 18px}
+.lake svg{width:200px;height:auto;fill:var(--surface2);stroke:var(--line);stroke-width:2.6px;stroke-linecap:round;stroke-linejoin:round}
+.lake svg path+path{fill:none}
+/* A tela de uma tarefa só: ocupa a tela inteira, com o nome grande no alto */
+.sheet.full{top:0;max-height:none;border-radius:0;padding-top:calc(6px + env(safe-area-inset-top,0px))}
+.sheet.full .in{min-height:100%}.sheet.full .sfoot{margin-top:auto}
+.tbar{display:flex;align-items:center;margin:0 -4px}
+.tbar .bk{display:flex;align-items:center;gap:4px;color:var(--link);font-weight:500;font-size:15px;padding:8px 4px}
+.tbar .bk svg{width:20px;height:20px}
+.thero{display:flex;align-items:center;gap:12px;padding:0 0 14px;margin:0 -16px;padding-inline:16px;border-bottom:1px solid var(--line)}
+.thero .ti{width:52px;height:52px;border-radius:16px}.thero .ti svg{width:28px;height:28px}
+.thero h3{margin:0;font-family:var(--display);font-weight:500;font-size:24px;line-height:1.1}
+.thero small{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.hist2{display:flex;flex-direction:column}
+.hist2 div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:7px 2px;border-bottom:1px solid var(--line)}
+.hist2 div:last-child{border-bottom:none}
+.hist2 div span:last-child{color:var(--muted)}
+.addrow{display:flex;gap:8px}.addrow .field{flex:1;min-width:0}
+

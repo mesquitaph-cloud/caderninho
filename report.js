@@ -9,7 +9,8 @@ const liters = ml => ml >= 1000 ? n1(ml / 1000) + ' L' : ml + ' ml';
 const hours = ms => ms >= 10 * HOUR ? Math.round(ms / HOUR) + ' h' : dur(ms);
 
 const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos'], nasal: ['lavagem nasal', 'lavagens nasais'],
-                     tummy: ['tummy time', 'tummy times'], sunbath: ['banho de sol', 'banhos de sol'], care: ['outro cuidado', 'outros cuidados'] };
+                     tummy: ['tummy time', 'tummy times'], sunbath: ['banho de sol', 'banhos de sol'], ointment: ['pomada', 'pomadas'],
+                     care: ['outra tarefa', 'outras tarefas'] };
 
 // Totais de [a, z). sleep: o que sleepIntervals devolve; o sono em andamento conta até agora.
 // on(k): se a família usa o botão k (Ordenha, Remédio e os cuidados só entram se usar).
@@ -41,7 +42,7 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     diapers: day.filter(e => e.kind === 'diaper').length, poos: day.filter(e => e.kind === 'diaper' && e.poo).length,
     pumpMl: on('pump') ? day.filter(e => e.kind === 'pump').reduce((s, e) => s + e.ml, 0) : 0,
     doses: on('med') ? day.filter(e => e.kind === 'med' && !e.skipped).length : 0,
-    // Cada cuidado com quantas vezes e, no tummy time e no banho de sol, os minutos anotados.
+    // Cada tarefa com quantas vezes e, no tummy time e no banho de sol, os minutos anotados.
     care: on('care') ? Object.keys(CARE_WORDS).map(k => { const es = day.filter(e => e.kind === k);
       return [k, es.length, es.reduce((t, e) => t + (e.duration_min || 0), 0)]; }).filter(([, n]) => n) : [],
     // Peso: o último antes do período e o último dentro dele, para dizer de quanto para quanto.
@@ -62,7 +63,7 @@ function lines(s) {
   if (s.diapers) out.push(['diaper', plural(s.diapers, 'fralda', 'fraldas') + ', ' + s.poos + ' com cocô']);
   if (s.pumpMl) out.push(['pump', liters(s.pumpMl) + ' de leite ordenhado']);
   if (s.doses) out.push(['med', plural(s.doses, 'dose de remédio dada', 'doses de remédio dadas')]);
-  if (s.care.length) out.push(['care', 'Cuidados: ' + careText(s)]);
+  if (s.care.length) out.push(['care', 'Tarefas: ' + careText(s)]);
   if (s.wTo) out.push(['weight', 'Peso: ' + (s.wFrom ? 'de ' + kg(s.wFrom.grams) + ' (' + shortDate(s.wFrom.measured_on) + ') para ' : '') + kg(s.wTo.grams) + ' (' + shortDate(s.wTo.measured_on) + ')']);
   if (s.marks.length) out.push(['mark', (s.marks.length === 1 ? 'Marco: ' : 'Marcos: ') + s.marks.map(m => m.title + ' (' + shortDate(m.happened_on) + ')').join(', ')]);
   return out;
@@ -97,7 +98,7 @@ export function monthHtml(s, { heading }) {
   if (s.laps) extra.push(['Sono no colo', hours(s.lapMs) + ' em ' + plural(s.laps, 'sono', 'sonos')]);
   if (s.alone) extra.push(['P' + s.aloneText.slice(1), plural(s.alone, 'vez', 'vezes')]);
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);
-  if (s.care.length) extra.push(['Cuidados', careText(s)]);
+  if (s.care.length) extra.push(['Tarefas', careText(s)]);
   if (s.wTo) extra.push(['Peso', (s.wFrom ? kg(s.wFrom.grams) + ' → ' : '') + kg(s.wTo.grams)]);
   if (s.marks.length) extra.push([s.marks.length === 1 ? 'Marco' : 'Marcos', s.marks.map(m => m.title).join(', ')]);
   if (extra.length) h += `<div class="hl">${extra.map(([k, v]) => `<div><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('')}</div>`;

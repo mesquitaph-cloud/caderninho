@@ -17,6 +17,22 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
+- **Tarefas e Pomada para assadura (08–09/11, PR `claude/tarefas-0811`):** o botão Cuidados vira
+  **Tarefas** e abre a lista da rotina logo abaixo do título (sem nada programado, só a capivara dormindo, com
+  "Programar tarefa" e "Anotar uma tarefa avulsa"). Programar começa escolhendo a tarefa (Banho de sol, Tummy
+  time, Pomada para assadura, Banho, Massagem, Lavagem nasal, Outra tarefa), e cada uma abre uma tela inteira
+  só dela: horários fixos ou vezes por dia (a pomada também "na troca de fralda"), hoje com o círculo para
+  marcar, últimos dias e "Tirar da rotina". Na hora marcada, "Hora da tarefa" no alto da tela inicial, igual à
+  dose, com "Hoje não" (só neste celular); marcar vibra como na dose. Notificação de tarefas com chave própria
+  em Tarefas (vem desligada; no máximo 10 agendadas). A pomada: as da família ficam na tarefa Pomada; na
+  Fralda, lista de marcar; sem pomada cadastrada, o aviso "Configure aqui as pomadas", que some 15 dias depois
+  de aparecer se ninguém cadastrar. No histórico, troca com pomada em duas linhas e um horário só; a pomada
+  não ganha marca no gráfico e fica fora do relatório do pediatra; no resumo, "Tarefas: … pomadas".
+  Prévias aprovadas: https://claude.ai/artifact/GDAaPiB7wR9iuqMVHfFT8r,
+  https://claude.ai/artifact/RzemaHaWMDHAXvoQdw79Zv e https://claude.ai/artifact/LuTpMQ8LQ3uGNeqHBY1hBo.
+  `supabase/023_tarefas_e_pomadas.sql` rodado pelo Patrick em 09/11. Para testar: `testes/servidor.mjs` com
+  os cenários `tarefas`, `app-tarefas` e `normal` (sem tarefa). No iPhone e no Android, só chega com a
+  próxima compilação. Texto ainda não aprovado palavra por palavra: o título "Tarefa avulsa".
 - **No `main`:** cronômetro da mamada (#41), App Links do Android (#40), tela de bloqueio do Android (#42,
   e #46: canal "normal" sem som, porque o silencioso não aparecia na tela de bloqueio), aviso do remédio
   (#43) e voltar ao app sem tela vazia (#44). **Em 30/10:** boas-vindas (#48), Política e Termos no
@@ -202,7 +218,7 @@ mesmos, porque o texto cita os itens pelo número.
   (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
   se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas e com
   o item 49 (data da consulta). Pedido de novo pelo Patrick em 07/11.
-- **29 · Tarefas: a rotina do bebê programada** (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
+- **29 · Tarefas: a rotina do bebê programada** (feito no PR `claude/tarefas-0811`, 09/11) (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
   antigo item 39): a família programa a rotina do dia (horários de banho, tummy time, banho de sol etc.),
   e uma linha de "tarefas diárias" na tela inicial mostra o que vem a seguir, para marcar no dia. A
   decidir (com prévia): se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho, banho
@@ -293,10 +309,10 @@ mesmos, porque o texto cita os itens pelo número.
   "em 120 mamadeiras"; "164", "52 com cocô"). A decidir (com prévia): os mesmos dias que a média do sono
   usa (só dias terminados); o que fica na linha pequena (total, número de mamadeiras, fraldas com cocô);
   e se muda também a Semana e o resumo para mandar à família.
-- **42 · Logo do Soneca no relatório para o pediatra** (Patrick, 07/11). Cuidado com a regra da
-  identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
-  app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
-  prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
+- **42 · Logo do Soneca no relatório para o pediatra** (Patrick, 07/11; decidido e no código em 08/11):
+  a capivara pequena (44 px) e o nome "Soneca" no alto à esquerda, acima do nome do bebê, em traço marrom
+  (`--paper-ink`); sai igual no PDF. Prévia aprovada: https://claude.ai/artifact/TDApZW29i9BZqSEXd4pvLy.
+  Exceção aberta na regra da capivara (só esse logo; nada de capivara no meio do relatório).
 - **43 · Aviso de "Salvo" no alto da tela** (Patrick, 07/11; no `main` pelo #70):
   o aviso (`toast` em `app.js`) saiu de cima dos botões de registro e desce no alto, por cima do cartão do
   bebê. Vale para todos os avisos, inclusive os de erro. Mesma pílula, mesmo tempo (1,8 s, ou 5 s com
@@ -774,8 +790,8 @@ Prévia aprovada das telas, antes e depois, de dia e de noite (privada): https:/
   gráficos na versão escura de cada cor.
 - **Modo noite:** segue o celular; no Perfil dá para escolher claro ou escuro.
 - **Capivara:** um traço só, sem preenchimento. Só no cartão do sono (e, com o nome, na entrada); nunca
-  em saúde nem no resumo para a consulta. Sem frase junto. O desenho é esboço; a arte final vai para um
-  ilustrador.
+  em saúde nem no meio do resumo para a consulta (só o logo pequeno no alto do relatório). Sem frase
+  junto. O desenho é esboço; a arte final vai para um ilustrador.
 - **Ícones:** app azul-céu com a capivara marrom (`icons/`); fralda com fitas no lugar da gota; remédio
   em cápsula nos gráficos.
 - **Tom:** humor sutil e raro na rotina; saúde e resumo neutros.

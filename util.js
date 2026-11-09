@@ -19,6 +19,8 @@ export const ICON = {
   care: `<svg viewBox="0 0 24 24" ${P}><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M8 11.5 6.6 10a1.6 1.6 0 0 0-2.4 2.1l3.3 4.6A6 6 0 0 0 12.4 19H13a4 4 0 0 0 4-4v-2"/></svg>`,
   tummy: `<svg viewBox="0 0 24 24" ${P}><circle cx="17" cy="8.5" r="2.6"/><path d="M14.6 10.4c-2.6.6-5.6 2.2-8.6 3.4"/><path d="M15.4 11.2 16 14.6"/><path d="M6 13.8c-1 .4-1.9.8-2.6 1.4"/><path d="M2.5 18.5h19"/></svg>`,
   sunbath: `<svg viewBox="0 0 24 24" ${P}><path d="M7 15a5 5 0 0 1 10 0"/><path d="M12 4v3M4.9 7.9l2.1 2.1M19.1 7.9 17 10M2.5 15h3M18.5 15h3"/><path d="M3 19h18"/></svg>`,
+  // Pomada: a bisnaga, com a tampa embaixo (prévia de 08/11).
+  ointment: `<svg viewBox="0 0 24 24" ${P}><path d="M7 3.5h10"/><path d="M7.6 3.5 10 16.5h4l2.4-13"/><path d="M9.5 7.5h5"/><rect x="10" y="16.5" width="4" height="4.5" rx="1.2"/></svg>`,
   // Arroto: três bolhas subindo.
   burp: `<svg viewBox="0 0 24 24" ${P}><circle cx="8.5" cy="16" r="4"/><circle cx="15.5" cy="8.5" r="2.6"/><circle cx="19.5" cy="3.8" r="1.3"/></svg>`,
   // Últimos 3 dias: a listinha, três linhas com pontos, como a linha do tempo.
@@ -65,6 +67,26 @@ export function dayTitle(d0) {
   const now = Date.now(), dt = new Date(d0);
   const nome = d0 === startOfDay(now) ? 'Hoje' : d0 === startOfDay(now - DAY) ? 'Ontem' : DIAS[dt.getDay()];
   return nome + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
+}
+
+// As datas curtas da barra da tela inicial, para caber ao lado de Dia | Semana | Mês e do "Hoje"
+// numa linha só (Patrick, 08/11; prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug).
+// O leitor de tela continua lendo a data inteira (dayTitle, rangeTitle, mês por extenso).
+// "Hoje, 8 nov" ou "Sáb, 7 nov".
+export function navDayTitle(d0) {
+  const dt = new Date(d0);
+  return (d0 === startOfDay(Date.now()) ? 'Hoje' : DIAS[dt.getDay()]) + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
+}
+// "2 a 8 nov" ou, quando vira o mês, "26/10 a 1/11".
+export function navRangeTitle(a, z) {
+  const A = new Date(a), Z = new Date(z);
+  return A.getMonth() === Z.getMonth() ? A.getDate() + ' a ' + Z.getDate() + ' ' + MESES[Z.getMonth()]
+    : A.getDate() + '/' + (A.getMonth() + 1) + ' a ' + Z.getDate() + '/' + (Z.getMonth() + 1);
+}
+// "Out 2026".
+export function navMonthTitle(m) {
+  const d = new Date(m), s = MESES[d.getMonth()];
+  return s[0].toUpperCase() + s.slice(1) + ' ' + d.getFullYear();
 }
 
 // "27 set 2026": o dia de um peso ou de um marco (aaaa-mm-dd).
@@ -129,9 +151,10 @@ export const SYMPTOM = { febre: 'Febre', colica: 'Cólica', choro: 'Choro incons
                          dentes: 'Incômodo dos dentes', outro: 'Outro' };
 // Tamanho do cocô, opcional, na fralda com cocô. O alerta marrom (vazou da fralda) é à parte.
 export const POO_SIZE = { pequeno: 'pequeno', medio: 'médio', grande: 'grande', gigante: 'gigante' };
-// Cuidados: o que a família escolhe no botão Cuidados, na ordem da tela. Tummy time e banho de sol
-// podem ter os minutos; "Outro cuidado" leva o que foi feito na observação.
-export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal', tummy: 'Tummy time', sunbath: 'Banho de sol', burp: 'Arroto', care: 'Outro cuidado' };
+// Tarefas (antes Cuidados, 08/11): o que a família escolhe ao anotar uma tarefa avulsa, na ordem da tela.
+// Tummy time e banho de sol podem ter os minutos; a pomada leva quais foram passadas; "Outra tarefa"
+// leva o que foi feito na observação.
+export const CARE = { massage: 'Massagem', bath: 'Banho', nasal: 'Lavagem nasal', tummy: 'Tummy time', sunbath: 'Banho de sol', burp: 'Arroto', ointment: 'Pomada', care: 'Outra tarefa' };
 // Arroto: pôs para arrotar, arrotou ou os dois no mesmo registro (coluna burp).
 export const BURP = { put: 'Pôs para arrotar', done: 'Arrotou', both: 'Pôs para arrotar e arrotou' };
 export const CARE_MIN = ['tummy', 'sunbath'];
@@ -166,6 +189,7 @@ export function label(e, evs, sex) {
     : (SYMPTOM[e.symptom] || 'Sintoma') + (e.temp_c != null ? ' · ' + temp(e.temp_c) : '') + (e.duration_min ? ' · durou ' + dur(e.duration_min * MIN) : '');
   if (e.kind === 'care') return e.note || CARE.care;
   if (e.kind === 'burp') return BURP[e.burp] || CARE.burp;
+  if (e.kind === 'ointment') return 'Pomada' + (e.ointments?.length ? ' · ' + e.ointments.join(', ') : '');
   if (CARE[e.kind]) return CARE[e.kind] + (e.duration_min ? ' · ' + dur(e.duration_min * MIN) : '');
   return e.note || 'Outros';
 }
@@ -175,8 +199,13 @@ export function detail(e) {
     return 'esquerdo' + (e.left_min ? ' ' + e.left_min + ' min' : '') + ', direito' + (e.right_min ? ' ' + e.right_min + ' min' : '');
   if (e.kind === 'pump' && e.side) return SIDE[e.side];
   if (e.kind === 'med') return e.dose_at ? 'dose das ' + hm(Date.parse(e.dose_at)) + (e.skipped ? ' pulada' : '') : 'quando precisou';
+  if (e.kind === 'ointment' && e.diaper_id) return 'na troca de fralda';
   return '';
 }
 
 export function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
 export function lsSet(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} }
+
+// A capivara do Soneca, um traço só (a cor e a espessura vêm do CSS, em .capi). Vai na entrada, no cartão
+// do sono e no alto do relatório para o pediatra.
+export const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
