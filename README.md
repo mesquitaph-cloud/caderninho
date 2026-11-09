@@ -780,6 +780,24 @@ antes, desligadas por padrão e sem nada do que foi anotado.
 código em 07/10, seção "Política, Termos e aceites"); apagar a conta no Perfil, com as sugestões apagadas junto (012 e 014, no ar em 07/10);
 controlador, encarregado, preço, prazos e plano do Supabase definidos; revisão do advogado (07/10).
 
+## Guias do site: padrão visual (09/11)
+
+Todo guia novo em `guias/<tema>/index.html` copia o guia 1 (`guias/horas-de-sono`) e usa só as classes `.gd-*` do
+`styles.css`; nada de estilo próprio por página. Padrão aprovado pelo Patrick em 09/11 (design dos guias 1 e 2):
+
+- **Um só tom de apoio por página:** as caixas (Resposta curta, lista de sinais) usam `--sleep-soft`; o `--sleep` fica só
+  nas barras do gráfico, e `--sleep-ink` na pílula da média. Nenhum outro roxo ou azul. Guia de mamada, fralda etc. ainda
+  usa o mesmo tom; se um dia mudar, cria-se o par `--<registro>-soft` de dia e de noite, para todos os guias.
+- **Resposta curta:** ícone de lua, rótulo sem letras maiúsculas, a última frase (a conclusão) num parágrafo próprio, em 500.
+- **Gráfico:** viewBox de 300 de largura, idade acima de cada barra, a faixa em `.gd-range` e a média numa pílula `.gd-pill`
+  (legenda `.gd-kp` "média" e `.gd-kb` "onde ficam 95% dos bebês"). Mesma distância entre as linhas (58).
+- **Ritmo:** subtítulos com 26 px acima; "Procure atendimento no mesmo dia…" com `.gd-urgent`; fontes num `div.gd-src`,
+  com "Fonte:" numa linha e cada estudo em outra.
+- **Bloco final (`#lojas`):** frase, botões das lojas lado a lado e, por último, a foto do app, sem legenda (o `alt` fica).
+  No computador, a foto vai ao lado.
+- **Barra do alto** presa ao rolar, com "Baixar".
+- Prévia de dia e de noite antes do PR, e o guia entra no `sitemap.xml` no mesmo PR.
+
 ## Identidade visual: Soneca (no ar)
 
 O app passa a se chamar **Soneca** ("o Soneca" no texto), com a capivara dormindo de mascote.
