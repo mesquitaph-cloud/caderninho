@@ -29,6 +29,8 @@ body{margin:0;background:#888;font-family:var(--body);display:flex;flex-wrap:wra
 .ios63{--w:1206px;--h:2622px}
 /* iPhone 6,3" (1206 x 2622), o tamanho que a App Store Connect pede hoje: os mesmos quadros, menores */
 .ios.l1{--top:28cqh}.and.l1{--top:37cqh}
+/* Divisão: título em três linhas, o celular desce para não cobrir a frase */
+.ios[id="04-divisao"]{--top:32cqh}.and[id="04-divisao"]{--top:41cqh}
 /* Destaque do Google Play (1024 x 500) */
 .feat{--w:1024px;--h:500px}
 .feat .blob{width:70cqw;left:auto;right:-14cqw;top:-20cqh}
@@ -37,26 +39,47 @@ body{margin:0;background:#888;font-family:var(--body);display:flex;flex-wrap:wra
 .feat p{font-size:2.5cqw;max-width:42cqw}
 .feat .phone{--pw:21cqw;left:auto;transform:none;top:14cqh;box-shadow:0 1.4cqw 3cqw var(--glow)}
 .feat .p1{right:27cqw}.feat .p2{right:4cqw;top:24cqh}
+/* Quadro duplo da abertura; 1em = uma unidade do iPhone 6,9" (ver PANO no script) */
+.pano{position:relative;overflow:hidden;background:var(--bg);color:var(--ink)}
+.pano .blob{position:absolute;aspect-ratio:1;border-radius:50%;background:var(--sleep)}
+.pano .pt{position:absolute;top:116em;width:1084em;display:flex;flex-direction:column;gap:34em}
+.pano h1{margin:0;font-weight:500;font-size:119em;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.pano p{margin:0;font-size:55em;line-height:1.35;color:var(--muted);text-wrap:balance;max-width:18.2em}
+.pano .lock{font-size:70em;gap:.44em;margin-bottom:.21em}.pano .capi{width:2.4em}
+.pano .ph{position:absolute;aspect-ratio:430/932;background:var(--bezel);box-shadow:0 60em 140em var(--glow)}
+.pano .ph img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
 </style></head><body>
 <script>
 const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
-// Capivara só nos quadros de rotina; crescimento e relatório ficam sóbrios.
+// Capivara só nos quadros de rotina; crescimento fica sóbrio.
+// 01-rotina e 02-semana saem do quadro duplo (#pano) abaixo; estes são os outros.
 const F = [
-  ['01-rotina', 'home-light', '--sleep', 'A rotina do bebê, num toque', 'Mamada, sono, fralda e remédio anotados na hora, por toda a família.', 'lock'],
-  ['02-linha-do-tempo', 'day-light', '--feed', 'O dia inteiro numa linha do tempo', 'Cada mamada, soneca e fralda, com a hora e quem anotou.'],
-  ['03-familia', 'hist-light', '--diaper', 'Toda a família na mesma página', 'Mãe, pai, avó: cada um anota no próprio celular e todos veem na hora.'],
-  ['04-semana', 'week-light', '--sleep', 'A semana num relance', 'Sono, mamadas e fraldas de cada dia, lado a lado.'],
-  ['05-divisao', 'division-light', '--care', 'Quem trocou mais fraldas? O Soneca sabe.', 'A divisão de tarefas do mês, com troféu e tudo.', 'capi'],
-  ['06-crescimento', 'growth-light', '', 'Peso e comprimento nas curvas da OMS', 'Percentis de 3 a 97, para menina ou menino.'],
-  ['07-relatorio', 'report-light', '', 'Tudo pronto para a consulta', 'Relatório em PDF para o pediatra, com as últimas semanas.'],
-  ['08-noite', 'home-dark', '--sleep', 'De madrugada, a tela não ofusca', 'Modo escuro para as mamadas da noite.', 'capi', 'night'],
+  ['03-linha-do-tempo', 'day-light', '--feed', 'O dia inteiro numa linha do tempo', 'Cada mamada, soneca e fralda, com a hora e quem anotou.'],
+  ['04-divisao', 'division-light', '--care', 'Quem trocou mais fraldas? O&nbsp;Soneca sabe.', 'A divisão de tarefas do mês, com troféu e tudo.', 'capi'],
+  ['05-crescimento', 'growth-light', '', 'Peso e comprimento nas curvas da OMS', 'Percentis de 3 a 97, para menina ou menino.'],
+  ['06-noite', 'home-dark', '--sleep', 'De madrugada, a tela não ofusca', 'Modo escuro para as mamadas da noite.', 'capi', 'night'],
 ];
 const kind = new URLSearchParams(location.search).get('k') || 'ios';
 let h = '';
+// Quadro duplo da abertura: dois quadros lado a lado, cortados depois pelo quadros.mjs na metade.
+// Medidas em unidades do iPhone 6,9" (1290 de largura), multiplicadas por u. O celular da esquerda
+// gira -11,39° para a divisa entrar pela quina de cima direita, passar à direita de "Última fralda" e da legenda
+// do gráfico e descer entre "Dormindo há" e "Acordou";
+// s é o tamanho dele e T a altura do topo. Mudou a tela inicial? Conferir o corte de novo.
+const PANO = { ios: { u: 1, H: 2796, s: 1, T: 960, bt: 1250 }, ios63: { u: 1206 / 1290, H: 2622, s: 1, T: 960, bt: 1250 }, and: { u: 1080 / 1290, H: 1920, s: .82, T: 790, bt: 1020 } }[kind];
+if (PANO) {
+  const { u, H, s, T, bt } = PANO, px = n => n * u + 'px';
+  const ph = (w, l, t, r, img) => `<div class="ph" style="width:${px(w)};left:${px(l)};top:${px(t)};transform:rotate(${r}deg);border-radius:${px(130 * w / 1000)};padding:${px(22 * w / 1000)}"><img src="telas/${img}.png" alt="" style="border-radius:${px(108 * w / 1000)}"></div>`;
+  h += `<div class="pano" id="pano" style="width:${2 * 1290 * u}px;height:${H}px;font-size:${u}px">
+    <div class="blob" style="width:${px(2300)};left:${px(140)};top:${px(bt)}"></div>
+    <div class="pt" style="left:${px(103)}"><div class="lock">${CAPI}Soneca</div><h1>A rotina do bebê, num toque</h1><p>Mamada, sono, fralda e remédio anotados na hora, por toda a família.</p></div>
+    <div class="pt" style="left:${px(1393)}"><h1>A semana num relance</h1><p>Sono, mamadas e fraldas de cada dia, lado a lado.</p></div>
+    ${ph(900 * s, 1290 + 410 * s, T, 7, 'week-light')}${ph(1000 * s, 1290 - 780.7 * s, T, -11.39, 'home-light')}</div>`;
+}
 if (kind === 'feat') {
   h = `<div class="f feat" id="feature-graphic" style="--c:var(--sleep)"><div class="blob"></div>
     <div class="lk"><div class="lock">${CAPI}Soneca</div><p>A rotina do bebê anotada por toda a família, numa linha do tempo só.</p></div>
-    <div class="phone p1"><img src="telas/home-light.png" alt=""></div><div class="phone p2"><img src="telas/day-light.png" alt=""></div></div>`;
+    <div class="phone p1"><img src="telas/home-light.png" alt=""></div><div class="phone p2"><img src="telas/week-light.png" alt=""></div></div>`;
 } else for (const [id, img, c, t, s, extra, cls] of F) {
   const top = extra === 'lock' ? `<div class="lock">${CAPI}Soneca</div>` : extra === 'capi' ? `<div class="lock">${CAPI}</div>` : '';
     h += `<div class="f ${kind === 'ios63' ? 'ios ios63' : kind} ${extra ? 'l1' : ''} ${cls || ''}" id="${id}" style="${c ? `--c:var(${c})` : ''}">

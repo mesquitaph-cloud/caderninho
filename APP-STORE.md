@@ -56,7 +56,7 @@ Revisar antes de colar. Tom neutro e claro; nada de promessa de saúde.
 
 **Copyright:** `2026 Patrick Harris de Mesquita`
 
-**Screenshots:** as 8 de `loja/app-store-6.3/` (1206 × 2622), na aba "iPhone with Dynamic Island (medium display)", que foi a que a App Store Connect pediu em 14/10. Antes: Sugestão de ordem: tela inicial com os botões;
+**Screenshots:** as 6 de `loja/app-store-6.3/` (desde 09/11; `01-rotina` e `02-semana` juntas e nessa ordem) (1206 × 2622), na aba "iPhone with Dynamic Island (medium display)", que foi a que a App Store Connect pediu em 14/10. Antes: Sugestão de ordem: tela inicial com os botões;
 linha do tempo do dia; painel da semana; resumo do mês; remédios; relatório para pediatra. Com dados de
 exemplo (a "Família Revisão" do 013 serve), de dia, e uma de noite.
 
