@@ -1,13 +1,15 @@
 // Abre o Soneca de verdade com o Supabase de mentira e tira as fotos das telas, de dia e de noite.
-const { chromium } = await import('playwright').catch(() => import('/opt/node22/lib/node_modules/playwright/index.mjs'));
-import fs from 'node:fs'; import path from 'node:path';
-const HERE = path.dirname(new URL(import.meta.url).pathname);
+// No Windows: PLAYWRIGHT=<pasta do pacote playwright> e CH=chrome (ou msedge) para usar o navegador instalado.
+import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
+const { chromium } = await import(process.env.PLAYWRIGHT ? pathToFileURL(path.join(process.env.PLAYWRIGHT, 'index.mjs')).href : 'playwright')
+  .catch(() => import('/opt/node22/lib/node_modules/playwright/index.mjs'));
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '../..'), OUT = path.join(HERE, 'telas');
 const FAKE = fs.readFileSync(path.join(HERE, 'fake-sb.js'), 'utf8');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 fs.mkdirSync(OUT, { recursive: true });
 
-const browser = await chromium.launch();
+const browser = await chromium.launch(process.env.CH ? { channel: process.env.CH, args: ['--headless=new'] } : {});
 for (const scheme of ['light', 'dark']) {
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, colorScheme: scheme, timezoneId: 'America/Sao_Paulo', locale: 'pt-BR' });
   const page = await ctx.newPage();
@@ -30,7 +32,8 @@ for (const scheme of ['light', 'dark']) {
 
   await top(); await snap('home');
   await page.evaluate(() => document.getElementById('tabDay').scrollIntoView({ block: 'start' })); await page.evaluate(() => window.scrollBy(0, -12)); await snap('day');
-  await page.click('#tabWeek'); await page.evaluate(() => document.getElementById('tabDay').scrollIntoView({ block: 'start' })); await snap('week');
+  // Semana: o título "Como foram os dias" logo abaixo do cabeçalho fixo (vai no 02-semana).
+  await page.click('#tabWeek'); await page.evaluate(() => { const c = [...document.querySelectorAll('h2,h3')].find(x => /foram os dias/.test(x.textContent)); c.scrollIntoView({ block: 'start' }); window.scrollBy(0, -240); }); await snap('week');
   await page.evaluate(() => window.scrollBy(0, 700)); await snap('week2');
   await page.click('#tabMonth'); await page.evaluate(() => document.getElementById('tabDay').scrollIntoView({ block: 'start' })); await snap('month');
   await page.evaluate(() => { const h=[...document.querySelectorAll('#monthView h3,#monthView h4,#monthView .card')].find(x=>/divis/i.test(x.textContent)&&x.textContent.length<4000); (h||document.body).scrollIntoView({block:'start'}); window.scrollBy(0,-16); }); await snap('division');
