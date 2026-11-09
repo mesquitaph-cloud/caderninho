@@ -884,7 +884,10 @@ function renderDock(last, open, now) {
   const opening = want && want !== stripK && stripReady && !reduceMotion() && !$('dock').hidden;
   stripK = want; stripReady = true;
   renderGrid(last, open, now, want);
-  $('strip').innerHTML = want ? stripHtml(want, open, now) : '';
+  // A faixa do sono que já está na tela só troca o tempo: recriá-la reiniciava os zz no meio do ciclo.
+  const keep = want === 'sleep' && $('strip').querySelector('.ext.k-sleep');
+  if (keep) $('stripT').textContent = dur(now - open);
+  else $('strip').innerHTML = want ? stripHtml(want, open, now) : '';
   $('din').classList.toggle('on', !!want);
   // Com a tela de registro aberta (ou fechando), a faixa espera escondida: a tela encolhe até ela.
   if (opening) { if (closing || (S && !$('sheet').hidden)) $('din').classList.add('pre'); else openStrip(); }
