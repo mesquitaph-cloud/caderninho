@@ -1594,7 +1594,7 @@ function drawEntry() {
   if (k === 'symptom') {
     const opts = S.edit ? SYMPTOM_OPTS.filter(([id]) => id !== 'vomito') : SYMPTOM_OPTS;
     h += `<div><div class="lbl">O que aconteceu</div><div class="seg ${c}" style="background:none">${opts.map(([id, n]) => opt(n, S.sym === id, 'sym', id)).join('')}</div></div>`;
-    if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
+    if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" class="tbox" value="${esc(S.temp)}" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
     if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
   }
   // Tarefa avulsa: qual foi; tummy time e banho de sol podem ter os minutos; a pomada, quais foram
@@ -1646,6 +1646,9 @@ function cheer(ev) {
 cheer.n = 0;
 const savedText = (ev, fresh) => ev.poo_alert ? 'Alerta marrom às ' + hm(ev.t) + '. Coragem!'
   : ev.poo_size === 'gigante' ? 'Salvo às ' + hm(ev.t) + '. Que fralda!'
+  // Febre: o aviso repete o que foi anotado, sem interpretar ("Febre de 38,5 °C anotada às 03:12").
+  : ev.kind === 'symptom' && ev.symptom === 'febre' ? 'Febre' + (ev.temp_c != null
+    ? ' de ' + ev.temp_c.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' °C' : '') + ' anotada às ' + hm(ev.t)
   : 'Salvo às ' + hm(ev.t) + (fresh ? cheer(ev) : '');
 function computeT() {
   const [H, M] = (S.time || hm(Date.now())).split(':').map(Number);

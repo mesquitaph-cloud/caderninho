@@ -6,7 +6,7 @@
   --bg:#FFF8EE;--surface:#FFFFFF;--surface2:#F8EEE0;--ink:#4A3522;--muted:#826449;--line:#EFE2D2;
   --feed:#9ED9B8;--feed-ink:#1F5A3B;--sleep:#9CC8F0;--sleep-ink:#1F4E80;
   --diaper:#FFD98A;--diaper-ink:#664700;--vomit:#F6A5A0;--vomit-ink:#7E2722;
-  --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;--on-danger:#FFFFFF;
+  --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--focus:#7A5A3C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;--on-danger:#FFFFFF;
   --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;
   /* Selo da App Store na página das lojas: preto de dia, branco de noite */
   --badge-day:inline;--badge-night:none;
@@ -29,7 +29,7 @@
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
-  --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}}
+  --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}}
 :root[data-theme="dark"]{
   color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--diaper:#68521E;--diaper-ink:#F2D49A;
@@ -38,14 +38,14 @@
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
-  --accent:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}
+  --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}
 html{touch-action:manipulation}body{overflow-x:clip}*{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-inline:24px;padding-block:20px 48px;-webkit-tap-highlight-color:transparent}
 /* App do Android: a tela vai até em cima, embaixo do relógio; o conteúdo começa depois dele. */
 [data-app="android"] body{padding-top:calc(20px + env(safe-area-inset-top,0px))}
 .wrap{max-width:480px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
-button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .baby{display:flex;align-items:center;gap:10px;text-align:left;padding:4px;border-radius:14px}
 .av{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-family:var(--display);font-weight:500;font-size:20px}
@@ -101,7 +101,7 @@ button.pl::before{content:"";position:absolute;inset:-6px;border-radius:50%}
 .li.tg:disabled{opacity:.5;cursor:default}
 .sw{width:42px;height:25px;border-radius:13px;background:var(--line);position:relative;flex:none}
 .sw i{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.2)}
-.sw.on{background:var(--accent)}.sw.on i{left:20px}
+.sw.on{background:var(--focus)}.sw.on i{left:20px}
 @media (prefers-reduced-motion:no-preference){.sw,.sw i{transition:left .15s,background .15s}}
 /* Cartão de remédios na tela inicial: a última dose e a próxima */
 .meds{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:10px;display:flex;flex-direction:column;gap:6px}
@@ -227,7 +227,7 @@ svg .gl,svg .base{stroke:var(--line);stroke-width:1}
 svg .hit{fill:transparent}
 svg .dayrow{cursor:pointer;outline:none}
 svg .dayrow:hover .hit,svg .dayrow:focus-visible .hit{fill:var(--surface2)}
-svg .dayrow:focus-visible .hit{stroke:var(--accent);stroke-width:2}
+svg .dayrow:focus-visible .hit{stroke:var(--focus);stroke-width:2}
 svg .m-sleep{fill:var(--c-sleep)}
 svg .m-feed{fill:var(--c-feed);stroke:var(--surface);stroke-width:1.2}
 svg .m-diaper{fill:var(--c-diaper)}
@@ -353,6 +353,8 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 .ml button{width:48px;height:48px;border-radius:50%;background:var(--surface2);font-size:24px;font-weight:500}
 .ml input{width:100px;text-align:center;font-size:28px;font-family:var(--display);font-weight:500;border:none;background:none;color:var(--ink)}
 .ml em{font-style:normal;color:var(--muted)}
+/* Temperatura da febre: caixa vazia, sem número de exemplo que pareça já anotado */
+.ml input.tbox{width:110px;height:52px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface)}
 /* Peito na mamada: marcar o peito e, se quiser, os minutos */
 .sides{display:flex;flex-direction:column;gap:8px}
 .side{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px 4px 4px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
@@ -686,7 +688,7 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 .sexpick input{position:absolute;opacity:0;width:1px;height:1px}
 .sexpick span{display:block;text-align:center;border:1.5px solid var(--line);border-radius:14px;padding:12px;font-weight:500;background:var(--surface);cursor:pointer}
 .sexpick input:checked+span{border-color:var(--c-weight);background:var(--surface2)}
-.sexpick input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.sexpick input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
 /* Peso e comprimento: abas, períodos e o gráfico com as curvas da OMS */
 .seg2{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:3px}
 .seg2 button{flex:1;padding:8px 0;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted)}
@@ -880,7 +882,7 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .chk .box svg{width:15px;height:15px;stroke:var(--on-accent);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round;visibility:hidden}
 .chk input:checked+.box{background:var(--accent);border-color:var(--accent)}
 .chk input:checked+.box svg{visibility:visible}
-.chk input:focus-visible+.box{outline:2px solid var(--accent);outline-offset:2px}
+.chk input:focus-visible+.box{outline:2px solid var(--focus);outline-offset:2px}
 .chk a{color:var(--link);font-weight:500;text-underline-offset:2px}
 a.li{color:inherit;text-decoration:none}
 
