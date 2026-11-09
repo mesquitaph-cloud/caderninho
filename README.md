@@ -17,6 +17,22 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
+- **Tarefas e Pomada para assadura (08–09/11, PR `claude/tarefas-0811`):** o botão Cuidados vira
+  **Tarefas** e abre a lista da rotina logo abaixo do título (sem nada programado, só a capivara dormindo, com
+  "Programar tarefa" e "Anotar uma tarefa avulsa"). Programar começa escolhendo a tarefa (Banho de sol, Tummy
+  time, Pomada para assadura, Banho, Massagem, Lavagem nasal, Outra tarefa), e cada uma abre uma tela inteira
+  só dela: horários fixos ou vezes por dia (a pomada também "na troca de fralda"), hoje com o círculo para
+  marcar, últimos dias e "Tirar da rotina". Na hora marcada, "Hora da tarefa" no alto da tela inicial, igual à
+  dose, com "Hoje não" (só neste celular); marcar vibra como na dose. Notificação de tarefas com chave própria
+  em Tarefas (vem desligada; no máximo 10 agendadas). A pomada: as da família ficam na tarefa Pomada; na
+  Fralda, lista de marcar; sem pomada cadastrada, o aviso "Configure aqui as pomadas", que some 15 dias depois
+  de aparecer se ninguém cadastrar. No histórico, troca com pomada em duas linhas e um horário só; a pomada
+  não ganha marca no gráfico e fica fora do relatório do pediatra; no resumo, "Tarefas: … pomadas".
+  Prévias aprovadas: https://claude.ai/artifact/GDAaPiB7wR9iuqMVHfFT8r,
+  https://claude.ai/artifact/RzemaHaWMDHAXvoQdw79Zv e https://claude.ai/artifact/LuTpMQ8LQ3uGNeqHBY1hBo.
+  `supabase/023_tarefas_e_pomadas.sql` rodado pelo Patrick em 09/11. Para testar: `testes/servidor.mjs` com
+  os cenários `tarefas`, `app-tarefas` e `normal` (sem tarefa). No iPhone e no Android, só chega com a
+  próxima compilação. Texto ainda não aprovado palavra por palavra: o título "Tarefa avulsa".
 - **No `main`:** cronômetro da mamada (#41), App Links do Android (#40), tela de bloqueio do Android (#42,
   e #46: canal "normal" sem som, porque o silencioso não aparecia na tela de bloqueio), aviso do remédio
   (#43) e voltar ao app sem tela vazia (#44). **Em 30/10:** boas-vindas (#48), Política e Termos no
@@ -202,7 +218,7 @@ mesmos, porque o texto cita os itens pelo número.
   (o calendário do PNI, do Ministério da Saúde, ou o da SBP, que inclui vacinas só da rede particular);
   se a família marca as tomadas; e o tom, sem cobrança. Liga com "reação à vacina" em Sintomas e com
   o item 49 (data da consulta). Pedido de novo pelo Patrick em 07/11.
-- **29 · Tarefas: a rotina do bebê programada** (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
+- **29 · Tarefas: a rotina do bebê programada** (feito no PR `claude/tarefas-0811`, 09/11) (Felipe Boin, 03/11; Patrick, 07/11, que juntou aqui o
   antigo item 39): a família programa a rotina do dia (horários de banho, tummy time, banho de sol etc.),
   e uma linha de "tarefas diárias" na tela inicial mostra o que vem a seguir, para marcar no dia. A
   decidir (com prévia): se é uma lista de marcar ou os Cuidados que já existem (tummy time, banho, banho

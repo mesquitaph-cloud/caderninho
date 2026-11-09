@@ -12,7 +12,7 @@ export const METRICS = {
   pump:   { name: 'Ordenhas', cls: 'm-pump',   val: s => s.pumpMl,       fmt: v => v ? v + ' ml' : '0' },
 };
 const FILTERS = [['sleep', 'Sono'], ['feed', 'Mamada'], ['diaper', 'Fralda'], ['pump', 'Ordenha'],
-                 ['symptom', 'Sintomas'], ['med', 'Remédio'], ['care', 'Cuidados']];
+                 ['symptom', 'Sintomas'], ['med', 'Remédio'], ['care', 'Tarefas']];
 
 // Os gráficos levam só os botões que a família escolheu (Mamada, Sono e Fralda são fixos). Lugar de
 // cada marca na linha: fralda embaixo, mamada no meio, todo o resto em cima.
@@ -23,6 +23,8 @@ function topKind(e, k) {
   if (e.kind === 'pump') return k.pump ? 'pump' : null;
   if (e.kind === 'symptom' || e.kind === 'vomit') return k.symptom ? 'symptom' : null;
   if (e.kind === 'med') return k.med && !e.skipped ? 'med' : null;
+  // A pomada não ganha marca própria (prévia de 08/11): a da Fralda já aparece na troca.
+  if (e.kind === 'ointment') return null;
   if (CARE[e.kind]) return k.care ? 'care' : null;
   return null;
 }
@@ -158,7 +160,7 @@ export function dayLine({ d0, evs, sleeps, now, on, zoom = null }) {
   if (k.pump) items.push([KEY.pump(), 'Ordenha', pump.reduce((a, e) => a + e.ml, 0) + ' ml']);
   if (k.symptom) items.push([KEY.symptom(), 'Sintomas', n(e => topKind(e, k) === 'symptom')]);
   if (k.med) items.push([KEY.med(), 'Remédio', n(e => topKind(e, k) === 'med')]);
-  if (k.care) items.push([KEY.care(), 'Cuidados', n(e => topKind(e, k) === 'care')]);
+  if (k.care) items.push([KEY.care(), 'Tarefas', n(e => topKind(e, k) === 'care')]);
   return `<div class="svgbox">${s}</div><div class="lgd day">${items.map(([i, t, v]) => `<span>${i}<em>${t}</em> ${esc(String(v))}</span>`).join('')}</div>`;
 }
 

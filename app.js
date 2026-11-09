@@ -27,6 +27,8 @@ const st = {
   members: [], names: {},
   entries: new Map(),          // id -> registro (com t = ms)
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
+  routines: [],                // tarefas programadas do bebê aberto (sem as tiradas da rotina), do 023
+  routinesOk: true,            // falso se não deu para carregar (antes do 023)
   measures: [], weights: [], lengths: [], milestones: [], // medidas (com peso, comprimento ou os dois) e marcos do bebê aberto, do mais antigo ao mais recente
   growthOk: true,              // falso se não deu para carregar (por exemplo, antes do 007)
   questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
@@ -458,10 +460,19 @@ const withT = r => ({ ...r, t: Date.parse(r.at) });
 
 async function loadMeds() {
   const b = st.baby;
-  if (!b) { st.meds = []; return; }
-  const { data, error } = await sb.from('medicines').select('*').eq('baby_id', b.id).is('stopped_at', null).order('created_at');
+  if (!b) { st.meds = []; st.routines = []; return; }
+  const [{ data, error }] = await Promise.all([
+    sb.from('medicines').select('*').eq('baby_id', b.id).is('stopped_at', null).order('created_at'), loadRoutines()]);
   if (error) return toast('Não foi possível carregar os remédios.');
   if (st.baby?.id === b.id) st.meds = data;
+}
+// Tarefas programadas (023). Sem aviso de erro: antes do 023 a tabela não existe, e o resto funciona.
+async function loadRoutines() {
+  const b = st.baby;
+  if (!b) { st.routines = []; return; }
+  const { data, error } = await sb.from('routines').select('*').eq('baby_id', b.id).is('stopped_at', null).order('created_at');
+  if (st.baby?.id !== b.id) return;
+  st.routinesOk = !error; st.routines = data || [];
 }
 async function loadGrowth() {
   const b = st.baby;
@@ -490,7 +501,7 @@ async function loadQuestions() {
 // Botões da família. Canal ao vivo à parte: antes do 008 a tabela não existe, e ela no mesmo canal
 // dos registros poderia derrubar a sincronização de tudo.
 // Mudou algo vindo de outro celular: redesenha a tela e, se estiver aberta, a lista de remédios.
-function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } }
+function refresh() { if (!S) render(); else if (S.mode === 'meds') { render(); drawMeds(); } else if (S.mode === 'tasks' || S.mode === 'task') { render(); redrawTasks(); } }
 
 function subscribe(fid) {
   if (st.channel) sb.removeChannel(st.channel);
@@ -504,6 +515,16 @@ function subscribe(fid) {
       const m = p.new; if (!m?.id || !st.baby || m.baby_id !== st.baby.id) return;
       st.meds = st.meds.filter(x => x.id !== m.id);
       if (!m.stopped_at) st.meds = [...st.meds, m].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+      refresh();
+    })
+    .subscribe();
+  // Tarefas num canal à parte: antes do 023 a tabela não existe e poderia derrubar o canal dos registros.
+  if (st.taskChannel) sb.removeChannel(st.taskChannel);
+  st.taskChannel = sb.channel('tarefas-' + fid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'routines', filter: 'family_id=eq.' + fid }, p => {
+      const r = p.new; if (!r?.id || !st.baby || r.baby_id !== st.baby.id) return;
+      st.routines = st.routines.filter(x => x.id !== r.id);
+      if (!r.stopped_at) st.routines = [...st.routines, r].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
       refresh();
     })
     .subscribe();
@@ -542,7 +563,7 @@ function render() {
   $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
-  renderHome(); renderBv(); medAlertsLater(); dockSize();
+  renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); dockSize();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -584,7 +605,7 @@ function renderHome() {
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
   renderDock(last, open, now);
   renderLast(last, open, now);
-  renderMeds();
+  renderMeds(); renderTasks();
 
   const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
   $('tabDay').setAttribute('aria-selected', st.view === 'day'); $('tabWeek').setAttribute('aria-selected', week); $('tabMonth').setAttribute('aria-selected', month);
@@ -654,12 +675,23 @@ function renderHome() {
   $('timeline').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
     : !rows.length ? `<div class="empty">${d0 === today ? 'Toque num botão abaixo para anotar o primeiro.' : 'Nada registrado neste dia.'}</div>`
     : rows.slice().reverse().map(e => {
-        const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
-        const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', esc(byText(e))].filter(Boolean).join(' · ');
-        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span><span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs, b.sex))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span></button>`;
+        // A pomada da troca de fralda vai junto da troca (prévia de 08/11): duas linhas, um horário só.
+        if (e.kind === 'ointment' && e.diaper_id && st.entries.has(e.diaper_id)) return '';
+        const o = e.kind === 'diaper' && diaperOint(e.id);
+        if (o) return `<div class="rg"><span class="h">${hm(e.t)}</span><div>${rowIn(e, evs, b, e.id)}${rowIn(o, evs, b, e.id)}</div></div>`;
+        return `<button class="row" data-id="${esc(e.id)}"><span class="h">${hm(e.t)}</span>${rowBody(e, evs, b)}</button>`;
       }).join('');
   enterFresh();
 }
+
+// Uma linha da linha do tempo, sem o horário: o ícone, o que foi e, embaixo, o detalhe e quem fez.
+function rowBody(e, evs, b) {
+  const noteIsName = e.kind === 'other' || e.kind === 'care' || (e.kind === 'symptom' && e.symptom === 'outro');
+  const sub = [esc(detail(e)), !noteIsName && e.note ? esc(e.note) : '', esc(byText(e))].filter(Boolean).join(' · ');
+  return `<span class="d k-${e.kind}">${ICON[e.kind]}</span><span><span class="l">${esc(label(e, evs, b.sex))}${e.poo_alert ? '<span class="brownpill">alerta marrom</span>' : ''}</span>${sub ? `<span class="s">${sub}</span>` : ''}</span>`;
+}
+// Linha dentro do par fralda + pomada: as duas abrem a troca.
+const rowIn = (e, evs, b, id) => `<button class="row rin" data-id="${esc(id)}">${rowBody(e, evs, b)}</button>`;
 
 // Há quanto tempo (Patrick, 07/11; prévia https://claude.ai/artifact/8uHTiptEmsVdo7KzRgdbxi): última
 // mamada (do começo dela), sono e fralda, logo acima do gráfico. Fala de agora, por isso fica em Dia,
@@ -779,12 +811,12 @@ $('paneHome').addEventListener('click', e => {
 /* ---------- botões da tela inicial ---------- */
 // Os botões ficam presos embaixo, em cima das abas, numa linha só (prévia aprovada em 06/11:
 // https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE): Mamada, Sono, Fralda, Ordenha (se a família ligou) e
-// Outros. Outros abre, logo acima, uma linha com Remédio, Sintomas e Cuidados (os que a família ligou) e
+// Outros. Outros abre, logo acima, uma linha com Remédio, Sintomas e Tarefas (os que a família ligou) e
 // Anotação livre. Um toque anota; segurar abre os últimos 3 dias daquele registro. Desde 07/11 toda família
 // tem os mesmos botões (saiu Família › Botões da tela inicial).
 const BTN = {
   feed: ['Mamada', 'k-feed'], sleep: ['Sono', 'k-sleep'], diaper: ['Fralda', 'k-diaper'],
-  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'], care: ['Cuidados', 'k-care'],
+  med: ['Remédio', 'k-med'], symptom: ['Sintomas', 'k-symptom'], pump: ['Ordenha', 'k-pump'], care: ['Tarefas', 'k-care'],
 };
 const FIXED = ['feed', 'sleep', 'diaper'];
 // Todos os registros ligados para todas as famílias (Patrick, 07/11). Fica a função para os resumos e
@@ -807,7 +839,7 @@ function renderGrid(last, open, now, joined) {
     if (k === 'feed') { const t = ftGet(); if (t) return t.run ? 'mamando' : 'pausada'; }
     if (k === 'med') return medSub();
     if (k === 'symptom') return symptomSub(last, now);
-    if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outro cuidado' : c.kind === 'burp' ? (c.burp === 'put' ? 'pôs para arrotar' : 'arrotou') : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
+    if (k === 'care') { const c = last(Object.keys(CARE)); return c ? (c.kind === 'care' ? 'outra tarefa' : c.kind === 'burp' ? (c.burp === 'put' ? 'pôs para arrotar' : 'arrotou') : CARE[c.kind].toLowerCase()) + ' ' + ago(c.t) : 'sem registro'; }
     return e ? ago(e.t) : 'sem registro';
   };
   const ks = rowKeys();
@@ -947,7 +979,7 @@ function enterFresh() {
 }
 
 // O nome de cada botão no "Anotar…" e no título dos últimos 3 dias.
-const ADD = { feed: 'mamada', sleep: 'sono', diaper: 'fralda', med: 'remédio', symptom: 'sintoma', pump: 'ordenha', care: 'cuidado' };
+const ADD = { feed: 'mamada', sleep: 'sono', diaper: 'fralda', med: 'remédio', symptom: 'sintoma', pump: 'ordenha', care: 'tarefa' };
 
 /* ---------- gravar registros ---------- */
 // As colunas do sintoma só vão no sintoma, e as do tamanho do cocô só quando há tamanho ou alerta:
@@ -963,6 +995,7 @@ function fields(ev) {
   if (CARE[ev.kind]) f.duration_min = ev.duration_min ?? null;
   if ('lap_min' in ev) f.lap_min = ev.lap_min ?? null;
   if (ev.kind === 'burp') f.burp = ev.burp;
+  if (ev.kind === 'ointment') { f.ointments = ev.ointments; f.diaper_id = ev.diaper_id ?? null; }
   // Quem fez e o "pegou no sono sozinha" também só vão quando há o que mandar (ou apagar): sem o 022.
   if ('done_by' in ev) f.done_by = ev.done_by ?? null;
   if ('self_settled' in ev) f.self_settled = ev.self_settled ?? null;
@@ -1109,13 +1142,16 @@ async function updateEntry(id, ev) {
 async function deleteEntry(id) {
   const { error } = await sb.from('entries').delete().eq('id', id);
   if (error) { toast('Não foi possível apagar. Confira a conexão.'); return false; }
-  st.entries.delete(id); render(); return true;
+  st.entries.delete(id);
+  // A pomada da troca de fralda vai junto (no banco, apagada em cascata).
+  for (const e of [...st.entries.values()]) if (e.diaper_id === id) st.entries.delete(e.id);
+  render(); return true;
 }
 
 /* ---------- painel de registro ---------- */
 let S = null;   // estado do painel aberto (null = fechado)
 const TITLE = { feed:'Mamada', pump:'Ordenha', sleep:'Sono', wake:'Sono', diaper:'Fralda', vomit:'Vômito', other:'Outros', med:'Remédio',
-                symptom:'Sintomas', care:'Cuidados' };
+                symptom:'Sintomas', care:'Tarefa avulsa' };
 // As opções do botão Sintomas, na ordem da tela. Vômito grava o registro de vômito de sempre.
 const SYMPTOM_OPTS = [['febre', 'Febre'], ['colica', 'Cólica'], ['choro', 'Choro inconsolável'], ['vomito', 'Vômito'],
                       ['diarreia', 'Diarreia'], ['muco', 'Muco nas fezes'], ['tosse', 'Tosse'], ['assadura', 'Assadura'],
@@ -1131,6 +1167,8 @@ const QUICK_TIME = '<div class="time quick"><button class="small" data-act="now"
 function openPanel(html) {
   const from = sheetFrom, was = !$('sheet').hidden; sheetFrom = null;
   $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
+  // A tela de uma tarefa ocupa a tela inteira (prévia de 08/11).
+  $('sheet').classList.toggle('full', S?.mode === 'task');
   if (was) return;
   sheetK = from ? from.home : null; stripAtOpen = stripK;
   if (from && !reduceMotion()) growSheet(from);
@@ -1139,7 +1177,7 @@ function closeSheet() {
   const sh = $('sheet'), k = sheetK, anim = !sh.hidden && k && !reduceMotion() && !$('dock').hidden;
   const r = anim ? sh.getBoundingClientRect() : null, surf = anim ? getComputedStyle(sh).backgroundColor : '';
   sheetK = null; closing = !!anim;
-  S = null; $('scrim').hidden = true; sh.hidden = true; render(); closing = false;
+  S = null; $('scrim').hidden = true; sh.hidden = true; sh.classList.remove('full'); render(); closing = false;
   // A faixa do sono ou da mamada que começou com a tela aberta esperou escondida: a tela encolhe até
   // ela (quando é o mesmo registro) ou ela sai do botão como antes.
   if ($('din').classList.contains('pre') && !stripBusy && stripK && stripK !== stripAtOpen) {
@@ -1384,9 +1422,13 @@ setInterval(() => {
   if (stripK === 'feed' && !stripBusy && $('stripT')) $('stripT').textContent = dur(ftTotal(t, now));
 }, 1000);
 
-function openEntry(k, edit) {
+function openEntry(k, edit, avulsa) {
   if (!st.baby) return babySheet(null);
   if (k === 'med' && !edit) return medsSheet();
+  // Tarefas (08/11): o botão abre a lista da rotina; a tarefa avulsa é o formulário de antes.
+  if (k === 'care' && !edit && !avulsa) return tasksSheet();
+  // A pomada marcada na Fralda abre a própria troca.
+  if (edit?.kind === 'ointment' && edit.diaper_id && st.entries.get(edit.diaper_id)) { edit = st.entries.get(edit.diaper_id); k = 'diaper'; }
   // Um "Dormiu" esquecido (mais de 14 h) não conta: o Sono abre em "Dormiu agora", como na tela inicial.
   const open = liveOpen(sleepIntervals(sortedEntries()).open, Date.now());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
@@ -1397,7 +1439,8 @@ function openEntry(k, edit) {
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
         sk: edit ? edit.kind : (open !== null ? 'wake' : 'sleep'), note: edit?.note || '', err: '',
         sym: edit?.symptom || null, temp: edit?.temp_c != null ? String(edit.temp_c).replace('.', ',') : '', dmin: edit?.duration_min || edit?.lap_min || '',
-        by: edit?.done_by || null, alone: !!edit?.self_settled };
+        by: edit?.done_by || null, alone: !!edit?.self_settled,
+        oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   // Sono (com o bebê acordado), Mamada, Fralda e Ordenha novos abrem a tela curta.
   S.compact = !edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump'); S.openO = false; S.openT = false; S.t0 = S.time;
@@ -1463,6 +1506,7 @@ function drawDiaperCompact() {
   let h = head('Fralda') + `<div class="seg k-diaper" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div>`;
   if (S.poo) h += `<div>${pooHtml()}</div>`;
   S.wig = false;
+  h += ointList() || ointNudge();
   h += orow('openO', 'Outras opções', S.openO);
   if (S.openO) h += `<div class="ofold">${canBy() ? byHtml('diaper', 'Quem fez') : ''}${noteField('Observação (opcional)')}</div>`;
   h += timeRow('diaper') + sfoot('diaper', 'Salvar');
@@ -1484,13 +1528,37 @@ const noteField = ph => `<input class="field" id="noteIn" maxlength="300" placeh
 const pooHtml = () => `<div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
     <button class="brown${S.palert ? ' on' : ''}${S.wig ? ' wig' : ''}" data-act="palert" aria-pressed="${S.palert}">${ICON.siren}<span><b>Alerta marrom</b><small>aperte em caso de emergência</small></span></button>`;
 
+// Pomada na Fralda e na tarefa avulsa (prévia de 08/11): as pomadas da família numa lista de marcar, com
+// o círculo da dose. Sem nenhuma cadastrada, não aparece. extra: os nomes de um registro antigo que já
+// não estão na lista (para dar para desmarcar).
+const ointRoutine = () => st.routines.find(r => r.kind === 'ointment');
+function ointList(extra) {
+  const names = [...new Set([...(ointRoutine()?.items || []), ...(extra || [])])];
+  if (!names.length) return '';
+  return `<div><div class="lbl">Pomada</div><div class="olist">${names.map(n => { const on = S.oint.has(n);
+    return `<button class="oline${on ? ' on' : ''}" data-act="oint" data-val="${esc(n)}" role="checkbox" aria-checked="${on}"><span class="ck">${CHECK}</span><span>${esc(n)}</span></button>`; }).join('')}</div></div>`;
+}
+// Sem pomada cadastrada (prévia de 09/11, https://claude.ai/artifact/LuTpMQ8LQ3uGNeqHBY1hBo): no lugar da
+// lista, o aviso que leva à tela da Pomada. Some 15 dias depois de aparecer pela primeira vez neste
+// celular, para este bebê, se ninguém cadastrar pomada (Patrick, 09/11). Antes do 023, não aparece.
+const NUDGE_DAYS = 15;
+function ointNudge() {
+  if (!st.routinesOk || ointRoutine()) return '';
+  const k = 'cad-pomada-aviso-' + st.baby.id, first = +lsGet(k) || 0, now = Date.now();
+  if (!first) lsSet(k, String(now));
+  if (first && now - first > NUDGE_DAYS * DAY) return '';
+  return `<div><div class="lbl">Pomada</div><button class="ointcfg" data-act="ointCfg">${ICON.ointment}<span>Configure aqui as pomadas</span><i class="cv" aria-hidden="true">›</i></button></div>`;
+}
+// A pomada marcada numa troca de fralda.
+const diaperOint = id => { for (const e of st.entries.values()) if (e.kind === 'ointment' && e.diaper_id === id) return e; return null; };
+
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
   if (S.compact && k === 'sleep' && S.sk === 'sleep') return drawSleepCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
   if (S.compact && k === 'diaper') return drawDiaperCompact();
   if (S.compact && k === 'pump') return drawPumpCompact();
-  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar cuidado' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
+  let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar tarefa' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
     // Mamada nova no peito: o cronômetro. "Digitar os minutos" volta para os minutos digitados.
@@ -1512,6 +1580,7 @@ function drawEntry() {
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
   if (k === 'diaper' && S.poo) h += `<div>${pooHtml()}</div>`;
+  if (k === 'diaper') h += ointList(S.edit && diaperOint(S.edit.id)?.ointments) || (S.edit ? '' : ointNudge());
   S.wig = false;   // a sirene balança só no toque que liga o alerta, não a cada redesenho
   if (k === 'other') h += `<div><div class="lbl">O que aconteceu</div><input class="field" id="noteIn" placeholder="Consulta com o pediatra" value="${esc(S.note)}"></div>`;
   if (k === 'med') h += `<div class="soft"><b>${esc(label(S.edit))}</b> · ${esc(detail(S.edit))}</div>`;
@@ -1522,9 +1591,11 @@ function drawEntry() {
     if (S.sym === 'febre') h += `<div><div class="lbl">Temperatura <small>(opcional)</small></div><div class="ml"><input id="tempIn" inputmode="decimal" value="${esc(S.temp)}" placeholder="37,8" aria-label="Temperatura em graus Celsius"><em>°C</em></div></div>`;
     if (withDuration(S.sym)) h += `<div><div class="lbl">Quanto tempo durou <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="30" aria-label="Minutos"><em>min</em></div></div>`;
   }
-  // Cuidados: qual foi; tummy time e banho de sol podem ter os minutos; o outro cuidado, o que foi feito.
+  // Tarefa avulsa: qual foi; tummy time e banho de sol podem ter os minutos; a pomada, quais foram
+  // passadas; a outra tarefa, o que foi feito.
   if (k === 'care') {
-    h += `<div><div class="lbl">Qual cuidado</div><div class="copts">${Object.entries(CARE).map(([id, n]) => `<button class="copt${S.ck === id ? ' on' : ''}" data-act="ck" data-val="${id}" aria-pressed="${S.ck === id}">${ICON[id]}<span>${id === 'care' ? 'Outro' : n}</span></button>`).join('')}</div></div>`;
+    h += `<div><div class="lbl">Qual tarefa</div><div class="copts">${Object.entries(CARE).map(([id, n]) => `<button class="copt${S.ck === id ? ' on' : ''}" data-act="ck" data-val="${id}" aria-pressed="${S.ck === id}">${ICON[id]}<span>${id === 'care' ? 'Outra' : n}</span></button>`).join('')}</div></div>`;
+    if (S.ck === 'ointment') h += ointList(S.edit?.ointments) || '<div class="soft">Cadastre as pomadas em Tarefas, na Pomada para assadura.</div>';
     if (CARE_MIN.includes(S.ck)) h += `<div><div class="lbl">Quanto tempo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="10" aria-label="Minutos"><em>min</em></div>
       <div class="seg" style="margin-top:8px">${CARE_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m} min</button>`).join('')}</div></div>`;
     // Arroto: como xixi e cocô, um ou os dois; cada registro é só o momento, sem tempo.
@@ -1602,13 +1673,14 @@ async function saveEntry(btn) {
     if (withDuration(S.sym) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'A duração vai de 1 a 600 minutos.'; return drawEntry(); }
   }
   if (k === 'care') {
-    if (!S.ck) { S.err = 'Escolha o cuidado.'; return drawEntry(); }
+    if (!S.ck) { S.err = 'Escolha a tarefa.'; return drawEntry(); }
+    if (S.ck === 'ointment' && !S.oint.size) { S.err = 'Marque a pomada que passou.'; return drawEntry(); }
     if (S.ck === 'care' && !S.note.trim()) { S.err = 'Escreva o que foi feito.'; return drawEntry(); }
     if (S.ck === 'burp' && !S.bput && !S.bdone) { S.err = 'Marque pôs para arrotar, arrotou ou os dois.'; return drawEntry(); }
     if (CARE_MIN.includes(S.ck) && S.dmin !== '' && !(dmin >= 1 && dmin <= 600)) { S.err = 'O tempo vai de 1 a 600 minutos.'; return drawEntry(); }
   }
   if (k === 'sleep' && S.dmin !== '' && !(dmin >= 1 && dmin <= 600) && lapShown()) { S.err = 'O tempo no colo vai de 1 a 600 minutos.'; return drawEntry(); }
-  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. Cuidados grava o cuidado escolhido.
+  // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. A tarefa avulsa grava a tarefa escolhida.
   const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
   // Na tela curta, sem mexer no horário, vale o instante do toque (não o minuto cheio): assim um "Dormiu
   // agora" logo depois de um "Acordou" fica depois dele.
@@ -1623,6 +1695,9 @@ async function saveEntry(btn) {
   if (alone || S.edit?.self_settled) ev.self_settled = alone || null;
   if (k === 'care') ev.duration_min = CARE_MIN.includes(S.ck) && S.dmin !== '' ? dmin : null;
   if (ev.kind === 'burp') ev.burp = S.bput && S.bdone ? 'both' : S.bput ? 'put' : 'done';
+  if (ev.kind === 'ointment') { ev.ointments = [...S.oint]; ev.diaper_id = null; }
+  // As pomadas marcadas na Fralda viram um registro de pomada ligado à troca.
+  const oint = k === 'diaper' ? [...S.oint] : null;
   if (ev.kind === 'symptom') {
     ev.symptom = S.sym;
     if (S.sym === 'febre' && S.temp !== '') ev.temp_c = Math.round(temp * 10) / 10;
@@ -1645,22 +1720,36 @@ async function saveEntry(btn) {
   if (k === 'med') for (const f of ['medicine_id', 'med_name', 'med_amount', 'dose_at', 'skipped']) ev[f] = S.edit[f];
   if (S.note.trim()) ev.note = S.note.trim().slice(0, 300);
   busy(btn, true);
-  if (S.edit) { if (await updateEntry(S.edit.id, ev)) { closeSheet(); toast(savedText(ev)); } else busy(btn, false); return; }
+  if (S.edit) {
+    const id = S.edit.id;
+    if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); closeSheet(); toast(savedText(ev)); } else busy(btn, false);
+    return;
+  }
   const fromTimer = S.fromTimer && ev.kind === 'feed' && ev.src === 'breast';
   // Na tela curta do Sono, da Fralda e da Ordenha, o botão confirma enquanto o registro salva.
   const conf = S.compact && (k === 'sleep' || k === 'diaper' || k === 'pump') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
   const row = await addEntry(ev);
   if (!row) { conf?.cancel(); return busy(btn, false); }
+  if (oint?.length) await setDiaperOint(row.id, { ...ev, t: Date.parse(row.at) }, oint);
   await conf?.done;
   if (fromTimer) ftSet(null);
   closeSheet(); toast(savedText(ev, true), () => deleteEntry(row.id));
+}
+
+// Grava, troca ou apaga a pomada ligada a uma troca de fralda: mesmo horário e mesmo quem fez da troca.
+async function setDiaperOint(did, ev, names) {
+  const old = diaperOint(did);
+  if (!names.length) return old ? deleteEntry(old.id) : true;
+  const o = { kind: 'ointment', t: ev.t, ointments: names, diaper_id: did };
+  if ('done_by' in ev) o.done_by = ev.done_by;
+  return old ? updateEntry(old.id, o) : addEntry(o);
 }
 
 /* ---------- últimos 3 dias de um botão ---------- */
 // Tocar no botão (fora do +) mostra hoje, ontem e anteontem daquele registro, do mais novo para o
 // mais antigo, com a hora, o detalhe e quem anotou. Tocar numa linha abre para editar.
 const HIST = { feed: ['Mamadas', ['feed']], sleep: ['Sono', ['sleep', 'wake']], diaper: ['Fraldas', ['diaper']], med: ['Remédios', ['med']],
-               symptom: ['Sintomas', ['symptom', 'vomit']], pump: ['Ordenhas', ['pump']], care: ['Cuidados', Object.keys(CARE)] };
+               symptom: ['Sintomas', ['symptom', 'vomit']], pump: ['Ordenhas', ['pump']], care: ['Tarefas', Object.keys(CARE)] };
 function histSheet(k) {
   if (!st.baby) return babySheet(null);
   S = { mode: 'hist', k }; drawHist(); $('sheet').scrollTop = 0;
@@ -2137,6 +2226,288 @@ async function medAction(a, v, btn) {
   S.err = ''; drawMedForm();
 }
 
+/* ---------- Tarefas: a rotina programada (antes Cuidados, 08/11) ---------- */
+// Prévia aprovada: https://claude.ai/artifact/GDAaPiB7wR9iuqMVHfFT8r. O botão Tarefas abre a lista da
+// rotina logo abaixo do título (sem nada programado, só a capivara). Cada tarefa abre uma tela só dela.
+// Na hora marcada, a tarefa de horário fixo aparece em "Hora da tarefa", no alto da tela inicial, como a
+// dose do remédio; "Vezes por dia" não tem hora e fica só na lista. Marcar vibra como na dose. "Hoje não"
+// tira do alto só neste celular. Anotar pelo botão (tarefa avulsa) também conta: a tarefa do dia é
+// marcada por qualquer registro do mesmo tipo.
+const TASKS = [['sunbath', 'Banho de sol'], ['tummy', 'Tummy time'], ['ointment', 'Pomada para assadura'], ['bath', 'Banho'],
+               ['massage', 'Massagem'], ['nasal', 'Lavagem nasal'], ['care', 'Outra tarefa']];
+const TASK_NAME = Object.fromEntries(TASKS);
+const taskName = r => r.kind === 'care' ? r.name : TASK_NAME[r.kind];
+// "Banho de sol marcado", "Massagem marcada": o feminino de cada tarefa.
+const TASK_FEM = ['massage', 'nasal', 'ointment', 'care'];
+const fem = (k, m, f) => TASK_FEM.includes(k) ? f : m;
+const taskTimes = r => (r.times || []).map(x => x.slice(0, 5)).sort();
+const BACK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+const sameTask = (r, e) => e.kind === r.kind && (r.kind !== 'care' || (e.note || '').trim().toLowerCase() === r.name.trim().toLowerCase());
+// Os horários (ou as vezes) de um dia, cada um com o registro que o marcou, na ordem em que foram feitos.
+// Horário de antes de a tarefa ser programada não conta, como no remédio.
+function taskSlots(r, d0 = startOfDay(Date.now())) {
+  const d1 = addDays(d0, 1), made = Date.parse(r.created_at) || 0;
+  const done = sortedEntries().filter(e => e.t >= d0 && e.t < d1 && sameTask(r, e));
+  const slots = r.schedule === 'fixed' ? taskTimes(r).map(hh => ({ hh, due: atTime(d0, hh) })).filter(x => x.due >= made || d0 > made)
+    : r.schedule === 'count' ? Array.from({ length: r.per_day }, (_, i) => ({ n: i + 1, due: null })) : [];
+  slots.forEach((x, i) => { x.e = done[i] || null; x.id = r.id + '@' + (x.due ?? 'n' + x.n); });
+  return slots;
+}
+// "Hoje não": só neste celular, só naquele horário.
+const OFF = 'cad-tarefa-hoje-nao';
+const offList = () => { try { return JSON.parse(lsGet(OFF)) || []; } catch { return []; } };
+const isOff = id => offList().includes(id);
+const setOff = id => lsSet(OFF, JSON.stringify([...offList().filter(x => +x.split('@')[1] > Date.now() - 2 * DAY), id]));
+
+// Tela inicial: de cada tarefa de horário fixo, o horário mais recente que já chegou, sem marcar.
+function homeTasks() {
+  const now = Date.now(), out = [];
+  for (const r of st.routines) {
+    if (r.schedule !== 'fixed') continue;
+    const x = taskSlots(r).filter(x => x.due <= now).at(-1);
+    if (x && !x.e && !isOff(x.id)) out.push({ r, ...x });
+  }
+  return out.sort((a, b) => a.due - b.due);
+}
+let tasksBusy = 0;
+function renderTasks() {
+  if (tasksBusy) return;
+  const box = $('tasks'), list = homeTasks();
+  box.hidden = !list.length; if (box.hidden) return;
+  box.innerHTML = `<div class="mh"><h3>${ICON.care}<span>Hora da tarefa</span></h3><button class="lnk" data-act="allTasks">Ver todas (${st.routines.length})</button></div>
+    <div class="doses">${list.map(x => `<div class="dose soon can"><button class="ck" role="checkbox" aria-checked="false" data-act="tcheck" data-val="${esc(x.id)}" aria-label="Marcar ${esc(taskName(x.r))} das ${x.hh} como feito">${CHECK}</button><button class="di" data-act="topen" data-val="${esc(x.r.id)}"><span><b>${esc(taskName(x.r))}</b><span class="st"></span></span><span class="tm">${x.hh}</span></button><button class="skipbtn" data-act="tskip" data-val="${esc(x.id)}">Hoje não</button></div>`).join('')}</div>`;
+}
+// Marcar na tela inicial: como a dose, o check na hora, um instante, e a linha encolhe.
+async function markTaskHome(b, off) {
+  const row = b.closest('.dose'); if (!row || row.classList.contains('done')) return;
+  const [rid] = b.dataset.val.split('@'), r = st.routines.find(x => x.id === rid);
+  if (!r) return;
+  if (r.kind === 'ointment' && !off) return taskScreen(r, 'home');   // a pomada pede quais foram passadas
+  tasksBusy++;
+  if (!off) { row.classList.add('ticking', 'done'); row.querySelector('.ck').setAttribute('aria-checked', 'true'); }
+  const [saved] = await Promise.all([off ? (setOff(b.dataset.val), true) : doTask(r), pause(off ? 0 : 550)]);
+  if (saved) {
+    row.classList.add('fade'); await pause(250);
+    row.style.height = row.offsetHeight + 'px'; row.offsetHeight;
+    row.classList.add('shrink'); row.style.height = '0px'; await pause(220);
+    row.remove();
+    if (tasksBusy === 1 && !$('tasks').querySelector('.dose')) { $('tasks').classList.add('gone'); await pause(250); }
+  }
+  tasksBusy--; if (!tasksBusy) { $('tasks').classList.remove('gone'); renderTasks(); taskAlertsLater(); }
+}
+// Marca a tarefa agora: o mesmo registro da tarefa avulsa, com a vibração leve da dose.
+async function doTask(r, ointments) {
+  const ev = { kind: r.kind, t: Date.now() };
+  if (r.kind === 'care') ev.note = r.name;
+  if (r.kind === 'ointment') ev.ointments = ointments;
+  const row = await addEntry(ev);
+  if (!row) return null;
+  buzz();
+  toast(r.kind === 'care' ? 'Tarefa marcada às ' + hm(Date.parse(row.at)) : taskName(r) + fem(r.kind, ' marcado', ' marcada') + ' às ' + hm(Date.parse(row.at)),
+        async () => { if (await deleteEntry(row.id)) redrawTasks(); });
+  return row;
+}
+const redrawTasks = () => { if (S?.mode === 'tasks') drawTasks(); else if (S?.mode === 'task') drawTask(); };
+
+// A folha Tarefas: a lista logo abaixo do título; sem nada programado, a capivara dormindo.
+function tasksSheet() { S = { mode: 'tasks' }; drawTasks(); $('sheet').scrollTop = 0; }
+function taskRow(r) {
+  const slots = taskSlots(r), done = slots.filter(x => x.e).length;
+  let sub, right = '';
+  if (r.schedule === 'fixed') {
+    sub = 'todo dia às ' + taskTimes(r).join(', ').replace(/, ([^,]*)$/, ' e $1');
+    const next = slots.find(x => !x.e);
+    right = !slots.length ? '' : next ? `<span class="tp">${next.hh}</span>` : `<span class="tp" aria-label="feito hoje">${CHECK}</span>`;
+  } else if (r.schedule === 'count') {
+    sub = (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') + ' · ' + done + ' de ' + r.per_day + ' hoje';
+    right = `<span class="dots" aria-hidden="true">${slots.map(x => `<i${x.e ? ' class="f"' : ''}></i>`).join('')}</span>`;
+  } else {
+    const n = (r.items || []).length;
+    sub = 'na troca de fralda · ' + (n === 1 ? '1 pomada' : n + ' pomadas');
+    right = '<span></span>';
+  }
+  return `<button class="trow" data-act="tOpen" data-val="${esc(r.id)}"><span class="ti">${ICON[r.kind]}</span><span><b>${esc(taskName(r))}</b><small>${esc(sub)}</small></span>${right || '<span></span>'}<span class="cv" aria-hidden="true">›</span></button>`;
+}
+const taskAlertKey = id => 'cad-tarefaalert-' + id;
+const taskAlertOn = () => !!st.baby && lsGet(taskAlertKey(st.baby.id)) === '1';
+function drawTasks() {
+  let h = `<div class="grab"></div><div class="shead"><h3>Tarefas<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (!st.routines.length) h += `<div class="lake">${CAPI.replace(' class="capi"', '')}</div><button class="save" data-act="tNew">Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>`;
+  else {
+    h += `<div class="tlist">${st.routines.map(taskRow).join('')}</div>`;
+    if (medNotif) h += `<button class="li tg" role="switch" aria-checked="${taskAlertOn()}" data-act="tAlert"><span>Ativar notificações de tarefas</span><span class="sw${taskAlertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+    h += '<button class="ghost" data-act="tNew">+ Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>'
+      + '<p class="dim">Só a família programa. O Soneca lembra os horários e não cobra o que ficou para depois.</p>';
+  }
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+// Programar: primeiro escolhe qual tarefa; cada uma abre a sua tela. As que já estão na rotina não
+// aparecem (a outra tarefa pode ter várias).
+function pickSheet() {
+  S = { mode: 'taskpick' };
+  const free = TASKS.filter(([k]) => k === 'care' || !st.routines.some(r => r.kind === k));
+  openPanel(`<div class="grab"></div><div class="shead"><h3>Programar tarefa<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>
+    <div class="tlist">${free.map(([k, n]) => `<button class="trow" data-act="tPick" data-val="${k}"><span class="ti">${ICON[k]}</span><span><b>${esc(n)}</b></span><span></span><span class="cv" aria-hidden="true">›</span></button>`).join('')}</div>`);
+  $('sheet').scrollTop = 0;
+}
+// A tela de uma tarefa só (nova ou já programada). from: de onde veio, para o "voltar".
+function taskScreen(r, from, kind, ret) {
+  const k = r ? r.kind : kind;
+  S = { mode: 'task', r: r || null, kind: k, from, ret: ret || null, name: r?.name || '', sched: r?.schedule || (k === 'ointment' ? 'diaper' : 'fixed'),
+        times: r && r.schedule === 'fixed' ? taskTimes(r) : ['09:00'], per: r?.per_day || 3, items: [...(r?.items || [])],
+        oint: new Set(), item: '', addOpen: false, openTime: null, err: '', confirmStop: false };
+  drawTask(); $('sheet').scrollTop = 0;
+}
+function slotRow(r, x) {
+  const name = esc(taskName(r)), when = x.hh || x.n + 'ª vez';
+  if (x.e) return `<div class="dose done"><span class="ck" aria-hidden="true">${CHECK}</span><span class="di"><span><b>${name}</b><span class="st">${esc(fem(r.kind, 'feito', 'feita') + ' por ' + whoGave(x.e) + ' às ' + hm(x.e.t))}</span></span><span class="tm">${when}</span></span></div>`;
+  return `<div class="dose later can"><button class="ck" role="checkbox" aria-checked="false" data-act="tTick" aria-label="Marcar ${name} (${when}) como feito">${CHECK}</button><span class="di"><span><b>${name}</b><span class="st"></span></span><span class="tm">${when}</span></span></div>`;
+}
+function drawTask() {
+  const isNew = !S.r, k = S.kind, b = st.baby;
+  if (!isNew && !st.routines.some(r => r.id === S.r.id)) return tasksSheet();   // tirada da rotina em outro celular
+  const nm = k === 'care' ? (S.name.trim() || TASK_NAME.care) : TASK_NAME[k];
+  let h = `<div class="tbar"><button class="bk" data-act="tBack">${BACK}${S.ret ? 'Fralda' : isNew ? 'Programar tarefa' : 'Tarefas'}</button></div>
+    <div class="thero"><span class="ti">${ICON[k]}</span><div><h3>${esc(nm)}</h3><small>${isNew ? 'Nova tarefa na rotina de ' : 'Tarefa da rotina de '}${esc(b.name)}</small></div></div>`;
+  if (k === 'care') h += `<div><label class="lbl" for="tName">Nome da tarefa</label><input class="field" id="tName" maxlength="40" placeholder="Ex.: Cortar as unhas" value="${esc(S.name)}"></div>`;
+  // Hoje: cada horário (ou cada vez) com o círculo para marcar; a pomada, quais foram passadas agora.
+  if (!isNew && S.r.schedule !== 'diaper' && k !== 'ointment') h += `<div class="sec cs"><h4>Hoje</h4><div class="doses">${taskSlots(S.r).map(x => slotRow(S.r, x)).join('')}</div></div>`;
+  if (!isNew && k === 'ointment' && S.items.length)
+    h += `<div class="sec"><h4>Passou agora</h4><div class="olist">${S.items.map(n => { const on = S.oint.has(n);
+      return `<button class="oline${on ? ' on' : ''}" data-act="tOint" data-val="${esc(n)}" role="checkbox" aria-checked="${on}"><span class="ck">${CHECK}</span><span>${esc(n)}</span></button>`; }).join('')}</div></div>`;
+  h += `<div class="cs"><div class="lbl">Quando</div><div class="seg" style="background:none">${k === 'ointment' ? opt('Na troca de fralda', S.sched === 'diaper', 'tSched', 'diaper') : ''}${opt('Horários fixos', S.sched === 'fixed', 'tSched', 'fixed')}${opt('Vezes por dia', S.sched === 'count', 'tSched', 'count')}</div></div>`;
+  if (S.sched === 'fixed')
+    h += `<div class="cs"><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip${S.openTime === i ? ' on' : ''}"><button class="t" data-act="tOpenTime" data-val="${i}" aria-expanded="${S.openTime === i}"><b id="ttl-${i}">${t}</b></button>${S.times.length > 1 ? `<button data-act="tRmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="tAddTime">+ horário</button>' : ''}</div>${S.openTime != null && S.times[S.openTime] != null ? clockHtml('tt-' + S.openTime, S.times[S.openTime], 'care', 'Horário ' + (S.openTime + 1)) : ''}</div>`
+      + `<div class="note cs">${ICON.care}<span>Na hora marcada, a tarefa aparece em destaque no alto da tela, com a caixinha para marcar. Fica assim até alguém marcar ou o dia acabar.</span></div>`;
+  if (S.sched === 'count') h += `<div><div class="ml"><button data-act="tPer" data-val="-1" aria-label="Menos uma vez">−</button><output>${S.per}</output><em>${S.per === 1 ? 'vez por dia' : 'vezes por dia'}</em><button data-act="tPer" data-val="1" aria-label="Mais uma vez">+</button></div></div>`;
+  if (k === 'ointment') {
+    h += `<div class="sec"><h4>Pomadas de ${esc(b.name)}</h4>${S.items.map((n, i) => `<div class="li"><span>${esc(n)}</span><button data-act="tRmItem" data-val="${i}">Tirar</button></div>`).join('')}`
+      + (S.addOpen || !S.items.length ? `<div class="addrow"><input class="field" id="tItem" maxlength="40" placeholder="Nome da pomada" value="${esc(S.item)}"><button class="small" data-act="tAddItem">Adicionar</button></div>`
+                                      : (S.items.length < 12 ? '<button class="ghost" data-act="tNewItem">+ Nova pomada</button>' : '')) + '</div>';
+    h += '<p class="dim">As pomadas aparecem na Fralda, para marcar na hora da troca.</p>';
+  }
+  // Últimos dias: os registros desta tarefa antes de hoje, do mais novo para o mais antigo.
+  if (!isNew) {
+    const t0 = startOfDay(Date.now()), past = sortedEntries().filter(e => e.t < t0 && e.t >= addDays(t0, -7) && sameTask(S.r, e)).slice(-5).reverse();
+    if (past.length) h += `<div class="sec"><h4>Últimos dias</h4><div class="hist2">${past.map(e => `<div><span>${esc(cap1(whenText(e.t)))}${e.kind === 'ointment' ? ' · ' + esc(e.ointments.join(', ')) : ''}</span><span>${esc(byText(e))}</span></div>`).join('')}</div></div>`;
+  }
+  h += `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save" data-act="tSave">Salvar</button>${isNew ? '' : `<button class="del" data-act="tStop">${S.confirmStop ? 'Toque de novo para tirar da rotina' : 'Tirar da rotina'}</button>`}</div>`;
+  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+}
+const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+async function saveTask(btn) {
+  const k = S.kind, name = S.name.trim();
+  const times = S.sched === 'fixed' ? [...new Set(S.times.filter(Boolean))].sort() : null;
+  if (k === 'care' && !name) { S.err = 'Escreva o nome da tarefa.'; return drawTask(); }
+  if (S.sched === 'fixed' && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawTask(); }
+  if (k === 'ointment' && S.item.trim() && !S.items.includes(S.item.trim())) S.items.push(S.item.trim().slice(0, 40));
+  if (k === 'ointment' && !S.items.length) { S.err = 'Escreva o nome de pelo menos uma pomada.'; return drawTask(); }
+  const row = { name: k === 'care' ? name : null, schedule: S.sched, times, per_day: S.sched === 'count' ? S.per : null,
+                items: k === 'ointment' ? S.items : null };
+  const oint = [...S.oint].filter(n => S.items.includes(n)), r0 = S.r, ret = S.ret, added = S.items;
+  busy(btn, true);
+  const q = r0 ? sb.from('routines').update(row).eq('id', r0.id)
+               : sb.from('routines').insert({ family_id: st.family.id, baby_id: st.baby.id, kind: k, ...row });
+  const { data, error } = await q.select().single();
+  busy(btn, false);
+  if (error) { S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTask(); }
+  st.routines = [...st.routines.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  // Veio da Fralda: volta para a mesma troca, com as pomadas novas já marcadas.
+  if (ret) { S = ret; for (const n of added) S.oint.add(n); drawEntry(); toast('Salvo'); return taskAlertsLater(); }
+  tasksSheet();
+  if (oint.length) await doTask(data, oint); else toast('Salvo');
+  taskAlertsLater();
+}
+// Tirar da rotina não apaga: a tarefa some da lista e do alto, e os registros continuam na linha do tempo.
+async function stopTask(btn) {
+  busy(btn, true);
+  const { error } = await sb.from('routines').update({ stopped_at: new Date().toISOString() }).eq('id', S.r.id);
+  busy(btn, false);
+  if (error) { S.err = 'Não foi possível tirar da rotina. Confira a conexão e tente de novo.'; return drawTask(); }
+  st.routines = st.routines.filter(x => x.id !== S.r.id);
+  tasksSheet(); toast('Tirada da rotina'); taskAlertsLater();
+}
+function taskInput(el) {
+  const id = el.id, v = el.value;
+  if (id === 'tName') { S.name = v; const t = $('sheetIn').querySelector('.thero h3'); if (t) t.textContent = v.trim() || TASK_NAME.care; }
+  else if (id === 'tItem') S.item = v;
+  else if (id.startsWith('tt-')) { S.times[+id.slice(3)] = v; const l = $('ttl-' + id.slice(3)); if (l) l.textContent = v; }
+  if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
+}
+async function taskAction(a, v, btn) {
+  if (S.mode === 'tasks') {
+    if (a === 'tNew') return pickSheet();
+    if (a === 'tLoose') return openEntry('care', null, true);
+    if (a === 'tOpen') { const r = st.routines.find(x => x.id === v); return r && taskScreen(r, 'tasks'); }
+    if (a === 'tAlert') return setTaskAlert(!taskAlertOn());
+    return;
+  }
+  if (S.mode === 'taskpick') { if (a === 'tPick') taskScreen(null, 'pick', v); return; }
+  if (a === 'tBack') { if (S.ret) { S = S.ret; return drawEntry(); } return S.r ? tasksSheet() : pickSheet(); }
+  if (a === 'tSave') return saveTask(btn);
+  if (a === 'tStop') { if (S.confirmStop) return stopTask(btn); S.confirmStop = true; }
+  else if (a === 'tTick') { const r = S.r; await doTask(r); return S?.mode === 'task' && drawTask(); }
+  else if (a === 'tOint') { if (S.oint.has(v)) S.oint.delete(v); else S.oint.add(v); }
+  else if (a === 'tSched') S.sched = v;
+  else if (a === 'tPer') S.per = Math.max(1, Math.min(12, S.per + (+v)));
+  else if (a === 'tAddTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 6) % 24) + ':' + pad(M)); S.openTime = S.times.length - 1; }
+  else if (a === 'tRmTime') { S.times.splice(+v, 1); if (S.openTime === +v) S.openTime = null; else if (S.openTime > +v) S.openTime--; }
+  else if (a === 'tOpenTime') S.openTime = S.openTime === +v ? null : +v;
+  else if (a === 'tNewItem') S.addOpen = true;
+  else if (a === 'tAddItem') { const n = S.item.trim().slice(0, 40); if (n && !S.items.includes(n) && S.items.length < 12) S.items.push(n); S.item = ''; S.addOpen = false; }
+  else if (a === 'tRmItem') { const [n] = S.items.splice(+v, 1); S.oint.delete(n); }
+  S.err = ''; drawTask();
+}
+
+// Aviso na hora da tarefa (só no app, como o do remédio): o celular agenda os horários fixos dos próximos
+// dias que ninguém marcou. Só com a chave ligada (vem desligada), guardada neste celular, por bebê.
+// O iPhone guarda no máximo 64 avisos: 48 do remédio, 6 do lembrete e 10 das tarefas.
+const TASK_ALERT_MAX = 10;
+let taskAlertTimer = 0;
+const taskAlertsLater = () => { if (medNotif) { clearTimeout(taskAlertTimer); taskAlertTimer = setTimeout(taskAlertsSync, 900); } };
+function taskAlertFor(r, x, b) {
+  const title = taskName(r) + ' de ' + b.name, body = 'Está na hora. Toque para marcar quando fizer.';
+  return { id: alertId('t' + x.id + title), title, body, schedule: { at: new Date(x.due), allowWhileIdle: true },
+           channelId: 'tarefa', smallIcon: 'ic_stat_mamada', extra: { baby: b.id, task: x.id, go: 'day' } };
+}
+function taskSlotsFrom(a, z) {
+  const out = [];
+  for (let d0 = startOfDay(a); d0 < z; d0 = addDays(d0, 1))
+    for (const r of st.routines) if (r.schedule === 'fixed') for (const x of taskSlots(r, d0)) if (x.due >= a && x.due < z) out.push({ r, ...x });
+  return out.sort((p, q) => p.due - q.due);
+}
+async function taskAlertsSync() {
+  const b = st.baby; if (!medNotif || !b) return;
+  try {
+    const now = Date.now(), ok = taskAlertOn() && (await medNotif.checkPermissions()).display === 'granted';
+    const want = (ok ? taskSlotsFrom(now + 5000, now + ALERT_DAYS * DAY).filter(x => !x.e && !isOff(x.id)).slice(0, TASK_ALERT_MAX) : []).map(x => taskAlertFor(x.r, x, b));
+    if (ANDROID && want.length) await medNotif.createChannel({ id: 'tarefa', name: 'Hora da tarefa', importance: 4, visibility: 1, vibration: true });
+    const { notifications: old } = await medNotif.getPending();
+    const mine = old.filter(n => n.extra?.baby === b.id && n.extra?.task), keep = new Set(want.map(n => n.id)), have = new Set(mine.map(n => +n.id));
+    const drop = mine.filter(n => !keep.has(+n.id)), add = want.filter(n => !have.has(n.id));
+    if (drop.length) await medNotif.cancel({ notifications: drop.map(n => ({ id: +n.id })) });
+    if (add.length) await medNotif.schedule({ notifications: add });
+    // A tarefa marcada tira da central de notificações o aviso que já tocou, como a dose.
+    const doneIds = new Set(taskSlotsFrom(now - ALERT_DAYS * DAY, now + 5000).filter(x => x.e).map(x => taskAlertFor(x.r, x, b).id));
+    const { notifications: shown = [] } = await medNotif.getDeliveredNotifications();
+    const clear = shown.filter(n => doneIds.has(+n.id));
+    if (clear.length) await medNotif.removeDeliveredNotifications({ notifications: clear });
+  } catch {}
+}
+// Ligar a chave pede a permissão de avisos na primeira vez. Negada, a chave volta a ficar desligada.
+async function setTaskAlert(on) {
+  if (!medNotif || !st.baby) return;
+  const k = taskAlertKey(st.baby.id);
+  if (on) {
+    let p = await medNotif.checkPermissions().catch(() => ({}));
+    if (p.display !== 'granted') p = await medNotif.requestPermissions().catch(() => ({}));
+    if (p.display !== 'granted') { lsSet(k, '0'); toast('Permita as notificações do Soneca nas configurações do celular.'); return S?.mode === 'tasks' && drawTasks(); }
+  }
+  lsSet(k, on ? '1' : '0');
+  if (S?.mode === 'tasks') drawTasks();
+  taskAlertsSync();
+}
+
 /* ---------- aba do bebê ---------- */
 // Peso e comprimento (sobre as curvas da OMS), remédios programados, marcos e, no fim, nome e
 // nascimento. Só guarda o que a família anota; as curvas mostram as linhas, sem avaliar o bebê.
@@ -2538,7 +2909,7 @@ async function delBaby(btn) {
   st.babies = st.babies.filter(x => x.id !== id);
   if (st.baby?.id === id) {
     if (st.babies.length) await selectBaby(st.babies[0].id);
-    else { st.baby = null; st.entries = new Map(); st.meds = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = []; }
+    else { st.baby = null; st.entries = new Map(); st.meds = []; st.routines = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = []; }
   }
   closeSheet(); toast('Apagado');
 }
@@ -2564,7 +2935,7 @@ async function saveBaby(btn) {
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
   // Outro bebê: nada do anterior pode aparecer com o nome deste.
-  st.entries = new Map(); st.meds = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = [];
+  st.entries = new Map(); st.meds = []; st.routines = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = [];
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render();
 }
 function renameSheet() {
@@ -2856,6 +3227,7 @@ $('sheetIn').addEventListener('input', e => {
     return;
   }
   if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
+  if (S?.mode === 'task') return taskInput(e.target);
   if (S?.mode === 'weight' || S?.mode === 'milestone') return logInput(e.target);
   if (S?.mode === 'question') return questionInput(e.target);
   if (S?.mode !== 'entry') return;
@@ -2885,6 +3257,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
+  if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);
   if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
   if (S.mode === 'question' || S.mode === 'answers') return questionAction(a, v, b);
   if (S.mode === 'report') return reportAction(a, v);
@@ -2900,6 +3273,9 @@ $('sheetIn').addEventListener('click', async e => {
   else if (a === 'ck') { S.ck = v; if (!CARE_MIN.includes(v)) S.dmin = ''; }
   else if (a === 'dchip') S.dmin = +S.dmin === +v ? '' : v;
   else if (a === 'bput' || a === 'bdone') S[a] = !S[a];
+  else if (a === 'oint') { if (S.oint.has(v)) S.oint.delete(v); else S.oint.add(v); }
+  // O aviso abre a tela da Pomada; a Fralda espera, com o que já foi marcado, e volta depois.
+  else if (a === 'ointCfg') return taskScreen(null, 'diaper', 'ointment', S);
   else if (a === 'by') S.by = S.by === v ? null : v;
   else if (a === 'alone') { S.alone = !S.alone; if (S.alone) { S.dmin = ''; S.by = null; } }
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
@@ -2995,6 +3371,14 @@ $('meds').addEventListener('click', e => {
   if (b.dataset.act === 'skipDose') return markHome(b, true);
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
+});
+$('tasks').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, v = b.dataset.val;
+  if (a === 'tcheck') return markTaskHome(b);
+  if (a === 'tskip') return markTaskHome(b, true);
+  if (a === 'allTasks') return tasksSheet();
+  if (a === 'topen') { const r = st.routines.find(x => x.id === v); if (r) taskScreen(r, 'home'); }
 });
 $('babyBtn').onclick = () => st.baby ? goTab('baby') : babySheet(null);
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
