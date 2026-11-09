@@ -778,22 +778,59 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .nt-defs b{font-weight:500;color:var(--ink)}
 .nt-few{margin:0;background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.4}
 
-/* Página das lojas (inicio/): soneca.app.br sem o app, só com os selos da App Store e do Google Play */
-.ln{max-width:440px;margin:0 auto;min-height:calc(100vh - 52px);display:flex;flex-direction:column;gap:18px;padding-top:max(32px,env(safe-area-inset-top,0px))}
+/* Página das lojas (inicio/): soneca.app.br. Celular: uma coluna. Computador: topo e apresentação em duas. */
+.ln{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;padding-top:max(12px,env(safe-area-inset-top,0px))}
 .ln p{margin:0}
-.ln h1.brand{display:flex;align-items:center;gap:12px;margin:0;font-family:var(--display);font-weight:500;font-size:36px;letter-spacing:-.02em}
-.ln-tag{font-size:19px;line-height:1.35}
+.ln h1,.ln h2{font-family:var(--display);font-weight:500;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.ln-brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:500;font-size:22px}
+.ln-brand .capi{width:46px;height:27px}
+.ln-hero{display:grid;gap:28px;align-items:center;padding-block:28px 56px}
+.ln-copy{display:flex;flex-direction:column;gap:22px;min-width:0}
+.ln-hero h1{font-size:clamp(28px,6.4vw,42px);line-height:1.15}
+.ln-desc{font-size:18px;color:var(--muted);margin-top:14px!important;max-width:34ch}
 .ln-inv{background:var(--feed);color:var(--ink);border-radius:18px;padding:16px}
 .ln-invt{font-family:var(--display);font-weight:500;font-size:18px}
 .ln-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:17px}
-.ln-badges{display:flex;flex-wrap:wrap;gap:12px}
+.ln-badges{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .ln-badge{display:block;border-radius:10px;line-height:0}
-.ln-badge img{height:50px;width:auto}
-.ln-badge .ln-day{display:var(--badge-day)}.ln-badge .ln-night{display:var(--badge-night)}
+.ln-badge img{height:46px;width:auto}
 .ln-note{font-size:15px;color:var(--muted)}
-.ln-box{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px}
-.ln-boxt{font-family:var(--display);font-weight:500;font-size:17px}
-.ln .legal{margin-top:auto}
+.ln-phone{justify-self:center;width:min(300px,78vw);border-radius:36px;padding:8px;background:var(--surface);border:1px solid var(--line)}
+.ln-phone img{display:block;width:100%;height:auto;border-radius:28px}
+.ln-sec{padding-block:8px 64px}
+.ln-sech{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:18px}
+.ln-sec h2{font-size:clamp(24px,5vw,32px);line-height:1.2}
+.ln-arrows{display:none;gap:8px;flex:none}
+.ln-arrows button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center}
+.ln-arrows svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ln-track{display:grid;grid-auto-flow:column;grid-auto-columns:min(78%,340px);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding-bottom:6px}
+.ln-track::-webkit-scrollbar{display:none}
+.ln-card{scroll-snap-align:start;border-radius:22px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.ln-card img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover}
+.ln-dots{display:flex;justify-content:center;gap:7px;margin-top:14px}
+.ln-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.ln-dots i.on{background:var(--muted)}
+.ln-video{max-width:440px;margin:0 auto;border-radius:24px;overflow:hidden;border:1px solid var(--line);background:var(--surface);line-height:0}
+.ln-video video{display:block;width:100%;height:auto;aspect-ratio:4/5}
+.ln-me{display:grid;gap:24px;border-top:1px solid var(--line);padding-top:48px}
+.ln-me>img{display:block;width:100%;max-width:420px;height:auto;aspect-ratio:1/1;object-fit:cover;object-position:50% 20%;border-radius:20px}
+.ln-me>div{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ln-me h2{font-size:28px}
+.ln-me p{font-size:17px;line-height:1.55;max-width:60ch}
+.ln-me .ln-badges{margin-top:8px}
+.ln-sig{margin-top:8px!important;font-size:15px;color:var(--muted)}
+.ln-sig b{display:block;color:var(--ink);font-weight:500;font-size:16px}
+.ln-foot{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)}
+.ln-foot .legal{justify-content:flex-start;margin-top:6px}
+@media (min-width:760px){
+  .ln-hero{grid-template-columns:1.1fr .9fr;gap:48px;padding-block:44px 80px}
+  .ln-arrows{display:flex}
+}
+@media (min-width:700px){
+  .ln-me{grid-template-columns:300px 1fr;gap:44px;align-items:start}
+  .ln-me>img{aspect-ratio:4/5;object-position:50% 50%}
+  .ln-me h2{font-size:34px}
+}
 /* Aceites: o cartão e a caixinha */
 .consent{background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
 .consent b{font-weight:500}
