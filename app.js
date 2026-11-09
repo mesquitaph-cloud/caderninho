@@ -3547,7 +3547,7 @@ addEventListener('touchend', async () => {
   document.documentElement.style.setProperty('--pk', 1);
   const t0 = Date.now();
   try { await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render(); } catch {}
-  await wait(Math.max(0, 1100 - (Date.now() - t0)));   // o bastante para ver a capivara dar uma volta
+  await wait(Math.max(0, 2400 - (Date.now() - t0)));   // o bastante para ver a capivara dar uma volta
   await pullHide(); pulling = false;
 });
 addEventListener('touchcancel', () => { if (pull) { pull = null; pullHide(); } });
