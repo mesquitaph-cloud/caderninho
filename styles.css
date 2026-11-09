@@ -836,7 +836,12 @@ body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 au
 @media (prefers-reduced-motion:no-preference){.rb{transition:transform .12s cubic-bezier(.3,.7,.2,1)}.rb:active{transform:scale(.93)}}
 /* A faixa do sono ou da mamada: sai do botão dela, ligada por uma emenda curva */
 .ext{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;padding:12px 12px 12px 14px;min-height:84px}
-.ext .capi{width:84px;height:auto;flex:none;fill:none;stroke:currentColor;stroke-width:2.3px;stroke-linecap:round;stroke-linejoin:round}
+.ext .capi{width:84px;height:auto;flex:none;fill:none;stroke:currentColor;stroke-width:2.3px;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+/* Os dois z da capivara dormindo, acima da cabeça (fora da caixa do desenho): ciclo de 3,2 s */
+.ext .z{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.ext .z1{animation:z1 3.2s ease-in-out infinite}.ext .z2{animation:z2 3.2s ease-in-out infinite}}
+@keyframes z1{0%{opacity:0;transform:translate(0,3px)}18%{opacity:1;transform:translate(0,0)}62%{opacity:1;transform:translate(1px,-1px)}80%,100%{opacity:0;transform:translate(2px,-3px)}}
+@keyframes z2{0%,22%{opacity:0;transform:translate(0,3px)}40%{opacity:1;transform:translate(0,0)}66%{opacity:1;transform:translate(1px,-1px)}84%,100%{opacity:0;transform:translate(2px,-3px)}}
 .ext .fi{width:84px;flex:none;display:grid;place-items:center}.ext .fi svg{width:44px;height:44px}
 .ext .tx{flex:none;display:flex;flex-direction:column;gap:1px;min-width:0;white-space:nowrap}
 .ext small{font-size:13px}.ext small.sd{opacity:.85}

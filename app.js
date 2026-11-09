@@ -725,6 +725,10 @@ addEventListener('resize', stickLast);
 // quem entrou na família a partir de BV_DESDE: quem já usava o Soneca não vê nada novo.
 // Os testes (testes/cenarios.js) mudam a data por window.testeBvDesde.
 const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
+// Na faixa do sono, a mesma capivara com dois z acima da cabeça: o pequeno aparece, depois o grande
+// (em cima), e os dois somem juntos (prévia de 08/11). Parados para quem pede menos movimento.
+const CAPI_Z = CAPI.replace('</svg>', '<path class="z z1" vector-effect="non-scaling-stroke" d="M93 4H99L93 10H99"/>'
+  + '<path class="z z2" vector-effect="non-scaling-stroke" d="M103 -14H112L103 -5H112"/></svg>');
 const bvKey = () => 'cad-bv-' + st.family.id;
 const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
 const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
@@ -875,7 +879,7 @@ function closePop() {
 // terminar, estreita e desce de volta para dentro dele. Com as duas ao mesmo tempo, fica a da mamada.
 let stripK = null, stripBusy = false, stripReady = false;
 function stripHtml(k, open, now) {
-  if (k === 'sleep') return `<div class="ext k-sleep">${CAPI}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button></div>`;
+  if (k === 'sleep') return `<div class="ext k-sleep">${CAPI_Z}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button></div>`;
   const t = ftGet();
   return `<div class="ext k-feed" data-strip="open" role="button" tabindex="0" aria-label="Abrir o cronômetro da mamada"><span class="fi">${ICON.feed}</span><span class="tx"><small>${t.run ? 'Mamando há' : 'Mamada pausada'}</small><span class="t" id="stripT">${dur(ftTotal(t, now))}</span><small class="sd">${t.run ? 'no ' + FT_SIDE[t.run] : 'começou às ' + hhmm(t.start)}</small></span><button class="spill" data-strip="end">Terminar</button></div>`;
 }
