@@ -6,6 +6,12 @@ const CEN = (() => {
 })();
 console.info('[teste] cenário:', CEN);
 
+// Ajudantes dos cenários: a hora de um registro, "d dias atrás às hh:mm" e apagar os registros que
+// passam num teste.
+const at = e => Date.parse(e.at);
+const dia = (d, hh = 0, mm = 0) => sod(NOW) - d * DAY + hh * 36e5 + mm * MIN;
+const rmWhere = ok => { for (let i = entries.length - 1; i >= 0; i--) if (ok(entries[i])) entries.splice(i, 1); };
+
 // "Apagar" de verdade (no fake-sb.js não apaga nada).
 const thenOrig = Q.prototype.then;
 Q.prototype.then = function (ok, ko) {
@@ -51,27 +57,31 @@ if (CEN === 'nascimento' || CEN === 'sem-nascimento') {
   if (CEN === 'sem-nascimento') T.babies[0].birth_date = null;
 }
 
+// "dorme-muito": a foto do guia "Recém-nascido dorme muito" do site (07/11). Mamou há 3h10, trocou a
+// fralda há 2h50 e dorme há 2h40, sem nada depois.
+if (CEN === 'dorme-muito') {
+  rmWhere(e => at(e) >= NOW - 200 * MIN);
+  add(NOW - 190 * MIN, 'feed', { src: 'breast', side: 'left', left_min: 15, right_min: null });
+  add(NOW - 170 * MIN, 'diaper', { pee: true });
+  add(NOW - 160 * MIN, 'sleep');
+}
+
 let ME = U.me;
 const RPC = {};
 
 if (CEN === 'sono-aberto') {
   // Some todo sono e despertar dos últimos 6 dias; fica um "Dormiu" às 20h50 de 6 dias atrás, sem "Acordou".
-  const from = sod(NOW) - 6 * DAY;
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const e = entries[i];
-    if ((e.kind === 'sleep' || e.kind === 'wake') && Date.parse(e.at) >= from) entries.splice(i, 1);
-  }
+  const from = dia(6);
+  rmWhere(e => (e.kind === 'sleep' || e.kind === 'wake') && at(e) >= from);
   add(from + 20 * 36e5 + 50 * MIN, 'sleep');
 }
 
 // "noites": noites variadas para o cartão "Como foram as noites" da aba Mês. Troca todo sono que começa
 // entre 18h e 7h por uma noite de um de três jeitos: longa (6 a 8 h seguidas), com 3 despertares ou comum.
-if (CEN === 'noites') {
-  const hr = t => new Date(t).getHours();
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const e = entries[i];
-    if ((e.kind === 'sleep' || e.kind === 'wake') && (hr(Date.parse(e.at)) >= 18 || hr(Date.parse(e.at)) < 7)) entries.splice(i, 1);
-  }
+// "noites-foto" é a base da foto do guia "Regressão do sono" (mais abaixo).
+if (CEN === 'noites' || CEN === 'noites-foto') {
+  const hr = e => new Date(at(e)).getHours();
+  rmWhere(e => (e.kind === 'sleep' || e.kind === 'wake') && (hr(e) >= 18 || hr(e) < 7));
   for (let d = 40; d >= 1; d--) {
     const base = sod(NOW) - d * DAY, bed = base + 19 * 36e5 + Math.round(rnd() * 120) * MIN, up = base + DAY + 6.5 * 36e5;
     const r = rnd(), cuts = r < .3 ? [bed + (6 + rnd() * 2) * 36e5] : r < .55 ? [base + DAY + 30 * MIN, base + DAY + 150 * MIN, base + DAY + 270 * MIN] : [base + DAY + 120 * MIN];
@@ -90,6 +100,53 @@ if (CEN === 'noites') {
     }
     add(s, 'sleep'); add(up, 'wake');
   }
+}
+
+// "mamadeira": todas as mamadas na mamadeira de fórmula, para a foto do guia "Quantos ml" (07/11). Com
+// ?foto=1 sobram ~5 por dia; de 140 a 170 ml dá ~800 ml/dia, perto da média de 864 ml/dia aos 3-4 meses
+// num estudo japonês com 578 bebês só de fórmula (Milk Science, J-STAGE) e de 120 a 150 ml/kg/dia (NHMRC).
+if (CEN === 'mamadeira') {
+  for (const e of entries) if (e.kind === 'feed') {
+    e.src = 'bottle'; e.ml = pick([140, 150, 150, 160, 170]);
+    delete e.side; delete e.left_min; delete e.right_min;
+  }
+}
+
+// "?foto=1" (com qualquer cenário): limpa os gráficos para as fotos dos guias do site (07/11). Tira
+// mamada e fralda que caem no meio de um sono e uma em cada três das que sobram (fralda com cocô fica).
+const FOTO = (() => {
+  if (new URLSearchParams(location.search).get('foto')) sessionStorage.setItem('teste-foto', '1');
+  return sessionStorage.getItem('teste-foto') === '1';
+})();
+if (FOTO) {
+  const evs = entries.slice().sort((a, b) => at(a) - at(b)), naps = [];
+  let s0 = null;
+  for (const e of evs) {
+    if (e.kind === 'sleep' && s0 === null) s0 = at(e);
+    else if (e.kind === 'wake' && s0 !== null) { naps.push([s0, at(e)]); s0 = null; }
+  }
+  if (s0 !== null) naps.push([s0, NOW]);
+  const inSleep = t => naps.some(([a, z]) => t > a + MIN && t < z - MIN);
+  let n = 0;
+  const drop = new Set(evs.filter(e => (e.kind === 'feed' || e.kind === 'diaper') && (inSleep(at(e)) || (!e.poo && ++n % 3 === 0))));
+  rmWhere(e => drop.has(e));
+  window.testeRegistros = entries;
+}
+
+// "noites-foto": a foto do guia "Regressão do sono" (Patrick, 07/11), tirada com ?foto=1. As noites do
+// "noites", com despertares a mais em três delas. Na foto de 07/11, dia(3) foi quarta e dia(6), domingo.
+if (CEN === 'noites-foto') {
+  const rm = (a, z, kinds) => rmWhere(e => at(e) >= a && at(e) <= z && kinds.includes(e.kind));
+  const wake = (t, awake, feed) => { add(t, 'wake'); if (feed) add(t + 5 * MIN, 'feed', { src: 'bottle', ml: 90 }); add(t + awake * MIN, 'sleep'); };
+  // Hoje: na madrugada, um despertar com mamada e outro por volta das 2h, 50 min acordada sem mamar.
+  rm(dia(0, 0), dia(0, 6), ['sleep', 'wake', 'feed']);
+  wake(dia(0, 0, 40), 20, true); wake(dia(0, 2, 10), 50, false);
+  // Quarta: mais um despertar sem mamada na madrugada e dois entre 18h e 0h.
+  wake(dia(3, 0, 50), 25, false); wake(dia(3, 21, 30), 20, false); wake(dia(3, 23, 10), 25, false);
+  // Domingo: um despertar à 0h com mamada e um às 20h (a hora de dormir passa para 19h20).
+  wake(dia(6, 0, 0), 25, true);
+  rm(dia(6, 19), dia(6, 21), ['sleep', 'feed']);
+  add(dia(6, 19, 5), 'feed', { src: 'bottle', ml: 120 }); add(dia(6, 19, 20), 'sleep'); wake(dia(6, 20, 0), 20, false);
 }
 
 // "app-convite": finge o app do iPhone aberto por um link de convite (Universal Link), sem passar
@@ -216,18 +273,46 @@ if (CEN === 'app-politica') {
 if (CEN === 'quem-fez') {
   let i = 0;
   for (const e of entries) {
-    if (Date.parse(e.at) < sod(NOW) - 30 * DAY) continue;
+    if (at(e) < dia(30)) continue;
     if (e.kind === 'sleep' && i++ % 4 === 0) e.self_settled = true;
     if (e.author_id === U.p && (e.kind === 'diaper' || (e.kind === 'feed' && e.src === 'bottle'))) e.done_by = U.me;
   }
 }
 
+// "fraldas": a foto do guia "Quantas fraldas por dia" do site (08/11). Nos últimos 7 dias, de 6 a 8
+// fraldas por dia, de 1 a 3 com cocô (nos dados de exemplo são sempre 8). Hoje fica como está.
+if (CEN === 'fraldas' || CEN === 'sem-coco') {
+  const alvo = [null, [7, 2], [6, 1], [8, 3], [6, 2], [7, 1], [8, 2], [7, 3]];
+  for (let d = 1; d < alvo.length; d++) {
+    const a = dia(d), [n, poos] = alvo[d];
+    const ds = entries.filter(e => e.kind === 'diaper' && at(e) >= a && at(e) < a + DAY).sort((x, y) => at(x) - at(y));
+    // Tira as que sobram espalhadas pelo dia; o cocô fica em fraldas espaçadas.
+    const fora = ds.length - n, sai = new Set();
+    for (let i = 0; i < fora; i++) sai.add(ds[Math.floor((i + .5) * ds.length / fora)]);
+    rmWhere(e => sai.has(e));
+    const ficam = ds.filter(e => !sai.has(e));
+    ficam.forEach((e, i) => {
+      const poo = Math.floor(i * poos / ficam.length) !== Math.floor((i + 1) * poos / ficam.length);
+      if (poo) { e.poo = true; e.poo_size = e.poo_size || 'medio'; } else { delete e.poo; delete e.poo_size; }
+    });
+  }
+}
+
+// "sem-coco": a foto do guia "Bebê não faz cocô há X dias" do site (08/11). O mesmo do "fraldas", mas
+// sem cocô de 5 dias atrás, às 6h, até 2 dias atrás, às 9h40, quando vem um cocô grande (só xixi nesse
+// meio). Na foto de 08/11, o intervalo vai de seg 2, 20:37, a sex 6, 09:40: 3 dias e 13h.
+if (CEN === 'sem-coco') {
+  const a = dia(5, 6), z = dia(2, 9, 40);
+  for (const e of entries) if (e.kind === 'diaper' && at(e) > a && at(e) < z + 4 * 36e5) { delete e.poo; delete e.poo_size; }
+  add(z, 'diaper', { pee: true, poo: true, poo_size: 'grande' });
+}
+
 // "carrossel" (08/11): fotos do carrossel da página inicial. A Helena acordada há pouco mais de uma hora
 // (para "Acordou há" no alto da tela) e três dúvidas para a consulta. Abrir com o relógio às 13h.
 if (CEN === 'carrossel') {
-  const t = e => Date.parse(e.at), sl = entries.filter(e => e.kind === 'sleep').pop(), wk = entries.filter(e => e.kind === 'wake').pop();
-  if (sl && (!wk || t(sl) > t(wk))) add(Math.max(t(sl) + 60 * MIN, NOW - 72 * MIN), 'wake');
-  entries.sort((a, b) => t(a) - t(b));
+  const sl = entries.filter(e => e.kind === 'sleep').pop(), wk = entries.filter(e => e.kind === 'wake').pop();
+  if (sl && (!wk || at(sl) > at(wk))) add(Math.max(at(sl) + 60 * MIN, NOW - 72 * MIN), 'wake');
+  entries.sort((a, b) => at(a) - at(b));
   T.questions = [
     { id: 'qc1', family_id: F, baby_id: B, body: 'É normal ficar 3 dias sem cocô?', asked_on: null, answer: null, created_at: new Date(NOW - 6 * DAY).toISOString() },
     { id: 'qc2', family_id: F, baby_id: B, body: 'Os cochilos da tarde estão curtos, é normal?', asked_on: null, answer: null, created_at: new Date(NOW - 4 * DAY).toISOString() },

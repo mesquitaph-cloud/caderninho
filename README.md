@@ -355,6 +355,20 @@ mesmos, porque o texto cita os itens pelo número.
   comprimento em "Anotar medida", com a curva da OMS (perímetro cefálico por idade, 0 a 5 anos, menina
   e menino) na aba do bebê e no relatório para o pediatra. A decidir (com prévia): se vira uma terceira
   aba ao lado de Peso e Comprimento; e a coluna nova no banco (SQL novo).
+- **51 · Classificação do cocô: cor ou foto** (Patrick, 07/11): na Fralda com cocô, anotar a cor
+  (por exemplo amarelo, verde, marrom, outra) ou tirar uma foto, para a família mostrar ao pediatra
+  quando foi cada cocô e como estava. Nasceu do guia "Cor do cocô" do site (item 48). A decidir (com
+  prévia): cor, foto ou as duas; quais cores e com que nomes; se a cor aparece no painel da semana e
+  no relatório. A foto pesa mais: guarda imagem de saúde do bebê (LGPD, Política de Privacidade),
+  ocupa espaço no Supabase e pede permissão da câmera (com prévia da janela do sistema). Conferir na
+  Caderneta da Criança do Ministério da Saúde se ela tem uma escala de cor das fezes (lembrança, não
+  conferido) e, se tiver, usar as mesmas cores. Coluna nova no banco (SQL novo).
+- **52 · Cuidados que conversam com a Fralda** (Patrick, 08/11): se a família salva em Cuidados algo
+  que é da troca de fralda (por exemplo uma pomada), essa opção passa a aparecer também na Fralda, para
+  marcar na hora da troca sem abrir Cuidados depois. A decidir (com prévia): como o app sabe que o
+  cuidado é de fralda (a pessoa marca ao criar, ou uma lista de nomes como pomada e creme); onde aparece
+  na Fralda (botão de marcar ou lista); se conta como um cuidado no resumo ou só como detalhe da fralda;
+  e se precisa de coluna nova no banco (SQL novo).
 
 **Marketing**
 
@@ -1400,6 +1414,15 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   se cresce dentro delas, quais números entram e o período (7 dias, 30 dias, desde o nascimento).
   Mesmo cuidado do cartão "como está o bebê": mostrar o que foi anotado, sem "normal" ou "abaixo do
   esperado". Prévia num artefato antes de programar.
+- **Capivara que muda com a atividade** (Patrick, 08/11): a capivara do logo ganha versões para cada
+  momento da rotina. Exemplos: no "Acordou", ela abre os olhos; dormindo, saem "zzz". A decidir: quais
+  atividades ganham versão (só sono ou também mamada e fralda), se é desenho parado ou animação curta
+  (com animação desligada para quem pede menos movimento no celular) e onde aparece. Segue a regra da
+  capivara: só nas telas de rotina, nunca em febre, sintomas, remédios ou relatório. Prévia antes.
+- **Painel de quem desistiu** (Patrick, 08/11): no funil de novos usuários, olhar quem não ficou até
+  1 semana e quais ações usou e quais nunca usou (botões de registro, convite, aba Semana, relatório
+  etc.), para achar onde a pessoa trava. Só números agregados, sem nome nem e-mail. Limite de hoje: só
+  sabemos o que a pessoa anotou, não o que ela abriu ou olhou (ver "Guardar última vez que abriu o app").
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 

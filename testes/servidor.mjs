@@ -5,6 +5,7 @@
 //   sono-aberto   um "Dormiu" de 6 dias atrás sem "Acordou" (o caso do Bruno, 17/10)
 //   sem-familia   conta nova sem família, com um convite válido para a Família Andrade (o caso da Ca)
 //   noites        noites variadas (longas, com 3 despertares e comuns) para o cartão da aba Mês
+//   noites-foto   as mesmas noites, com despertares a mais em três delas (foto do guia "Regressão do sono", com &foto=1)
 //   nascimento    rotina desde o nascimento (97 dias), para a aba Mês voltar até julho
 //   sem-nascimento   o mesmo, sem a data de nascimento anotada
 //   quem-fez      registros que outra pessoa fez e sonos em que a Helena pegou no sono sozinha
