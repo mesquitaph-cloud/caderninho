@@ -812,16 +812,26 @@ a.li{color:inherit;text-decoration:none}
 /* O cartão do bebê fica preso no alto, com os cantos de baixo arredondados */
 .hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:18px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
 body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
-/* A data com as setas à esquerda e Dia | Semana | Mês, pequeno, à direita */
+/* A data com as setas e o "Hoje" à esquerda e Dia | Semana | Mês, pequeno, à direita, sempre numa
+   linha (08/11, prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). As datas curtas são de util.js. */
 #paneHome{gap:10px}
-#paneHome .daynav{flex-wrap:wrap;gap:6px}
+#paneHome .daynav{flex-wrap:nowrap;gap:6px}
 #paneHome .daynav h2{display:flex;line-height:1}
 #paneHome .daynav .mid{gap:0;min-width:0}
-#paneHome .daynav .arr{width:28px;height:30px}
-#paneHome .dtitle{font-size:15px;padding:6px 5px;gap:5px}
-#paneHome .dtitle svg{width:16px;height:16px}
-#paneHome .views{display:flex;margin:0 0 0 auto;gap:2px;padding:3px;border-radius:12px}
-#paneHome .views button{padding:5px 8px;border-radius:9px;font-size:13px}
+#paneHome .daynav .arr{width:24px;height:30px;flex:none}
+#paneHome .dtitle{font-size:14px;padding:6px 4px;white-space:nowrap}
+#paneHome .daynav .today{font-size:13px;padding:4px 9px;margin:0 2px;white-space:nowrap}
+#paneHome .views{display:flex;flex:none;margin:0 0 0 auto;gap:2px;padding:3px;border-radius:12px}
+#paneHome .views button{padding:5px 6px;border-radius:9px;font-size:13px}
+/* Celular estreito (iPhone SE e mini, Android de 360px): aperta um pouco mais, para sobrar folga
+   com as datas mais compridas ("Qua, 28 out", "30/10 a 5/11") */
+@media (max-width:400px){
+  #paneHome .daynav{gap:4px}
+  #paneHome .daynav .arr{width:22px}
+  #paneHome .dtitle{padding:6px 3px}
+  #paneHome .daynav .today{padding:4px 7px;margin:0 1px}
+  #paneHome .views button{padding:5px 4px}
+}
 #paneHome{padding-bottom:calc(var(--dockh,96px) + 10px)}
 /* Botões de registro, presos em cima das abas, numa linha só */
 .dock{position:fixed;left:0;right:0;bottom:var(--tabh,64px);z-index:4;background:var(--bg);background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px 12px}

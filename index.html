@@ -151,13 +151,14 @@
   <div class="bvslot" id="bvTop"></div>
   <div class="bvslot" id="bvMid"></div>
 
-  <!-- A data com as setas, e Dia | Semana | Mês ao lado -->
+  <!-- A data com as setas, o "Hoje" colado nela, e Dia | Semana | Mês ao lado: tudo numa linha
+       (Patrick, 08/11; prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). Tocar na data abre o calendário. -->
   <div class="daynav">
     <div class="mid">
       <button class="arr" id="prevDay" aria-label="Dia anterior"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <h2><button class="dtitle" id="dayTitle"><span id="dayText">Hoje</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></button></h2>
-      <button class="arr" id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <h2><button class="dtitle" id="dayTitle"><span id="dayText">Hoje</span></button></h2>
       <button class="today" id="toToday" hidden>Hoje</button>
+      <button class="arr" id="nextDay" aria-label="Próximo dia"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
     <div class="views" role="tablist" aria-label="Ver por">
       <button role="tab" id="tabDay" aria-selected="true" aria-controls="dayView" data-view="day">Dia</button>

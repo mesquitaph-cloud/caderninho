@@ -1,6 +1,6 @@
 import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
-import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, ageText, fullDate, shortDate,
+import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, navDayTitle, navRangeTitle, navMonthTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE, aloneText,
          LONG_SLEEP, localDate, reduceMotion, CAPI } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
@@ -618,7 +618,7 @@ function renderHome() {
     st.month = clampMonth(st.month || now);
     const d = new Date(st.month), end = monthStart(st.month, 1), partial = end > now;
     const title = MESES_L[d.getMonth()] + ' ' + d.getFullYear();
-    $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
+    $('dayText').textContent = navMonthTitle(st.month); $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
     $('nextDay').disabled = st.month >= curMonth(); $('toToday').hidden = st.month >= curMonth(); $('prevDay').disabled = st.month <= firstMonth();
     if (!b) { st.shareText = ''; $('monthView').innerHTML = '<div class="empty">Cadastre um bebê para começar.</div>'; return; }
     // Mês de mais de 60 dias atrás: os registros dele ainda estão chegando.
@@ -641,7 +641,7 @@ function renderHome() {
     // Os 7 dias ficam dentro do que o app carrega.
     st.weekEnd = Math.min(today, Math.max(st.weekEnd, addDays(firstDay(), 6)));
     const title = rangeTitle(addDays(st.weekEnd, -6), st.weekEnd);
-    $('dayText').textContent = title; $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
+    $('dayText').textContent = navRangeTitle(addDays(st.weekEnd, -6), st.weekEnd); $('dayTitle').setAttribute('aria-label', title + '. Escolher no calendário');
     $('nextDay').disabled = $('toToday').hidden = st.weekEnd >= today;
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
@@ -659,7 +659,7 @@ function renderHome() {
   }
 
   const d0 = st.viewDay, d1 = addDays(d0, 1);
-  $('dayText').textContent = dayTitle(d0); $('dayTitle').setAttribute('aria-label', dayTitle(d0) + '. Escolher no calendário');
+  $('dayText').textContent = navDayTitle(d0); $('dayTitle').setAttribute('aria-label', dayTitle(d0) + '. Escolher no calendário');
   $('nextDay').disabled = $('toToday').hidden = d0 >= today;
   $('prevDay').disabled = d0 <= firstDay();
 

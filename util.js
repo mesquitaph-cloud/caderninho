@@ -69,6 +69,26 @@ export function dayTitle(d0) {
   return nome + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
 }
 
+// As datas curtas da barra da tela inicial, para caber ao lado de Dia | Semana | Mês e do "Hoje"
+// numa linha só (Patrick, 08/11; prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug).
+// O leitor de tela continua lendo a data inteira (dayTitle, rangeTitle, mês por extenso).
+// "Hoje, 8 nov" ou "Sáb, 7 nov".
+export function navDayTitle(d0) {
+  const dt = new Date(d0);
+  return (d0 === startOfDay(Date.now()) ? 'Hoje' : DIAS[dt.getDay()]) + ', ' + dt.getDate() + ' ' + MESES[dt.getMonth()];
+}
+// "2 a 8 nov" ou, quando vira o mês, "26/10 a 1/11".
+export function navRangeTitle(a, z) {
+  const A = new Date(a), Z = new Date(z);
+  return A.getMonth() === Z.getMonth() ? A.getDate() + ' a ' + Z.getDate() + ' ' + MESES[Z.getMonth()]
+    : A.getDate() + '/' + (A.getMonth() + 1) + ' a ' + Z.getDate() + '/' + (Z.getMonth() + 1);
+}
+// "Out 2026".
+export function navMonthTitle(m) {
+  const d = new Date(m), s = MESES[d.getMonth()];
+  return s[0].toUpperCase() + s.slice(1) + ' ' + d.getFullYear();
+}
+
 // "27 set 2026": o dia de um peso ou de um marco (aaaa-mm-dd).
 export function fullDate(ymd) { const d = new Date(ymd + 'T00:00'); return d.getDate() + ' ' + MESES[d.getMonth()] + ' ' + d.getFullYear(); }
 export const shortDate = ymd => { const d = new Date(ymd + 'T00:00'); return d.getDate() + ' ' + MESES[d.getMonth()]; };
