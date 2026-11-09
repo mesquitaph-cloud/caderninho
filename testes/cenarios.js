@@ -222,6 +222,19 @@ if (CEN === 'quem-fez') {
   }
 }
 
+// "carrossel" (08/11): fotos do carrossel da página inicial. A Helena acordada há pouco mais de uma hora
+// (para "Acordou há" no alto da tela) e três dúvidas para a consulta. Abrir com o relógio às 13h.
+if (CEN === 'carrossel') {
+  const t = e => Date.parse(e.at), sl = entries.filter(e => e.kind === 'sleep').pop(), wk = entries.filter(e => e.kind === 'wake').pop();
+  if (sl && (!wk || t(sl) > t(wk))) add(Math.max(t(sl) + 60 * MIN, NOW - 72 * MIN), 'wake');
+  entries.sort((a, b) => t(a) - t(b));
+  T.questions = [
+    { id: 'qc1', family_id: F, baby_id: B, body: 'É normal ficar 3 dias sem cocô?', asked_on: null, answer: null, created_at: new Date(NOW - 6 * DAY).toISOString() },
+    { id: 'qc2', family_id: F, baby_id: B, body: 'Os cochilos da tarde estão curtos, é normal?', asked_on: null, answer: null, created_at: new Date(NOW - 4 * DAY).toISOString() },
+    { id: 'qc3', family_id: F, baby_id: B, body: 'Quando começar a introdução alimentar?', asked_on: null, answer: null, created_at: new Date(NOW - 2 * DAY).toISOString() },
+  ];
+}
+
 const baseClient = createClient;
 createClient = (...a) => {
   const c = baseClient(...a);
