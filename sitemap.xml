@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Lista das páginas do soneca.app.br para o Google (enviada no Search Console).
+     Cada guia novo entra aqui no mesmo PR que o publica, com a data em <lastmod>.
+     As versões antigas de privacidade e termos (1.0.html etc.) ficam de fora de propósito. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://soneca.app.br/</loc><lastmod>2026-11-09</lastmod></url>
+  <url><loc>https://soneca.app.br/guias/horas-de-sono</loc><lastmod>2026-11-09</lastmod></url>
+  <url><loc>https://soneca.app.br/privacidade</loc></url>
+  <url><loc>https://soneca.app.br/termos</loc></url>
+  <url><loc>https://soneca.app.br/apagar-conta</loc></url>
+</urlset>

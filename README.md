@@ -531,9 +531,13 @@ Tela de Início" (aparecia também dentro do app do iPhone), com o botão "Insta
 O texto de indicar não diz mais "Não precisa baixar na loja". As sugestões dizem "app do iPhone" ou
 "no navegador".
 
-**Domínio (14/10):** `soneca.app.br` no ar. O `vercel.json` leva `caderninho-bay.vercel.app/privacidade`
-e `/termos` para o domínio novo (o resto do endereço antigo continua igual, para ninguém perder a
-entrada). Na App Store, a política é `https://soneca.app.br/privacidade`.
+**Domínio (14/10):** `soneca.app.br` no ar. Desde 09/11, o `vercel.json` leva todo o
+`caderninho-bay.vercel.app` para o domínio novo (menos `/.well-known/`, que os apps usam), para o Google
+largar o endereço antigo. Na App Store, a política é `https://soneca.app.br/privacidade`.
+
+**Busca do Google (09/11):** `soneca.app.br` verificado no Search Console (por domínio, registro TXT no
+Registro.br). O site tem `robots.txt` e `sitemap.xml`; **cada guia novo entra no `sitemap.xml` no mesmo
+PR que o publica**, com a data em `<lastmod>`. A página inicial declara `canonical`.
 
 ## App do Android (15/10; teste fechado na Play Store desde 17/10)
 
@@ -759,7 +763,7 @@ antes pela prévia; mudança no banco vira arquivo novo em `supabase/`.
 
 - **Cópia dos dados**: por e-mail, exportada à mão pelo Supabase; o botão (JSON e CSV) fica para depois.
 - Domínio próprio no ar (14/10): a seção 13 da Política 1.3 já usa `soneca.app.br`, e o `vercel.json` leva
-  `caderninho-bay.vercel.app/privacidade` e `/termos` para o novo.
+  o `caderninho-bay.vercel.app` inteiro (antes só `/privacidade` e `/termos`) para o novo.
 - Apagar as provas de aceite com mais de 5 anos (tarefa agendada; a primeira vence em 2031).
 - ~~DM Sans servida pelo próprio site, sem Google Fonts~~ (feito em 11/10, seção "App do iPhone").
 - ~~Remetente dos e-mails em serviço próprio com domínio do Soneca~~ (feito em 30/10, Resend).
