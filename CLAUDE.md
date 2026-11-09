@@ -26,10 +26,11 @@ https://claude.ai/artifact/5ivtMLy5pNcHfVMPefEmz8.
   salmão, cuidados em caramelo claro. Noite em cinza-azulado, como o WhatsApp (`--bg` `#111B21`), não
   azul-noite. "Feito" e "enviado" em menta. Links em `--link`, nunca em
   `--accent` (o caramelo não dá leitura como texto).
-- **Relatório para pediatra:** papel sempre claro, só com `--paper*` e `--rp-*`; sóbrio, sem capivara.
+- **Relatório para pediatra:** papel sempre claro, só com `--paper*` e `--rp-*`; sóbrio. A
+  capivara só no logo do alto (pequena, com o nome, em traço `--paper-ink`); nunca no meio do relatório.
 - **Fonte:** DM Sans, só pesos 400 e 500 (nada de 600 ou 700).
-- **Capivara:** só em telas de rotina (sono, mamada, fralda, tela vazia) e ao lado do nome na entrada.
-  Nunca em febre, sintomas, remédios, dúvidas para a consulta nem no relatório.
+- **Capivara:** só em telas de rotina (sono, mamada, fralda, tela vazia) e ao lado do nome na entrada
+  e no logo do relatório. Nunca em febre, sintomas, remédios nem dúvidas para a consulta.
 - **Tom:** humor sutil e raro, só na rotina (como o alerta marrom). Saúde e relatório neutros e
   objetivos.
 - **Ícones:** traço fino arredondado, como os de `util.js` e o da capivara.

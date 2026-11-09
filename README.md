@@ -293,10 +293,10 @@ mesmos, porque o texto cita os itens pelo número.
   "em 120 mamadeiras"; "164", "52 com cocô"). A decidir (com prévia): os mesmos dias que a média do sono
   usa (só dias terminados); o que fica na linha pequena (total, número de mamadeiras, fraldas com cocô);
   e se muda também a Semana e o resumo para mandar à família.
-- **42 · Logo do Soneca no relatório para o pediatra** (Patrick, 07/11). Cuidado com a regra da
-  identidade: o relatório é sóbrio e sem capivara, então entra só o nome "Soneca" escrito na fonte do
-  app (ou a versão do logo sem a capivara), nas cores do papel (`--paper*` e `--rp-*`). A decidir (com
-  prévia): onde fica (cabeçalho ou rodapé), o tamanho, e se aparece também no PDF impresso.
+- **42 · Logo do Soneca no relatório para o pediatra** (Patrick, 07/11; decidido e no código em 08/11):
+  a capivara pequena (44 px) e o nome "Soneca" no alto à esquerda, acima do nome do bebê, em traço marrom
+  (`--paper-ink`); sai igual no PDF. Prévia aprovada: https://claude.ai/artifact/TDApZW29i9BZqSEXd4pvLy.
+  Exceção aberta na regra da capivara (só esse logo; nada de capivara no meio do relatório).
 - **43 · Aviso de "Salvo" no alto da tela** (Patrick, 07/11; no `main` pelo #70):
   o aviso (`toast` em `app.js`) saiu de cima dos botões de registro e desce no alto, por cima do cartão do
   bebê. Vale para todos os avisos, inclusive os de erro. Mesma pílula, mesmo tempo (1,8 s, ou 5 s com
@@ -760,8 +760,8 @@ Prévia aprovada das telas, antes e depois, de dia e de noite (privada): https:/
   gráficos na versão escura de cada cor.
 - **Modo noite:** segue o celular; no Perfil dá para escolher claro ou escuro.
 - **Capivara:** um traço só, sem preenchimento. Só no cartão do sono (e, com o nome, na entrada); nunca
-  em saúde nem no resumo para a consulta. Sem frase junto. O desenho é esboço; a arte final vai para um
-  ilustrador.
+  em saúde nem no meio do resumo para a consulta (só o logo pequeno no alto do relatório). Sem frase
+  junto. O desenho é esboço; a arte final vai para um ilustrador.
 - **Ícones:** app azul-céu com a capivara marrom (`icons/`); fralda com fitas no lugar da gota; remédio
   em cápsula nos gráficos.
 - **Tom:** humor sutil e raro na rotina; saúde e resumo neutros.

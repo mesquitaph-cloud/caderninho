@@ -16,7 +16,7 @@
   /* Curvas da OMS no gráfico de crescimento */
   --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
   --scrim:rgba(74,53,34,.38);
-  /* Relatório para pediatra: a folha é sempre clara, mesmo com o app no escuro (vira PDF). Sóbria: as cores do Soneca, sem capivara */
+  /* Relatório para pediatra: a folha é sempre clara, mesmo com o app no escuro (vira PDF). Sóbria: as cores do Soneca; a capivara só no alto, com o nome, em traço marrom */
   --paper:#FFFFFF;--paper-ink:#4A3522;--paper-muted:#826449;--paper-line:#EFE2D2;--paper-soft:#FBF5EC;
   --rp-sleep:#5E97CF;--rp-feed:#2E7350;--rp-diaper:#B8860B;--rp-poo:#5E3A1E;--rp-pump:#2E7350;--rp-sym:#A8423C;--rp-weight:#B8693A;--rp-curve:#CBBBA8;--rp-curve-mid:#9C846C;--rp-band:#F7F0E6;
   --display:"DM Sans",system-ui,sans-serif;--body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -580,6 +580,9 @@ textarea.field.short{min-height:76px}
 .rp-head h1{font-size:26px;line-height:1.1}
 .rp-head>div:first-child{flex:1 1 260px;min-width:0}
 .rp-head p{margin:2px 0 0;color:var(--paper-muted);font-weight:500}
+/* O logo no alto: a capivara pequena e o nome, na tinta do papel (sai igual no PDF) */
+.rp-brand{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:var(--display);font-weight:500;font-size:17px;line-height:1;letter-spacing:-.02em;color:var(--paper-ink)}
+.rp-brand .capi{width:44px;height:auto;flex:none;stroke:var(--paper-ink);stroke-width:1.6px}
 .rp-per{margin-left:auto;text-align:right;font-size:12.5px;color:var(--paper-muted);font-weight:500}
 .rp-per b{display:block;font-family:var(--display);font-weight:500;font-size:16px;color:var(--paper-ink)}
 .rp-sec{display:flex;flex-direction:column;gap:8px;min-width:0;break-inside:avoid}
