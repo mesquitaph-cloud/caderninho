@@ -206,10 +206,9 @@ button.ck::before{content:"";position:absolute;inset:-8px;border-radius:50%}
 .bvtop .capi{width:64px;height:auto;flex:none;stroke-width:1.9px}
 .bv .btns{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .bv .save{padding:11px 18px;font-size:16px;border-radius:14px}
-/* O botão Editar e a aba Semana, enquanto o cartão fala deles */
+/* O botão Editar, enquanto o cartão fala dele */
 .act.k-edit.bvhl{border:2px solid var(--accent)}
 .act.k-edit.bvhl b,.act.k-edit.bvhl span{color:var(--ink)}
-.views .bvhl{color:var(--ink);box-shadow:inset 0 0 0 2px var(--accent)}
 /* Remédios e horários, ainda sem remédio: os passos numerados */
 .steps{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
 .steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;font-size:15px;align-items:start}
@@ -910,7 +909,10 @@ a.li{color:inherit;text-decoration:none}
 
 /* ---------- Tela inicial de 06/11 (prévia aprovada: https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE) ---------- */
 /* O cartão do bebê fica preso no alto, com os cantos de baixo arredondados */
-.hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:18px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
+/* Item 54 (prévia aprovada em 12/11: https://claude.ai/artifact/CUY2ZjNWqmbAEr3b1GbiMw): o nome e a foto
+   ficam a 6 px do relógio (2 px aqui e 4 px do botão), sem o vão de antes; no Android, sem os 20 px a mais. */
+.hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:2px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
+[data-app="android"] .hcard{margin-top:calc(-20px - env(safe-area-inset-top,0px))}
 body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
 /* A data com as setas e o "Hoje" à esquerda e Dia | Semana | Mês, pequeno, à direita, sempre numa
    linha (08/11, prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). As datas curtas são de util.js. */
@@ -1047,10 +1049,14 @@ body.pop-open #grid [data-k="more"]{box-shadow:inset 0 0 0 2px var(--ink)}
    ao soltar, um traço corre pela borda dela enquanto busca */
 body.pulling #paneHome{transform:translateY(var(--pd,0px))}
 body.pull-back #paneHome{transition:transform .25s cubic-bezier(.3,.7,.2,1)}
-.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + var(--pd,0px) / 2 - 22px);z-index:2;width:76px;height:44px;margin-left:-38px;
-  display:grid;place-items:center;pointer-events:none;opacity:min(1,calc(var(--pk,0) * 2.5))}
-body.pull-back .ptr{transition:top .25s cubic-bezier(.3,.7,.2,1),opacity .2s}
-.ptr svg{width:64px;height:auto;overflow:visible;fill:none;stroke-width:2.4px;stroke-linecap:round;stroke-linejoin:round}
+/* Item 53 (prévia aprovada em 12/11: https://claude.ai/artifact/CUY2ZjNWqmbAEr3b1GbiMw): o vão é uma faixa
+   lisa, da cor do fundo, do relógio até o alto do cartão do bebê. O histórico rolado some nessa linha e
+   não passa mais por trás da capivara. */
+.ptr{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);height:var(--pd,0px);z-index:2;background:var(--bg);
+  display:grid;place-items:center;pointer-events:none}
+body.pull-back .ptr{transition:height .25s cubic-bezier(.3,.7,.2,1)}
+body.pull-back .ptr svg{transition:opacity .2s}
+.ptr svg{opacity:min(1,calc(var(--pk,0) * 2.5));width:64px;height:auto;overflow:visible;fill:none;stroke-width:2.4px;stroke-linecap:round;stroke-linejoin:round}
 .ptr path{vector-effect:non-scaling-stroke}
 .ptr .bg path{stroke:var(--line)}
 .ptr .fg path{stroke:var(--mascot);stroke-dasharray:100;stroke-dashoffset:calc(100 - 100 * var(--pk,0))}
