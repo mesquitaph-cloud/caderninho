@@ -123,7 +123,7 @@ _Evite_: cuidado (nome antigo), atividade, procedimento, atalho
 
 **Rotina** (09/11):
 As tarefas que a família programa para o bebê, cada uma com o seu "quando": horários fixos, vezes por dia
-ou, só na pomada, na troca de fralda. A de horário fixo aparece em "Hora da tarefa", no alto da tela Hoje,
+ou, só na pomada, na troca de fralda. A de horário fixo aparece em "Hora da tarefa", no alto do Diário,
 na hora marcada. "Tirar da rotina" não apaga o que já foi anotado.
 _Evite_: agenda, lembrete (o lembrete é outra coisa: o aviso para anotar)
 
@@ -146,20 +146,20 @@ Registro de texto livre para o que não cabe nas demais categorias.
 _Evite_: nota, observação (observação é o comentário opcional dentro de qualquer registro)
 
 **Botões da tela inicial**:
-Os botões de registro, três por linha, na aba Hoje. Mamada, Sono e Fralda aparecem sempre, e Outros
+Os botões de registro, três por linha, no Diário. Mamada, Sono e Fralda aparecem sempre, e Outros
 também. Os outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) cada família liga ou
 desliga na aba Família (o botão Editar, ao lado de Outros, leva até lá), e vale para todos da família.
 _Evite_: atalhos, menu, configurações
 
 **Linha do tempo**:
 Os registros de um bebê num dia, do mais recente para o mais antigo.
-_Evite_: histórico, feed, diário
+_Evite_: histórico, feed
 
 **Como foi o dia**:
 No alto da linha do tempo, o dia aberto numa linha só, de 0h a 24h, com as mesmas marcas do painel da
 semana e um losango para os sintomas. A contagem (sono, mamadas, xixi, cocô, ordenha, sintomas) vai
 embaixo. Tocar numa marca abre o registro.
-_Evite_: resumo (resumo é o do mês e o para mandar), estatística, gráfico do dia
+_Evite_: resumo (resumo é o do mês e o para mandar), gráfico do dia
 
 ## Remédios
 
@@ -197,13 +197,33 @@ _Evite_: farmácia, receituário
 ## Abas
 
 **Barra de baixo**:
-As quatro abas do app, sempre à mostra: Hoje, a aba do bebê (com o nome dele), Família e Perfil.
+As cinco abas do app, sempre à mostra, nesta ordem: Tendências, a aba do bebê (com o nome dele), Diário,
+Família e Perfil. O Diário fica no centro, e o app abre nele.
 _Evite_: menu, navegação, rodapé
 
-**Hoje**:
-A aba dos registros do dia a dia: os botões da tela inicial, o cartão de remédios, a linha do tempo,
-o painel da semana e o resumo do mês. No alto, o nome e a idade do bebê levam à aba do bebê.
-_Evite_: home, início, painel
+**Diário** (antes "Hoje", até 13/11):
+A aba dos registros do dia a dia, no centro da barra de baixo e a que abre com o app: os botões da
+tela inicial, o cartão de remédios, a linha do tempo, o painel da semana e o resumo do mês (Dia | Semana
+| Mês). No alto, o nome e a idade do bebê levam à aba do bebê.
+_Evite_: home, início, painel, Hoje (nome antigo; "Hoje" continua sendo o dia de hoje)
+
+**Tendências** (13/11):
+A 1ª aba da barra de baixo, com o ícone de barras: como cada registro muda de um período para outro.
+Dia | Semana | Mês, no Diário, mostram um período fechado; Tendências põe os períodos lado a lado, **dia
+a dia** (14 dias) ou **semana a semana** (12 semanas, cada uma com os 7 dias que terminam ontem, como
+no painel da semana), com as setas para voltar no tempo. Hoje não entra na conta. Na guia Sono, nesta
+ordem: o sono por dia (barras empilhadas, a noite embaixo e o dia em cima), os despertares à noite, a
+noite (da hora de dormir até a de acordar), o maior sono seguido e as sonecas. A **barra mais clara** é
+um dia com poucos registros ou uma semana com menos de 4 dias anotados; nos cartões da noite, uma noite
+que não foi anotada do começo ao fim. Um número baixo nunca deixa a barra clara. Só junta o que foi
+anotado; não compara com outros bebês nem diz o que é normal. "Estatísticas" também serve.
+_Evite_: normal, meta, desempenho, evolução do bebê, gráfico de crescimento (esse é o da aba do bebê)
+
+**Guias**:
+Os botões no alto de Tendências que separam um assunto do outro: Sono, Mamadas, Fraldas, Ordenha (só
+com o botão Ordenha ligado) e Peso. A tela abre em Sono. Na primeira versão, só o Sono tem gráficos; as
+outras mostram "Em construção", com a capivara de capacete de obra.
+_Evite_: abas (aba é a da barra de baixo), filtros, categorias
 
 **Aba do bebê**:
 Leva o nome do bebê na barra de baixo. Nesta ordem: o botão do relatório para pediatra, as dúvidas
@@ -284,7 +304,7 @@ _Evite_: orientação médica, recomendação, conduta
 Os 7 dias que terminam no dia escolhido, lado a lado: como foram os dias de 0h a 24h, a média por
 dia, uma barra por dia e os maiores intervalos. Só junta o que foi registrado; não avalia nem compara
 com outros bebês.
-_Evite_: relatório, estatísticas, análise, desempenho
+_Evite_: relatório, análise, desempenho
 
 **Média por dia**:
 O total de um tipo de registro dividido pelos dias que já terminaram e têm algum registro. Hoje não

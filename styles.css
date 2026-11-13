@@ -12,7 +12,7 @@
   --badge-day:inline;--badge-night:none;
   /* Botões de entrar: cores exigidas pela Apple (preto de dia, branco de noite) e pelo Google (sempre claro) */
   --apple-bg:#000000;--apple-ink:#FFFFFF;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#5E97CF;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
+  --c-sleep:#5E97CF;--c-nap:#9CC8F0;--c-wakes:#1F4E80;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
   /* Curvas da OMS no gráfico de crescimento */
   --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
   --scrim:rgba(74,53,34,.38);
@@ -27,7 +27,7 @@
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}}
 :root[data-theme="dark"]{
@@ -36,7 +36,7 @@
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}
 html{touch-action:manipulation}body{overflow-x:clip}*{box-sizing:border-box}[hidden]{display:none!important}
@@ -506,9 +506,9 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 /* ---------- Barra de baixo: Hoje, o bebê, Família e Perfil ---------- */
 #scrMain{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
-.tabbar .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.tabbar .in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
 .tabbar button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:14px;font-size:12px;font-weight:500;color:var(--muted);min-width:0}
-.tabbar .ic{width:52px;height:30px;border-radius:999px;display:grid;place-items:center}
+.tabbar .ic{width:min(52px,100%);height:30px;border-radius:999px;display:grid;place-items:center}
 .tabbar .ic svg{width:22px;height:22px}
 .tabbar .mini{width:24px;height:24px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-family:var(--display);font-weight:500;font-size:13px}
 .tabbar .nm{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1114,4 +1114,53 @@ body.pull-back .ptr svg{transition:opacity .2s}
 .hist2 div:last-child{border-bottom:none}
 .hist2 div span:last-child{color:var(--muted)}
 .addrow{display:flex;gap:8px}.addrow .field{flex:1;min-width:0}
-
+/* Tendências (item 58, prévia aprovada em 13/11: https://claude.ai/artifact/R84pJ6Ke6egHFtYVpfHxBv).
+   Sono à noite em --c-sleep, de dia em --c-nap e despertares em --c-wakes: cores do app (--sleep e
+   --sleep-ink de dia; --sleep-ink e --c-sleep de noite) num papel novo, que ainda pedem aprovação. */
+.trh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.trh h2{display:flex;align-items:center;gap:8px;margin:0;font-family:var(--display);font-weight:500;font-size:24px;line-height:1.15}
+.trh h2 .capi{width:42px;height:auto;flex:none;stroke-width:1.6px}
+.trh>span{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow-wrap:anywhere}
+.trt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -24px;padding:2px 24px}
+.trt::-webkit-scrollbar{display:none}
+.trt button{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;white-space:nowrap}
+.trt button i{width:8px;height:8px;border-radius:50%}
+.trt button[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
+.trr{display:flex;align-items:center;justify-content:space-between}
+.trr span{font-weight:500;font-size:15px}
+.trr .arr{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:var(--ink)}
+.trr .arr:disabled{opacity:.3;cursor:default}
+.trk h3{display:flex;align-items:center;gap:8px}
+.trk h3 .capi{width:34px;height:auto;flex:none;stroke-width:1.6px;overflow:visible}
+.tri{margin-left:auto;flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--muted);color:var(--muted);font-weight:500;font-size:14px;line-height:1;display:grid;place-items:center;position:relative}
+.tri::before{content:"";position:absolute;inset:-9px;border-radius:50%}
+.tri[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.trib{display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border-radius:14px;padding:10px 12px;margin-top:-2px}
+.trib svg{flex:none;width:44px;height:36px}
+.trib div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.trib p{margin:0;font-size:13px;line-height:1.4}
+.trib b{font-weight:500}
+.trib .fewr{opacity:.35}
+.trd{background:var(--surface2);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.trd .td,.trd .tx{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.trd b{font-family:var(--display);font-weight:500;font-size:26px;line-height:1.15;font-variant-numeric:tabular-nums}
+.trd .tf{font-size:12px;color:var(--muted)}
+svg.trc{width:100%;height:auto;display:block;overflow:visible}
+svg.trc text{font-family:var(--body);font-size:9.5px;fill:var(--muted)}
+svg.trc text.on{fill:var(--ink)}
+svg.trc .gl{stroke:var(--line);stroke-width:1}
+svg.trc .hit{fill:transparent;cursor:pointer}
+svg.trc .few{opacity:.35}
+svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2}
+.tb-night{fill:var(--c-sleep);background:var(--c-sleep)}
+.tb-nap{fill:var(--c-nap);background:var(--c-nap)}
+.tb-wake{fill:var(--c-wakes);background:var(--c-wakes)}
+.tb-dot{fill:var(--surface);background:var(--surface);border:1px solid var(--muted)}
+.trl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted)}
+.trl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.trl i.tb-dot{border-radius:50%}
+.tre,.trb{align-items:center;text-align:center;padding:28px 18px;gap:14px}
+.tre p,.trb p{margin:0;color:var(--muted);max-width:30ch}
+.tre .capi{width:150px;height:auto;stroke-width:1.6px;overflow:visible}
+.trb .capi{width:120px;height:auto;stroke-width:1.6px;overflow:visible}

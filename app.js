@@ -8,6 +8,7 @@ import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { nightsHtml } from './noites.js';
+import { trendsHtml, trendWindow } from './tendencias.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -34,7 +35,8 @@ const st = {
   questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
   questionsOk: true,           // falso se não deu para carregar (por exemplo, antes do 010)
   settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
-  tab: 'home',                 // aba aberta na barra de baixo: 'home' (Hoje), 'baby', 'family' ou 'profile'
+  tab: 'home',                 // aba aberta na barra de baixo: 'trends' (Tendências), 'baby', 'home' (Diário), 'family' ou 'profile'
+  trend: { tab: 'sono', mode: 'd', off: 0, sel: null, info: null }, // Tendências: guia, dia a dia ou semana a semana, janelas para trás, barra tocada e botão i aberto
   view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
   weekEnd: startOfDay(Date.now()),   // último dos 7 dias do painel
@@ -554,7 +556,7 @@ const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
 // Redesenha a aba aberta e a barra de baixo. Hoje é redesenhada sempre, mesmo escondida: é leve e
 // fica pronta para quando a pessoa voltar.
-const PANES = { home: 'paneHome', baby: 'paneBaby', family: 'paneFamily', profile: 'paneProfile' };
+const PANES = { trends: 'paneTrends', home: 'paneHome', baby: 'paneBaby', family: 'paneFamily', profile: 'paneProfile' };
 function render() {
   if ($('scrMain').hidden) return;
   for (const k in PANES) $(PANES[k]).hidden = k !== st.tab;
@@ -563,6 +565,7 @@ function render() {
   $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
+  else if (st.tab === 'trends') drawTrendsPane();
   renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); dockSize();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
@@ -1067,7 +1070,7 @@ const aNome = b => artigo(b, 'a ', 'o ', '') + b.name, daNome = b => artigo(b, '
 // Os avisos da primeira semana: dia 1 (o do primeiro registro, se foi antes das 17h), dia 3 e dia 7.
 function onbList(b) {
   const f = +lsGet('cad-lembrete-1o'); if (!f) return [];
-  return [[0, 'O primeiro dia ' + daNome(b) + ' no Soneca', 'Veja na tela Hoje tudo o que foi anotado.', 'day'],
+  return [[0, 'O primeiro dia ' + daNome(b) + ' no Soneca', 'Veja no Diário tudo o que foi anotado.', 'day'],
           [2, 'A semana ' + daNome(b) + ' já aparece', 'Na aba Semana, os dias lado a lado: sono, mamadas e fraldas.', 'week'],
           [6, 'O resumo da semana ' + daNome(b), 'Sono, mamadas e fraldas dos últimos 7 dias, para ver e mandar para a família.', 'week']]
     .map(([n, title, body, go], i) => ({ id: ONB_IDS[i], t: atTime(addDays(startOfDay(f), n), '17:00'), title, body, go }))
@@ -1959,7 +1962,7 @@ function drawMeds() {
   h += meds.length
     ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
     : '<ol class="steps"><li><span class="n">1</span><span>Anote o remédio, quanto dar e quando: em horários fixos, de tantas em tantas horas ou só quando precisar.</span></li>'
-      + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto da tela Hoje. Quem der marca, e todos da família veem.</span></li>'
+      + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto do Diário. Quem der marca, e todos da família veem.</span></li>'
       // O aviso na hora só existe no app do celular, não no site.
       + (medNotif ? '<li><span class="n">3</span><span>Se quiser, o celular avisa na hora de cada dose.</span></li>' : '') + '</ol>'
       + '<p class="dim">O Soneca só lembra o que vocês programarem. Não sugere remédio, dose nem horário.</p><button class="save" data-act="newMed">Programar um remédio</button>';
@@ -2587,6 +2590,21 @@ function bindZoom() {
   box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
 }
 
+// Tendências: a 5ª aba (item 58). A janela aberta pode ir além dos 60 dias que o app carrega: busca o
+// que falta como o resumo de um mês antigo (loadOlder).
+const trendFirst = b => b.birth_date ? dayOf(b.birth_date) : startOfDay(Date.parse(b.created_at));
+function drawTrendsPane() {
+  const b = st.baby, el = $('paneTrends'), t = st.trend;
+  if (!b) { el.innerHTML = '<div class="ptitle"><h2>Tendências</h2></div><div class="soft">Cadastre o bebê da família para ver as tendências.</div>'; return; }
+  const now = Date.now(), first = trendFirst(b);
+  let loading = '';
+  if (t.tab === 'sono') {
+    const { a } = trendWindow(t.mode, t.off, now, first);
+    if (olderMissing(a)) { loadOlder(a); loading = olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'; }
+  }
+  el.innerHTML = trendsHtml({ t, evs: sortedEntries(), now, first, pump: isOn('pump'), loading,
+    who: [b.name, ageText(b.birth_date)].filter(Boolean).join(' · '), chips: st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '' });
+}
 function drawBabyPane() {
   const b = st.baby, el = $('paneBaby');
   if (!b) {
@@ -2623,7 +2641,7 @@ function drawBabyPane() {
         const times = m.schedule !== 'prn' && medTimes(m).length <= 4 ? `<span class="mtimes">${medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')}</span>` : '';
         return `<button class="mrow" data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}"><span><b>${esc(m.name)}</b><small>${esc([m.amount, when].filter(Boolean).join(' · '))}</small></span>${times}</button>`;
       }).join('') + '<div class="row2"><button class="ghost" data-act="allMeds">Ver doses</button><button class="ghost" data-act="newMed">+ Programar</button></div>'
-    : `<div class="soft">Nenhum remédio programado. Programe os remédios de ${esc(b.name)} para as doses aparecerem na hora, no alto da tela Hoje.</div><button class="ghost" data-act="newMed">+ Programar remédio</button>`;
+    : `<div class="soft">Nenhum remédio programado. Programe os remédios de ${esc(b.name)} para as doses aparecerem na hora, no alto do Diário.</div><button class="ghost" data-act="newMed">+ Programar remédio</button>`;
   h += '</div>';
   if (st.growthOk) {
     h += '<div class="sec" id="babyMilestones"><h4>Marcos</h4>';
@@ -2947,6 +2965,7 @@ async function saveBaby(btn) {
 }
 async function selectBaby(id) {
   st.baby = st.babies.find(b => b.id === id); lsSet('cad-baby-' + st.family.id, id);
+  st.trend.off = 0; st.trend.sel = null;
   // Outro bebê: nada do anterior pode aparecer com o nome deste.
   st.entries = new Map(); st.meds = []; st.routines = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = [];
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render();
@@ -3396,6 +3415,18 @@ $('tasks').addEventListener('click', e => {
 $('babyBtn').onclick = () => st.baby ? goTab('baby') : babySheet(null);
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
 $('tabbar').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) goTab(b.dataset.tab); });
+// Tendências (tendencias.js): guias, visão, setas, toque numa barra e botão i. Redesenha só a aba e
+// devolve o foco ao botão tocado.
+function redrawTrends(sel) { drawTrendsPane(); if (sel) $('paneTrends').querySelector(sel)?.focus(); }
+$('paneTrends').addEventListener('click', e => {
+  const t = st.trend, g = s => e.target.closest(s); let x;
+  if ((x = g('[data-baby]'))) return selectBaby(x.dataset.baby);
+  if ((x = g('[data-tinfo]'))) { const k = x.dataset.tinfo; t.info = t.info === k ? null : k; return redrawTrends(`[data-tinfo="${k}"]`); }
+  if ((x = g('[data-ttab]'))) { t.tab = x.dataset.ttab; t.info = null; return redrawTrends(`[data-ttab="${t.tab}"]`); }
+  if ((x = g('[data-tmode]'))) { if (t.mode !== x.dataset.tmode) { t.mode = x.dataset.tmode; t.off = 0; t.sel = null; } return redrawTrends(`[data-tmode="${t.mode}"]`); }
+  if ((x = g('[data-tnav]'))) { if (x.disabled) return; t.off = Math.max(0, t.off - +x.dataset.tnav); t.sel = null; return redrawTrends(`[data-tnav="${x.dataset.tnav}"]`); }
+  if ((x = g('[data-ti]'))) { t.sel = +x.dataset.ti; return redrawTrends(); }
+});
 for (const id of ['paneBaby', 'paneFamily', 'paneProfile']) $(id).addEventListener('click', e => {
   const c = e.target.closest('[data-baby]'); if (c) return selectBaby(c.dataset.baby);
   const b = e.target.closest('[data-act]'); if (b) paneAction(b.dataset.act, b.dataset.val, b);
