@@ -8,12 +8,13 @@ import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { nightsHtml } from './noites.js';
-import { trendsHtml, trendWindow } from './tendencias.js';
+import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
+import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX } from './janela.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
-const SCREENS = ['scrLoading','scrLogin','scrName','scrTerms','scrBabyOk','scrInvite','scrCreate','scrMain'];
+const SCREENS = ['scrLoading','scrLogin','scrName','scrStart','scrPaste','scrTerms','scrBabyOk','scrInvite','scrOnb','scrMain'];
 const KEEP_DAYS = 60;
 // Política de Privacidade e Termos de Uso (/privacidade e /termos). Ao mudar o texto, sobe a versão:
 // todos veem a tela de aceite de novo na próxima abertura.
@@ -84,7 +85,8 @@ async function boot() {
   }
   st.user = session.user;
 
-  const { data: prof } = await sb.from('profiles').select('id,display_name').eq('id', st.user.id).maybeSingle();
+  // select('*'): o "Você é" e o aviso da janela de sono (024) vêm junto quando existem.
+  const { data: prof } = await sb.from('profiles').select('*').eq('id', st.user.id).maybeSingle();
   if (!prof) {
     // Quem entrou pelo Google ou pela Apple já vem com o nome; dá para trocar antes de continuar.
     const meta = st.user.user_metadata || {};
@@ -100,7 +102,8 @@ async function boot() {
   if (inv) return showInvite(inv);
 
   await loadFamilies();
-  if (!st.families.length) { $('cancelCreate').hidden = true; show('scrCreate'); return; }
+  // Sem família: "Como você vai começar?" (criar uma ou entrar por convite).
+  if (!st.families.length) return show('scrStart');
   const saved = lsGet('cad-family');
   await openFamily((st.families.find(f => f.id === saved) || st.families[0]).id);
 }
@@ -264,10 +267,23 @@ $('fName').addEventListener('submit', async e => {
   const btn = e.submitter; busy(btn, true);
   if (!await addConsent('terms')) { busy(btn, false); return err('errName', 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.'); }
   const { error } = await sb.from('profiles').insert({ id: st.user.id, display_name: name });
+  if (error) { busy(btn, false); return err('errName', errMsg(error)); }
+  // "Você é" vai à parte: sem o 024, o nome salva do mesmo jeito.
+  if (role) await sb.from('profiles').update({ caregiver: role }).eq('id', st.user.id);
   busy(btn, false);
-  if (error) return err('errName', errMsg(error));
   show('scrLoading'); boot();
 });
+// "Você é" (item 47): Mãe, Pai ou Outro cuidador; opcional, e tocar de novo desmarca.
+let role = null;
+$('rolePick').addEventListener('click', e => {
+  const b = e.target.closest('[data-role]'); if (!b) return;
+  role = role === b.dataset.role ? null : b.dataset.role;
+  for (const o of $('rolePick').children) { const on = o.dataset.role === role; o.classList.toggle('on', on); o.setAttribute('aria-pressed', on); }
+});
+// "Como você vai começar?" e o link do convite.
+$('startCreate').onclick = () => onbStart('start');
+$('startJoin').onclick = () => { err('errPaste'); show('scrPaste'); $('pasteIn').focus(); };
+$('backPaste').onclick = () => show('scrStart');
 
 /* ---------- aceites (015) ---------- */
 // A prova de cada aceite fica no banco (conta, tipo, versão, data e hora); ninguém edita nem apaga.
@@ -316,19 +332,25 @@ function showBabyOk(fid) {
 }
 
 /* ---------- convite ---------- */
+// "Família Andrade" já traz a palavra: sem isso saía "na família Família Andrade".
+const famName = n => /^fam[íi]lia\s/i.test(n) ? n : 'família ' + n;
 async function showInvite(tok) {
   show('scrInvite'); err('errInvite'); $('acceptInvite').hidden = false; $('inviteOk').hidden = false; $('okInvite').checked = false;
-  const { data, error } = await sb.rpc('invite_info', { tok });
+  $('inviteTitle').textContent = 'Convite'; $('inviteCard').hidden = true;
+  const [{ data, error }, kid] = await Promise.all([sb.rpc('invite_info', { tok }), sb.rpc('invite_baby', { tok })]);
   const row = data && data[0];
   if (error || !row || !row.is_valid) {
-    $('inviteText').textContent = '';
     err('errInvite', row && !row.is_valid ? 'Este convite não vale mais. Peça um novo a quem te convidou.' : ERR.invite_not_found);
     $('acceptInvite').hidden = true; $('inviteOk').hidden = true; return;
   }
-  // "Família Andrade" já traz a palavra: sem isso saía "para a família Família Andrade".
-  const fam = /^fam[íi]lia\s/i.test(row.family_name) ? row.family_name : 'família ' + row.family_name;
-  $('inviteText').textContent = row.creator_name + ' convidou você para a ' + fam + '.';
-  $('inviteBaby').textContent = 'Você vai ver e anotar os registros dos bebês da família, que incluem dados de saúde.';
+  // Prévia 3 (13/11): "Entrar na Família Mesquita", o bebê e "Convite de Ana". Sem o 024, sem o bebê.
+  $('inviteTitle').textContent = 'Entrar na ' + famName(row.family_name);
+  const bb = !kid?.error && kid?.data?.[0];
+  $('inviteCapi').innerHTML = CAPI;
+  $('inviteBaby').textContent = bb ? [bb.baby_name, ageText(bb.birth_date)].filter(Boolean).join(' · ') : '';
+  $('inviteBaby').hidden = !bb;
+  $('inviteFrom').textContent = 'Convite de ' + row.creator_name;
+  $('inviteCard').hidden = false;
   $('acceptInvite').onclick = async () => {
     if (!$('okInvite').checked) return err('errInvite', 'Para entrar, marque o compromisso acima.');
     err('errInvite'); busy($('acceptInvite'), true);
@@ -341,7 +363,6 @@ async function showInvite(tok) {
 }
 $('skipInvite').onclick = () => { lsSet('cad-invite', null); show('scrLoading'); boot(); };
 
-/* ---------- criar família ---------- */
 // Convite colado: para quem abriu o link no navegador ou estava com uma versão antiga do app (Ca, 17/10).
 // Aceita o link inteiro, com ou sem https://, ou só o código.
 $('fPaste').addEventListener('submit', e => {
@@ -351,22 +372,123 @@ $('fPaste').addEventListener('submit', e => {
   if (!tok) return err('errPaste', 'Não achei um convite nesse link. Confira com quem te convidou.');
   $('pasteIn').value = ''; lsSet('cad-invite', tok); showInvite(tok);
 });
-$('fCreate').addEventListener('submit', async e => {
-  e.preventDefault(); err('errCreate');
-  if (!$('okBaby').checked) return err('errCreate', 'Para criar a família, marque a autorização dos dados do bebê.');
-  const btn = e.submitter; busy(btn, true);
-  const { data: fid, error } = await sb.rpc('create_family', {
-    family_name: $('famIn').value.trim(), baby_name: $('babyIn').value.trim(), baby_birth: $('birthIn').value || null,
-  });
-  busy(btn, false);
-  if (error) return err('errCreate', errMsg(error));
-  // Menina ou menino vai à parte (a função do banco não recebe); sem o 011, só não salva.
-  const sex = document.querySelector('input[name="sexIn"]:checked')?.value;
-  if (sex) await sb.from('babies').update({ sex }).eq('family_id', fid);
-  await addConsent('baby', { family_id: fid });
-  $('fCreate').reset(); await loadFamilies(); openFamily(fid);
+
+/* ---------- criar família: uma pergunta por tela ---------- */
+// Itens 40, 46, 57 e 60 (prévia aprovada em 13/11: https://claude.ai/artifact/RYPyjm5Z4ARWtnvXJrmffU;
+// textos aprovados palavra por palavra). Sobre o bebê → como mama → o que vai na mamadeira (só com
+// mamadeira) → outros alimentos (só com 6 meses ou mais) → sono → criar a família. As respostas ficam
+// só na memória até "Criar família": antes disso, nada é gravado.
+let O = null;
+function onbStart(from) {
+  O = { from, i: 0, name: '', birth: '', sex: null, feed: null, milk: null, food: null, sleep: null, at: '', alert: null, fam: '', ok: false };
+  show('scrOnb'); onbDraw(); window.scrollTo(0, 0);
+}
+const onbSteps = () => ['bebe', 'mama', ...(O.feed === 'bottle' || O.feed === 'both' ? ['mamadeira'] : []),
+  ...(monthsOld(O.birth, Date.now()) >= 6 ? ['comida'] : []), 'sono', 'familia'];
+// "Como a Marina mama hoje?"; sem menina ou menino anotado, só o nome.
+const onbArt = (a, o) => O.sex === 'F' ? a : O.sex === 'M' ? o : '';
+const onbNome = () => esc(O.name.trim());
+const CHK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
+const pressed = (on, attrs, txt) => `<button type="button" class="opt${on ? ' on' : ''}" ${attrs} aria-pressed="${on}">${txt}</button>`;
+function onbDraw() {
+  const steps = onbSteps(), k = steps[O.i] || 'familia', n = steps.length;
+  let h = `<div class="onbtop"><button type="button" class="back" data-onb="back" aria-label="Voltar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>`
+    + `<div class="onbsteps" role="progressbar" aria-label="Passo ${O.i + 1} de ${n}" aria-valuemin="1" aria-valuemax="${n}" aria-valuenow="${O.i + 1}">${steps.map((_, j) => `<i class="${j <= O.i ? 'on' : ''}"></i>`).join('')}</div></div>`;
+  const big = (key, opts) => `<div class="big">${opts.map(([v, txt, ic]) => `<button type="button" data-pick="${key}" data-v="${v}" aria-pressed="${O[key] === v}">${ic || ''}<span>${txt}</span></button>`).join('')}</div>`;
+  if (k === 'bebe') h += `<h1>Sobre o bebê</h1><form id="fOnb">`
+    + `<div><div class="lbl">Nome</div><input class="field" id="oName" maxlength="40" placeholder="Marina" required value="${esc(O.name)}" aria-label="Nome do bebê"></div>`
+    + `<div><div class="lbl">Nascimento</div><input class="field" id="oBirth" type="date" value="${esc(O.birth)}" aria-label="Nascimento"></div>`
+    + `<div class="pick2" role="group" aria-label="Menina ou menino">${pressed(O.sex === 'F', 'data-sex="F"', 'Menina')}${pressed(O.sex === 'M', 'data-sex="M"', 'Menino')}</div>`
+    + '<button class="save" type="submit">Continuar</button></form>';
+  if (k === 'mama') h += `<h1>Como ${onbArt('a ', 'o ')}${onbNome()} mama hoje?</h1>`
+    + big('feed', [['breast', 'No peito', ICON.nursing], ['bottle', 'Na mamadeira', ICON.feed], ['both', 'Nos dois', '<span class="two">' + ICON.nursing + ICON.feed + '</span>']]);
+  if (k === 'mamadeira') h += '<h1>O que vai na mamadeira?</h1>' + big('milk', [['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Os dois']]);
+  if (k === 'comida') h += `<h1>${onbArt('A ', 'O ')}${onbNome()} já come outros alimentos?</h1>` + big('food', [['1', 'Já come'], ['0', 'Ainda não']]);
+  if (k === 'sono') {
+    const f = forms(O.sex), Ac = f.ac.charAt(0).toUpperCase() + f.ac.slice(1);
+    // O aviso só vale no app e com a faixa da idade (nascimento anotado e menos de 12 meses).
+    const canAlert = !!medNotif && !!wakeRef(O.birth || null, Date.now());
+    h += `<h1>${onbArt('A ', 'O ')}${onbNome()} está ${f.ac} ou dormindo?</h1><form id="fOnb">`
+      + `<div class="pick2">${pressed(O.sleep === 'wake', 'data-sleep="wake"', Ac)}${pressed(O.sleep === 'sleep', 'data-sleep="sleep"', 'Dormindo')}</div>`
+      + (O.sleep ? `<div><div class="lbl">${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}</div><input class="field" id="oAt" type="time" value="${esc(O.at)}" aria-label="${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}"></div>` : '')
+      + (canAlert ? `<div><div class="lbl" id="oAlertLbl">Avisar quando a janela de sono estiver chegando?</div><div class="pick2" role="group" aria-labelledby="oAlertLbl">${pressed(O.alert === true, 'data-alert="1"', 'Sim')}${pressed(O.alert === false, 'data-alert="0"', 'Agora não')}</div></div>` : '')
+      + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Continuar</button><button type="button" class="link" data-onb="skip">Pular</button></form>';
+  }
+  if (k === 'familia') h += '<h1>Criar a família</h1><form id="fOnb">'
+    + `<div><div class="lbl">Nome da família</div><input class="field" id="oFam" maxlength="60" placeholder="Família Mesquita" required value="${esc(O.fam)}" aria-label="Nome da família"></div>`
+    + '<div class="consent"><b>Dados do bebê e de saúde</b><p class="txt">O Soneca guarda o que você anotar sobre o bebê: rotina, incluindo amamentação e ordenha, e, se quiser, sintomas, temperatura, remédios e peso. Esses dados são de uma criança e de saúde, e só os membros da sua família os veem. Não vendemos, não usamos para publicidade e você apaga tudo quando quiser.</p>'
+    + `<label class="chk"><input type="checkbox" id="oOk"${O.ok ? ' checked' : ''}>${CHK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar esses dados, inclusive de amamentação, para o uso da minha família.</span></label></div>`
+    + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Criar família</button></form>';
+  $('scrOnb').innerHTML = h;
+  $('scrOnb').dataset.step = k;
+}
+function onbGo(d) {
+  O.i += d;
+  if (O.i < 0) { const from = O.from; O = null; return show(from === 'profile' ? 'scrMain' : 'scrStart'); }
+  onbDraw(); window.scrollTo(0, 0);
+}
+const nowHm = () => hm(Date.now());
+$('scrOnb').addEventListener('input', e => {
+  const t = e.target, map = { oName: 'name', oBirth: 'birth', oFam: 'fam', oAt: 'at' };
+  if (map[t.id]) O[map[t.id]] = t.value;
+  if (t.id === 'oOk') O.ok = t.checked;
 });
-$('cancelCreate').onclick = () => { show('scrMain'); };
+$('scrOnb').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b || !O) return;
+  if (b.dataset.onb === 'back') return onbGo(-1);
+  if (b.dataset.onb === 'skip') { O.sleep = null; return onbGo(1); }
+  if (b.dataset.sex) { O.sex = O.sex === b.dataset.sex ? null : b.dataset.sex; return onbDraw(); }
+  // Como mama, mamadeira e outros alimentos: um toque escolhe e passa para a próxima.
+  if (b.dataset.pick) {
+    O[b.dataset.pick] = b.dataset.v;
+    if (b.dataset.pick === 'feed' && O.feed === 'breast') O.milk = null;
+    return onbGo(1);
+  }
+  if (b.dataset.sleep) { O.sleep = b.dataset.sleep; if (!O.at) O.at = nowHm(); onbDraw(); return $('oAt')?.focus(); }
+  // "Sim" pede a permissão do celular na hora (decisão de 13/11). Negada, fica "Agora não".
+  if (b.dataset.alert) {
+    O.alert = b.dataset.alert === '1'; onbDraw();
+    if (O.alert && !(await notifPerm()).ok) { O.alert = false; onbDraw(); toast(NOTIF_DENIED); }
+  }
+});
+$('scrOnb').addEventListener('submit', async e => {
+  e.preventDefault(); if (!O) return;
+  const k = $('scrOnb').dataset.step;
+  if (k === 'bebe') { if (!O.name.trim()) return; return onbGo(1); }
+  if (k === 'sono') {
+    // Horário apagado: vale o de agora (o campo já abre com ele).
+    if (O.sleep && !/^\d\d:\d\d$/.test(O.at)) O.at = nowHm();
+    return onbGo(1);
+  }
+  if (!O.ok) return err('errOnb', 'Para criar a família, marque a autorização dos dados do bebê.');
+  const btn = e.submitter; busy(btn, true);
+  const ok = await onbCreate();
+  busy(btn, false);
+  if (ok !== true) err('errOnb', ok);
+});
+// "Criar família": só aqui se grava. A família e o bebê pela função do banco; menina ou menino, o jeito de
+// alimentar, o primeiro registro de sono e o aviso vão à parte (sem o 024, só não salvam as respostas).
+async function onbCreate() {
+  const { data: fid, error } = await sb.rpc('create_family', {
+    family_name: O.fam.trim(), baby_name: O.name.trim(), baby_birth: O.birth || null,
+  });
+  if (error) return errMsg(error);
+  const { data: bb } = await sb.from('babies').select('id').eq('family_id', fid).order('created_at');
+  const bid = bb?.[0]?.id;
+  if (bid && O.sex) await sb.from('babies').update({ sex: O.sex }).eq('id', bid);
+  if (bid && O.feed) await sb.from('babies').update({ feeding: O.feed, bottle_milk: O.feed === 'breast' ? null : O.milk,
+    eats_food: O.food === null ? null : O.food === '1' }).eq('id', bid);
+  await addConsent('baby', { family_id: fid });
+  // A resposta do sono vira o primeiro registro: hoje, ou ontem se o horário ainda não chegou.
+  if (bid && O.sleep) {
+    const now = Date.now(); let t = atTime(startOfDay(now), O.at); if (t > now) t = atTime(addDays(startOfDay(now), -1), O.at);
+    await sb.from('entries').insert({ family_id: fid, baby_id: bid, ...fields({ kind: O.sleep, t }) });
+  }
+  if (O.alert !== null) await setWinAlert(O.alert, true);
+  O = null;
+  await loadFamilies(); openFamily(fid);
+  return true;
+}
 
 /* ---------- abrir família ---------- */
 async function openFamily(fid) {
@@ -566,7 +688,7 @@ function render() {
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
   else if (st.tab === 'trends') drawTrendsPane();
-  renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); dockSize();
+  renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); winSyncLater(); dockSize();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -606,6 +728,7 @@ function renderHome() {
   const old = open0 !== null && open === null;
   $('sleepBanner').hidden = !old;
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
+  renderWin(last, open, now);
   renderDock(last, open, now);
   renderLast(last, open, now);
   renderMeds(); renderTasks();
@@ -720,6 +843,56 @@ function stickLast() {
   $('paneHome').classList.toggle('lstuck', stuck);
 }
 addEventListener('scroll', stickLast, { passive: true });
+
+/* ---------- janela de sono (item 60) ---------- */
+// No cartão do bebê, no alto (prévia 9, opção 2, escolhida em 13/11): com o bebê acordado, "Acordada há
+// 45 min · Janela de sono em 15 min" e a régua da referência da idade (janela.js). Dormindo, some: volta a
+// faixa "Dormindo há" de baixo. De 12 meses em diante e sem nascimento, só o contador.
+const lastWake = (last, open, now) => {
+  if (open !== null || last(['sleep', 'wake'])?.kind !== 'wake') return null;
+  const w = last(['wake']);
+  return w && now - w.t >= 0 && now - w.t <= WAKE_MAX ? w : null;
+};
+function renderWin(last, open, now) {
+  const el = $('sleepWin'), b = st.baby, w = b && lastWake(last, open, now);
+  if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
+  const awake = now - w.t, ref = wakeRef(b.birth_date, now);
+  const h = `<span class="hwt">${winText(awake, ref, b.sex)}</span>` + (ref ? rulerHtml(awake, ref) : '');
+  if (el.innerHTML !== h) el.innerHTML = h;
+  el.hidden = false;
+}
+// O aviso no celular: quem disse Sim no onboarding (ou, depois, no Perfil). Fica no perfil da pessoa
+// (sleep_alert, 024) e, sem o 024, só neste celular.
+const winOn = () => lsGet('cad-janela') === '1' || (lsGet('cad-janela') == null && !!st.profile?.sleep_alert);
+async function setWinAlert(on, quiet) {
+  lsSet('cad-janela', on ? '1' : '0');
+  if (st.profile) st.profile.sleep_alert = on;
+  await sb.from('profiles').update({ sleep_alert: on }).eq('id', st.user.id);
+  if (!quiet) winSyncLater();
+}
+// Um aviso por soneca, 15 min antes do começo da janela, só entre 6h e 18h (decisão de 13/11). O celular
+// guarda um aviso por bebê; um "Acordou" novo troca o aviso, e o "Dormiu" cancela o que não tocou.
+const winId = id => alertId('janela-' + id);
+let winTimer = 0;
+const winSyncLater = () => { if (medNotif) { clearTimeout(winTimer); winTimer = setTimeout(winSync, 1000); } };
+async function winSync() {
+  const b = st.baby; if (!medNotif || !b) return;
+  try {
+    const now = Date.now(), evs = sortedEntries();
+    const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
+    const open = liveOpen(sleepIntervals(evs).open, now), w = lastWake(last, open, now);
+    const n = w && winOn() && winNotice(w.t, wakeRef(b.birth_date, w.t), b);
+    const want = n && n.at > now + 5000 ? n.at + '|' + n.title + '|' + n.body : '';
+    const key = 'cad-janela-at-' + b.id;
+    if ((lsGet(key) || '') === want) return;
+    await medNotif.cancel({ notifications: [{ id: winId(b.id) }] });
+    lsSet(key, want || null);
+    if (!want || !(await notifGranted())) return;
+    if (ANDROID) await medNotif.createChannel({ id: 'janela', name: 'Janela de sono', importance: 4, visibility: 1, vibration: true });
+    await medNotif.schedule({ notifications: [{ id: winId(b.id), title: n.title, body: n.body, schedule: { at: new Date(n.at), allowWhileIdle: true },
+      channelId: 'janela', smallIcon: 'ic_stat_sono', extra: { baby: b.id, go: 'day' } }] });
+  } catch {}
+}
 addEventListener('resize', stickLast);
 
 /* ---------- boas-vindas ---------- */
@@ -744,7 +917,8 @@ function bvCard() {
   const joined = me ? Date.parse(me.joined_at) : NaN;
   if (!b || !f || !(joined >= BV_DESDE)) return null;
   const done = bvDone(), evs = [...st.entries.values()], creator = f.creator_id === st.user.id;
-  if (creator && !evs.length) return done.includes('ola') ? null : 'ola';
+  // O sono anotado no onboarding (item 57) não conta: o cartão pergunta a última mamada mesmo assim.
+  if (creator && !evs.some(x => x.kind !== 'sleep' && x.kind !== 'wake')) return done.includes('ola') ? null : 'ola';
   if (!creator && !done.includes('entrou')) return 'entrou';
   // Item 56 (prévia aprovada em 12/11: https://claude.ai/artifact/CUY2ZjNWqmbAEr3b1GbiMw): o primeiro
   // "Agora não" (ou ×) só adia o convite; ele volta uma única vez, 3 dias do calendário depois, com outro
@@ -763,17 +937,22 @@ function renderBv() {
   const go = (label, no) => `<div class="btns"><button class="save" data-bvgo="${k}">${label}</button>${no ? `<button class="link" data-bv="${k}">${no}</button>` : ''}</div>`;
   const card = h => `<div class="card bv">${h}</div>`;
   const nome = b ? esc(b.name) : '';
-  // Item 30 (prévia aprovada em 07/11): o primeiro registro já sai do cartão, com a última mamada.
+  // Item 30 (prévia aprovada em 07/11): o primeiro registro já sai do cartão, com a última mamada. Desde o
+  // onboarding novo (13/11), no jeito que a família escolheu: peito com o lado, mamadeira com os ml, e nos
+  // dois "Como foi". Sem resposta (antes do 024), como antes: o peito.
+  const fd = b?.feeding, src = fd === 'bottle' ? 'bottle' : fd === 'both' ? bvSrc : 'breast';
   const top = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
-      + '<p>Para começar: quando foi a última mamada?</p>'
-      + '<div><div class="lbl">Horário</div><input class="field bvtime" type="time" id="bvTime" aria-label="Horário da última mamada"></div>'
-      + '<div><div class="lbl">Peito (opcional)</div><div class="seg bvside k-feed">'
-      + '<button class="opt" data-bvside="left" aria-pressed="false">Esquerdo</button><button class="opt" data-bvside="right" aria-pressed="false">Direito</button></div></div>'
+      + '<p>Quando foi a última mamada?</p>'
+      + `<div class="bvrow"><div><div class="lbl">Horário</div><input class="field bvtime" type="time" id="bvTime" value="${esc(bvTimeV)}" aria-label="Horário da última mamada"></div>`
+      + (src === 'bottle' ? `<div><div class="lbl">ml</div><input class="field bvml" id="bvMl" inputmode="numeric" maxlength="4" value="${esc(bvMlV)}" aria-label="Mililitros"></div>` : '') + '</div>'
+      + (fd === 'both' ? '<div><div class="lbl">Como foi</div><div class="seg bvside k-feed">'
+        + ['breast', 'bottle'].map(v => `<button class="opt${src === v ? ' on' : ''}" data-bvsrc="${v}" aria-pressed="${src === v}">${v === 'breast' ? 'Peito' : 'Mamadeira'}</button>`).join('') + '</div></div>' : '')
+      + (src === 'breast' ? '<div><div class="lbl">Peito</div><div class="seg bvside k-feed">'
+        + '<button class="opt" data-bvside="left" aria-pressed="false">Esquerdo</button><button class="opt" data-bvside="right" aria-pressed="false">Direito</button></div></div>' : '')
       + '<p class="err" id="bvErr" hidden></p>'
-      + '<div class="btns"><button class="save" data-bvfeed="1">Anotar mamada</button><button class="link" data-bv="ola">Pular</button></div>'
-      + '<p class="dim">Depois, toque em Mamada, Sono ou Fralda para anotar. Tudo aparece aqui embaixo, na linha do tempo do dia.</p>')
-    : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(st.family.name)}</h3></div>`
-      + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
+      + '<div class="btns"><button class="save" data-bvfeed="1">Anotar mamada</button><button class="link" data-bv="ola">Pular</button></div>')
+    : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(famName(st.family.name))}</h3></div>`
+      + '<p>O que alguém anota aparece para todos.</p>' + go('Entendi'))
     : '';
   if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
   bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não'))
@@ -781,8 +960,13 @@ function renderBv() {
     : '');
 }
 // A última mamada do cartão "Tudo pronto": horário de hoje (ou de ontem, se ainda não chegou) e o peito, se marcado.
-let bvSide = null;
+let bvSide = null, bvSrc = 'breast', bvTimeV = '', bvMlV = '';
 $('paneHome').addEventListener('click', async e => {
+  const c = e.target.closest('[data-bvsrc]');
+  if (c) {
+    bvSrc = c.dataset.bvsrc; bvTimeV = $('bvTime')?.value || ''; bvMlV = $('bvMl')?.value || '';
+    bvSide = null; return renderBv();
+  }
   const s = e.target.closest('[data-bvside]');
   if (s) {
     bvSide = bvSide === s.dataset.bvside ? null : s.dataset.bvside;
@@ -795,8 +979,12 @@ $('paneHome').addEventListener('click', async e => {
     if (!/^\d\d:\d\d$/.test(v)) { err.textContent = 'Informe o horário da última mamada.'; err.hidden = false; return $('bvTime').focus(); }
     const now = Date.now(), d0 = startOfDay(now);
     let t = atTime(d0, v); if (t > now) t = atTime(addDays(d0, -1), v);
+    const fd = st.baby.feeding, src = fd === 'bottle' ? 'bottle' : fd === 'both' ? bvSrc : bvSide || fd ? 'breast' : null;
+    const ml = src === 'bottle' ? +($('bvMl')?.value || '').replace(/\D/g, '') : null;
+    if (src === 'bottle' && !(ml > 0)) { err.textContent = 'Informe quantos ml.'; err.hidden = false; return $('bvMl').focus(); }
+    if (ml > 1000) { err.textContent = 'No máximo 1000 ml.'; err.hidden = false; return $('bvMl').focus(); }
     busy(f, true);
-    const ok = await addEntry({ kind: 'feed', t, src: bvSide ? 'breast' : null, side: bvSide });
+    const ok = await addEntry({ kind: 'feed', t, src, side: src === 'breast' ? bvSide : null, ml });
     busy(f, false);
     if (ok) { bvSkip('ola'); toast('Salvo às ' + hm(t)); }
     return;
@@ -832,7 +1020,10 @@ function symptomSub(last, now) {
   if (!e || e.t < startOfDay(now)) return 'nada hoje';
   return (e.kind === 'vomit' ? 'vômito' : e.symptom === 'outro' ? 'outro' : (SYMPTOM[e.symptom] || 'sintoma').toLowerCase()) + ' ' + ago(e.t);
 }
-const rowKeys = () => [...FIXED, ...(isOn('pump') ? ['pump'] : []), 'more'];
+// Desde o onboarding novo (itens 40 e 61, 13/11), a linha segue as respostas do bebê aberto: na mamadeira,
+// sem Ordenha; com "Já come", o botão Comida. Nenhum registro some dos resumos.
+const rowKeys = () => [...FIXED, ...(isOn('pump') && st.baby?.feeding !== 'bottle' ? ['pump'] : []),
+  ...(st.baby?.eats_food ? ['food'] : []), 'more'];
 const popKeys = () => [...['med', 'symptom', 'care'].filter(isOn), 'other'];
 function renderGrid(last, open, now, joined) {
   // Há quanto tempo, só para o leitor de tela: na tela, a linha do tempo logo acima já mostra a hora.
@@ -848,8 +1039,10 @@ function renderGrid(last, open, now, joined) {
   };
   const ks = rowKeys();
   $('grid').style.setProperty('--n', ks.length);
+  $('grid').classList.toggle('n6', ks.length > 5);   // com Comida e Ordenha: seis botões, letra menor
   $('grid').innerHTML = ks.map((k, i) => {
     if (k === 'more') return `<button class="rb k-other" data-k="more" aria-haspopup="dialog" aria-expanded="false">${ICON.other}<b>Outros</b></button>`;
+    if (k === 'food') return `<button class="rb k-food" data-k="food" aria-haspopup="dialog">${ICON.food}<b>Comida</b></button>`;
     const j = k === joined ? ` joined${i === 0 ? ' jl' : ''}` : '';
     return `<button class="rb ${BTN[k][1]}${j}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])} (${esc(sub(k))}). Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b>${j ? '<span class="neck" aria-hidden="true"><i class="l"></i><i class="r"></i></span>' : ''}</button>`;
   }).join('');
@@ -858,6 +1051,7 @@ function renderGrid(last, open, now, joined) {
 function openPop() {
   const ks = popKeys(), bt = $('grid').querySelector('.rb').getBoundingClientRect();
   $('popIn').style.setProperty('--n', rowKeys().length);
+  $('popIn').classList.toggle('n6', rowKeys().length > 5);
   $('popIn').innerHTML = ks.map(k => k === 'other'
     ? `<button class="rb k-other" data-k="other">${ICON.edit}<b>Livre</b></button>`
     : `<button class="rb ${BTN[k][1]}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}. Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b></button>`).join('');
@@ -1048,7 +1242,15 @@ function ratePopup() {
   $('ask').hidden = false; $('ask').querySelector('[data-rate="go"]').focus();
 }
 // O link segue para a loja (o app abre fora dele); o popup fecha nos dois casos.
+// Comida, primeira etapa (item 61): só o aviso, com a capivara de capacete. Nada é gravado.
+function foodSoon() {
+  if (!$('ask').hidden) return;
+  $('ask').innerHTML = `<div class="cbox soon" role="dialog" aria-modal="true" aria-labelledby="soonH">${CAPI_HAT}<h3 id="soonH">Em construção</h3>`
+    + '<p>O registro de comida chega numa próxima versão.</p><button class="save" data-soon="1">Entendi</button></div>';
+  $('ask').hidden = false; $('ask').querySelector('[data-soon]').focus();
+}
 $('ask').addEventListener('click', e => {
+  if (e.target.closest('[data-soon]') || (e.target === $('ask') && $('ask').querySelector('.soon'))) return closeAsk();
   const b = e.target.closest('[data-rate]'); if (!b) return;
   if (b.dataset.rate === 'go') lsSet('cad-review-feito', '1');
   closeAsk();
@@ -1446,7 +1648,7 @@ function openEntry(k, edit, avulsa) {
   const open = liveOpen(sleepIntervals(sortedEntries()).open, Date.now());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
   S = { mode: 'entry', k: k === 'wake' ? 'sleep' : CARE[k] ? 'care' : k, edit, ck: CARE[k] && k !== 'care' || edit?.kind === 'care' ? k : null, base: startOfDay(t), time: hm(t),
-        src: edit ? (edit.src || '') : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
+        src: edit ? (edit.src || '') : st.baby.feeding === 'bottle' ? 'bottle' : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
@@ -3181,7 +3383,7 @@ async function afterLeavingFamily() {
   S = null; $('scrim').hidden = true; $('sheet').hidden = true;
   await loadFamilies();
   if (st.families.length) openFamily(st.families[0].id);
-  else { $('cancelCreate').hidden = true; show('scrCreate'); }
+  else show('scrStart');
 }
 // Os toques nas abas do bebê, Família e Perfil.
 async function paneAction(a, v, btn) {
@@ -3241,7 +3443,7 @@ async function paneAction(a, v, btn) {
   if (a === 'rename') return renameSheet();
   if (a === 'theme') return setTheme(v);
   if (a === 'switchFam') return openFamily(v);
-  if (a === 'newFam') { $('cancelCreate').hidden = false; return show('scrCreate'); }
+  if (a === 'newFam') return onbStart('profile');
   if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
@@ -3360,6 +3562,7 @@ $('grid').addEventListener('click', e => {
   const b = e.target.closest('[data-k]'); if (!b || held) return;
   if (closePop()) return;
   if (b.dataset.k === 'more') return openPop();
+  if (b.dataset.k === 'food') return foodSoon();
   sheetFrom = fromBtn(b, b.dataset.k); openEntry(b.dataset.k); sheetFrom = null;
 });
 $('popIn').addEventListener('click', e => {
