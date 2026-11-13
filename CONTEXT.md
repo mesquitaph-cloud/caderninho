@@ -24,6 +24,18 @@ _Evite_: usuário, participante, cuidador
 Como a pessoa aparece para as famílias de que participa, escolhido por ela no primeiro acesso.
 _Evite_: apelido, username, e-mail
 
+**Você é** (13/11):
+O que a pessoa responde nas boas-vindas, ao lado do nome: Mãe, Pai ou Outro cuidador. Opcional e de cada
+pessoa (quem entra por convite responde por si), não da família.
+_Evite_: papel, parentesco, tipo de usuário
+
+**Onboarding** (13/11):
+As telas de quem acabou de entrar, uma pergunta por tela: boas-vindas (nome e "Você é"), "Como você vai
+começar?" (criar uma família ou entrar numa), e, para quem cria, sobre o bebê, como mama, o que vai na
+mamadeira, outros alimentos, sono e criar a família. Nada é gravado antes de "Criar família". A idade só
+decide quais perguntas aparecem, nunca o que a família deve fazer.
+_Evite_: cadastro, tutorial, configuração inicial
+
 **Convite**:
 Link que o criador gera para uma única pessoa entrar na família; vale 7 dias ou até ser usado.
 _Evite_: compartilhamento, acesso
@@ -37,6 +49,12 @@ _Evite_: convite (convite é para entrar numa família), compartilhamento
 Uma criança acompanhada por uma família. Uma família pode ter mais de um bebê; cada registro é de
 um único bebê.
 _Evite_: filho, criança, paciente
+
+**Jeito de alimentar** (13/11):
+Do bebê, respondido no onboarding: como mama (no peito, na mamadeira ou nos dois), o que vai na mamadeira
+(leite materno, fórmula ou os dois) e, com 6 meses ou mais, se já come outros alimentos. Muda os botões da
+tela inicial (na mamadeira, sem Ordenha; "Já come", com Comida) e como a Mamada abre. Nenhum registro some.
+_Evite_: tipo de aleitamento, dieta, perfil alimentar
 
 **Aceite**:
 A confirmação, guardada no banco com a data e a versão, de que a pessoa leu a Política de Privacidade
@@ -144,6 +162,19 @@ _Evite_: histórico completo, relatório
 **Outros**:
 Registro de texto livre para o que não cabe nas demais categorias.
 _Evite_: nota, observação (observação é o comentário opcional dentro de qualquer registro)
+
+**Comida** (13/11):
+O botão para bebês que já comem outros alimentos (papinha, frutas, refeições). Por enquanto só abre o aviso
+"Em construção"; o registro vem numa próxima versão.
+_Evite_: papinha (como nome do botão), refeição, introdução alimentar
+
+**Janela de sono** (13/11):
+Com o bebê acordado, no cartão do bebê: há quanto tempo está acordado e, até 12 meses, a faixa de tempo
+acordado da idade (Cleveland Clinic), em duração e nunca em hora no relógio. As frases dizem que o bebê
+"pode estar" com sono; não mandam pôr para dormir. De 12 meses em diante e sem nascimento, só o contador.
+Some com o bebê dormindo. **Aviso da janela**: um por soneca no celular de quem pediu, 15 min antes do
+começo da faixa, só entre 6h e 18h.
+_Evite_: hora de dormir, hora ideal, previsão, sono atrasado, passou do ponto
 
 **Botões da tela inicial**:
 Os botões de registro, três por linha, no Diário. Mamada, Sono e Fralda aparecem sempre, e Outros

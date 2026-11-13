@@ -29,7 +29,7 @@ const P = d => `<path vector-effect="non-scaling-stroke" d="${d}"/>`;
 const EAR = /<path[^>]*d="M80 15\.8C80 9\.5 86\.5 8\.5 87\.5 14\.6"\/>/;
 const CAPI_ZZ = CAPI.replace('viewBox="0 0 120 70"', 'viewBox="0 -16 120 86"')
   .replace('</svg>', P('M93 4H99L93 10H99') + P('M103 -14H112L103 -5H112') + '</svg>');
-const CAPI_HAT = CAPI.replace(EAR, '').replace('viewBox="0 0 120 70"', 'viewBox="0 -8 120 78"')
+export const CAPI_HAT = CAPI.replace(EAR, '').replace('viewBox="0 0 120 70"', 'viewBox="0 -8 120 78"')
   .replace('</svg>', P('M82.5 14.8C82.5 6.5 87.5 2.5 92.5 2.5S102.5 6.5 102.5 14.8Z') + P('M78 14.8H107') + P('M92.5 2.5V8.5') + '</svg>');
 
 // Os dias e as semanas da janela aberta. first: o primeiro dia que dá para ver (nascimento ou cadastro).

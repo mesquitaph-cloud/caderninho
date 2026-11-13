@@ -50,24 +50,44 @@
   <p class="legal"><a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a><a href="/termos" target="_blank" rel="noopener">Termos de Uso</a></p>
 </section>
 
-<!-- Nome de exibição -->
+<!-- Boas-vindas: nome de exibição e "Você é" (itens 47 e 57; textos aprovados em 13/11) -->
 <section class="screen" id="scrName" hidden>
-  <h1>Bem-vindo</h1>
+  <h1>Boas-vindas ao Soneca</h1>
   <form id="fName">
-    <p>Como você quer aparecer para a família?</p>
-    <input class="field" id="nameIn" maxlength="40" placeholder="Patrick" required>
+    <div><div class="lbl">Seu nome</div><input class="field" id="nameIn" maxlength="40" placeholder="Patrick" required aria-label="Seu nome"></div>
+    <div><div class="lbl" id="roleLbl">Você é</div>
+      <div class="pick3" id="rolePick" role="group" aria-labelledby="roleLbl"><button type="button" class="opt" data-role="mae" aria-pressed="false">Mãe</button><button type="button" class="opt" data-role="pai" aria-pressed="false">Pai</button><button type="button" class="opt" data-role="outro" aria-pressed="false">Outro cuidador</button></div></div>
     <label class="chk"><input type="checkbox" id="okName"><span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span>Li a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a> e os <a href="/termos" target="_blank" rel="noopener">Termos de Uso</a> do Soneca. Se tenho menos de 18 anos, uso com autorização do meu responsável.</span></label>
     <p class="err" id="errName" hidden></p>
     <button class="save" type="submit">Continuar</button>
   </form>
 </section>
 
+<!-- Criar ou entrar (prévia 3, aprovada em 13/11) -->
+<section class="screen" id="scrStart" hidden>
+  <h1>Como você vai começar?</h1>
+  <div class="big">
+    <button type="button" id="startCreate"><span class="bt"><b>Criar uma família</b><small>Para anotar a rotina do seu bebê</small></span></button>
+    <button type="button" id="startJoin"><span class="bt"><b>Entrar numa família</b><small>Recebi um convite de quem já usa</small></span></button>
+  </div>
+</section>
+
+<!-- Link do convite colado: para quem abriu o link no navegador ou numa versão antiga do app (Ca, 17/10) -->
+<section class="screen" id="scrPaste" hidden>
+  <button type="button" class="back" id="backPaste" aria-label="Voltar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <h1>Cole o link do convite</h1>
+  <form id="fPaste">
+    <input class="field" id="pasteIn" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Link do convite">
+    <p class="err" id="errPaste" hidden></p>
+    <button class="save" type="submit">Abrir convite</button>
+  </form>
+</section>
+
 <!-- Convite -->
 <section class="screen" id="scrInvite" hidden>
-  <h1>Convite</h1>
-  <p id="inviteText"></p>
+  <h1 id="inviteTitle">Convite</h1>
+  <div class="card ivcard" id="inviteCard" hidden><div class="bvtop"><span id="inviteCapi"></span><h3 id="inviteBaby"></h3></div><p id="inviteFrom"></p></div>
   <div class="consent" id="inviteOk">
-    <p class="txt" id="inviteBaby"></p>
     <label class="chk"><input type="checkbox" id="okInvite"><span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span>Vou usar essas informações só para cuidar do bebê e não vou repassá-las sem autorização da família.</span></label>
   </div>
   <p class="err" id="errInvite" hidden></p>
@@ -97,32 +117,10 @@
   <button class="save" id="acceptBaby">Continuar</button>
 </section>
 
-<!-- Criar família -->
-<section class="screen" id="scrCreate" hidden>
-  <h1>Criar família</h1>
-  <form id="fPaste" class="consent">
-    <b>Recebeu um convite?</b>
-    <p class="txt">Cole aqui o link que te mandaram para entrar na família de quem convidou.</p>
-    <div><div class="lbl">Link do convite</div><input class="field" id="pasteIn" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-    <p class="err" id="errPaste" hidden></p>
-    <button class="save" type="submit">Abrir convite</button>
-  </form>
-  <p class="hint" style="margin:0">Ou crie uma família nova:</p>
-  <form id="fCreate">
-    <p>A família é quem cuida do bebê e vê os mesmos registros. Depois você convida as outras pessoas.</p>
-    <div><div class="lbl">Nome da família</div><input class="field" id="famIn" maxlength="60" placeholder="Família Mesquita" required></div>
-    <div><div class="lbl">Nome do bebê</div><input class="field" id="babyIn" maxlength="40" placeholder="Marina" required></div>
-    <div><div class="lbl">Nascimento (opcional)</div><input class="field" id="birthIn" type="date"></div>
-    <div><div class="lbl" id="sexLbl">Menina ou menino (opcional)</div>
-      <div class="sexpick" role="radiogroup" aria-labelledby="sexLbl"><label><input type="radio" name="sexIn" value="F"><span>Menina</span></label><label><input type="radio" name="sexIn" value="M"><span>Menino</span></label></div>
-      <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.</p></div>
-    <div class="consent"><b>Dados do bebê e de saúde</b><p class="txt">O Soneca guarda o que você anotar sobre o bebê: rotina, incluindo amamentação e ordenha, e, se quiser, sintomas, temperatura, remédios e peso. Esses dados são de uma criança e de saúde, e só os membros da sua família os veem. Não vendemos, não usamos para publicidade e você apaga tudo quando quiser.</p>
-      <label class="chk"><input type="checkbox" id="okBaby"><span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar esses dados, inclusive de amamentação, para o uso da minha família.</span></label></div>
-    <p class="err" id="errCreate" hidden></p>
-    <button class="save" type="submit">Criar família</button>
-  </form>
-  <button type="button" class="link" id="cancelCreate" hidden>Voltar</button>
-</section>
+<!-- Criar família, uma pergunta por tela (itens 40, 46, 57 e 60; prévia aprovada em 13/11:
+     https://claude.ai/artifact/RYPyjm5Z4ARWtnvXJrmffU). Desenhadas pelo app.js (onbDraw); nada é gravado
+     antes de "Criar família". -->
+<section class="screen" id="scrOnb" hidden></section>
 
 <!-- App -->
 <div id="scrMain" hidden>
@@ -135,6 +133,8 @@
       <div class="av" id="babyInitial">B</div>
       <div><div class="bn" id="babyName">Bebê</div><div class="ba" id="babyAge"></div></div>
     </button>
+    <!-- Janela de sono (item 60): com o bebê acordado, há quanto tempo e a faixa da idade (janela.js) -->
+    <div class="hw" id="sleepWin" hidden></div>
   </header>
   <div class="babies" id="babyTabs" hidden></div>
 

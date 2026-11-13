@@ -161,7 +161,7 @@ if (CEN === 'app-convite') {
 
 // "app-remedio": finge o app do Android, com avisos de mentira guardados em window.avisos (pendentes)
 // e window.tocarAviso(n) para fingir o toque. Mais um remédio de 8 em 8 horas.
-if (CEN === 'app-remedio' || CEN === 'app-tarefas') {
+if (CEN === 'app-remedio' || CEN === 'app-tarefas' || CEN === 'app-janela' || CEN === 'app-conta-nova') {
   const real = window.Capacitor, perm = { display: 'prompt' }, taps = [];
   window.avisos = [];
   window.tocarAviso = n => taps.forEach(f => f({ notification: n }));
@@ -178,7 +178,7 @@ if (CEN === 'app-remedio' || CEN === 'app-tarefas') {
     registerPlugin: name => name === 'LocalNotifications' ? LN : name === 'App'
       ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
       : new Proxy({}, { get: () => async () => ({}) }) };
-  T.medicines.push({ id: 'm-2', family_id: T.medicines[0].family_id, baby_id: T.medicines[0].baby_id, name: 'Amoxicilina', amount: '5 ml',
+  if (CEN === 'app-remedio' || CEN === 'app-tarefas') T.medicines.push({ id: 'm-2', family_id: T.medicines[0].family_id, baby_id: T.medicines[0].baby_id, name: 'Amoxicilina', amount: '5 ml',
     schedule: 'every', times: ['06:00:00', '14:00:00', '22:00:00'], every_hours: 8, start_date: ymd(NOW - DAY), days: 7, stopped_at: null,
     created_by: U.me, created_at: new Date(NOW - 2 * DAY).toISOString() });
 }
@@ -348,3 +348,50 @@ if (CEN === 'tarefas' || CEN === 'app-tarefas') {
                           author_id: d.author_id, created_at: d.at });
 }
 
+// Onboarding novo e janela de sono (itens 40, 46, 47, 57, 60 e 61; 13/11).
+// "conta-nova" (e "app-conta-nova", que finge o app do Android, com os avisos em window.avisos): conta
+// recém-criada, sem nome nem família, para passar por todas as telas. O convite "teste-convite" vale e
+// mostra a Família Andrade com a Helena. O que "Criar família" grava fica em T (window.testeT).
+if (CEN === 'conta-nova' || CEN === 'app-conta-nova') {
+  ME = 'u-nova';
+  T.consents = [];
+  const fam = T.families.splice(0), mem = T.family_members.splice(0), kids = T.babies.splice(0);
+  T.entries.splice(0);
+  RPC.create_family = ({ family_name, baby_name, baby_birth }) => {
+    const fid = 'f-nova', bid = 'b-nova', now = new Date().toISOString();
+    T.families.push({ id: fid, name: family_name, creator_id: ME, created_at: now });
+    T.family_members.push({ family_id: fid, user_id: ME, joined_at: now });
+    T.babies.push({ id: bid, family_id: fid, name: baby_name, birth_date: baby_birth, sex: null, created_at: now });
+    return { data: fid };
+  };
+  RPC.invite_info = ({ tok }) => tok === 'teste-convite' ? [{ creator_name: 'Carol', family_name: fam[0].name, is_valid: true }] : [];
+  RPC.invite_baby = ({ tok }) => tok === 'teste-convite' ? [{ baby_name: kids[0].name, birth_date: kids[0].birth_date }] : [];
+  RPC.accept_invite = ({ tok }) => {
+    if (tok !== 'teste-convite') return { error: { message: 'invite_not_found' } };
+    T.families.push(...fam); T.family_members.push(...mem); T.babies.push(...kids);
+    T.family_members.push({ family_id: fam[0].id, user_id: ME, joined_at: new Date().toISOString() });
+    return { data: fam[0].id };
+  };
+  window.testeT = T;
+}
+
+// "janela" (e "app-janela", o app do Android com o aviso da janela ligado): a Helena com 2 meses, acordada
+// há 45 min (faixa de 1h a 2h: "Janela de sono em 15 min"). ?acordada=MIN muda há quanto tempo acordou;
+// ?bebe=menino, ?bebe=sem (sem menina ou menino), ?bebe=4m, ?bebe=7m (mamadeira e "Já come"), ?bebe=13m
+// e ?bebe=semdata (só o contador) trocam o bebê. ?bebe=dormindo: a Helena dorme há 25 min.
+if (CEN === 'janela' || CEN === 'app-janela') {
+  const q = new URLSearchParams(location.search);
+  if (q.get('acordada')) sessionStorage.setItem('teste-acordada', q.get('acordada'));
+  if (q.get('bebe')) sessionStorage.setItem('teste-bebe', q.get('bebe'));
+  const aw = +(sessionStorage.getItem('teste-acordada') || 45), bb = sessionStorage.getItem('teste-bebe') || '';
+  const meses = { '4m': 4, '7m': 7, '13m': 13 }[bb] || 2, kid = T.babies[0];
+  const d = new Date(NOW); d.setMonth(d.getMonth() - meses); d.setDate(d.getDate() - 3);
+  kid.birth_date = bb === 'semdata' ? null : ymd(d.getTime());
+  if (bb === 'menino') { kid.name = 'Theo'; kid.sex = 'M'; }
+  if (bb === 'sem') { kid.name = 'Alex'; kid.sex = null; }
+  if (bb === '7m') { kid.name = 'Theo'; kid.sex = 'M'; kid.feeding = 'bottle'; kid.bottle_milk = 'formula'; kid.eats_food = true; }
+  rmWhere(e => at(e) >= NOW - 6 * 36e5 && (e.kind === 'sleep' || e.kind === 'wake'));
+  add(NOW - aw * MIN - 70 * MIN, 'sleep');
+  add(NOW - aw * MIN, 'wake'); if (bb === 'dormindo') add(NOW - Math.min(25, aw - 5) * MIN, 'sleep');
+  T.profiles.find(p => p.id === U.me).sleep_alert = CEN === 'app-janela';
+}

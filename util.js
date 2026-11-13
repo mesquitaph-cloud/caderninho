@@ -4,6 +4,11 @@ const P = 'fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="
 export const ICON = {
   feed: `<svg viewBox="0 0 24 24" ${P}><path d="M9 3h6M10.5 3v3M13.5 3v3"/><path d="M9.5 6h5a1.5 1.5 0 0 1 1.5 1.5V19a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V7.5A1.5 1.5 0 0 1 9.5 6z"/><path d="M8 12h3M8 15.5h3"/></svg>`,
   sleep: `<svg viewBox="0 0 24 24" ${P}><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>`,
+  // Mulher amamentando, só no traço (no lugar do peito; aprovado pelo Patrick em 13/11): a cabeça
+  // inclinada para o bebê, o ombro e o braço que segura o bebê no colo.
+  nursing: `<svg viewBox="0 0 24 24" ${P}><circle cx="8.5" cy="5" r="2.6"/><path d="M4 21v-6a6 6 0 0 1 6-6h.5"/><path d="M10.5 9c1.6.2 2.8 1.2 3.4 2.6"/><circle cx="15.6" cy="13.2" r="2.1"/><path d="M17.6 13.9c1.3.4 2.5.1 3.4-.8"/><path d="M6.5 16c2.8 2.3 8.4 2.7 12.5-.6"/></svg>`,
+  // Comida (item 61): a tigela com a colher.
+  food: `<svg viewBox="0 0 24 24" ${P}><path d="M3 12h18a9 9 0 0 1-18 0z"/><path d="M15 4l-3 8"/></svg>`,
   // Fralda descartável vista de frente, com as fitas dos lados
   diaper: `<svg viewBox="0 0 24 24" ${P}><path d="M4.5 6h15v3.6c-2.8.4-4.3 2.9-4.9 8.4H9.4c-.6-5.5-2.1-8-4.9-8.4z"/><path d="M4.5 9.6h15"/><path d="M2.5 7.4l2 .4M21.5 7.4l-2 .4"/></svg>`,
   vomit: `<svg viewBox="0 0 24 24" ${P}><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8.5 15.5c1-1 2-1 3.5 0s2.5 1 3.5 0"/></svg>`,

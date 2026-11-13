@@ -11,6 +11,9 @@
 //   quem-fez      registros que outra pessoa fez e sonos em que a Helena pegou no sono sozinha
 //   app-convite   a mesma conta, no "app do iPhone" aberto pelo link de convite (Universal Link)
 //   carrossel     a Helena acordada e 3 dúvidas para a consulta, para as fotos do carrossel (relógio às 13h)
+//   conta-nova    conta recém-criada, sem nome nem família: o onboarding inteiro (app-conta-nova: no "app do Android")
+//   janela        a Helena com 2 meses, acordada há 45 min: a janela de sono (?acordada=MIN, ?bebe=menino|sem|4m|7m|13m|semdata|dormindo);
+//                 app-janela: o mesmo no "app do Android", com o aviso da janela em window.avisos
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

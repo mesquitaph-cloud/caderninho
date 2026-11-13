@@ -296,13 +296,12 @@ mesmos, porque o texto cita os itens pelo número.
   https://claude.ai/artifact/K2FDN2JaaYbKBhc937hAHE), e na aba do bebê. A decidir: onde a foto fica
   guardada (Storage do Supabase, com regra de acesso só para a família), tamanho máximo, e se entra na
   Política (foto do bebê é dado pessoal; LGPD). Pede SQL novo e plugin de câmera/galeria no app.
-- **40 · Família que não amamenta no peito** (Patrick, 07/11): uma opção para esconder o peito e a
-  ordenha. Hoje a Mamada sempre pergunta "Peito" ou "Mamadeira", e só o botão Ordenha dá para desligar
-  (Família › Botões). A decidir (com prévia): onde fica a opção (cadastro do bebê, Família › Botões ou
-  pergunta nas boas-vindas); se a Mamada abre direto na mamadeira; o que some dos resumos e do relatório
-  do pediatra; e o texto, neutro, sem julgar quem não amamenta. Junto: na mamadeira, marcar se é leite
-  materno ou fórmula (vale também para quem amamenta e dá leite ordenhado). A decidir: se a escolha
-  fica lembrada da última mamadeira; e se resumos e relatório separam os ml de cada um.
+- **40 · Família que não amamenta no peito** (Patrick, 07/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): a
+  pergunta "Como a Marina mama hoje?" (No peito · Na mamadeira · Nos dois) e, com mamadeira, "O que vai na
+  mamadeira?" (Leite materno · Fórmula · Os dois) ficam no onboarding, por bebê. Na mamadeira, a tela
+  inicial não mostra a Ordenha e a Mamada abre na mamadeira; nenhum registro some e nada é apagado.
+  Texto neutro, sem julgar quem não amamenta. Fica para depois: mudar a resposta no Perfil, separar os ml
+  de leite materno e de fórmula nos resumos e no relatório. Banco: `supabase/024_onboarding_novo.sql`.
 - **41 · Média por dia da mamadeira e das fraldas no resumo do Mês** (Patrick, 07/11): nos quadros
   "Na mamadeira" e "Fraldas" da aba Mês, a média por dia em destaque e o total do mês menor embaixo, como
   o quadro "Sono por dia" já faz (`monthHtml` em `report.js`). Hoje o destaque é o total (ex.: "18,2 L",
@@ -336,14 +335,15 @@ mesmos, porque o texto cita os itens pelo número.
   no ramo `claude/avisos-0711`:** a cada redesenho, o app tira da central os avisos já tocados das doses
   marcadas (por quem for) nos últimos 3 dias, achados pelo número do aviso. Testar no iPhone e no
   Android, com o app aberto e fechado.
-- **46 · O app muda com a idade do bebê** (Patrick, 07/11): botões, resumos e frases acompanham a fase
-  (ex.: recém-nascido × bebê que já come papinha). A decidir: o que muda em cada fase, por que fonte se
-  definem as idades, e se a família pode desfazer a mudança. Liga com "fases até 5 anos" (Ideias para
-  depois) e com os itens 21 (marcos) e 25 (limpar a tela inicial).
-- **47 · Quem está usando: pai ou mãe fixo** (Patrick, 07/11): cada pessoa marca uma vez, no perfil, se
-  é o pai, a mãe ou outro cuidador, em vez de o app não saber quem é. Serve às frases do item 44 e à
-  divisão de tarefas no resumo. A decidir (com prévia): onde se escolhe (boas-vindas ou Perfil), as
-  opções além de pai e mãe (avó, babá, duas mães, dois pais), e se pede coluna nova no banco (SQL novo).
+- **46 · O app muda com a idade do bebê** (Patrick, 07/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): a idade
+  só decide quais perguntas aparecem, não o que a família deve fazer. Com 6 meses ou mais, o onboarding
+  pergunta "A Marina já come outros alimentos?" (Já come · Ainda não); "Já come" põe o botão Comida (item
+  61), e "Ainda não" não volta a perguntar. Sem nascimento: jeito de recém-nascido, sem a pergunta e sem a
+  referência de sono. Prematuro: sem pergunta agora.
+- **47 · Quem está usando: pai, mãe ou outro cuidador** (Patrick, 07/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11):
+  "Você é" (Mãe · Pai · Outro cuidador) na tela do nome, para todos, inclusive quem entra por convite;
+  pode pular. Fica no perfil da pessoa (coluna `caregiver`, SQL 024). Serve depois às frases do item 44 e
+  à divisão de tarefas. Falta: mudar no Perfil (texto a aprovar) e a menção na Política de Privacidade.
 - **49 · Data da próxima consulta com o pediatra** (Patrick, 07/11): a família anota quando é a
   próxima consulta e o app lembra perto do dia, junto com as dúvidas que faltam perguntar. A decidir
   (com prévia): onde fica (aba do bebê, perto do relatório e das dúvidas); se o aviso é notificação e com
@@ -369,6 +369,15 @@ mesmos, porque o texto cita os itens pelo número.
   cuidado é de fralda (a pessoa marca ao criar, ou uma lista de nomes como pomada e creme); onde aparece
   na Fralda (botão de marcar ou lista); se conta como um cuidado no resumo ou só como detalhe da fralda;
   e se precisa de coluna nova no banco (SQL novo).
+- **57 · Boas-vindas perguntam peito ou mamadeira** (Patrick, 11/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11):
+  o onboarding novo, com uma pergunta por tela, na ordem: boas-vindas (nome, "Você é" e a Política) →
+  "Como você vai começar?" (Criar uma família · Entrar numa família) → sobre o bebê (nome, nascimento,
+  menina ou menino) → como mama → o que vai na mamadeira (só com mamadeira) → outros alimentos (só 6
+  meses ou mais) → sono (acordada ou dormindo, desde que hora, e o aviso da janela de sono) → criar a
+  família (nome e LGPD). Nada é gravado antes de "Criar família"; a resposta do sono vira o primeiro
+  registro. Quem entra por convite: nome → link do convite → convite → tela inicial. O cartão "Tudo pronto"
+  pergunta a última mamada no jeito escolhido. Textos aprovados palavra por palavra no vault (nota
+  "Concorrentes - onboarding"). Prévia aprovada: https://claude.ai/artifact/RYPyjm5Z4ARWtnvXJrmffU.
 - **58 · Tendências** (Patrick, 07/11; decidido em 13/11; no ramo `claude/tendencias-58`, PR aberto em
   13/11): a 5ª aba, a primeira da barra de baixo, com o ícone de barras. A barra fica Tendências · aba do
   bebê · Diário · Família · Perfil; "Hoje" passa a se chamar Diário, fica no centro e continua sendo a
@@ -393,6 +402,20 @@ mesmos, porque o texto cita os itens pelo número.
   fora: remédios, cuidados (banho, massagem, lavagem nasal etc.), febre e sintomas. A decidir (com
   prévia): que número aparece para cada registro; febre e sintomas sem a capivara e sem avaliar nada;
   cuidados e ordenha só com o botão ligado.
+
+- **60 · Janela de sono** (Patrick, 13/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): no cartão do bebê, no alto,
+  com o bebê acordado, a faixa "Acordada há 45 min · Janela de sono em 15 min" e uma régua pequena com a
+  referência da idade em duração (Cleveland Clinic, https://health.clevelandclinic.org/wake-windows-by-age,
+  25/04/2024; 4 a 5 meses = 1h40 a 3h15, média das faixas vizinhas, decisão do Patrick). De 12 a 18 meses
+  e sem nascimento, só o contador. Dormindo, volta a faixa "Dormindo há". Sem menina ou menino anotado,
+  "acordado/a". Aviso no celular, se a pessoa disse Sim no onboarding: um por soneca, 15 min antes da
+  janela, só das 6h às 18h. A regra "o Soneca não orienta" foi afrouxada só aqui, por decisão do Patrick.
+  Fica para depois: o costume do próprio bebê com 5 a 7 dias de sono anotado, a explicação da fonte nos
+  Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
+- **61 · Registro de comida** (Patrick, 13/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): primeira etapa, o
+  botão Comida na tela inicial para quem respondeu "Já come". Ao tocar, o aviso "Em construção" com a
+  capivara de capacete; nada é gravado. A decidir na etapa seguinte (com prévia): os campos, o lugar nos
+  resumos e no relatório, e ligar o botão no Perfil.
 
 **Marketing**
 

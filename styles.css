@@ -12,7 +12,7 @@
   --badge-day:inline;--badge-night:none;
   /* Botões de entrar: cores exigidas pela Apple (preto de dia, branco de noite) e pelo Google (sempre claro) */
   --apple-bg:#000000;--apple-ink:#FFFFFF;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#5E97CF;--c-nap:#9CC8F0;--c-wakes:#1F4E80;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;
+  --c-sleep:#5E97CF;--c-nap:#9CC8F0;--c-wakes:#1F4E80;--c-feed:#2E7350;--c-diaper:#B8860B;--c-pump:#2E7350;--c-poo:#5E3A1E;--poo-ink:#6B4423;--poo-bg:#F3E3D3;--on-poo:#FFF3E6;--c-med:#A8423C;--c-weight:#B8693A;--c-vomit:#A8423C;--c-care:#9A5328;--food:#F5CDB0;--food-ink:#76401E;--c-food:#9A5328;
   /* Curvas da OMS no gráfico de crescimento */
   --curve:#CDB79E;--curve-mid:#A88B6E;--band:#F6EBDC;
   --scrim:rgba(74,53,34,.38);
@@ -27,7 +27,7 @@
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;--food:#7D4F23;--food-ink:#F5D3BA;--c-food:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}}
 :root[data-theme="dark"]{
@@ -36,7 +36,7 @@
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
   --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
-  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;
+  --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;--food:#7D4F23;--food-ink:#F5D3BA;--c-food:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
   --accent:#C98B62;--focus:#C98B62;--on-accent:#111B21;--link:#E6B48E;--danger:#F2B8B5;--on-danger:#111B21;--scrim:rgba(5,9,11,.6);}
 html{touch-action:manipulation}body{overflow-x:clip}*{box-sizing:border-box}[hidden]{display:none!important}
@@ -93,7 +93,7 @@ button.pl::before{content:"";position:absolute;inset:-6px;border-radius:50%}
 .act.k-edit{background:var(--surface);color:var(--muted);border:1.5px dashed var(--line);justify-items:center;align-content:center;text-align:center}
 .k-feed{--kbg:var(--feed);background:var(--feed);color:var(--feed-ink)}.k-sleep,.k-wake{--kbg:var(--sleep);background:var(--sleep);color:var(--sleep-ink)}
 .k-diaper{--kbg:var(--diaper);background:var(--diaper);color:var(--diaper-ink)}.k-vomit,.k-symptom{--kbg:var(--vomit);background:var(--vomit);color:var(--vomit-ink)}.k-other{--kbg:var(--other);background:var(--other);color:var(--other-ink)}
-.k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}
+.k-pump{--kbg:var(--pump);background:var(--pump);color:var(--pump-ink)}.k-food{--kbg:var(--food);background:var(--food);color:var(--food-ink)}
 .k-med{--kbg:var(--med);background:var(--med);color:var(--med-ink)}
 .k-care,.k-massage,.k-bath,.k-nasal,.k-tummy,.k-sunbath,.k-burp,.k-ointment{--kbg:var(--care);background:var(--care);color:var(--care-ink)}
 /* Editar: liga e desliga os botões da família */
@@ -944,7 +944,7 @@ body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 au
 .rb svg{width:22px;height:22px}
 .rb b{font-weight:500;font-size:12.5px;line-height:1.1;color:var(--ink);text-align:center;overflow-wrap:anywhere}
 .rb.k-feed svg,.rb.k-pump svg{color:var(--c-feed)}.rb.k-sleep svg{color:var(--c-sleep)}.rb.k-diaper svg{color:var(--c-diaper)}
-.rb.k-med svg,.rb.k-symptom svg{color:var(--c-med)}.rb.k-care svg{color:var(--c-care)}.rb.k-other svg{color:var(--other-ink)}
+.rb.k-med svg,.rb.k-symptom svg{color:var(--c-med)}.rb.k-care svg{color:var(--c-care)}.rb.k-food svg{color:var(--c-food)}.rb.k-other svg{color:var(--other-ink)}
 @media (prefers-reduced-motion:no-preference){.rb{transition:transform .12s cubic-bezier(.3,.7,.2,1)}.rb:active{transform:scale(.93)}}
 /* A faixa do sono ou da mamada: sai do botão dela, ligada por uma emenda curva */
 .ext{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;padding:12px 12px 12px 14px;min-height:84px}
@@ -1164,3 +1164,46 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .tre p,.trb p{margin:0;color:var(--muted);max-width:30ch}
 .tre .capi{width:150px;height:auto;stroke-width:1.6px;overflow:visible}
 .trb .capi{width:120px;height:auto;stroke-width:1.6px;overflow:visible}
+
+/* Onboarding novo (itens 47, 57 e 60; prévia aprovada em 13/11): uma pergunta por tela, a barrinha dos
+   passos e a seta de voltar no alto, e as opções grandes de um toque */
+.onbtop{display:flex;align-items:center;gap:10px}
+.back{width:40px;height:40px;margin-left:-8px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+#scrPaste>.back{margin-bottom:-6px}
+.onbsteps{flex:1;display:flex;gap:4px}
+.onbsteps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.onbsteps i.on{background:var(--accent)}
+.pick2,.pick3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pick3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pick2 .opt,.pick3 .opt{text-align:center;padding-inline:6px;min-width:0;overflow-wrap:anywhere}
+.pick2 .opt.on,.pick3 .opt.on{border-color:var(--ink);background:var(--surface2)}
+.big{display:flex;flex-direction:column;gap:10px}
+.big button{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;font-size:17px;font-weight:500;min-height:60px}
+.big button[aria-pressed="true"]{border-color:var(--ink);background:var(--surface2)}
+.big button>svg,.big .two svg{width:28px;height:28px;flex:none;color:var(--c-feed)}
+.big .two{display:flex;gap:2px;flex:none}
+.big .bt{display:flex;flex-direction:column;gap:2px}
+.big .bt b{font-weight:500}
+.big .bt small{font-size:14px;color:var(--muted);font-weight:400}
+.ivcard .bvtop .capi{width:56px;height:auto;flex:none;stroke-width:1.9px}
+.ivcard h3:empty{display:none}
+.ivcard p{margin:0}
+.bvrow{display:flex;gap:8px;align-items:end}.bvrow>div{flex:1;min-width:0}
+/* Comida, primeira etapa (item 61): o aviso "Em construção" com a capivara de capacete */
+.cbox.soon{align-items:center;text-align:center;gap:10px;padding:24px 20px 16px}
+.cbox.soon .capi{width:120px;height:auto;stroke-width:1.6px;overflow:visible}
+.cbox.soon .save{align-self:stretch;margin-top:6px}
+/* Janela de sono (item 60): no cartão do bebê, com o bebê acordado; a régua com a faixa da idade */
+.hcard{flex-wrap:wrap}
+.hw{flex-basis:100%;display:flex;flex-direction:column;gap:2px;background:var(--sleep);color:var(--sleep-ink);border-radius:14px;padding:8px 12px 2px;margin-top:2px}
+.hwt{font-size:14px;font-variant-numeric:tabular-nums}
+.hwt b{font-weight:500}
+.ruler{position:relative;display:block;height:30px}
+.ruler i{position:absolute;display:block}
+.ruler .trk,.ruler .rng{top:9px;height:6px;border-radius:3px;background:currentColor}
+.ruler .trk{left:0;right:0;opacity:.18}
+.ruler .rng{opacity:.5}
+.ruler .now{top:5px;width:14px;height:14px;border-radius:50%;background:currentColor;border:2px solid var(--sleep);transform:translateX(-50%)}
+.ruler .tk{position:absolute;top:17px;font-size:11px;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+/* Seis botões na linha (Ordenha e Comida): a letra diminui para "Mamada" e "Ordenha" não quebrarem */
+.n6 .rb b{font-size:11px;overflow-wrap:normal}
