@@ -881,6 +881,15 @@ svg.rp-g-chart{display:block;width:100%;height:auto}
 .gd-signs li{display:flex;gap:12px;align-items:baseline}
 .gd-signs li::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--c-sleep);transform:translateY(-1px)}
 .gd-urgent{font-weight:500}
+/* Tabela simples (guia 7, "Quantos ml"): idade, conta e exemplo */
+.gd-tbl{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.gd-tbl table{width:100%;border-collapse:collapse;font-size:15px;line-height:1.4;font-variant-numeric:tabular-nums}
+.gd-tbl th{text-align:left;font-weight:500;color:var(--muted);font-size:14px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.gd-tbl td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.gd-tbl tr:last-child td{border-bottom:0}
+.gd-tbl td:first-child{font-weight:500;white-space:nowrap}
+.gd-tbl td:last-child{white-space:nowrap}
+@media (max-width:520px){.gd-tbl td:last-child,.gd-tbl td:first-child{white-space:normal}}
 /* Bloco final: frase e lojas primeiro, foto por último (ao lado, no computador) */
 .gd-cta{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:16px}
 .gd-cta .ln-badges{flex-wrap:nowrap;gap:10px}
