@@ -149,6 +149,20 @@ if (CEN === 'noites-foto') {
   add(dia(6, 19, 5), 'feed', { src: 'bottle', ml: 120 }); add(dia(6, 19, 20), 'sleep'); wake(dia(6, 20, 0), 20, false);
 }
 
+// "mamadeira-dia": a foto do guia "Quantos ml o bebê toma na mamadeira" (prévia aprovada pelo Patrick em
+// 13/11). Abrir com o relógio às 23:30 e &foto=1. Uma família que só anota mamadeira: hoje seis, de fórmula,
+// somando 810 ml; nenhum sono, fralda ou remédio anotado (Acordou e Última fralda ficam "sem registro").
+if (CEN === 'mamadeira-dia') {
+  rmWhere(e => at(e) >= dia(0) - 3 * 36e5 || e.kind !== 'feed');
+  T.medicines.length = 0;
+  const quem = { Carol: U.me, Pedro: U.p, Vo: U.v };
+  for (const [hh, mm, ml, q] of [[6, 10, 120, 'Carol'], [9, 20, 150, 'Vo'], [12, 40, 130, 'Vo'], [15, 50, 150, 'Pedro'], [19, 0, 120, 'Carol'], [22, 10, 140, 'Pedro']]) {
+    add(dia(0, hh, mm), 'feed', { src: 'bottle', ml });
+    entries[entries.length - 1].author_id = quem[q];
+  }
+  entries.sort((a, b) => at(a) - at(b));
+}
+
 // "app-convite": finge o app do iPhone aberto por um link de convite (Universal Link), sem passar
 // pelo navegador. O app tem de mostrar a tela do convite, não "Criar família".
 if (CEN === 'app-convite') {
