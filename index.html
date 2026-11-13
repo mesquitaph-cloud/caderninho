@@ -126,7 +126,7 @@
 
 <!-- App -->
 <div id="scrMain" hidden>
-<!-- Hoje: os registros do dia a dia -->
+<!-- Diário (antes "Hoje"): os registros do dia a dia -->
 <div class="ptr" id="ptr" aria-hidden="true" hidden></div>
 <div class="wrap" id="paneHome">
   <!-- O cartão do bebê fica preso no alto enquanto a tela rola -->
@@ -183,14 +183,16 @@
 </div></div>
 <div class="popscrim" id="popScrim" hidden></div>
 <div class="pop" id="pop" role="dialog" aria-label="Outros registros" hidden><div class="pin" id="popIn"></div></div>
-<!-- Aba do bebê, Família e Perfil: desenhadas pelo app.js -->
+<!-- Tendências, aba do bebê, Família e Perfil: desenhadas pelo app.js -->
+<div class="wrap pane" id="paneTrends" hidden></div>
 <div class="wrap pane" id="paneBaby" hidden></div>
 <div class="wrap pane" id="paneFamily" hidden></div>
 <div class="wrap pane" id="paneProfile" hidden></div>
 <nav class="tabbar" id="tabbar" aria-label="Seções do Soneca">
   <div class="in">
-    <button data-tab="home"><span class="ic"><span data-i="today"></span></span>Hoje</button>
+    <button data-tab="trends"><span class="ic"><span data-i="trends"></span></span>Tendências</button>
     <button data-tab="baby"><span class="ic"><span class="mini" id="tabBabyInitial">B</span></span><span class="nm" id="tabBabyName">Bebê</span></button>
+    <button data-tab="home"><span class="ic"><span data-i="diary"></span></span>Diário</button>
     <button data-tab="family"><span class="ic"><span data-i="menu"></span></span>Família</button>
     <button data-tab="profile"><span class="ic"><span data-i="profile"></span></span>Perfil</button>
   </div>

@@ -25,7 +25,8 @@ const LONG = 6 * HOUR, BED = 3 * HOUR, FEW = 3, MAX_SLEEP = 14 * HOUR;
 const at = (d0, h) => d0 + h * HOUR; // d0 é início do dia; ok para 6h e 18h (a troca de horário é à meia-noite)
 
 // Uma noite por dia d: os sonos que começam em [d 18h, d+1 6h).
-function nights(a, z, evs, sleeps, now) {
+// Também usada por Tendências (tendencias.js), que precisa dos sonos de cada noite (ns).
+export function nights(a, z, evs, sleeps, now) {
   const out = [], ivs = sleeps.filter(([x, y]) => y - x <= MAX_SLEEP);
   const feeds = evs.filter(e => e.kind === 'feed'), baths = evs.filter(e => e.kind === 'bath');
   const syms = evs.filter(e => e.kind === 'symptom' || e.kind === 'vomit');
@@ -43,7 +44,7 @@ function nights(a, z, evs, sleeps, now) {
       return [{ awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
     });
     if (bed === null) {
-      out.push({ d, t0: ns[0][0], hasBed: false, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
+      out.push({ d, t0: ns[0][0], hasBed: false, ns, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
       continue;
     }
     // O dia que veio antes: das 6h até a hora de dormir.
@@ -53,7 +54,7 @@ function nights(a, z, evs, sleeps, now) {
     const lastFeed = feeds.filter(e => e.t < bed && e.t >= bed - 24 * HOUR).at(-1);
     const any = dayEvs.length > 0 || naps.length > 0;
     out.push({
-      d, t0: bed, hasBed: true, longest, wakes,
+      d, t0: bed, hasBed: true, ns, longest, wakes,
       late: (bed - d) > 20 * HOUR,
       bath: baths.some(e => e.t >= bed - 3 * HOUR && e.t <= bed),
       feedSoon: lastFeed ? bed - lastFeed.t < 2 * HOUR : null,
@@ -111,7 +112,7 @@ function wakesBox(all, month) {
 }
 
 // "noite de 14 para 15 out"; na virada do mês, "noite de 31 out para 1 nov".
-function nightName(d) {
+export function nightName(d) {
   const x = new Date(d), y = new Date(addDays(d, 1));
   return 'noite de ' + x.getDate() + (x.getMonth() === y.getMonth() ? '' : ' ' + MESES[x.getMonth()]) + ' para ' + y.getDate() + ' ' + MESES[y.getMonth()];
 }

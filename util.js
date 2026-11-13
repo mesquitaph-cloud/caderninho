@@ -32,7 +32,10 @@ export const ICON = {
   // Relatório para pediatra: a prancheta.
   clip: `<svg viewBox="0 0 24 24" ${P}><path d="M8.5 3h7v3h-7z"/><path d="M15.5 4.5H18a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2h2.5"/><path d="M8 12h8M8 16h5"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" ${P}><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5.5a3 3 0 0 1 0 5M21 20a6 6 0 0 0-4-5.6"/></svg>`,
-  // Barra de baixo: Hoje (o calendário), Família (o menu de pessoas) e Perfil (a pessoa com a engrenagem).
+  // Barra de baixo: Tendências (as barras), Diário (o caderno; antes Hoje, com o calendário), Família (o
+  // menu de pessoas) e Perfil (a pessoa com a engrenagem).
+  trends: `<svg viewBox="0 0 24 24" ${P}><path d="M5 19V11M10 19V6M15 19V13M20 19V9"/></svg>`,
+  diary: `<svg viewBox="0 0 24 24" ${P}><path d="M6 3.5h10.5a2 2 0 0 1 2 2v15H8a2 2 0 0 1-2-2z"/><path d="M6 18.5a2 2 0 0 1 2-2h10.5M10 8h5M10 11h4"/></svg>`,
   today: `<svg viewBox="0 0 24 24" ${P}><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13.2v3.6"/></svg>`,
   profile: `<svg viewBox="0 0 24 24" ${P}><circle cx="10" cy="7.5" r="3.5"/><path d="M3 20a7 7 0 0 1 9.6-6.5"/><circle cx="17.5" cy="17.5" r="2.4"/><path d="M19.9 17.5h1.5M18.7 19.6l.75 1.3M16.3 19.6l-.75 1.3M15.1 17.5h-1.5M16.3 15.4l-.75-1.3M18.7 15.4l.75-1.3"/></svg>`,
 };
