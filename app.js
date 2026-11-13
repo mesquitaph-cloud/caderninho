@@ -732,6 +732,8 @@ const CAPI_Z = CAPI.replace('</svg>', '<path class="z z1" vector-effect="non-sca
 const bvKey = () => 'cad-bv-' + st.family.id;
 const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
 const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
+// Quando a pessoa adiou o convite pela primeira vez (ms), para ele voltar uma vez 3 dias depois.
+const bvAdiou = () => +lsGet(bvKey() + '-convite') || 0;
 // "a Marina", "o Pedro"; sem menina ou menino anotado, só o nome.
 const artigo = (b, a, o, nada) => b.sex === 'F' ? a : b.sex === 'M' ? o : nada;
 function bvCard() {
@@ -741,11 +743,13 @@ function bvCard() {
   const done = bvDone(), evs = [...st.entries.values()], creator = f.creator_id === st.user.id;
   if (creator && !evs.length) return done.includes('ola') ? null : 'ola';
   if (!creator && !done.includes('entrou')) return 'entrou';
-  if (creator && st.members.length < 2 && !done.includes('convite')) return 'convite';
-  const j0 = startOfDay(joined);
-  if (!evs.length || j0 >= startOfDay(Date.now())) return null;
-  const days = new Set(evs.filter(e => e.t >= j0).map(e => startOfDay(e.t)));
-  return days.size >= 3 && !done.includes('semana') ? 'semana' : null;
+  // Item 56 (prévia aprovada em 12/11: https://claude.ai/artifact/CUY2ZjNWqmbAEr3b1GbiMw): o primeiro
+  // "Agora não" (ou ×) só adia o convite; ele volta uma única vez, 3 dias do calendário depois, com outro
+  // texto ('convite2'). O segundo encerra. O convite da aba Família fica sempre. Saiu o cartão da semana.
+  if (!creator || st.members.length >= 2 || done.includes('convite')) return null;
+  const adiou = bvAdiou();
+  if (!adiou) return 'convite';
+  return startOfDay(Date.now()) >= addDays(startOfDay(adiou), 3) ? 'convite2' : null;
 }
 // O redesenho de 30 em 30 s só troca o cartão que mudou, para não apagar o que a pessoa digitou nele.
 const bvHtml = {};
@@ -769,11 +773,9 @@ function renderBv() {
       + `<p>Aqui vocês veem e anotam a mesma rotina ${artigo(b, 'da ', 'do ', 'de ')}${nome}. O que alguém anota aparece para todos.</p>` + go('Entendi'))
     : '';
   if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
-  bvPaint('bvMid', k === 'semana' ? card(x + `<h3>Dá para ver a semana inteira</h3><p>No painel da semana, os dias lado a lado. E, na aba ${artigo(b, 'da ', 'do ', 'de ')}${nome}, o relatório para levar ao pediatra, com as dúvidas que vocês anotarem até a consulta.</p>` + go('Ver', 'Fechar'))
+  bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não'))
+    : k === 'convite2' ? card(x + '<h3>Alguém mais cuida junto?</h3><p>Quem você convidar vê e anota na mesma linha do tempo. Se preferir depois, o convite fica na aba Família.</p>' + go('Convidar alguém', 'Agora não'))
     : '');
-  bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não')) : '');
-  // Enquanto o cartão fala dela, a aba Semana fica com a borda caramelo.
-  $('tabWeek').classList.toggle('bvhl', k === 'semana');
 }
 // A última mamada do cartão "Tudo pronto": horário de hoje (ou de ontem, se ainda não chegou) e o peito, se marcado.
 let bvSide = null;
@@ -799,10 +801,12 @@ $('paneHome').addEventListener('click', async e => {
 }, true);
 $('paneHome').addEventListener('click', e => {
   const b = e.target.closest('[data-bv],[data-bvgo]'); if (!b) return;
-  const k = b.dataset.bv || b.dataset.bvgo; bvSkip(k);
+  const k = b.dataset.bv || b.dataset.bvgo;
+  // Primeiro "Agora não" (ou ×) do convite: só adia. Convidar, ou dispensar a volta, encerra o convite.
+  if (k === 'convite' && !b.dataset.bvgo) lsSet(bvKey() + '-convite', String(Date.now()));
+  else bvSkip(k === 'convite2' ? 'convite' : k);
   if (!b.dataset.bvgo || k === 'entrou') return render();
-  if (k === 'convite') return goTab('family', 'famMembers');
-  if (k === 'semana') { st.view = 'week'; st.weekEnd = startOfDay(Date.now()); render(); }
+  if (k === 'convite' || k === 'convite2') return goTab('family', 'famMembers');
 });
 
 /* ---------- botões da tela inicial ---------- */
