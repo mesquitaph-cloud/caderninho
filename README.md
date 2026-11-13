@@ -369,6 +369,30 @@ mesmos, porque o texto cita os itens pelo número.
   cuidado é de fralda (a pessoa marca ao criar, ou uma lista de nomes como pomada e creme); onde aparece
   na Fralda (botão de marcar ou lista); se conta como um cuidado no resumo ou só como detalhe da fralda;
   e se precisa de coluna nova no banco (SQL novo).
+- **58 · Tendências** (Patrick, 07/11; decidido em 13/11; no ramo `claude/tendencias-58`, PR aberto em
+  13/11): a 5ª aba, a primeira da barra de baixo, com o ícone de barras. A barra fica Tendências · aba do
+  bebê · Diário · Família · Perfil; "Hoje" passa a se chamar Diário, fica no centro e continua sendo a
+  tela que abre o app (Dia | Semana | Mês ficam dentro dele, sem mudança). No alto, a capivara pequena, o
+  título e as guias Sono · Mamadas · Fraldas · Ordenha · Peso (Ordenha só com o botão ligado); abre em
+  Sono. **Só o Sono tem gráficos nesta versão**; as outras guias mostram "Em construção", com a capivara
+  de capacete de obra só no traço. No Sono, dia a dia (14 dias, provisório) ou semana a semana (12
+  semanas, cada uma com os 7 dias que terminam ontem), com as setas para voltar no tempo e, nesta ordem:
+  sono (barras empilhadas, noite embaixo e dia em cima), despertares à noite, a noite (da hora de dormir
+  até a de acordar), maior sono seguido e sonecas. Tocar numa barra mostra o número no quadro de cima; o
+  botão i explica a noite e a soneca e depois a barra mais clara. Hoje não entra na conta (sem a frase na
+  tela). Barra mais clara: dia com menos de 4 registros de dormiu e acordou, ou semana com menos de 4 dias
+  assim; nos cartões da noite, noite não anotada do começo ao fim (sem hora de dormir, sem o acordou de
+  manhã ou com mais de 3 h sem sono anotado entre a hora de dormir e as 6h). Regras de noite e dia de
+  "Como foram as noites" (`nights` em `noites.js`) e do sono de dia do item 22. Código em `tendencias.js`;
+  sem mudança no banco. Prévia aprovada: https://claude.ai/artifact/R84pJ6Ke6egHFtYVpfHxBv. A aprovar,
+  palavra por palavra: os textos da tela e do botão i, os cortes da barra clara, os 14 dias e as cores do
+  sono de dia (`--c-nap`) e dos despertares (`--c-wakes`).
+- **59 · Tendências dos outros registros** (Patrick, 13/11; 2ª versão da tela do item 58): os gráficos
+  das guias que ficaram "Em construção" (Mamadas: mamadas por dia, mamadeira em ml e tempo no peito;
+  Fraldas: xixi e cocô; Ordenha; Peso), já desenhados na prévia do item 58, e os registros que ficaram de
+  fora: remédios, cuidados (banho, massagem, lavagem nasal etc.), febre e sintomas. A decidir (com
+  prévia): que número aparece para cada registro; febre e sintomas sem a capivara e sem avaliar nada;
+  cuidados e ordenha só com o botão ligado.
 
 **Marketing**
 
@@ -1430,7 +1454,7 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
   dos 50% (todos os "Dormiu" do período, contando o sono sem a marca como não sozinho, embora o resumo
   diga só "5 vezes" porque a marca é opcional), um mínimo de sonos no período, onde aparece e o texto.
   Cuidado para o troféu não virar meta: o Soneca só junta o que foi anotado, sem avaliar o bebê.
-- **Tela de estatísticas do bebê** (Patrick, 07/11), como a do Baby Tracker: tendências e números
+- **Tela de estatísticas do bebê** (Patrick, 07/11; virou os itens 58 e 59 em 13/11), como a do Baby Tracker: tendências e números
   de cada registro ao longo do tempo (sono por dia, mamadas por dia, fraldas, ordenha), em gráficos
   por semana e por mês. Parte já existe nas abas Semana e Mês; a decidir se vira uma tela própria ou
   se cresce dentro delas, quais números entram e o período (7 dias, 30 dias, desde o nascimento).
