@@ -17,9 +17,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
-- **Noite de cada bebê (item 65, 13/11, ramo `claude/noite-do-bebe-65-235612`, PR aberto):** cada família
-  escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Antes de publicar, o Patrick roda
-  `supabase/025_noite_do_bebe.sql`; sem ele o app novo funciona com a regra antiga. Detalhes no item 65.
+- **Noite de cada bebê (item 65, no `main` pelo #97 em 13/11; SQL 025 rodado em 13/11):** cada família
+  escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Falta publicar: no site, com o
+  próximo deploy; no iPhone e no Android, só com a próxima compilação. Detalhes no item 65.
 - **Tarefas e Pomada para assadura (08–09/11, PR `claude/tarefas-0811`):** o botão Cuidados vira
   **Tarefas** e abre a lista da rotina logo abaixo do título (sem nada programado, só a capivara dormindo, com
   "Programar tarefa" e "Anotar uma tarefa avulsa"). Programar começa escolhendo a tarefa (Banho de sol, Tummy
@@ -416,8 +416,8 @@ mesmos, porque o texto cita os itens pelo número.
   Fica para depois: o costume do próprio bebê com 5 a 7 dias de sono anotado, a explicação da fonte nos
   Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
 - **65 · Noite de cada bebê** (antes "Hora de dormir de cada família"; Patrick, 13/11; decidido e com
-  textos aprovados em 13/11; no ramo `claude/noite-do-bebe-65-235612`, PR aberto em 13/11; **falta rodar
-  `supabase/025_noite_do_bebe.sql`**): cada bebê tem a sua noite, começo (16h a 23h) e fim (4h a 9h), de hora
+  textos aprovados em 13/11; no `main` pelo #97 em 13/11; `supabase/025_noite_do_bebe.sql` rodado pelo Patrick
+  em 13/11, conferido no banco: os bebês começam com 18h às 6h desde 13/11; falta a próxima compilação): cada bebê tem a sua noite, começo (16h a 23h) e fim (4h a 9h), de hora
   em hora, padrão 18h às 6h. Do começo em diante, todo sono é da noite; um sono que começa antes e passa do
   começo conta inteiro; despertar só depois do primeiro sono da noite; sai a regra do "primeiro sono de mais
   de 3 h". Vale daqui para frente: `babies.night` guarda desde quando vale cada horário, e os dias de antes
