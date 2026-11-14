@@ -15,7 +15,8 @@
 </head>
 <body>
 <!-- Página pública de soneca.app.br (a Vercel mostra esta página em "/", pelo vercel.json). Ordem aprovada
-     em 08/11/2026: topo com a tela do app, carrossel das dores, vídeo e a apresentação do Patrick.
+     em 08/11/2026: topo com a tela do app, carrossel das dores, vídeo e a apresentação do Patrick; em
+     13/11/2026 entraram os depoimentos de duas mães logo depois do topo (item 64).
      Textos e fotos aprovados estão em loja/landing/. Com ?convite=..., o inicio.js troca o texto do topo
      pelos passos do convite. Cada foto tem versão de dia e de noite (<picture>, pelo tema do celular). -->
 <main class="ln">
@@ -43,7 +44,16 @@
     </div>
   </div>
 
-  <!-- 2. Carrossel das dores -->
+  <!-- 2. Depoimentos (textos aprovados em loja/landing/depoimentos.md; não são avaliações das lojas, sem estrelas nem nota) -->
+  <section class="ln-sec" aria-labelledby="lnDepT">
+    <div class="ln-sech"><h2 id="lnDepT">O que dizem as famílias</h2></div>
+    <div class="ln-qs">
+      <figure class="ln-q"><blockquote>Estou amando esse aplicativo! Ele facilita muito nossa rotina, ajudando a organizar os horários de sono, mamadas e atividades do bebê. Assim, consigo acompanhar melhor cada necessidade do meu pequeno, ter mais organização e viver a maternidade com mais tranquilidade. Super recomendo!</blockquote><figcaption><span class="ln-av ln-av-j" aria-hidden="true">J</span><b>Ju, mãe do Antônio</b></figcaption></figure>
+      <figure class="ln-q"><blockquote>Sempre achei difícil encontrar um aplicativo que realmente funcionasse para a nossa rotina. Não tinha me adaptado a nenhum até conhecer o Soneca. É intuitivo, claro, prático e pensado para facilitar a vida das mães. Amo e recomendo de olhos fechados!</blockquote><figcaption><span class="ln-av ln-av-m" aria-hidden="true">M</span><b>Monique, mãe do Bento</b></figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 3. Carrossel das dores -->
   <section class="ln-sec" aria-labelledby="lnCarT">
     <div class="ln-sech">
       <h2 id="lnCarT">Você já se perguntou isso hoje?</h2>
@@ -64,7 +74,7 @@
     <div class="ln-dots" id="lnDots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </section>
 
-  <!-- 3. Vídeo (arquivo do próprio site; só baixa quando a pessoa chega nele) -->
+  <!-- 4. Vídeo (arquivo do próprio site; só baixa quando a pessoa chega nele) -->
   <section class="ln-sec" aria-labelledby="lnVidT">
     <div class="ln-sech"><h2 id="lnVidT">Veja o Soneca em uso.</h2></div>
     <div class="ln-video">
@@ -72,7 +82,7 @@
     </div>
   </section>
 
-  <!-- 4. Apresentação do Patrick (texto aprovado em loja/landing/apresentacao.md) -->
+  <!-- 5. Apresentação do Patrick (texto aprovado em loja/landing/apresentacao.md) -->
   <section class="ln-sec ln-me" aria-labelledby="lnMeT">
     <img src="/inicio/patrick.jpg" alt="Patrick Harris de Mesquita" width="520" height="650" loading="lazy">
     <div>
