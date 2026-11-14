@@ -406,15 +406,48 @@ mesmos, porque o texto cita os itens pelo número.
   prévia): que número aparece para cada registro; febre e sintomas sem a capivara e sem avaliar nada;
   cuidados e ordenha só com o botão ligado.
 
-- **60 · Janela de sono** (Patrick, 13/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): no cartão do bebê, no alto,
-  com o bebê acordado, a faixa "Acordada há 45 min · Janela de sono em 15 min" e uma régua pequena com a
-  referência da idade em duração (Cleveland Clinic, https://health.clevelandclinic.org/wake-windows-by-age,
-  25/04/2024; 4 a 5 meses = 1h40 a 3h15, média das faixas vizinhas, decisão do Patrick). De 12 a 18 meses
-  e sem nascimento, só o contador. Dormindo, volta a faixa "Dormindo há". Sem menina ou menino anotado,
-  "acordado/a". Aviso no celular, se a pessoa disse Sim no onboarding: um por soneca, 15 min antes da
-  janela, só das 6h às 18h. A regra "o Soneca não orienta" foi afrouxada só aqui, por decisão do Patrick.
-  Fica para depois: o costume do próprio bebê com 5 a 7 dias de sono anotado, a explicação da fonte nos
-  Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
+- **60 · Janela de sono** (Patrick, 13/11; 1ª etapa, só a faixa da idade, no `main` pelo #94 em 13/11, falta
+  a próxima compilação; regra da janela própria do bebê decidida em 13/11, ainda não programada). **O que já
+  está no código (1ª etapa):** no cartão do bebê, no alto, com o bebê acordado, a faixa "Acordada há 45 min ·
+  Janela de sono em 15 min" e uma régua pequena com a referência da idade em duração. Dormindo, volta a faixa
+  "Dormindo há". Sem menina ou menino anotado, "acordado/a". Aviso no celular, se a pessoa disse Sim no
+  onboarding e com "Acompanhar o sono" ligado (item 65): um por soneca, 15 min antes do começo da faixa da
+  idade, só das 6h às 18h. A regra "o Soneca não orienta" foi afrouxada só aqui, por decisão do Patrick.
+  Código em `janela.js` e em `app.js` (`renderWin`, `winSync`). **Regra decidida em 13/11 (2ª etapa):**
+  - **Faixa da idade** (Cleveland Clinic, https://health.clevelandclinic.org/wake-windows-by-age,
+    25/04/2024; 4 a 5 meses é a média das faixas vizinhas, decisão do Patrick): 0–1 m 30 min a 1h · 1–3 m
+    1h a 2h · 3–4 m 1h15 a 2h30 · 4–5 m 1h40 a 3h15 · 5–7 m 2h a 4h · 7–10 m 2h30 a 4h30 · 10–12 m 3h a 6h.
+    De 12 a 18 meses e sem nascimento, só o contador.
+  - **Janela própria do bebê:** centro na mediana das janelas de dia do bebê (de "acordou" até o próximo
+    "dormiu", de 10 min a 6 h, fora da noite do bebê). Largura = do P25 ao P75 do bebê, com mínimo de 45 min
+    e máximo de 1h30. Começa no mínimo aos 30 min acordado; se cair antes, empurrar mantendo a largura.
+  - **Dados da janela própria:** últimos 7 dias, se houver 5 ou mais dias com sono de dia; senão, últimos 14
+    dias com 5 ou mais dias; senão, a faixa da idade. Horários arredondados para 5 min.
+  - **Régua do cartão do bebê** (decidido pelo Patrick em 13/11): com a janela própria, mostra a faixa do
+    bebê. A faixa da idade aparece só quando ainda não há dados do bebê (menos de 5 dias com sono de dia nos
+    últimos 7 e também nos últimos 14).
+  - **Aviso:** 15 min antes do início da janela e nunca antes de 30 min acordado. Se cair antes, sai aos 30
+    min com a frase do começo da janela. Só das 6h às 18h. Um por soneca.
+  - **Perto da noite** (N = início da noite do bebê, item 65; A = hora em que acordou; janela de `de` a
+    `até`; S = mediana das sonecas do bebê depois das 15h, se houver 5 ou mais, senão de todas, no máximo
+    1 h):
+    - se N − A ≤ `até`, a faixa mostra "Noite às HHh" e termina na noite;
+    - se N − (A + `de` + S) < `de`, no lugar da faixa vem "Uma soneca agora pode atrapalhar o sono da
+      noite." e não sai aviso;
+    - nos outros casos, faixa e aviso normais.
+  - **Fora:** sugestão de horário de soneca para encaixar a noite (descartada).
+  - **Tendências, guia Sono:** cartão com a janela do bebê, a referência da idade e quantas sonecas foram
+    antes, dentro e depois da janela **da idade** nos últimos 14 dias. Aparece com 10 ou mais sonecas de dia.
+    Traz o lembrete de que a janela é uma estimativa e de que os sinais de sono valem mais. Contagem ou
+    porcentagem: a decidir.
+  - **Estado:** decidido; prévia 12 em https://claude.ai/artifact/TQWszUrRW6UUUVTXemmqBD; os textos novos
+    aguardam aprovação palavra por palavra.
+  - **Ordem:** o que já está programado (só a idade) segue como está; a regra própria entra num PR seguinte.
+  - **O que o PR seguinte muda no código de hoje:** (a) o aviso hoje sai 15 min antes do começo da faixa,
+    sem o piso de 30 min acordado (de 0 a 1 mês, sai aos 15 min); (b) a faixa e o aviso hoje não olham a
+    noite do bebê (nada de "Noite às HHh" nem da frase da soneca que atrapalha); (c) a régua mostra a faixa
+    da idade (ver **Régua** acima); (d) o cartão das Tendências ainda não existe. Ficam para depois, como antes: a explicação da fonte nos
+    Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
 - **65 · Noite de cada bebê** (antes "Hora de dormir de cada família"; Patrick, 13/11; decidido e com
   textos aprovados em 13/11; no `main` pelo #97 em 13/11; `supabase/025_noite_do_bebe.sql` rodado pelo Patrick
   em 13/11, conferido no banco: os bebês começam com 18h às 6h desde 13/11; falta a próxima compilação): cada bebê tem a sua noite, começo (16h a 23h) e fim (4h a 9h), de hora
