@@ -1219,3 +1219,28 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .ruler .tk{position:absolute;top:17px;font-size:11px;transform:translateX(-50%);font-variant-numeric:tabular-nums}
 /* Seis botões na linha (Ordenha e Comida): a letra diminui para "Mamada" e "Ordenha" não quebrarem */
 .n6 .rb b{font-size:11px;overflow-wrap:normal}
+/* Noite de cada bebê (item 65; prévias https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ e
+   https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL): a tela de edição, com a régua de 24 h e os exemplos
+   no botão i, e a pergunta do passo 7 do onboarding. Noite em --c-sleep, soneca em --c-nap. */
+.nth{display:flex;align-items:center;gap:8px}
+.nth .tri{margin-left:0}
+.ntimes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ntimes select.field{font-weight:500;font-variant-numeric:tabular-nums}
+.nbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 12px 6px}
+.nrul{display:block;width:100%;height:auto}
+.nrul .nday{fill:var(--surface2)}
+.nrul .nnight{fill:var(--c-sleep)}
+.nrul line{stroke:var(--muted)}
+.nrul text{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.nex{display:grid;gap:6px;background:var(--surface2);border-radius:14px;padding:10px 12px;font-size:14px}
+.nex b{font-weight:500}
+.nex p{margin:0;display:flex;gap:8px;line-height:1.4}
+.nex i{flex:none;width:10px;height:10px;border-radius:3px;margin-top:5px}
+.nex .nnight{background:var(--c-sleep)}.nex .nline{background:var(--muted)}.nex .nnap{background:var(--c-nap)}
+.onbdiv{height:1px;background:var(--line)}
+.lbl.strong{color:var(--ink);font-weight:500;font-size:16px}
+.onbhint{margin:6px 0 0}
+.onbmore{display:flex;flex-direction:column;gap:14px;border-left:3px solid var(--sleep);padding-left:12px}
+.nchips{display:flex;flex-wrap:wrap;gap:8px}
+.nchips .opt{min-width:56px;text-align:center;padding-inline:12px;font-variant-numeric:tabular-nums}
+.nchips .opt.on{border-color:var(--ink);background:var(--surface2)}

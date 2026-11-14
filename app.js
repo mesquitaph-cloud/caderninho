@@ -10,6 +10,7 @@ import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml }
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX } from './janela.js';
+import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -380,7 +381,7 @@ $('fPaste').addEventListener('submit', e => {
 // só na memória até "Criar família": antes disso, nada é gravado.
 let O = null;
 function onbStart(from) {
-  O = { from, i: 0, name: '', birth: '', sex: null, feed: null, milk: null, food: null, sleep: null, at: '', alert: null, fam: '', ok: false };
+  O = { from, i: 0, name: '', birth: '', sex: null, feed: null, milk: null, food: null, sleep: null, at: '', track: null, alert: null, night: NIGHT_START, fam: '', ok: false };
   show('scrOnb'); onbDraw(); window.scrollTo(0, 0);
 }
 const onbSteps = () => ['bebe', 'mama', ...(O.feed === 'bottle' || O.feed === 'both' ? ['mamadeira'] : []),
@@ -408,10 +409,20 @@ function onbDraw() {
     const f = forms(O.sex), Ac = f.ac.charAt(0).toUpperCase() + f.ac.slice(1);
     // O aviso só vale no app e com a faixa da idade (nascimento anotado e menos de 12 meses).
     const canAlert = !!medNotif && !!wakeRef(O.birth || null, Date.now());
+    // Item 65 (prévia 4 e textos aprovados em 13/11): a pergunta de acompanhar o sono; só com Sim
+    // aparecem o aviso da janela e o começo da noite (18h a 22h; sem resposta, 18h; o fim fica 6h).
+    const de = esc(deName({ name: O.name, sex: O.sex }));
     h += `<h1>${onbArt('A ', 'O ')}${onbNome()} está ${f.ac} ou dormindo?</h1><form id="fOnb">`
       + `<div class="pick2">${pressed(O.sleep === 'wake', 'data-sleep="wake"', Ac)}${pressed(O.sleep === 'sleep', 'data-sleep="sleep"', 'Dormindo')}</div>`
       + (O.sleep ? `<div><div class="lbl">${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}</div><input class="field" id="oAt" type="time" value="${esc(O.at)}" aria-label="${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}"></div>` : '')
-      + (canAlert ? `<div><div class="lbl" id="oAlertLbl">Avisar quando a janela de sono estiver chegando?</div><div class="pick2" role="group" aria-labelledby="oAlertLbl">${pressed(O.alert === true, 'data-alert="1"', 'Sim')}${pressed(O.alert === false, 'data-alert="0"', 'Agora não')}</div></div>` : '')
+      + '<div class="onbdiv"></div>'
+      + `<div><div class="lbl strong" id="oTrackLbl">Quer que o Soneca acompanhe o sono ${de} com você?</div><div class="pick2" role="group" aria-labelledby="oTrackLbl">${pressed(O.track === true, 'data-track="1"', 'Sim')}${pressed(O.track === false, 'data-track="0"', 'Agora não')}</div>`
+      + (O.track === true ? `<p class="hint onbhint">Mostra a janela de sono no cartão ${de} e conta a noite no horário da sua casa.</p>`
+        : O.track === false ? '<p class="hint onbhint">Dá para ligar depois na aba Família.</p>' : '') + '</div>'
+      + (O.track !== true ? '' : '<div class="onbmore">'
+        + (canAlert ? `<div><div class="lbl" id="oAlertLbl">Avisar quando a janela de sono estiver chegando?</div><div class="pick2" role="group" aria-labelledby="oAlertLbl">${pressed(O.alert === true, 'data-alert="1"', 'Sim')}${pressed(O.alert === false, 'data-alert="0"', 'Agora não')}</div></div>` : '')
+        + `<div><div class="lbl" id="oNightLbl">A partir de que horas você quer que ${onbArt('a ', 'o ')}${onbNome()} durma à noite?</div><div class="nchips" role="group" aria-labelledby="oNightLbl">${ONB_STARTS.map(x => pressed(O.night === x, `data-night="${x}"`, x + 'h')).join('')}</div></div>`
+        + '</div>')
       + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Continuar</button><button type="button" class="link" data-onb="skip">Pular</button></form>';
   }
   if (k === 'familia') h += '<h1>Criar a família</h1><form id="fOnb">'
@@ -445,6 +456,8 @@ $('scrOnb').addEventListener('click', async e => {
     return onbGo(1);
   }
   if (b.dataset.sleep) { O.sleep = b.dataset.sleep; if (!O.at) O.at = nowHm(); onbDraw(); return $('oAt')?.focus(); }
+  if (b.dataset.track) { O.track = b.dataset.track === '1'; return onbDraw(); }
+  if (b.dataset.night) { O.night = +b.dataset.night; return onbDraw(); }
   // "Sim" pede a permissão do celular na hora (decisão de 13/11). Negada, fica "Agora não".
   if (b.dataset.alert) {
     O.alert = b.dataset.alert === '1'; onbDraw();
@@ -484,7 +497,11 @@ async function onbCreate() {
     const now = Date.now(); let t = atTime(startOfDay(now), O.at); if (t > now) t = atTime(addDays(startOfDay(now), -1), O.at);
     await sb.from('entries').insert({ family_id: fid, baby_id: bid, ...fields({ kind: O.sleep, t }) });
   }
-  if (O.alert !== null) await setWinAlert(O.alert, true);
+  // Item 65: "Acompanhar o sono" da família (só se respondeu) e o começo da noite do bebê (com Sim). Sem
+  // o 025, só não salvam: fica ligado e a noite fica 18h às 6h.
+  if (O.track !== null) await sb.from('family_settings').upsert({ family_id: fid, sleep_track: O.track });
+  if (bid && O.track && O.night !== NIGHT_START) await sb.from('babies').update({ night: nightSave(null, O.night, NIGHT_END, Date.now()) }).eq('id', bid);
+  if (O.track && O.alert !== null) await setWinAlert(O.alert, true);
   O = null;
   await loadFamilies(); openFamily(fid);
   return true;
@@ -498,11 +515,13 @@ async function openFamily(fid) {
   show('scrLoading');
   st.family = fam;
   lsSet('cad-family', fid);
-  const [{ data: babies }, { data: mem }] = await Promise.all([
+  const [{ data: babies }, { data: mem }, { data: fset }] = await Promise.all([
     sb.from('babies').select('*').eq('family_id', fid).order('created_at'),
     sb.from('family_members').select('user_id,joined_at').eq('family_id', fid).order('joined_at'),
+    // "Acompanhar o sono" (025): sem linha da família, ou sem o 025, fica ligado.
+    sb.from('family_settings').select('*').eq('family_id', fid).maybeSingle(),
   ]);
-  st.babies = babies || []; st.members = mem || [];
+  st.babies = babies || []; st.members = mem || []; st.track = fset?.sleep_track !== false;
   await loadNames(st.members.map(m => m.user_id));
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
@@ -753,14 +772,14 @@ function renderHome() {
       $('monthView').innerHTML = `<div class="empty">${olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'}</div>`;
       return;
     }
-    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs, sex: b.sex });
+    const s = periodStats({ a: st.month, z: end, evs, sleep, now, ...logs, sex: b.sex, rule: ruleOf(b) });
     const div = division({ a: st.month, z: end, evs, now, name: firstName });
     const heading = MESES_L[d.getMonth()] + ' de ' + b.name + (partial ? ', até ' + shortDate(localDate(now)) : '');
     st.shareText = s.any ? reportText(s, { title: heading, name: b.name, span: 'mês', div }) : '';
     const ref = refHtml({ birth: b.birth_date, at: localDate(Math.min(end - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
                           cap: 'Médias de ' + MESES_L[d.getMonth()].toLowerCase() + ', nos dias com registros.' });
     $('monthView').innerHTML = monthHtml(s, { heading }) + ref + divisionHtml(div, { name: b.name })
-      + (s.any ? shareHtml(st.shareText) : '') + nightsHtml({ a: st.month, z: end, evs, sleeps: intervals, now });
+      + (s.any ? shareHtml(st.shareText) : '') + nightsHtml({ a: st.month, z: end, evs, sleeps: intervals, now, rule: ruleOf(b), de: deName(b) });
     return;
   }
   if (week) {
@@ -772,11 +791,11 @@ function renderHome() {
     $('prevDay').disabled = st.weekEnd <= addDays(firstDay(), 6);
     // No fim do painel, o resumo destes 7 dias pronto para mandar.
     const wa = addDays(st.weekEnd, -6), wz = addDays(st.weekEnd, 1);
-    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs, sex: b.sex });
+    const s = b && periodStats({ a: wa, z: wz, evs, sleep, now, ...logs, sex: b.sex, rule: ruleOf(b) });
     const div = b && division({ a: wa, z: wz, evs, now, name: firstName });
     st.shareText = s?.any ? reportText(s, { title: 'Semana de ' + b.name + ', ' + title, name: b.name, span: 'semana', div }) : '';
     $('weekView').innerHTML = !b ? '<div class="empty">Cadastre um bebê para começar.</div>'
-      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn, zoom: st.zoom.week,
+      : weekHtml({ end: st.weekEnd, evs, sleep, now, show: st.show, metric: st.metric, on: isOn, zoom: st.zoom.week, rule: ruleOf(b),
                    ref: refHtml({ birth: b.birth_date, at: localDate(Math.min(wz - 1, now)), name: b.name, sleep: s.sleepDay, pee: s.peeDay,
                                   cap: 'Médias destes 7 dias, nos dias com registros.' }) })
         + divisionHtml(div, { name: b.name })
@@ -854,14 +873,14 @@ const lastWake = (last, open, now) => {
   return w && now - w.t >= 0 && now - w.t <= WAKE_MAX ? w : null;
 };
 function renderWin(last, open, now) {
-  const el = $('sleepWin'), b = st.baby, w = b && lastWake(last, open, now);
+  const el = $('sleepWin'), b = st.baby, w = b && st.track !== false && lastWake(last, open, now);
   if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
   const awake = now - w.t, ref = wakeRef(b.birth_date, now);
   const h = `<span class="hwt">${winText(awake, ref, b.sex)}</span>` + (ref ? rulerHtml(awake, ref) : '');
   if (el.innerHTML !== h) el.innerHTML = h;
   el.hidden = false;
 }
-// O aviso no celular: quem disse Sim no onboarding (ou, depois, no Perfil). Fica no perfil da pessoa
+// O aviso no celular: quem disse Sim no onboarding, e só com "Acompanhar o sono" ligado na família (item 65). Fica no perfil da pessoa
 // (sleep_alert, 024) e, sem o 024, só neste celular.
 const winOn = () => lsGet('cad-janela') === '1' || (lsGet('cad-janela') == null && !!st.profile?.sleep_alert);
 async function setWinAlert(on, quiet) {
@@ -881,7 +900,7 @@ async function winSync() {
     const now = Date.now(), evs = sortedEntries();
     const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
     const open = liveOpen(sleepIntervals(evs).open, now), w = lastWake(last, open, now);
-    const n = w && winOn() && winNotice(w.t, wakeRef(b.birth_date, w.t), b);
+    const n = w && winOn() && st.track !== false && winNotice(w.t, wakeRef(b.birth_date, w.t), b);
     const want = n && n.at > now + 5000 ? n.at + '|' + n.title + '|' + n.body : '';
     const key = 'cad-janela-at-' + b.id;
     if ((lsGet(key) || '') === want) return;
@@ -894,6 +913,72 @@ async function winSync() {
   } catch {}
 }
 addEventListener('resize', stickLast);
+
+/* ---------- noite de cada bebê e "Acompanhar o sono" (item 65) ---------- */
+// Decidido com o Patrick em 13/11; prévias aprovadas: https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ
+// (tela de edição e abas) e https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL (onboarding e aba Família);
+// textos aprovados palavra por palavra. A regra está em noite.js. A noite aparece e muda nas abas Bebê
+// (seção Noite) e Família (seção Sono), sempre, com o "Acompanhar o sono" ligado ou não: o interruptor
+// só liga e desliga a janela de sono (a faixa no cartão e o aviso no celular).
+const ruleMemo = new WeakMap();
+const ruleOf = b => { if (!b) return OLD_RULE; let r = ruleMemo.get(b); if (!r) ruleMemo.set(b, r = nightRule(b)); return r; };
+async function setTrack(on) {
+  st.track = on; render(); winSyncLater();
+  const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, sleep_track: on });
+  if (error) { st.track = !on; render(); winSyncLater(); toast(errMsg(error)); }
+}
+// A tela de edição: Começa (16h a 23h), Termina (4h a 9h), a régua de 24 h e os exemplos no botão i.
+function nightSheet(b) {
+  if (!b) return;
+  const c = nightNow(b);
+  S = { mode: 'night', b, start: c.start, end: c.end, info: false }; drawNight();
+}
+const h24 = h => (h % 24) + 'h';
+function nightRuler(c) {
+  const W = 300, x = h => (h / 24 * W).toFixed(1);
+  let s = `<svg class="nrul" viewBox="0 0 ${W} 48" role="img" aria-label="Régua de 24 horas com a noite de ${c.start}h às ${c.end}h">`
+    + `<rect class="nday" x="0" y="6" width="${W}" height="18" rx="6"/>`
+    + `<rect class="nnight" x="${x(c.start)}" y="6" width="${(W - x(c.start)).toFixed(1)}" height="18" rx="6"/>`
+    + `<rect class="nnight" x="0" y="6" width="${x(c.end)}" height="18" rx="6"/>`;
+  for (const h of [0, 6, 12, 18, 24]) s += `<line x1="${x(h)}" x2="${x(h)}" y1="26" y2="30"/><text x="${Math.min(Math.max(+x(h), 8), W - 8)}" y="43" text-anchor="middle">${h24(h)}</text>`;
+  return s + '</svg>';
+}
+function drawNight() {
+  const { b, start, end, info } = S, opts = (hs, v) => hs.map(h => `<option value="${h}"${h === v ? ' selected' : ''}>${h}h</option>`).join('');
+  let h = `<div class="grab"></div><div class="shead"><h3 class="nth">${esc(nightTitle(b))}<button class="tri" data-act="nInfo" aria-expanded="${info}" aria-controls="nEx" aria-label="O que conta como noite">i</button></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (info) h += `<div class="nex" id="nEx" role="note"><b>O que conta como noite</b>`
+    + `<p><i class="nnight"></i>Dormiu às ${h24(start - 1)}40: o sono conta inteiro como noite.</p>`
+    + `<p><i class="nnight"></i>Acordou e voltou a dormir entre ${h24(start)} e ${h24(end)}: conta como despertar.</p>`
+    + `<p><i class="nline"></i>Só dormiu às ${h24(start + 1)}30: o tempo acordado antes não conta como despertar.</p>`
+    + `<p><i class="nnap"></i>Dormiu às ${h24(end + 1)}: conta como soneca.</p></div>`;
+  h += `<div class="ntimes"><div><label class="lbl" for="nStart">Começa</label><select class="field" id="nStart">${opts(STARTS, start)}</select></div>`
+    + `<div><label class="lbl" for="nEnd">Termina</label><select class="field" id="nEnd">${opts(ENDS, end)}</select></div></div>`
+    + `<div class="nbox">${nightRuler({ start, end })}</div>`
+    + '<p class="dim">Vale para todos da família, a partir de hoje. Os dias anteriores ficam como estavam.</p>'
+    + '<div class="err" id="nErr" hidden></div><button class="save" data-act="saveNight">Salvar</button>'
+    + `<button class="link" data-act="nightReset">Voltar para ${NIGHT_START}h às ${NIGHT_END}h</button>`;
+  openPanel(h);
+}
+async function saveNight(btn) {
+  const b = S.b, night = nightSave(b, S.start, S.end, Date.now());
+  busy(btn, true);
+  const { data, error } = await sb.from('babies').update({ night }).eq('id', b.id).select('id');
+  busy(btn, false);
+  if (error || !data?.length) return err('nErr', errMsg(error));
+  b.night = night; ruleMemo.delete(b);
+  closeSheet(); toast('Salvo');
+}
+function nightAction(a, b) {
+  if (a === 'nInfo') { S.info = !S.info; return drawNight(); }
+  if (a === 'nightReset') { S.start = NIGHT_START; S.end = NIGHT_END; return drawNight(); }
+  if (a === 'saveNight') return saveNight(b);
+}
+$('sheetIn').addEventListener('change', e => {
+  if (S?.mode !== 'night' || !['nStart', 'nEnd'].includes(e.target.id)) return;
+  S[e.target.id === 'nStart' ? 'start' : 'end'] = +e.target.value;
+  if (S.info) return drawNight();
+  $('sheetIn').querySelector('.nbox').innerHTML = nightRuler(S);
+});
 
 /* ---------- boas-vindas ---------- */
 // Cartões para quem acabou de entrar numa família, um de cada vez e na ordem: boas-vindas (quem criou)
@@ -2804,7 +2889,7 @@ function drawTrendsPane() {
     const { a } = trendWindow(t.mode, t.off, now, first);
     if (olderMissing(a)) { loadOlder(a); loading = olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'; }
   }
-  el.innerHTML = trendsHtml({ t, evs: sortedEntries(), now, first, pump: isOn('pump'), loading,
+  el.innerHTML = trendsHtml({ t, evs: sortedEntries(), now, first, pump: isOn('pump'), loading, rule: ruleOf(b), night: { de: deName(b), c: nightNow(b) },
     who: [b.name, ageText(b.birth_date)].filter(Boolean).join(' · '), chips: st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '' });
 }
 function drawBabyPane() {
@@ -2854,6 +2939,7 @@ function drawBabyPane() {
       : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
     h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
   }
+  h += `<div class="sec" id="babyNight"><h4>Noite</h4><div class="li"><span>${nightText(nightNow(b))}<small class="tsub">O que conta como noite em Tendências</small></span><button data-act="editNight" data-val="${esc(b.id)}">Mudar</button></div></div>`;
   h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date || b.sex ? ' <small>' + esc([b.birth_date && fullDate(b.birth_date), { F: 'menina', M: 'menino' }[b.sex]].filter(Boolean).join(' · ')) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
   // Só o criador apaga um bebê: o botão abre a edição já na confirmação.
   if (st.family.creator_id === st.user.id) h += `<button class="danger-btn" data-act="delBabyAsk" data-val="${esc(b.id)}">Apagar bebê</button>`;
@@ -3208,6 +3294,12 @@ function drawFamilyPane() {
   h += '</div><div class="sec"><h4>Bebês</h4>' +
     st.babies.map(b => `<button class="li tg" data-act="openBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(ageText(b.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
     '<button class="ghost" data-act="addBaby">+ Adicionar bebê</button></div>';
+  // Sono (item 65): "Acompanhar o sono" liga e desliga a janela de sono; a noite de cada bebê fica sempre.
+  const on = st.track !== false;
+  h += `<div class="sec" id="famSleep"><h4>Sono</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="sleepTrack"><span>Acompanhar o sono<small class="tsub">Para todos da família</small></span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`
+    + st.babies.map(b => { const c = nightNow(b);
+      return `<div class="li"><span>${esc(nightTitle(b))}<small class="tsub">${nightText(c)}${isDefault(c) ? ' · padrão' : ''}</small></span><button data-act="editNight" data-val="${esc(b.id)}">Mudar</button></div>`; }).join('')
+    + '</div>';
   h += creator
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
@@ -3410,6 +3502,8 @@ async function paneAction(a, v, btn) {
   // Família
   if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
   if (a === 'famName') return famNameSheet();
+  if (a === 'sleepTrack') return setTrack(st.track === false);
+  if (a === 'editNight') return nightSheet(st.babies.find(b => b.id === v));
   if (a === 'invite') {
     busy(btn, true);
     const { data, error } = await sb.from('invites').insert({ family_id: f.id }).select('token').single();
@@ -3489,6 +3583,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'feedback') return feedbackAction(a, v, b);
   if (S.mode === 'account') return accountAction(a);
   if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
+  if (S.mode === 'night') return nightAction(a, b);
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);

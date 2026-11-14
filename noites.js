@@ -18,24 +18,30 @@
 //   sonos" da aba Semana): as 3 do mês com mais despertares (empate: a mais recente primeiro), com a hora
 //   de dormir, a última mamada e o último cocô antes dela. Noite sem sono de mais de 3 h: o primeiro sono.
 //   Prévia aprovada em 02/11: https://claude.ai/artifact/W9ZLLSQzxCtDCrJ5JxEzoq
+//   Desde o item 65 (13/11), cada bebê tem a sua noite (noite.js). Os dias de antes do primeiro horário
+//   guardado ficam com a regra antiga, acima; os outros usam a nova: a noite vai do começo ao fim escolhidos
+//   pela família, um sono que começa antes e passa do começo conta inteiro, a hora de dormir é o primeiro
+//   sono da noite (sai a regra das 3 h) e despertar é acordar e voltar a dormir depois dele, até o fim.
 import { HOUR, esc, dur, hm, addDays, label, MESES, MESES_L, SYMPTOM } from './util.js';
 import { before, beforeLine } from './week.js';
+import { OLD_RULE, bounds, napsOf, nightText } from './noite.js';
 
 const LONG = 6 * HOUR, BED = 3 * HOUR, FEW = 3, MAX_SLEEP = 14 * HOUR;
-const at = (d0, h) => d0 + h * HOUR; // d0 é início do dia; ok para 6h e 18h (a troca de horário é à meia-noite)
 
-// Uma noite por dia d: os sonos que começam em [d 18h, d+1 6h).
+// Uma noite por dia d. Regra antiga: os sonos que começam em [d 18h, d+1 6h). Regra nova: os que começam
+// em [começo, fim) e o que começa antes do começo (depois do fim da noite de antes) e passa dele.
 // Também usada por Tendências (tendencias.js), que precisa dos sonos de cada noite (ns).
-export function nights(a, z, evs, sleeps, now) {
+// rule: a regra de cada dia, de nightRule (noite.js); sem ela, a antiga.
+export function nights(a, z, evs, sleeps, now, rule = OLD_RULE) {
   const out = [], ivs = sleeps.filter(([x, y]) => y - x <= MAX_SLEEP);
   const feeds = evs.filter(e => e.kind === 'feed'), baths = evs.filter(e => e.kind === 'bath');
   const syms = evs.filter(e => e.kind === 'symptom' || e.kind === 'vomit');
   for (let d = a; d < z; d = addDays(d, 1)) {
-    const d1 = addDays(d, 1), w0 = at(d, 18), w1 = at(d1, 6);
+    const d1 = addDays(d, 1), { c, day0, w0, w1 } = bounds(rule, d);
     if (w1 > now) break;
-    const ns = ivs.filter(([x]) => x >= w0 && x < w1);
+    const ns = ivs.filter(([x, y]) => (x >= w0 && x < w1) || (c && x >= day0 && x < w0 && y > w0));
     if (!ns.length) continue;
-    const main = ns.find(([x, y]) => y - x > BED), bed = main ? main[0] : null, from = bed ?? d1;
+    const main = c ? ns[0] : ns.find(([x, y]) => y - x > BED), bed = main ? main[0] : null, from = bed ?? d1;
     const longest = Math.max(...ns.map(([x, y]) => y - x));
     // Cada despertar: do "acordou" (y) ao "dormiu" seguinte (back).
     const wakes = ns.flatMap(([x, y], i) => {
@@ -44,17 +50,17 @@ export function nights(a, z, evs, sleeps, now) {
       return [{ awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
     });
     if (bed === null) {
-      out.push({ d, t0: ns[0][0], hasBed: false, ns, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
+      out.push({ d, c, t0: ns[0][0], hasBed: false, ns, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
       continue;
     }
-    // O dia que veio antes: das 6h até a hora de dormir.
-    const day0 = at(d, 6), dayEvs = evs.filter(e => e.t >= day0 && e.t < bed);
-    const naps = ivs.filter(([x, y]) => x >= day0 && x < at(d, 18) && y <= bed);
+    // O dia que veio antes: do fim da noite de antes até a hora de dormir.
+    const dayEvs = evs.filter(e => e.t >= day0 && e.t < bed);
+    const naps = napsOf(ivs, rule, d).filter(([, y]) => y <= bed);
     const dayFeeds = dayEvs.filter(e => e.kind === 'feed');
     const lastFeed = feeds.filter(e => e.t < bed && e.t >= bed - 24 * HOUR).at(-1);
     const any = dayEvs.length > 0 || naps.length > 0;
     out.push({
-      d, t0: bed, hasBed: true, ns, longest, wakes,
+      d, c, t0: bed, hasBed: true, ns, longest, wakes,
       late: (bed - d) > 20 * HOUR,
       bath: baths.some(e => e.t >= bed - 3 * HOUR && e.t <= bed),
       feedSoon: lastFeed ? bed - lastFeed.t < 2 * HOUR : null,
@@ -132,9 +138,16 @@ function topWakes(all, evs) {
     <div class="ls">${top.map(item).join('')}</div></div>`;
 }
 
+// As definições do alto, pela regra da última noite do mês. As da regra nova (item 65) ESPERAM A
+// APROVAÇÃO do Patrick palavra por palavra (propostas no PR); as da antiga são as de sempre.
+function defs(c, de) {
+  if (!c) return '<p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p>';
+  return `<p><b>Hora de dormir:</b> o primeiro sono da noite ${esc(de)} (${nightText(c)}).</p><p><b>Despertar:</b> acordou e voltou a dormir durante a noite, depois do primeiro sono.</p>`;
+}
 // a, z: o mês [a, z). sleeps: os sonos fechados, [dormiu, acordou].
-export function nightsHtml({ a, z, evs, sleeps, now }) {
-  const all = nights(a, z, evs, sleeps, now), N = all.length;
+// rule e de: a regra de cada dia e "da Marina" (noite.js), para as definições do alto.
+export function nightsHtml({ a, z, evs, sleeps, now, rule = OLD_RULE, de = 'do bebê' }) {
+  const all = nights(a, z, evs, sleeps, now, rule), N = all.length;
   if (!N) return '';
   const rs = rows(all, evs, a, z);
   const T1 = 'As noites com 6 h seguidas ou mais', month = MESES_L[new Date(a).getMonth()];
@@ -144,6 +157,6 @@ export function nightsHtml({ a, z, evs, sleeps, now }) {
     : group(T1, `${top.length} noites com 6 h ou mais`, `${rest.length} noites com menos de 6 h`, top, rest, rs);
   return `<div class="card nt"><h3>Como foram as noites</h3>
     <p class="cap">${month}, ${N === 1 ? '1 noite' : N + ' noites'} com sono anotado.</p>
-    <div class="nt-defs"><p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p></div>
+    <div class="nt-defs">${defs(all.at(-1).c, de)}</div>
     ${g1}${wakesBox(all, month.toLowerCase())}${topWakes(all, evs)}<p class="foot">Só põe lado a lado o que foi anotado. Poucas noites não bastam para dizer o que ajuda o bebê a dormir.</p></div>`;
 }

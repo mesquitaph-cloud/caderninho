@@ -1,6 +1,7 @@
 // Painel da semana: os 7 dias que terminam no dia escolhido.
 // Só junta o que foi registrado: não avalia o bebê. A referência para a idade vem pronta em "ref".
 import { MIN, HOUR, startOfDay, addDays, hm, dur, esc, dayTitle, shortDay, DIAS, label, detail, CARE, n1 } from './util.js';
+import { OLD_RULE, napsOf } from './noite.js';
 
 // "Dia a dia": uma barra por dia do que estiver escolhido. Em fraldas, a parte de baixo é das com cocô.
 // Mamadeira é o leite dado na mamadeira, em ml; só aparece se a semana tiver alguma com ml.
@@ -50,7 +51,7 @@ const KEY = {
 };
 
 // Números de um dia. "sleeps" são os sonos [início, fim]; o sono em andamento termina agora.
-function dayStats(d0, evs, sleeps, now) {
+function dayStats(d0, evs, sleeps, now, rule = OLD_RULE) {
   const d1 = addDays(d0, 1), end = Math.min(d1, now);
   const day = evs.filter(e => e.t >= d0 && e.t < d1);
   const feeds = day.filter(e => e.kind === 'feed'), pumps = day.filter(e => e.kind === 'pump'), dia = day.filter(e => e.kind === 'diaper');
@@ -58,7 +59,8 @@ function dayStats(d0, evs, sleeps, now) {
     d0, d1, day, feeds, pumps, dia,
     slept: sleeps.reduce((s, [a, z]) => s + Math.max(0, Math.min(z, end) - Math.max(a, d0)), 0),
     // Sono de dia: os sonos que começam entre 6h e 18h, inteiros, como na aba Mês (napDay em report.js).
-    nap: sleeps.filter(([a]) => a >= d0 + 6 * HOUR && a < d0 + 18 * HOUR).reduce((s, [a, z]) => s + z - a, 0),
+    // Desde o item 65, as sonecas da noite de cada bebê (noite.js); os dias de antes, a regra antiga.
+    nap: napsOf(sleeps, rule, d0).reduce((s, [a, z]) => s + z - a, 0),
     ml: feeds.reduce((s, e) => s + (e.ml || 0), 0),
     breastMin: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0),
     pumpMl: pumps.reduce((s, e) => s + e.ml, 0),
@@ -224,11 +226,11 @@ const LGD_DIAPER = '<div class="lgd"><span><svg viewBox="0 0 12 12" aria-hidden=
   + '<span><svg viewBox="0 0 12 12" aria-hidden="true"><circle class="m-diaper dot" cx="6" cy="6" r="5"/><circle class="m-poo dot" cx="6" cy="6" r="3"/></svg>fralda com cocô</span></div>';
 
 // end: último dia dos 7 (início do dia). sleep: o que sleepIntervals devolve.
-export function weekHtml({ end, evs, sleep, now, show, metric, on, zoom = null, ref = '' }) {
+export function weekHtml({ end, evs, sleep, now, show, metric, on, zoom = null, ref = '', rule = OLD_RULE }) {
   const k = shownKinds(on);
   const today = startOfDay(now), a = addDays(end, -6), z = Math.min(addDays(end, 1), now);
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
-  const all = []; for (let d = a; d <= end; d = addDays(d, 1)) all.push(dayStats(d, evs, sleeps, now));
+  const all = []; for (let d = a; d <= end; d = addDays(d, 1)) all.push(dayStats(d, evs, sleeps, now, rule));
   if (all.every(d => !d.day.length && !d.slept)) return '<div class="card"><div class="empty">Nada registrado nestes 7 dias.</div></div>';
   const mets = { ...k, bottle: all.some(d => d.ml) };
   if (!mets[metric]) metric = 'sleep';

@@ -15,6 +15,7 @@
 //   conta-nova    conta recém-criada, sem nome nem família: o onboarding inteiro (app-conta-nova: no "app do Android")
 //   janela        a Helena com 2 meses, acordada há 45 min: a janela de sono (?acordada=MIN, ?bebe=menino|sem|4m|7m|13m|semdata|dormindo);
 //                 app-janela: o mesmo no "app do Android", com o aviso da janela em window.avisos
+//   noite         a noite da Helena das 20h às 6h há 10 dias e "Acompanhar o sono" desligado (item 65)
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

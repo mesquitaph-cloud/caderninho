@@ -393,6 +393,13 @@ if (CEN === 'conta-nova' || CEN === 'app-conta-nova') {
 // há 45 min (faixa de 1h a 2h: "Janela de sono em 15 min"). ?acordada=MIN muda há quanto tempo acordou;
 // ?bebe=menino, ?bebe=sem (sem menina ou menino), ?bebe=4m, ?bebe=7m (mamadeira e "Já come"), ?bebe=13m
 // e ?bebe=semdata (só o contador) trocam o bebê. ?bebe=dormindo: a Helena dorme há 25 min.
+// "noite" (item 65): a Helena com a noite das 20h às 6h há 10 dias (antes disso, a regra antiga) e
+// "Acompanhar o sono" desligado na família. Para ver as abas Bebê e Família, a tela de edição e Tendências.
+if (CEN === 'noite') {
+  T.babies[0].night = [{ from: ymd(NOW - 10 * DAY), start: 20, end: 6 }];
+  T.family_settings[0].sleep_track = false;
+}
+
 if (CEN === 'janela' || CEN === 'app-janela') {
   const q = new URLSearchParams(location.search);
   if (q.get('acordada')) sessionStorage.setItem('teste-acordada', q.get('acordada'));

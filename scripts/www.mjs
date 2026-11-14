@@ -3,7 +3,7 @@
 import { cpSync, rmSync, mkdirSync } from 'node:fs';
 
 const FILES = ['index.html', 'styles.css', 'manifest.webmanifest',
-  'app.js', 'config.js', 'util.js', 'clock.js', 'week.js', 'noites.js', 'growth.js', 'who.js', 'report.js', 'pediatra.js', 'legal.js', 'tendencias.js', 'janela.js'];
+  'app.js', 'config.js', 'util.js', 'clock.js', 'week.js', 'noites.js', 'growth.js', 'who.js', 'report.js', 'pediatra.js', 'legal.js', 'tendencias.js', 'janela.js', 'noite.js'];
 const DIRS = ['icons', 'fonts', 'vendor', 'termos', 'privacidade'];
 
 rmSync('www', { recursive: true, force: true });
