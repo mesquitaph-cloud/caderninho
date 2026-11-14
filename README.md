@@ -423,6 +423,9 @@ mesmos, porque o texto cita os itens pelo número.
     e máximo de 1h30. Começa no mínimo aos 30 min acordado; se cair antes, empurrar mantendo a largura.
   - **Dados da janela própria:** últimos 7 dias, se houver 5 ou mais dias com sono de dia; senão, últimos 14
     dias com 5 ou mais dias; senão, a faixa da idade. Horários arredondados para 5 min.
+  - **Régua do cartão do bebê** (decidido pelo Patrick em 13/11): com a janela própria, mostra a faixa do
+    bebê. A faixa da idade aparece só quando ainda não há dados do bebê (menos de 5 dias com sono de dia nos
+    últimos 7 e também nos últimos 14).
   - **Aviso:** 15 min antes do início da janela e nunca antes de 30 min acordado. Se cair antes, sai aos 30
     min com a frase do começo da janela. Só das 6h às 18h. Um por soneca.
   - **Perto da noite** (N = início da noite do bebê, item 65; A = hora em que acordou; janela de `de` a
@@ -443,8 +446,7 @@ mesmos, porque o texto cita os itens pelo número.
   - **O que o PR seguinte muda no código de hoje:** (a) o aviso hoje sai 15 min antes do começo da faixa,
     sem o piso de 30 min acordado (de 0 a 1 mês, sai aos 15 min); (b) a faixa e o aviso hoje não olham a
     noite do bebê (nada de "Noite às HHh" nem da frase da soneca que atrapalha); (c) a régua mostra a faixa
-    da idade; com a janela própria, falta decidir (com prévia) se mostra a do bebê, a da idade ou as duas;
-    (d) o cartão das Tendências ainda não existe. Ficam para depois, como antes: a explicação da fonte nos
+    da idade (ver **Régua** acima); (d) o cartão das Tendências ainda não existe. Ficam para depois, como antes: a explicação da fonte nos
     Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
 - **65 · Noite de cada bebê** (antes "Hora de dormir de cada família"; Patrick, 13/11; decidido e com
   textos aprovados em 13/11; no `main` pelo #97 em 13/11; `supabase/025_noite_do_bebe.sql` rodado pelo Patrick
