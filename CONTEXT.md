@@ -173,8 +173,26 @@ Com o bebê acordado, no cartão do bebê: há quanto tempo está acordado e, at
 acordado da idade (Cleveland Clinic), em duração e nunca em hora no relógio. As frases dizem que o bebê
 "pode estar" com sono; não mandam pôr para dormir. De 12 meses em diante e sem nascimento, só o contador.
 Some com o bebê dormindo. **Aviso da janela**: um por soneca no celular de quem pediu, 15 min antes do
-começo da faixa, só entre 6h e 18h.
+começo da faixa, só entre 6h e 18h. Só aparece com **Acompanhar o sono** ligado na família.
 _Evite_: hora de dormir, hora ideal, previsão, sono atrasado, passou do ponto
+
+**Noite do bebê** (13/11, item 65):
+O período que a família escolhe como noite de cada bebê: começo (16h a 23h) e fim (4h a 9h), de hora em
+hora; padrão **18h às 6h**. Do começo em diante, todo sono é sono da noite; um sono que começa antes e
+passa do começo conta inteiro como noite. Os outros, entre o fim de uma noite e o começo da outra, são
+**sonecas**. Muda nas abas Bebê (seção Noite) e Família (seção Sono), "Noite de Marina"; sem nome, "Noite
+do bebê". Vale para todos da família, **a partir do dia em que muda**: os dias de antes ficam como
+estavam, e os dias de antes do item 65 seguem a regra antiga (18h às 6h, com a hora de dormir no primeiro
+sono de mais de 3 h). Recalcular o histórico fica para depois. O relatório do pediatra ainda usa a regra
+fixa, e o aviso da janela de sono continua só entre 6h e 18h.
+_Evite_: hora ideal de dormir, horário certo, rotina recomendada
+
+**Acompanhar o sono** (13/11, item 65):
+O interruptor da família toda (aba Família, seção Sono; no onboarding, "Quer que o Soneca acompanhe o sono
+da Marina com você?"). Liga e desliga só a **janela de sono**: a faixa no cartão do bebê e o aviso no
+celular (que também depende do Sim de cada pessoa). Desligado, a noite do bebê continua à vista, editável
+e usada em Tendências e nos resumos. Ligado por padrão.
+_Evite_: ajuda com o sono, otimizar o sono, treinar o sono
 
 **Botões da tela inicial**:
 Os botões de registro, três por linha, no Diário. Mamada, Sono e Fralda aparecem sempre, e Outros
@@ -244,7 +262,8 @@ Dia | Semana | Mês, no Diário, mostram um período fechado; Tendências põe o
 a dia** (14 dias) ou **semana a semana** (12 semanas, cada uma com os 7 dias que terminam ontem, como
 no painel da semana), com as setas para voltar no tempo. Hoje não entra na conta. Na guia Sono, nesta
 ordem: o sono por dia (barras empilhadas, a noite embaixo e o dia em cima), os despertares à noite, a
-noite (da hora de dormir até a de acordar), o maior sono seguido e as sonecas. A **barra mais clara** é
+noite (da hora de dormir até a de acordar), o maior sono seguido e as sonecas. Noite e sonecas seguem a
+**noite do bebê** escolhida pela família (item 65). A **barra mais clara** é
 um dia com poucos registros ou uma semana com menos de 4 dias anotados; nos cartões da noite, uma noite
 que não foi anotada do começo ao fim. Um número baixo nunca deixa a barra clara. Só junta o que foi
 anotado; não compara com outros bebês nem diz o que é normal. "Estatísticas" também serve.
@@ -362,17 +381,18 @@ O cartão no fim da aba Mês que compara as noites com 6 h seguidas ou mais com 
 quantas noites algo aconteceu antes de dormir, e resume os despertares do mês (tempo médio até voltar a
 dormir, em quantos mamou, em quantos teve sintoma anotado e qual, em quantas noites houve despertar e a
 média só nessas noites). No fim, **as noites com mais despertares e o que veio antes**: as 3 do mês, com
-a hora de dormir, a última mamada e o último cocô, como em "Os maiores sonos e o que veio antes". Cortes fixos; só põe lado a lado. **Hora de dormir**: o primeiro sono de mais de 3 h que começa
-entre 18h e 6h (o cochilo do começo da noite não conta). **Despertar**: acordou e voltou a dormir entre a
-hora de dormir e as 6h.
+a hora de dormir, a última mamada e o último cocô, como em "Os maiores sonos e o que veio antes". Cortes fixos; só põe lado a lado. **Hora de dormir**: o primeiro sono da **noite do bebê**; nos dias de antes
+do item 65, o primeiro sono de mais de 3 h que começa entre 18h e 6h (o cochilo do começo da noite não
+conta). **Despertar**: acordou e voltou a dormir durante a noite do bebê, depois do primeiro sono (antes do
+item 65, entre a hora de dormir e as 6h).
 _Evite_: causa, o que ajuda a dormir, padrão, análise do sono
 
 **Resumo do mês**:
 A aba Mês: os totais do mês atual (até agora) ou de um mês anterior, inteiro, até o mês do nascimento
 (sem a data anotada, até o mês do cadastro do bebê). Mamadas, leite na mamadeira,
 tempo no peito, sono, fraldas e cocôs, ordenha, doses de remédio dadas, peso e marcos. Só soma o que
-foi registrado. **Sono de dia**: a média por dia dos sonos que começam entre 6h e 18h, nos mesmos dias
-da média de sono por dia.
+foi registrado. **Sono de dia**: a média por dia das sonecas (fora da **noite do bebê**; antes do item
+65, os sonos que começam entre 6h e 18h), nos mesmos dias da média de sono por dia.
 _Evite_: relatório, balanço, desempenho
 
 **Resumo para mandar**:

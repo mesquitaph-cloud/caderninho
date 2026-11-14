@@ -17,6 +17,9 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
+- **Noite de cada bebê (item 65, 13/11, ramo `claude/noite-do-bebe-65-235612`, PR aberto):** cada família
+  escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Antes de publicar, o Patrick roda
+  `supabase/025_noite_do_bebe.sql`; sem ele o app novo funciona com a regra antiga. Detalhes no item 65.
 - **Tarefas e Pomada para assadura (08–09/11, PR `claude/tarefas-0811`):** o botão Cuidados vira
   **Tarefas** e abre a lista da rotina logo abaixo do título (sem nada programado, só a capivara dormindo, com
   "Programar tarefa" e "Anotar uma tarefa avulsa"). Programar começa escolhendo a tarefa (Banho de sol, Tummy
@@ -412,6 +415,23 @@ mesmos, porque o texto cita os itens pelo número.
   janela, só das 6h às 18h. A regra "o Soneca não orienta" foi afrouxada só aqui, por decisão do Patrick.
   Fica para depois: o costume do próprio bebê com 5 a 7 dias de sono anotado, a explicação da fonte nos
   Termos ou no Perfil e a chave do aviso no Perfil (textos a aprovar).
+- **65 · Noite de cada bebê** (antes "Hora de dormir de cada família"; Patrick, 13/11; decidido e com
+  textos aprovados em 13/11; no ramo `claude/noite-do-bebe-65-235612`, PR aberto em 13/11; **falta rodar
+  `supabase/025_noite_do_bebe.sql`**): cada bebê tem a sua noite, começo (16h a 23h) e fim (4h a 9h), de hora
+  em hora, padrão 18h às 6h. Do começo em diante, todo sono é da noite; um sono que começa antes e passa do
+  começo conta inteiro; despertar só depois do primeiro sono da noite; sai a regra do "primeiro sono de mais
+  de 3 h". Vale daqui para frente: `babies.night` guarda desde quando vale cada horário, e os dias de antes
+  ficam com a regra antiga (recalcular o histórico fica para uma segunda etapa). Muda: Tendências (Sono,
+  Despertares, A noite, Maior sono seguido, Sonecas e os 4 textos do botão i), a Semana e o Mês (sono de
+  dia, item 22) e "Como foram as noites" (item 24). Não muda: o relatório do pediatra (regra fixa, por ora)
+  e o aviso da janela de sono (6h às 18h). Telas: seção **Noite** na aba Bebê, seção **Sono** na aba Família
+  com o interruptor **Acompanhar o sono** (família toda; liga e desliga só a janela de sono, a faixa e o
+  aviso) e "Noite de [bebê]" sempre editável; tela de edição com régua de 24 h e exemplos no botão i. No
+  onboarding (passo 7), "Quer que o Soneca acompanhe o sono da Marina com você?"; só com Sim aparecem o aviso
+  da janela e o começo da noite (18h a 22h). Regra em `noite.js`; testes em `testes/noite.mjs` e no cenário
+  `noite` de `testes/servidor.mjs`. Prévias: https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ e
+  https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL. **A aprovar, palavra por palavra:** as definições de
+  "Como foram as noites" na regra nova e o "das 6h às 20h" do sono de dia no resumo (ver o PR).
 - **61 · Registro de comida** (Patrick, 13/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): primeira etapa, o
   botão Comida na tela inicial para quem respondeu "Já come". Ao tocar, o aviso "Em construção" com a
   capivara de capacete; nada é gravado. A decidir na etapa seguinte (com prévia): os campos, o lugar nos

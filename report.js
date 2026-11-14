@@ -3,6 +3,7 @@
 // da família: sem Ordenha ligada, não fala de ordenha. Sintomas e vômito ficam sempre de fora.
 import { MIN, HOUR, esc, dur, shortDate, ICON, startOfDay, addDays, aloneText, n1, plural, localDate as ymd } from './util.js';
 import { kg } from './growth.js';
+import { OLD_RULE, napsOf, NIGHT_START, NIGHT_END } from './noite.js';
 
 const liters = ml => ml >= 1000 ? n1(ml / 1000) + ' L' : ml + ' ml';
 // No resumo para a família, de 10 h para cima só as horas redondas (o relatório do pediatra tem o seu).
@@ -14,8 +15,8 @@ const CARE_WORDS = { massage: ['massagem', 'massagens'], bath: ['banho', 'banhos
 
 // Totais de [a, z). sleep: o que sleepIntervals devolve; o sono em andamento conta até agora.
 // on(k): se a família usa o botão k (Ordenha, Remédio e os cuidados só entram se usar).
-// sex: o do bebê, para o "pegou no sono sozinha".
-export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = () => true, sex = null }) {
+// sex: o do bebê, para o "pegou no sono sozinha". rule: a noite de cada dia (nightRule, noite.js; item 65).
+export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = () => true, sex = null, rule = OLD_RULE }) {
   const end = Math.min(z, now), day = evs.filter(e => e.t >= a && e.t < end);
   const feeds = day.filter(e => e.kind === 'feed'), bottles = feeds.filter(e => e.src === 'bottle');
   const sleeps = sleep.open === null ? sleep.out : [...sleep.out, [sleep.open, now]];
@@ -29,7 +30,11 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     sleepDay: perDay((d, d1) => sleeps.reduce((s, [x, y]) => s + Math.max(0, Math.min(y, d1) - Math.max(x, d)), 0)),
     // Sono de dia (02/11, pedido da Carol): os sonos que começam entre 6h e 18h, inteiros, nos mesmos dias
     // de sleepDay. Pode diferir uns minutos da média de "Como foram as noites", que conta por noite.
-    napDay: perDay(d => sleeps.filter(([x]) => x >= d + 6 * HOUR && x < d + 18 * HOUR).reduce((s, [x, y]) => s + y - x, 0)),
+    // Desde o item 65, as sonecas da noite de cada bebê (noite.js); os dias de antes, a regra antiga.
+    napDay: perDay(d => napsOf(sleeps, rule, d).reduce((s, [x, y]) => s + y - x, 0)),
+    // O horário das sonecas no texto: o do último dia do período (o fim da noite de antes e o começo).
+    napSpan: (() => { const d = startOfDay(end - 1), c = rule(d), p = rule(addDays(d, -1));
+      return 'das ' + (p ? p.end : NIGHT_END) + 'h às ' + (c ? c.start : NIGHT_START) + 'h'; })(),
     peeDay: perDay((d, d1) => day.filter(e => e.kind === 'diaper' && e.pee && e.t >= d && e.t < d1).length),
     feeds: feeds.length, bottles: bottles.length, bottleMl: bottles.reduce((s, e) => s + (e.ml || 0), 0),
     breastMs: feeds.reduce((s, e) => s + (e.left_min || 0) + (e.right_min || 0), 0) * MIN,
@@ -94,7 +99,7 @@ export function monthHtml(s, { heading }) {
   if (s.pumpMl) h += tile(TILE.pump, 'Ordenhado', liters(s.pumpMl), '');
   h += '</div>';
   const extra = [];
-  if (s.napDay) extra.push(['Sono de dia', dur(s.napDay) + ' por dia, das 6h às 18h']);
+  if (s.napDay) extra.push(['Sono de dia', dur(s.napDay) + ' por dia, ' + s.napSpan]);
   if (s.laps) extra.push(['Sono no colo', hours(s.lapMs) + ' em ' + plural(s.laps, 'sono', 'sonos')]);
   if (s.alone) extra.push(['P' + s.aloneText.slice(1), plural(s.alone, 'vez', 'vezes')]);
   if (s.doses) extra.push(['Remédios', plural(s.doses, 'dose dada', 'doses dadas')]);

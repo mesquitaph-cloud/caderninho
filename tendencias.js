@@ -13,13 +13,15 @@
 //   maior sono: noite não anotada do começo ao fim (sem hora de dormir, sem o acordou de manhã ou com um
 //   buraco de mais de GAP sem sono anotado entre a hora de dormir e as 6h); semana com menos de FEW_WEEK
 //   noites assim. Os cortes são provisórios.
+//   Desde o item 65 (13/11), cada bebê tem a sua noite (noite.js): os dias de antes do primeiro horário
+//   guardado seguem a regra antiga (acima); os outros, a noite e as sonecas da regra nova.
 // Nesta versão só a guia Sono tem gráficos; Mamadas, Fraldas, Ordenha e Peso mostram "Em construção".
 import { HOUR, addDays, startOfDay, dur, esc, MESES, DIAS, CAPI, rangeTitle, sleepIntervals } from './util.js';
 import { nights, nightName } from './noites.js';
+import { OLD_RULE, bounds, napsOf } from './noite.js';
 
 export const DAY_SPAN = 14, WEEKS = 12;
 const FEW_DAY = 4, FEW_WEEK = 4, GAP = 3 * HOUR, MAX_SLEEP = 14 * HOUR, EMPTY_DAYS = 3;
-const at = (d0, h) => d0 + h * HOUR;   // como em noites.js: ok para 6h e 18h
 const sum = (xs, f) => xs.reduce((s, x) => s + f(x), 0);
 const mean = (xs, f) => xs.length ? sum(xs, f) / xs.length : null;
 
@@ -60,14 +62,14 @@ export function trendWindow(mode, off, now, first) {
 }
 
 // Números de cada dia d, da manhã de d até a manhã seguinte.
-function dayRows(days, evs, now) {
+function dayRows(days, evs, now, rule) {
   if (!days.length) return [];
   const { out, open } = sleepIntervals(evs), ivs = out.filter(([x, y]) => y - x <= MAX_SLEEP);
-  const nmap = new Map(nights(days[0], addDays(days.at(-1), 1), evs, out, now).map(n => [n.d, n]));
+  const nmap = new Map(nights(days[0], addDays(days.at(-1), 1), evs, out, now, rule).map(n => [n.d, n]));
   const marks = evs.filter(e => e.kind === 'sleep' || e.kind === 'wake');
   return days.map(d => {
-    const d1 = addDays(d, 1), w0 = at(d, 18), w1 = at(d1, 6);
-    const naps = ivs.filter(([x]) => x >= at(d, 6) && x < w0);
+    const d1 = addDays(d, 1), { w0, w1 } = bounds(rule, d);
+    const naps = napsOf(ivs, rule, d);
     const n = nmap.get(d) || null, ns = n ? n.ns : [];
     const started = ivs.filter(([x]) => x >= d && x < d1);
     // A noite foi anotada do começo ao fim?
@@ -94,8 +96,8 @@ function dayRows(days, evs, now) {
 }
 
 // Cada barra: um dia ou a média de uma semana.
-function items(win, evs, now) {
-  const rows = dayRows(win.days, evs, now);
+function items(win, evs, now, rule) {
+  const rows = dayRows(win.days, evs, now, rule);
   const item = (r, few, nfew) => ({ ...r, total: r.night + r.nap, napEach: r.naps ? r.nap / r.naps : 0, sFew: few, nFew: nfew });
   if (!win.weeks) return rows.map(r => item(r, r.few, !r.whole));
   return win.weeks.map(w => {
@@ -170,16 +172,21 @@ function band({ its, sel, week }) {
   return s + '</svg>';
 }
 
-/* ---------- textos (provisórios, esperam a aprovação do Patrick palavra por palavra) ---------- */
-const DEFS = {
-  sono: '<b>Noite e dia.</b> À noite é o sono que começa entre 18h e 6h. De dia são as sonecas, os sonos que começam entre 6h e 18h. Cada sono conta inteiro no horário em que começou.',
-  desp: '<b>Despertar</b> é acordar e voltar a dormir entre a hora de dormir e as 6h. Acordar de uma soneca não conta.',
-  // "até o bebê acordar de manhã" da prévia, ajustado ao código: a noite termina no acordou do último
-  // sono que começou antes das 6h (noites.js).
-  faixa: '<b>A noite</b> começa na hora de dormir, o primeiro sono de mais de 3h que começa entre 18h e 6h, e vai até o acordou do último sono que começa antes das 6h. Um cochilo curto no começo da noite não muda a hora de dormir.',
-  long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que o sono começou.',
-  naps: '<b>Soneca</b> é cada sono que começa entre 6h e 18h. Um cochilo depois das 18h conta como sono da noite, mas não muda a hora de dormir.',
-};
+/* ---------- textos ---------- */
+// Os do botão i da guia Sono. Sono, Despertares, A noite e Sonecas: aprovados palavra por palavra pelo
+// Patrick em 13/11 (item 65), no lugar dos que citavam 18h e 6h; o nome e os horários mudam com o bebê
+// (de: "da Marina"; c: a noite de hoje, noite.js). Maior sono seguido: o de antes (item 58).
+function defs(k, de, c) {
+  const s = c.start + 'h', e = c.end + 'h';
+  de = esc(de);
+  return {
+    sono: `A noite ${de} vai das ${s} às ${e}, como a família escolheu. Todo sono que começa nesse horário conta como noite, e um sono que começa antes das ${s} e passa delas também conta inteiro. Os outros são sonecas.`,
+    desp: `Despertar é acordar e voltar a dormir durante a noite ${de} (${s} às ${e}), depois do primeiro sono. Acordar de uma soneca não conta.`,
+    faixa: `A família escolhe o começo e o fim da noite de cada bebê. A ${de} vai das ${s} às ${e}. Para mudar, toque em Noite, na aba Bebê.`,
+    long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que o sono começou.',
+    naps: `Soneca é cada sono fora da noite ${de}, entre ${e} e ${s}.`,
+  }[k];
+}
 const NIGHT_KEYS = ['desp', 'faixa', 'long'];
 function lightText(k, week) {
   if (NIGHT_KEYS.includes(k)) {
@@ -189,8 +196,8 @@ function lightText(k, week) {
   return 'A barra mais clara é ' + (week ? 'uma semana com menos de 4 dias anotados' : 'um dia com poucos registros') + '. O número pode ser menor do que o que aconteceu, porque nem tudo foi anotado.';
 }
 const infoBtn = (k, open) => `<button class="tri" data-tinfo="${k}" aria-expanded="${open}" aria-label="O que este gráfico mostra">i</button>`;
-const infoBox = (k, cls, week) => `<div class="trib" role="note"><svg viewBox="0 0 44 36" aria-hidden="true"><rect class="${cls}" x="6" y="6" width="12" height="28" rx="3"/><rect class="${cls} fewr" x="26" y="18" width="12" height="16" rx="3"/></svg>`
-  + `<div><p>${DEFS[k]}</p><p>${lightText(k, week)}</p></div></div>`;
+const infoBox = (k, cls, week, night) => `<div class="trib" role="note"><svg viewBox="0 0 44 36" aria-hidden="true"><rect class="${cls}" x="6" y="6" width="12" height="28" rx="3"/><rect class="${cls} fewr" x="26" y="18" width="12" height="16" rx="3"/></svg>`
+  + `<div><p>${defs(k, night.de, night.c)}</p><p>${lightText(k, week)}</p></div></div>`;
 const read = (d, n, x = '', few = '') => `<div class="trd" aria-live="polite"><span class="td">${d}</span><b>${n}</b>${x ? `<span class="tx">${x}</span>` : ''}${few ? `<span class="tf">${few}</span>` : ''}</div>`;
 const fewDay = (it, week) => it.sFew ? 'Poucos registros' + (week ? ` (${it.ok} de ${it.n} ${it.n === 1 ? 'dia' : 'dias'})` : '') + ': o número pode não ser fiel.' : '';
 const fewNight = (it, week) => it.nFew ? (week ? `Poucas noites anotadas do começo ao fim (${it.okN} de ${it.n})` : 'Noite não anotada do começo ao fim') + ': o número pode não ser fiel.' : '';
@@ -200,7 +207,8 @@ const SUBJ = { mam: 'mamadas', fr: 'fraldas', ord: 'ordenha', peso: 'peso' };
 
 // t: o estado da tela ({ tab, mode, off, sel, info }); o app guarda e troca.
 // who: "Helena · 3 meses"; chips: os bebês da família, quando há mais de um.
-export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading = '' }) {
+// rule: a regra de cada dia (nightRule, noite.js); night: { de: "da Marina", c: a noite de hoje } para os textos do i.
+export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading = '', rule = OLD_RULE, night = { de: 'do bebê', c: { start: 18, end: 6 } } }) {
   const tabs = TABS.filter(([k]) => k !== 'ord' || pump);
   if (!tabs.some(([k]) => k === t.tab)) t.tab = 'sono';
   let h = `<header class="trh"><h2>${CAPI}Tendências</h2>${who ? `<span>${esc(who)}</span>` : ''}</header>${chips}`;
@@ -217,13 +225,13 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   h += `<div class="trr"><button class="arr" data-tnav="-1" aria-label="${week ? 'Semanas anteriores' : 'Dias anteriores'}"${win.canBack ? '' : ' disabled'}>‹</button>`
     + `<span>${rangeTitle(win.a, win.z)}</span><button class="arr" data-tnav="1" aria-label="${week ? 'Semanas seguintes' : 'Dias seguintes'}"${win.canFwd ? '' : ' disabled'}>›</button></div>`;
   if (loading) return h + `<div class="empty">${loading}</div>`;
-  const its = items(win, evs, now);
+  const its = items(win, evs, now, rule);
   if (!its.length) return h + '<div class="empty">Nada anotado nestes dias.</div>';
   if (t.sel == null || t.sel >= its.length) t.sel = its.length - 1;
   const cur = its[t.sel], sel = t.sel;
   const lab = week ? rangeTitle(cur.d, cur.e) : dLong(cur.d), per = week ? ' · média por dia' : '';
   const nlab = week ? rangeTitle(cur.d, cur.e) + ' · média por noite' : nightName(cur.d);
-  const card = (k, title, cls, body, capi = '') => `<section class="card trk"><h3>${capi}${title}${infoBtn(k, t.info === k)}</h3>${t.info === k ? infoBox(k, cls, week) : ''}${body}</section>`;
+  const card = (k, title, cls, body, capi = '') => `<section class="card trk"><h3>${capi}${title}${infoBtn(k, t.info === k)}</h3>${t.info === k ? infoBox(k, cls, week, night) : ''}${body}</section>`;
   const sF = it => it.sFew, nF = it => it.nFew;
   const maxT = niceMax(Math.max(...its.map(x => x.total / HOUR)), 6), maxD = niceMax(Math.max(...its.map(x => x.desp)), 2);
   const maxL = niceMax(Math.max(...its.map(x => x.longest / HOUR)), 2), maxN = niceMax(Math.max(...its.map(x => x.naps)), 2);
