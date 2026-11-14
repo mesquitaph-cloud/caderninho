@@ -33,6 +33,7 @@ export function periodStats({ a, z, evs, sleep, now, weights, milestones, on = (
     // Desde o item 65, as sonecas da noite de cada bebê (noite.js); os dias de antes, a regra antiga.
     napDay: perDay(d => napsOf(sleeps, rule, d).reduce((s, [x, y]) => s + y - x, 0)),
     // O horário das sonecas no texto: o do último dia do período (o fim da noite de antes e o começo).
+    // "das 6h às 20h" com o horário do bebê: aprovado pelo Patrick em 13/11 (PR #97).
     napSpan: (() => { const d = startOfDay(end - 1), c = rule(d), p = rule(addDays(d, -1));
       return 'das ' + (p ? p.end : NIGHT_END) + 'h às ' + (c ? c.start : NIGHT_START) + 'h'; })(),
     peeDay: perDay((d, d1) => day.filter(e => e.kind === 'diaper' && e.pee && e.t >= d && e.t < d1).length),
