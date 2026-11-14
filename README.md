@@ -430,8 +430,8 @@ mesmos, porque o texto cita os itens pelo número.
   onboarding (passo 7), "Quer que o Soneca acompanhe o sono da Marina com você?"; só com Sim aparecem o aviso
   da janela e o começo da noite (18h a 22h). Regra em `noite.js`; testes em `testes/noite.mjs` e no cenário
   `noite` de `testes/servidor.mjs`. Prévias: https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ e
-  https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL. **A aprovar, palavra por palavra:** as definições de
-  "Como foram as noites" na regra nova e o "das 6h às 20h" do sono de dia no resumo (ver o PR).
+  https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL. As definições de "Como foram as noites" na regra nova e
+  o "das 6h às 20h" do sono de dia no resumo foram aprovadas palavra por palavra em 13/11 (PR #97).
 - **61 · Registro de comida** (Patrick, 13/11; decidido em 13/11 com o onboarding novo; no ramo `claude/onboarding-novo-0fa882`, PR aberto em 13/11): primeira etapa, o
   botão Comida na tela inicial para quem respondeu "Já come". Ao tocar, o aviso "Em construção" com a
   capivara de capacete; nada é gravado. A decidir na etapa seguinte (com prévia): os campos, o lugar nos

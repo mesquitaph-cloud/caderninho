@@ -138,8 +138,8 @@ function topWakes(all, evs) {
     <div class="ls">${top.map(item).join('')}</div></div>`;
 }
 
-// As definições do alto, pela regra da última noite do mês. As da regra nova (item 65) ESPERAM A
-// APROVAÇÃO do Patrick palavra por palavra (propostas no PR); as da antiga são as de sempre.
+// As definições do alto, pela regra da última noite do mês. As da regra nova (item 65) foram aprovadas
+// palavra por palavra pelo Patrick em 13/11 (PR #97); as da antiga são as de sempre.
 function defs(c, de) {
   if (!c) return '<p><b>Hora de dormir:</b> o primeiro sono de mais de 3&nbsp;h que começa entre 18h e 6h.</p><p><b>Despertar:</b> acordou e voltou a dormir entre a hora de dormir e as 6h.</p>';
   return `<p><b>Hora de dormir:</b> o primeiro sono da noite ${esc(de)} (${nightText(c)}).</p><p><b>Despertar:</b> acordou e voltou a dormir durante a noite, depois do primeiro sono.</p>`;
