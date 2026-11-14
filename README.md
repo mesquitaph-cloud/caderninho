@@ -472,6 +472,44 @@ mesmos, porque o texto cita os itens pelo número.
 
 **Marketing**
 
+- **66 · Marketing da janela de sono** (Patrick, 14/11; **prioridade máxima, para o dia seguinte**): telas,
+  Reels, tráfego pago, ASO e SEO da janela de sono (item 60, 1ª etapa: faixa da idade e aviso no celular).
+  Na ordem:
+  1. **Antes de tudo, a mensagem (decisão do Patrick):** o guia `guias/janela-de-sono` diz que nenhum
+     estudo mediu a janela de sono, que as tabelas vêm de consultoras de sono e que os sinais do bebê são o
+     melhor guia (Galland 2012; Douglas e Hill 2013). O app agora mostra a faixa da Cleveland Clinic e avisa
+     no celular. Todo material diz a mesma coisa que o guia: a faixa é uma referência e os sinais de sono
+     valem mais. Nada de "seu bebê vai dormir melhor", "acabe com o choro" ou "a janela certa do seu bebê".
+     Decidir o ângulo em uma frase (por exemplo, "o Soneca conta o tempo acordado e avisa quando chega a
+     faixa da idade") e aprovar palavra por palavra.
+  2. **Compilação com a janela (bloqueia 4, 5 e 6):** a 1.0.4 (#92) foi compilada antes do #94; a janela
+     e a noite de cada bebê (#94 a #97) só chegam às lojas na próxima versão. O Patrick dispara a
+     compilação no Codemagic a partir do `main` e manda para a revisão da Apple e do Google. Junto, os textos
+     da loja do passo 5: na App Store, as palavras-chave só mudam com versão nova. Até a versão estar nas
+     lojas, nada publicado promete a janela (regra dos ganchos: só o que o app já mostra).
+  3. **Telas (prévia antes):** cartão do bebê acordado nos três momentos ("Janela de sono em 15 min",
+     "Pode estar com sono", "Pode estar com bastante sono"), com a régua; o aviso no celular; a pergunta do
+     onboarding (passo 7). Dados de exemplo dos cenários `janela` e `app-janela` de `testes/servidor.mjs`,
+     de dia e de noite, só com textos já aprovados. Saem em dois formatos: PNGs para o kit do estúdio
+     (`kit/janela-dia/`) e os tamanhos das lojas (iPhone 6,9" e Play Store).
+  4. **Reels:** roteiro e telas para o estúdio (`C:\dev\studio`, projeto `002. soneca-reels`); o Claude entrega
+     só imagens e roteiro. Regras do estúdio: sem música, "toc" suave nos toques, áreas livres 250/380/120 px,
+     legendas de até 6 palavras. Gancho, legendas e texto do post a aprovar palavra por palavra. Sem a
+     capivara em nada de saúde; aqui é rotina, então pode.
+  5. **ASO (vai com a compilação do passo 2):** App Store: "O que há de novo", uma tela nova com a janela,
+     e conferir se "janela de sono" cabe no subtítulo ou nas palavras-chave (100 caracteres) sem tirar
+     termo que já traz gente. Play Store: descrição curta, descrição completa e a mesma tela nova. Textos a
+     aprovar. Base: a pesquisa de palavras do ASO (item 48).
+  6. **Tráfego pago (só com a versão nas lojas):** Meta Ads, conta 4204961766463413, um conjunto novo com o
+     Reel do passo 4. Destino `soneca.app.br` (a campanha de Tráfego não aceita link da App Store) ou o
+     guia da janela; decidir orçamento e público (o 1º teste foi R$ 10 por 24 h, Instagram, iOS, SP). Medir
+     no Funil do Soneca (contas novas por dia).
+  7. **SEO:** no guia `guias/janela-de-sono`, trocar o gancho aprovado em 07/11 ("O Soneca mostra há quanto
+     tempo seu bebê acordou.") por um que fale da faixa e do aviso, coerente com o texto do guia (passo 1),
+     e pôr a tela nova. Publicar só com a versão nas lojas; depois, pedir nova indexação no Search Console.
+     Seguir o padrão visual dos guias (seção "Guias do site: padrão visual").
+  - **Depois, com a 2ª etapa do item 60** (janela própria do bebê, ainda não programada): nova rodada de
+    telas, Reels e textos. Até lá, nada promete que o Soneca "aprende o ritmo do seu bebê".
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
