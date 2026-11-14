@@ -23,14 +23,19 @@ const at = (d0, h) => d0 + h * HOUR;   // como em noites.js: ok para 6h e 18h
 const sum = (xs, f) => xs.reduce((s, x) => s + f(x), 0);
 const mean = (xs, f) => xs.length ? sum(xs, f) / xs.length : null;
 
-// A capivara de sempre (util.js), com os "zz" do sono ou com o capacete de obra só no traço (no lugar
-// da orelha; exceção à regra "nada na cabeça" da Marca, decidida pelo Patrick em 13/11).
+// A capivara de sempre (util.js), com os "zz" do sono ou com um capacete de obra amarelo (no lugar
+// da orelha; exceção à regra "nada na cabeça" da Marca, decidida pelo Patrick em 13/11): cúpula,
+// faixa central em relevo e aba para a frente, nas cores --hat (styles.css).
 const P = d => `<path vector-effect="non-scaling-stroke" d="${d}"/>`;
+const HAT = (c, d) => `<path class="${c}" vector-effect="non-scaling-stroke" d="${d}"/>`;
 const EAR = /<path[^>]*d="M80 15\.8C80 9\.5 86\.5 8\.5 87\.5 14\.6"\/>/;
 const CAPI_ZZ = CAPI.replace('viewBox="0 0 120 70"', 'viewBox="0 -16 120 86"')
   .replace('</svg>', P('M93 4H99L93 10H99') + P('M103 -14H112L103 -5H112') + '</svg>');
 export const CAPI_HAT = CAPI.replace(EAR, '').replace('viewBox="0 0 120 70"', 'viewBox="0 -8 120 78"')
-  .replace('</svg>', P('M82.5 14.8C82.5 6.5 87.5 2.5 92.5 2.5S102.5 6.5 102.5 14.8Z') + P('M78 14.8H107') + P('M92.5 2.5V8.5') + '</svg>');
+  .replace('</svg>', HAT('hat', 'M80.5 14.5C80.5 4.5 86.5 -0.5 94 -0.5S107.5 4.5 107.5 14.5Z')
+    + HAT('hat hr', 'M90.8 14.5V1.2C90.8 -0.6 92.2 -1.8 94 -1.8S97.2 -0.6 97.2 1.2V14.5Z')
+    + HAT('hat', 'M77 13.2H113.5C115.2 13.2 116 14 116 15S115.2 16.8 113.5 16.8H77C75.8 16.8 75.2 16 75.2 15S75.8 13.2 77 13.2Z')
+    + '</svg>');
 
 // Os dias e as semanas da janela aberta. first: o primeiro dia que dá para ver (nascimento ou cadastro).
 // off: quantas janelas para trás (as setas).
