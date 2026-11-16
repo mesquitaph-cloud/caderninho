@@ -393,6 +393,8 @@ if (CEN === 'conta-nova' || CEN === 'app-conta-nova') {
 // há 45 min (faixa de 1h a 2h: "Janela de sono em 15 min"). ?acordada=MIN muda há quanto tempo acordou;
 // ?bebe=menino, ?bebe=sem (sem menina ou menino), ?bebe=4m, ?bebe=7m (mamadeira e "Já come"), ?bebe=13m
 // e ?bebe=semdata (só o contador) trocam o bebê. ?bebe=dormindo: a Helena dorme há 25 min.
+// ?dias=N deixa só os sonos dos últimos N dias (com menos de 5, a faixa da idade e o contador do item 73);
+// ?noite=H põe o começo da noite às H horas de hoje (para ver os casos perto da noite, item 60).
 // "noite" (item 65): a Helena com a noite das 20h às 6h há 10 dias (antes disso, a regra antiga) e
 // "Acompanhar o sono" desligado na família. Para ver as abas Bebê e Família, a tela de edição e Tendências.
 if (CEN === 'noite') {
@@ -414,5 +416,9 @@ if (CEN === 'janela' || CEN === 'app-janela') {
   rmWhere(e => at(e) >= NOW - 6 * 36e5 && (e.kind === 'sleep' || e.kind === 'wake'));
   add(NOW - aw * MIN - 70 * MIN, 'sleep');
   add(NOW - aw * MIN, 'wake'); if (bb === 'dormindo') add(NOW - Math.min(25, aw - 5) * MIN, 'sleep');
+  for (const k of ['dias', 'noite']) if (q.get(k)) sessionStorage.setItem('teste-' + k, q.get(k));
+  const dias = sessionStorage.getItem('teste-dias'), noite = sessionStorage.getItem('teste-noite');
+  if (dias) rmWhere(e => at(e) < sod(NOW) - (+dias - 1) * DAY && (e.kind === 'sleep' || e.kind === 'wake'));
+  if (noite) kid.night = [{ from: ymd(NOW - 30 * DAY), start: +noite, end: 6 }];
   T.profiles.find(p => p.id === U.me).sleep_alert = CEN === 'app-janela';
 }

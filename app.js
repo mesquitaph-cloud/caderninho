@@ -9,7 +9,8 @@ import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmTe
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
-import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX } from './janela.js';
+import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
+         novTitle, novText, NOV_ASK, swapTitle, swapText } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
@@ -707,7 +708,7 @@ function render() {
   $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
   if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
   else if (st.tab === 'trends') drawTrendsPane();
-  renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); winSyncLater(); dockSize();
+  renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); winSyncLater(); dockSize(); winMsgs();
 }
 // Trocar de aba: começa do alto. Tocar na aba aberta volta para o alto dela. "anchor" leva até uma seção.
 function goTab(t, anchor) {
@@ -747,7 +748,7 @@ function renderHome() {
   const old = open0 !== null && open === null;
   $('sleepBanner').hidden = !old;
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
-  renderWin(last, open, now);
+  renderWin(last, open, now, intervals);
   renderDock(last, open, now);
   renderLast(last, open, now);
   renderMeds(); renderTasks();
@@ -865,19 +866,25 @@ addEventListener('scroll', stickLast, { passive: true });
 
 /* ---------- janela de sono (item 60) ---------- */
 // No cartão do bebê, no alto (prévia 9, opção 2, escolhida em 13/11): com o bebê acordado, "Acordada há
-// 45 min · Janela de sono em 15 min" e a régua da referência da idade (janela.js). Dormindo, some: volta a
-// faixa "Dormindo há" de baixo. De 12 meses em diante e sem nascimento, só o contador.
+// 45 min · Janela de sono em 15 min" e a régua. Dormindo, some: volta a faixa "Dormindo há" de baixo. De 12
+// meses em diante e sem nascimento, só o contador. 2ª etapa (prévia 13, aprovada em 16/11): a faixa vem dos
+// registros do bebê quando há 5 dias com soneca (janela.js, babyWin); antes disso, a da idade com as 5
+// bolinhas do item 73. Perto da noite, só o "Acordada há" ou a frase da soneca que pode atrapalhar.
 const lastWake = (last, open, now) => {
   if (open !== null || last(['sleep', 'wake'])?.kind !== 'wake') return null;
   const w = last(['wake']);
   return w && now - w.t >= 0 && now - w.t <= WAKE_MAX ? w : null;
 };
-function renderWin(last, open, now) {
+const winOf = (b, sleeps, now) => babyWin(sleeps, ruleOf(b), b.birth_date, now);
+function renderWin(last, open, now, sleeps) {
   const el = $('sleepWin'), b = st.baby, w = b && st.track !== false && lastWake(last, open, now);
   if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
-  const awake = now - w.t, ref = wakeRef(b.birth_date, now);
-  const h = `<span class="hwt">${winText(awake, ref, b.sex)}</span>` + (ref ? rulerHtml(awake, ref) : '');
+  const awake = now - w.t, bw = winOf(b, sleeps, now), ref = bw.ref;
+  const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap), full = ref && !near;
+  const h = `<span class="hwt">${winText(awake, ref, b.sex, near)}</span>` + (full ? rulerHtml(awake, ref) : '')
+    + (full && !bw.own ? counterHtml(bw.valid, b) : '');
   if (el.innerHTML !== h) el.innerHTML = h;
+  el.classList.toggle('bare', !full);
   el.hidden = false;
 }
 // O aviso no celular: quem disse Sim no onboarding, e só com "Acompanhar o sono" ligado na família (item 65). Fica no perfil da pessoa
@@ -889,8 +896,9 @@ async function setWinAlert(on, quiet) {
   await sb.from('profiles').update({ sleep_alert: on }).eq('id', st.user.id);
   if (!quiet) winSyncLater();
 }
-// Um aviso por soneca, 15 min antes do começo da janela, só entre 6h e 18h (decisão de 13/11). O celular
-// guarda um aviso por bebê; um "Acordou" novo troca o aviso, e o "Dormiu" cancela o que não tocou.
+// Um aviso por soneca, 5 min antes do começo da janela, nunca antes de 30 min acordado, só durante o dia
+// do bebê e nunca perto da noite (decisões de 16/11; regra em janela.js). O celular guarda um aviso por
+// bebê; um "Acordou" novo troca o aviso, e o "Dormiu" cancela o que não tocou.
 const winId = id => alertId('janela-' + id);
 let winTimer = 0;
 const winSyncLater = () => { if (medNotif) { clearTimeout(winTimer); winTimer = setTimeout(winSync, 1000); } };
@@ -899,8 +907,8 @@ async function winSync() {
   try {
     const now = Date.now(), evs = sortedEntries();
     const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
-    const open = liveOpen(sleepIntervals(evs).open, now), w = lastWake(last, open, now);
-    const n = w && winOn() && st.track !== false && winNotice(w.t, wakeRef(b.birth_date, w.t), b);
+    const { out, open: open0 } = sleepIntervals(evs), open = liveOpen(open0, now), w = lastWake(last, open, now);
+    const n = w && winOn() && st.track !== false && winNotice(w.t, winOf(b, out, now), b, ruleOf(b));
     const want = n && n.at > now + 5000 ? n.at + '|' + n.title + '|' + n.body : '';
     const key = 'cad-janela-at-' + b.id;
     if ((lsGet(key) || '') === want) return;
@@ -911,6 +919,43 @@ async function winSync() {
     await medNotif.schedule({ notifications: [{ id: winId(b.id), title: n.title, body: n.body, schedule: { at: new Date(n.at), allowWhileIdle: true },
       channelId: 'janela', smallIcon: 'ic_stat_sono', extra: { baby: b.id, go: 'day' } }] });
   } catch {}
+}
+// Aviso de novidade e mensagem da troca de faixa (prévia 13, textos aprovados em 16/11). A novidade sai uma
+// vez por pessoa (marca neste celular), ao abrir o app atualizado, só com a janela ligada e o bebê com
+// janela (até 12 meses, com nascimento); quem entrou na família depois desta versão não vê (para essa
+// pessoa não é novidade). A troca sai uma vez por bebê, quando a faixa passa da idade para a do bebê; se
+// o bebê já tem os dados quando a pessoa vê a novidade, a novidade fica no lugar dela.
+// cad-troca60-<bebê>: '0' = a pessoa viu a faixa da idade; '1' = já viu a troca (ou não precisa).
+// Os testes (testes/cenarios.js) mudam a data por window.testeNovDesde.
+const NOV_DESDE = window.testeNovDesde || Date.parse('2026-11-17T00:00:00-03:00');
+function winMsgs() {
+  const b = st.baby, u = st.user;
+  if (!b || !u || !st.family || st.track === false || S || !$('sheet').hidden || st.tab !== 'home') return;
+  const bw = winOf(b, sleepIntervals(sortedEntries()).out, Date.now());
+  if (!bw.ref) return;
+  const nk = 'cad-nov60-' + u.id, sk = 'cad-troca60-' + b.id, me = st.members.find(m => m.user_id === u.id);
+  if (lsGet(nk) == null) {
+    lsSet(nk, '1');
+    if (!(Date.parse(me?.joined_at) < NOV_DESDE)) return lsSet(sk, bw.own ? '1' : '0');
+    lsSet(sk, bw.own ? '1' : '0');
+    S = { mode: 'nov60', b, title: novTitle(b), text: novText(b, bw.own), ask: !!medNotif && !winOn() };
+    return openPanel(novHtml());
+  }
+  const seen = lsGet(sk);
+  if (!bw.own) { if (seen == null) lsSet(sk, '0'); return; }
+  if (seen === '1') return;
+  lsSet(sk, '1');
+  if (seen !== '0') return;
+  S = { mode: 'nov60', b, title: swapTitle(b), text: swapText(b, bw.ref), ask: false };
+  openPanel(novHtml());
+}
+const novHtml = () => head(S.title) + `<p>${esc(S.text)}</p>`
+  + (S.ask ? `<p class="lbl">${NOV_ASK}</p><button class="save" data-act="novYes">Sim</button><button class="link" data-act="close">Agora não</button>`
+           : '<button class="save" data-act="close">Entendi</button>');
+async function novAction(a) {
+  if (a !== 'novYes') return;
+  if (!(await notifPerm()).ok) { closeSheet(); return toast(NOTIF_DENIED); }
+  closeSheet(); await setWinAlert(true);
 }
 addEventListener('resize', stickLast);
 
@@ -3584,6 +3629,7 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'account') return accountAction(a);
   if (S.mode === 'famname') { if (a === 'saveFamName') return saveFamName(b); return; }
   if (S.mode === 'night') return nightAction(a, b);
+  if (S.mode === 'nov60') return novAction(a);
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);

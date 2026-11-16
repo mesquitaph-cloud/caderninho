@@ -1227,6 +1227,14 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .ruler .rng{opacity:.5}
 .ruler .now{top:5px;width:14px;height:14px;border-radius:50%;background:currentColor;border:2px solid var(--sleep);transform:translateX(-50%)}
 .ruler .tk{position:absolute;top:17px;font-size:11px;transform:translateX(-50%);font-variant-numeric:tabular-nums}
+/* Janela de sono, 2ª etapa (prévia 13, 16/11): sem régua (perto da noite), a faixa fecha embaixo; a frase da
+   soneca perto da noite numa linha própria; o contador do item 73 com 5 bolinhas na cor do texto da faixa. */
+.hw.bare{padding-bottom:8px}
+.hwn{display:block;margin-top:2px;font-weight:500}
+.hwc{display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.3;padding-bottom:8px}
+.wdots{display:flex;gap:4px;flex:none}
+.wdots i{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor;opacity:.55;box-sizing:border-box}
+.wdots i.on{background:currentColor;opacity:1}
 /* Seis botões na linha (Ordenha e Comida): a letra diminui para "Mamada" e "Ordenha" não quebrarem */
 .n6 .rb b{font-size:11px;overflow-wrap:normal}
 /* Noite de cada bebê (item 65; prévias https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ e

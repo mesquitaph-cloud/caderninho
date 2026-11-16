@@ -7,7 +7,8 @@
 //   Sai a regra do "primeiro sono de mais de 3 h": a hora de dormir é o primeiro sono da noite.
 // Vale daqui para frente: babies.night (025) guarda desde quando vale cada horário, e os dias antes do
 // primeiro horário ficam com a regra antiga (noites.js). Sem o 025, tudo fica na regra antiga.
-// Não muda: o relatório do pediatra (regra fixa, por ora) e o aviso da janela de sono (6h às 18h).
+// Não muda: o relatório do pediatra (regra fixa, por ora). A janela de sono e o aviso dela seguem a noite
+// do bebê desde a 2ª etapa do item 60 (janela.js, 16/11).
 import { HOUR, addDays, localDate } from './util.js';
 
 export const NIGHT_START = 18, NIGHT_END = 6;
