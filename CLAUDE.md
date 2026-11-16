@@ -56,3 +56,12 @@ O conector do Supabase serve para consultar, não para mudar nada.
 - Dados pessoais do banco não saem da conversa: nada em commits, PRs, artefatos, e-mails ou arquivos.
 - A trava `.claude/hooks/supabase-guard.mjs` bloqueia escrita e pede confirmação para dados
   pessoais. Não tente contorná-la; se ela bloquear algo necessário, explique e peça orientação.
+
+## Histórico do Soneca (vault)
+
+Existe um registro permanente no vault: `C:\Users\mesqu\OneDrive\Documentos\obsidian.claude\02 Areas\Soneca\Histórico do Soneca.md`. Ele só cresce: acrescenta-se sempre no fim; nunca se reescreve, resume ou apaga uma entrada. Erro se corrige com uma entrada nova.
+
+- Toda sessão que abre um PR, no dia em que o abre e antes do merge, acrescenta no fim do arquivo uma linha por mudança, sob um título `## AAAA-MM-DD` (se o do dia já existir, usa ele). A linha leva: o link do PR, o título em linguagem simples, onde ver o detalhe no repositório (arquivo ou pasta, ex. `supabase/025…`, `loja/`) e se há mudança no banco. Merge ou fechamento sem merge entram depois, como linha nova.
+- Antes de escrever, reler o arquivo (outra sessão pode ter escrito) e só acrescentar no fim. Usar sempre o caminho completo acima, mesmo estando em worktree.
+- Só números agregados; nunca nome, e-mail ou dados de famílias.
+- Exemplo: `- [PR #101](link) aberto: janela própria do bebê (item 60). Código em src/; regra no README. Sem mudança no banco.`
