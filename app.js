@@ -880,7 +880,7 @@ function renderWin(last, open, now, sleeps) {
   const el = $('sleepWin'), b = st.baby, w = b && st.track !== false && lastWake(last, open, now);
   if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
   const awake = now - w.t, bw = winOf(b, sleeps, now), ref = bw.ref;
-  const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap), full = ref && !near;
+  const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap, bw.mid), full = ref && !near;
   const h = `<span class="hwt">${winText(awake, ref, b.sex, near)}</span>` + (full ? rulerHtml(awake, ref) : '')
     + (full && !bw.own ? counterHtml(bw.valid, b) : '');
   if (el.innerHTML !== h) el.innerHTML = h;

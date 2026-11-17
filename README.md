@@ -420,7 +420,11 @@ mesmos, porque o texto cita os itens pelo número.
     1h a 2h · 3–4 m 1h15 a 2h30 · 4–5 m 1h40 a 3h15 · 5–7 m 2h a 4h · 7–10 m 2h30 a 4h30 · 10–12 m 3h a 6h.
     De 12 a 18 meses e sem nascimento, só o contador (sem faixa, sem janela própria e sem aviso).
   - **Dia do bebê:** do fim ao começo da noite que vale na data (`babies.night`, item 65; padrão 18h às 6h).
-  - **Janelas que contam:** do "Acordou" de dia até o "Dormiu" seguinte, de 10 min a 6 h, só as que
+  - **Despertar curto (16/11):** acordar por menos de 15 min e voltar a dormir é interrupção do sono, não
+    janela: só para esta conta, os sonos juntam (do primeiro "Dormiu" ao último "Acordou", em cadeia), e a
+    soneca juntada que passa do começo da noite conta como noite. Totais, Diário, Tendências e relatório
+    não mudam; o cartão segue contando "Acordada há" do último "Acordou" anotado.
+  - **Janelas que contam:** do "Acordou" de dia até o "Dormiu" seguinte, de 15 min a 6 h, só as que
     terminam numa soneca de dia. Fica de fora a que termina no sono da noite (na análise de 16/11, tirar
     essa janela levou o erro de ~41 para 33 min; separar manhã e tarde não ajudou, e não se separa).
   - **Dados:** últimos 7 dias (hoje e os 6 de antes), se houver 5 ou mais dias com soneca de dia; senão,
@@ -433,8 +437,9 @@ mesmos, porque o texto cita os itens pelo número.
     pode estar ficando com sono", corpo "Janela de sono em 5 min."; no piso de 30 min, "A Ana pode estar
     com sono" · "Começou a janela de sono.".
   - **Perto da noite** (A = acordou; N = começo da noite; S = mediana das sonecas que começam a partir das
-    15h, se houver 5 ou mais, senão de todas, no máximo 1 h): se N − A ≤ fim da janela, só "Acordada há
-    …", sem faixa, frase nem aviso; se N − (A + início + S) < início, no lugar da faixa "Uma soneca agora
+    15h, se houver 5 ou mais, senão de todas, no máximo 1 h): se N − A ≤ fim da janela (de 3 meses em
+    diante, ≤ o maior entre o fim da janela e 1,5 × o centro: a mediana do bebê, ou o meio da faixa da
+    idade; 16/11), só "Acordada há …", sem faixa, frase nem aviso; se N − (A + início + S) < início, no lugar da faixa "Uma soneca agora
     pode atrapalhar o sono da noite.", sem aviso; fora isso, o normal. Saiu o "Noite às HHh".
   - **Contador de dias (item 73)** e **mensagens que aparecem uma vez** (novidade e troca de faixa): ver o
     item 73.
