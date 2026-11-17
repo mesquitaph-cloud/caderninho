@@ -598,6 +598,12 @@ mesmos, porque o texto cita os itens pelo número.
   ver que nenhum aviso toca (remédio, tarefa, janela, lembrete); ligar de novo e ver cada um voltar como
   estava; desligar só um aviso e ver os outros seguirem; com dois bebês, Remédios e Tarefas valendo para os
   dois; a conta de outro membro sem mudança; claro e escuro.
+  **Dois ajustes de texto aprovados por Patrick (17/11, prévia 15), em commit à parte:** na guia Peso de
+  Tendências a lista antes chamada "Pesos anotados" passa a "Anotado", nas abas Peso e Comprimento; no cartão
+  do bebê no Diário some o texto de reserva "peso, remédios e marcos": sem nascimento nem peso a segunda linha
+  fica vazia (com idade e/ou peso, igual a antes). O `aria-label` do botão do bebê já dizia "Abrir a aba
+  Família: dados do bebê, rotina e família" (#109). **Conferir no celular:** o cartão do bebê sem nascimento
+  nem peso, e o título "Anotado" nas duas abas.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
