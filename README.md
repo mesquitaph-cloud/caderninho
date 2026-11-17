@@ -480,7 +480,7 @@ mesmos, porque o texto cita os itens pelo número.
   tarde ou pela posição mudou de 0 a 3 min no acerto). Refazer em dezembro, com mais bebês de 3 a 12 meses.
 - **72 · Aviso de versão nova do app** (Patrick, 16/11; prioridade agora): quando houver versão nova nas
   lojas, o app avisa a família para atualizar. Motivo: o diagnóstico de 14/11 mostrou que quase todos
-  ficam na versão velha (todos os Android e quase todos os iPhones na 1.0.3). A decidir, com prévia.
+  ficam na versão velha (todos os Android e quase todos os iPhones na 1.0.3). **Programado em 17/11 (falta publicar, vai na 1.0.5):** prévia aprovada pelo Patrick (cartão, não faixa; 1 vez por dia até atualizar; só na tela Hoje). O app lê a tabela `app_versions` (`supabase/026_versao_do_app.sql`, **rodar antes de publicar**) e, se a versão instalada (`App.getInfo()`) for menor que a `latest` da loja, abre o cartão "Versão nova do Soneca" / "Atualize para ter as novidades do app." / "Atualizar na App Store" (ou Play Store) / "Agora não". Sem rede ou sem a tabela, não avisa. Marca do dia: `cad-versao-aviso`. A coluna `minimum` está pronta para uma versão com defeito grave, mas o app ainda não a usa (sem tela de bloqueio). **A cada lançamento, depois de a loja liberar para todos, atualizar `latest`** (roteiro no fim do 026; passo em `APP-STORE.md` e `PLAY-STORE.md`). Só funciona a partir da versão que trouxer o aviso: quem está na 1.0.3 não vê nada. Teste: `?cenario=app-versao`.
 - **73 · Contador de dias até a janela do próprio bebê** (Patrick, 16/11; textos aprovados em 16/11 na
   prévia 13; programado com a 2ª etapa do item 60, no mesmo PR). Antes dos 5 dias, embaixo da régua da
   idade: 5 bolinhas (os dias que valem nos últimos 14, sem "dias seguidos" e sem zerar; vale o dia com
