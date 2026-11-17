@@ -1176,6 +1176,8 @@ svg.trc text.mo{font-size:8.5px}
 svg.trc .gl{stroke:var(--line);stroke-width:1}
 svg.trc .hit{fill:transparent;cursor:pointer}
 svg.trc .few{opacity:.35}
+/* Hoje (item 62): a coluna a mais, só contorno tracejado e preenchimento fraco: o dia ainda não terminou */
+svg.trc .today rect{fill-opacity:.2;stroke:var(--ink);stroke-opacity:.6;stroke-width:1;stroke-dasharray:3 2}
 svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2}
 .tb-night{fill:var(--c-sleep);background:var(--c-sleep)}
 .tb-nap{fill:var(--c-nap);background:var(--c-nap)}
