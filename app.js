@@ -751,7 +751,7 @@ function renderHome() {
   renderWin(last, open, now, intervals);
   renderDock(last, open, now);
   renderLast(last, open, now);
-  renderMeds(); renderTasks();
+  renderMeds(); renderTasks(); verCardLater();
 
   const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
   $('tabDay').setAttribute('aria-selected', st.view === 'day'); $('tabWeek').setAttribute('aria-selected', week); $('tabMonth').setAttribute('aria-selected', month);
@@ -1398,6 +1398,33 @@ $('ask').addEventListener('click', e => {
   if (b.dataset.rate === 'go') lsSet('cad-review-feito', '1');
   closeAsk();
 });
+
+/* ---------- Aviso de versão nova (item 72, prévia aprovada em 17/11: o cartão) ---------- */
+// No app, na tela Hoje: se a loja já liberou uma versão maior que a instalada (tabela app_versions, 026),
+// o cartão "Versão nova do Soneca". No máximo uma vez por dia, até atualizar. Nunca bloqueia o uso.
+// Sem rede, sem a tabela ou sem resposta: não avisa e não mostra erro.
+const VER_STORE = ANDROID ? 'https://play.google.com/store/apps/details?id=br.app.soneca' : 'https://apps.apple.com/app/id6821448149';
+const verNum = v => String(v || '').split('.').map(n => parseInt(n, 10) || 0);
+function verLess(a, b) { const x = verNum(a), y = verNum(b); for (let i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; }
+let verCheck = null;   // uma consulta por abertura do app
+function verCardLater() {
+  if (!NATIVE || !appPlugin || verCheck) return;
+  if (lsGet('cad-versao-aviso') === localDate(Date.now())) return;
+  verCheck = (async () => {
+    const [info, r] = await Promise.all([appPlugin.getInfo(), sb.from('app_versions').select('latest').eq('platform', ANDROID ? 'android' : 'ios').maybeSingle()]);
+    return !r.error && r.data?.latest && info?.version && verLess(info.version, r.data.latest);
+  })().catch(() => false);
+  verCheck.then(newer => { if (newer) setTimeout(verCard, 2500); });   // depois do pedido de avaliação, que usa a mesma janela
+}
+function verCard() {
+  // Só na tela Hoje, sem outra janela aberta; se não der agora, tenta na próxima vez que a tela Hoje desenhar.
+  if (st.tab !== 'home' || S || !$('ask').hidden || !$('rpView').hidden || $('scrMain').hidden) { verCheck = null; return; }
+  lsSet('cad-versao-aviso', localDate(Date.now()));
+  $('ask').innerHTML = `<div class="cbox rate ver" role="dialog" aria-modal="true" aria-labelledby="verT"><h3 id="verT">Versão nova do Soneca</h3><p>Atualize para ter as novidades do app.</p>`
+    + `<a class="save" href="${VER_STORE}">Atualizar na ${STORE_NAME}</a><button class="link" data-ver="no">Agora não</button></div>`;
+  $('ask').hidden = false; $('ask').querySelector('.save').focus();
+}
+$('ask').addEventListener('click', e => { if (e.target.closest('[data-ver]') || e.target.closest('.ver .save')) closeAsk(); });
 
 /* ---------- Lembrete para anotar (item 30, prévia aprovada em 07/11) ---------- */
 // Vale só neste celular e vem ligado: só a chave do Perfil desliga. A cada registro feito aqui, o app remarca

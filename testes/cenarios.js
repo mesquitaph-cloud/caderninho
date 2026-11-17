@@ -422,3 +422,16 @@ if (CEN === 'janela' || CEN === 'app-janela') {
   if (noite) kid.night = [{ from: ymd(NOW - 30 * DAY), start: +noite, end: 6 }];
   T.profiles.find(p => p.id === U.me).sleep_alert = CEN === 'app-janela';
 }
+
+// "app-versao" (item 72): o app do Android com a 1.0.3 instalada e a 1.0.5 liberada na loja: o cartão
+// "Versão nova do Soneca" na tela Hoje. ?instalada=1.0.5 (igual: não avisa), ?ios=1 (o app do iPhone),
+// ?semtabela=1 (a tabela 026 ainda não existe: não avisa). window.abertos guarda o que o app abriu.
+if (CEN === 'app-versao') {
+  const P = new URLSearchParams(location.search), real = window.Capacitor, ios = P.get('ios') === '1';
+  window.abertos = [];
+  window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => ios ? 'ios' : 'android',
+    registerPlugin: name => name === 'App' ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }),
+        getInfo: async () => ({ version: P.get('instalada') || '1.0.3', build: '9' }) }
+      : new Proxy({}, { get: () => async () => ({}) }) };
+  if (P.get('semtabela') !== '1') T.app_versions = [{ platform: 'android', latest: '1.0.5' }, { platform: 'ios', latest: '1.0.5' }];
+}

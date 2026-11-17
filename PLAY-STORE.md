@@ -160,3 +160,14 @@ segurança; o Google não pede declarar o que é só registro técnico do servid
 - Testadores: uma lista de e-mails no Play Console (12 ou mais, mantidos 14 dias seguidos). O link de
   entrada no teste vai para cada um por mensagem.
 - Depois dos 14 dias: Painel → "Solicitar acesso à produção", com as respostas sobre o teste.
+
+## A cada versão nova: avisar o app (item 72)
+
+Depois de a Play liberar a versão para **100%** do público (a produção libera aos poucos), rodar no SQL
+Editor do Supabase, trocando o número:
+
+```sql
+update public.app_versions set latest = '1.0.5', updated_at = now() where platform = 'android';
+```
+
+Antes disso o app não avisa ninguém. Esquecer não quebra nada, só atrasa o aviso. Detalhes: `supabase/026_versao_do_app.sql`.

@@ -670,6 +670,7 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 .cbox.rate p{color:var(--ink);font-family:var(--display);font-size:18px;font-weight:500;text-wrap:balance}
 .cbox.rate .save{display:block;text-decoration:none;font-size:17px}
 .cbox.rate .link{align-self:center}
+.cbox.ver p{color:var(--muted);font-family:inherit;font-size:15px;font-weight:400}
 /* Cartão "Tudo pronto": a última mamada (item 30) */
 .bv .bvside{background:none}.bv .bvside .opt{flex:1}
 .bv .err{margin:0}

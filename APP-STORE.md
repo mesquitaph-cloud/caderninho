@@ -116,3 +116,14 @@ Search, Financial, Sensitive Info (a Apple trata saúde em Health & Fitness), De
 >
 > The app is free, has no in-app purchases and no ads. It does not provide medical advice; the
 > pediatrician report (PDF) only compiles what the family recorded.
+
+## A cada versão nova: avisar o app (item 72)
+
+Depois de a Apple liberar a versão **para todos** (se a liberação for em fases, esperar o fim das fases),
+rodar no SQL Editor do Supabase, trocando o número:
+
+```sql
+update public.app_versions set latest = '1.0.5', updated_at = now() where platform = 'ios';
+```
+
+Antes disso o app não avisa ninguém. Esquecer não quebra nada, só atrasa o aviso. Detalhes: `supabase/026_versao_do_app.sql`.
