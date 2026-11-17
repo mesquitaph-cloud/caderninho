@@ -497,6 +497,17 @@ mesmos, porque o texto cita os itens pelo número.
   passa da idade para a do bebê: "A janela de sono da Ana mudou" · "Agora ela vem dos registros dela: 30
   min a 1h20 acordada. Antes, era a referência para a idade."; se o bebê já tem os dados quando a pessoa
   vê a novidade, a novidade fica no lugar dela.
+- **74 · Botão i na faixa da janela de sono** (Patrick, 16/11; texto B aprovado palavra por palavra em
+  16/11; prévia https://claude.ai/artifact/CwMbW5wBXU16qahyEjvv8G; programado em 17/11). No cartão do
+  bebê, no fim da primeira linha da faixa acordada, um "i" na tinta do sono (alvo de 44 px). Aparece sempre
+  que há janela (antes, dentro, perto do fim, depois, com a frase da soneca perto da noite e no "direto até
+  a noite"); não aparece com o bebê dormindo, de 12 meses em diante, sem nascimento nem com a janela
+  desligada. Só no cartão (Tendências fica para depois). O toque abre a folha "Como funciona a janela de
+  sono", que fecha com "Entendi", com toque fora ou com o voltar do Android: o quadro **Hoje** com a faixa
+  e de onde ela vem (n janelas nos últimos 7 ou 14 dias; ou a referência da idade e quantos dias faltam),
+  **Como a conta é feita** (só na janela do bebê), o aviso 5 min antes, a frase perto da noite, o lembrete
+  "A janela é uma estimativa…", a fonte (só pela idade) e "Para desligar a janela: Família > Sono.".
+  Textos em `janela.js` (`infoHtml`); testes em `testes/janela.mjs`. Sem mudança no banco.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

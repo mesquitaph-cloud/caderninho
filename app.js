@@ -10,7 +10,7 @@ import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml }
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
-         novTitle, novText, NOV_ASK, swapTitle, swapText } from './janela.js';
+         novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
@@ -881,12 +881,25 @@ function renderWin(last, open, now, sleeps) {
   if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
   const awake = now - w.t, bw = winOf(b, sleeps, now), ref = bw.ref;
   const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap, bw.mid), full = ref && !near;
-  const h = `<span class="hwt">${winText(awake, ref, b.sex, near)}</span>` + (full ? rulerHtml(awake, ref) : '')
+  // O botão i (item 74): sempre que há janela (ref), com a faixa, a frase da soneca ou o "direto até a noite".
+  const h = `<span class="hwr"><span class="hwt">${winText(awake, ref, b.sex, near)}</span>`
+    + (ref ? `<button class="hwi" data-act="winInfo" aria-label="${INFO_TITLE}">i</button>` : '') + '</span>'
+    + (full ? rulerHtml(awake, ref) : '')
     + (full && !bw.own ? counterHtml(bw.valid, b) : '');
   if (el.innerHTML !== h) el.innerHTML = h;
   el.classList.toggle('bare', !full);
   el.hidden = false;
 }
+// A folha do botão i (item 74, texto B aprovado em 16/11): fecha com "Entendi", com um toque fora ou com o
+// voltar do Android (como as outras folhas). Os números são os da faixa de agora.
+$('sleepWin').addEventListener('click', e => {
+  if (!e.target.closest('[data-act="winInfo"]') || !st.baby) return;
+  const b = st.baby, now = Date.now(), bw = winOf(b, sleepIntervals(sortedEntries()).out, now);
+  if (!bw.ref) return;
+  S = { mode: 'winInfo' };
+  openPanel(`<div class="grab"></div><h3>${INFO_TITLE}</h3><div class="winfo">` + infoHtml(bw, b, monthsOld(b.birth_date, now))
+    + '</div><button class="save" data-act="close">Entendi</button>');
+});
 // O aviso no celular: quem disse Sim no onboarding, e só com "Acompanhar o sono" ligado na família (item 65). Fica no perfil da pessoa
 // (sleep_alert, 024) e, sem o 024, só neste celular.
 const winOn = () => lsGet('cad-janela') === '1' || (lsGet('cad-janela') == null && !!st.profile?.sleep_alert);
