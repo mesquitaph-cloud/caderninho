@@ -267,13 +267,19 @@ noite (da hora de dormir até a de acordar), o maior sono seguido e as sonecas. 
 um dia com poucos registros ou uma semana com menos de 4 dias anotados; nos cartões da noite, uma noite
 que não foi anotada do começo ao fim. Um número baixo nunca deixa a barra clara. Só junta o que foi
 anotado; não compara com outros bebês nem diz o que é normal. "Estatísticas" também serve.
-_Evite_: normal, meta, desempenho, evolução do bebê, gráfico de crescimento (esse é o da aba Família)
+_Evite_: normal, meta, desempenho, evolução do bebê, gráfico de crescimento (esse é o da guia Peso)
 
 **Guias**:
 Os botões no alto de Tendências que separam um assunto do outro: Sono, Mamadas, Fraldas, Ordenha (só
-com o botão Ordenha ligado) e Peso. A tela abre em Sono. Na primeira versão, só o Sono tem gráficos; as
+com o botão Ordenha ligado) e Peso. A tela abre em Sono. Por enquanto, só Sono e Peso têm conteúdo; as
 outras mostram "Em construção", com a capivara de capacete de obra.
 _Evite_: abas (aba é a da barra de baixo), filtros, categorias
+
+**Guia Peso** (item 75, etapa 3; em Tendências):
+O peso e o comprimento do bebê, só o que a família anotou: os pontos no tempo (guia Peso ou Comprimento), o
+botão Anotar peso (a mesma folha de antes, com peso, comprimento ou os dois) e a lista Pesos anotados, onde
+tocar numa linha edita ou apaga. Sem curva de referência e sem comparar com outros bebês.
+_Evite_: curva de crescimento, percentil, acima ou abaixo do normal, aba Peso (aba é a da barra de baixo)
 
 **Aba Família** (item 75, 17/11; antes eram duas abas, a do bebê e a Família):
 Tudo o que é do bebê e da família aberta, numa aba só, nesta ordem. No alto, o nome e a idade do bebê (com
@@ -282,9 +288,9 @@ que fica presa enquanto a tela rola: Rotina, Dados do bebê, Família. **Rotina 
 Remédios, Tarefas, Marcos e Relatório e dúvidas, cada uma abrindo a sua tela (Tarefas é a mesma de
 programar e tirar da rotina). **Dados de [nome]**: nome, nascimento, menina ou menino e a noite do bebê.
 **Nossa família**: o nome da família (só o criador muda), os membros e o convite, os bebês, adicionar bebê
-e o interruptor Acompanhar o sono. No fim, sair da família ou apagá-la. O peso e a curva continuam aqui até
-a etapa 3 do item 75 levá-los para Tendências › Peso. Só guarda o que a família anota; não compara com
-curvas de crescimento nem com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
+e o interruptor Acompanhar o sono. No fim, sair da família ou apagá-la. O peso e o comprimento não ficam
+aqui (etapa 3 do item 75): moram em Tendências › Peso, e o número "último peso" do alto leva até lá. Só
+guarda o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
 aqui.
 _Evite_: configurações, grupo, perfil do bebê, ficha, prontuário, tela do bebê, aba do bebê (não existe mais)
 

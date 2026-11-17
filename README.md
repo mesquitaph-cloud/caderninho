@@ -526,7 +526,7 @@ mesmos, porque o texto cita os itens pelo número.
   idade, escolha entre bebês), três números e fileira de atalhos presa no alto (Rotina, Dados do bebê,
   Família); **Rotina de [nome]** com Remédios (folha "Remédios e horários"), Tarefas (folha Tarefas, onde
   se programa e se tira da rotina), Marcos e Relatório e dúvidas (duas folhas novas, com o conteúdo que
-  estava na aba do bebê; anotar ou apagar volta para a folha); o peso e a curva seguem na Família, como
+  estava na aba do bebê; anotar ou apagar volta para a folha); o peso e a curva seguiram na Família, como
   seção "Peso e comprimento", até a etapa 3; **Dados de [nome]** (nome, nascimento, menina ou menino, noite
   do bebê); **Nossa família** (nome, membros e convite, bebês, adicionar bebê, Acompanhar o sono); no fim,
   sair ou apagar a família. Tocar no nome ou na foto do bebê no Diário abre a Família. "Botões da tela
@@ -538,6 +538,19 @@ mesmos, porque o texto cita os itens pelo número.
   no alto; cada linha da Rotina (Remédios, Tarefas, Marcos, Relatório e dúvidas) e voltar; anotar um marco
   e uma dúvida e ver a folha voltar; com dois bebês, trocar na Família e ver tudo mudar; Dados de [nome]
   (editar e noite); convidar alguém e apagar ou sair da família; claro e escuro.
+  **Etapa 3 (peso em Tendências, PR `claude/item-75-peso-3fc438`, 17/11, sem mudança no banco):** a seção
+  "Peso e comprimento" saiu da Família e foi para a guia **Peso** de Tendências (antes "Em construção"):
+  as abas Peso e Comprimento, o gráfico dos pontos anotados (com duas ou mais medidas), o botão **Anotar
+  peso**, a lista **Pesos anotados** (tocar edita ou apaga; é a mesma folha de anotar, com peso, comprimento
+  ou os dois) e a nota "Só o que foi anotado. Sem comparação com outros bebês nem curvas." O número "último
+  peso" no alto da Família agora abre a guia Peso. **Sem curva da OMS na guia**: o gráfico mostra só o que
+  foi anotado, como diz a nota (as curvas e o zoom do gráfico saíram do app; o código das curvas segue em
+  `growth.js` e o relatório para pediatra continua com elas). Código em `app.js` (`pesoHtml`, `logForm`,
+  `saveLog`) e `tendencias.js` (recebe o HTML do peso em `peso`).
+  **Conferir no celular (iPhone e Android):** Família › "último peso" abre Tendências na guia Peso; anotar um
+  peso (e um só comprimento), ver o gráfico e a lista; tocar numa linha, editar e apagar; Peso e Comprimento
+  trocando o gráfico; com dois bebês, trocar e ver o peso de cada um; a Família sem a seção de peso;
+  claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

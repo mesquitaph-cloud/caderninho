@@ -5,7 +5,7 @@ import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayT
          LONG_SLEEP, localDate, reduceMotion, CAPI } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
-import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
+import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart } from './growth.js';
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
@@ -2901,63 +2901,23 @@ const LOG = {
   weight:    { table: 'weights',    list: 'measures',   day: 'measured_on', sort: sortWeights },
   milestone: { table: 'milestones', list: 'milestones', day: 'happened_on', sort: sortMilestones },
 };
-/* ---------- peso e comprimento ---------- */
-// Peso ou comprimento, sobre as curvas da OMS quando há nascimento e menina ou menino; senão, só os
-// pontos no tempo. G.win: o pedaço visível em meses (nulo: o padrão, até um pouco depois da última medida).
-const G = { kind: 'weight', win: null, baby: null };
-const G_PRESETS = [['6 meses', 6], ['1 ano', 12], ['2 anos', 24], ['5 anos', 60]];
+/* ---------- peso e comprimento (Tendências › Peso, item 75 etapa 3) ---------- */
+// Peso ou comprimento, só o que a família anotou: os pontos no tempo, sem curva de referência e sem
+// comparar com outros bebês. Antes ficava na Família, com as curvas da OMS; os dados e a folha de anotar
+// são os mesmos (logForm, saveLog, delLog).
+const G = { kind: 'weight' };
 const gRows = () => G.kind === 'weight' ? st.weights : st.lengths;
-const gCurves = () => !!(st.baby.birth_date && st.baby.sex);
-function gWin() {
-  if (G.baby !== st.baby.id) { G.baby = st.baby.id; G.win = null; }
-  return G.win || growthWindow(gRows(), st.baby.birth_date);
-}
-function growthSvg() {
-  const b = st.baby, rows = gRows(), [a, z] = gWin();
-  if (gCurves()) return growthChart({ rows, kind: G.kind, sex: b.sex, birth: b.birth_date, a, b: z, id: 'gch' });
-  return rows.length >= 2 ? weightChart(rows, G.kind) : '';
-}
-function growthHtml() {
-  const b = st.baby, curves = gCurves(), [a, z] = gWin(), w = G.kind === 'weight';
-  let h = `<div class="seg2" role="tablist">${[['weight', 'Peso'], ['length', 'Comprimento']].map(([k, n]) => `<button role="tab" aria-selected="${G.kind === k}" class="${G.kind === k ? 'on' : ''}" data-act="gKind" data-val="${k}">${n}</button>`).join('')}</div>`;
-  if (curves) h += `<div class="gpre">${G_PRESETS.filter(([, m]) => w || m <= MAX_MONTHS).map(([n, m]) => `<button class="${a === 0 && z === m ? 'on' : ''}" data-act="gWin" data-val="${m}">${n}</button>`).join('')}</div>`;
-  const svg = growthSvg();
-  if (svg) h += `<div class="svgbox${curves ? ' gzoom' : ''}" id="gBox">${svg}</div>`;
-  if (curves) h += `<p class="dim">Curvas da OMS adotadas pela SBP · ${b.sex === 'F' ? 'meninas' : 'meninos'} · percentis 3, 15, 50, 85 e 97. Pinça ou rodinha para zoom; arraste para os lados.</p>`;
-  else h += `<p class="dim">${!gRows().length ? (w ? 'Nenhum peso anotado. ' : 'Nenhum comprimento anotado. ') : ''}Para ver as curvas da OMS, anote ${!b.birth_date && !b.sex ? 'o nascimento e se é menina ou menino' : !b.birth_date ? 'o nascimento' : 'se é menina ou menino'} em <button class="lnk inl" data-act="editBaby" data-val="${esc(b.id)}">Dados do bebê</button>.</p>`;
-  return h;
-}
-// Zoom no gráfico: rodinha do mouse, pinça com dois dedos e arrastar para os lados.
-function bindZoom() {
-  const box = $('gBox'); if (!box || !box.classList.contains('gzoom')) return;
-  const set = (a, z) => {
-    let sp = Math.min(MAX_MONTHS, Math.max(3, z - a));
-    a = Math.min(Math.max(0, a), MAX_MONTHS - sp); G.win = [a, a + sp];
-    box.innerHTML = growthSvg();
-    box.parentElement.querySelectorAll('.gpre button').forEach(e => e.classList.toggle('on', G.win[0] === 0 && G.win[1] === +e.dataset.val));
-  };
-  const frac = cx => { const r = box.getBoundingClientRect(); return Math.min(1, Math.max(0, (cx - r.left - r.width * 30 / 340) / (r.width * 280 / 340))); };
-  box.addEventListener('wheel', e => {
-    e.preventDefault();
-    const [a, z] = gWin(), f = frac(e.clientX), m = a + (z - a) * f, sp = (z - a) * Math.exp(e.deltaY * .0015);
-    set(m - sp * f, m - sp * f + sp);
-  }, { passive: false });
-  const pts = new Map(); let s0 = null;
-  const start = () => { s0 = pts.size ? { win: gWin(), p: new Map(pts) } : null; };
-  box.addEventListener('pointerdown', e => { box.setPointerCapture(e.pointerId); pts.set(e.pointerId, e.clientX); start(); });
-  box.addEventListener('pointermove', e => {
-    if (!pts.has(e.pointerId) || !s0) return;
-    pts.set(e.pointerId, e.clientX);
-    const [a, z] = s0.win, sp0 = z - a, w = box.getBoundingClientRect().width * 280 / 340;
-    if (pts.size === 1 && s0.p.size === 1) { const dx = e.clientX - [...s0.p.values()][0]; set(a - dx / w * sp0, z - dx / w * sp0); }
-    else if (pts.size >= 2 && s0.p.size >= 2) {
-      const [p1, p2] = [...pts.values()], [q1, q2] = [...s0.p.values()], fc = frac((q1 + q2) / 2), mc = a + sp0 * fc;
-      const sp = sp0 * (Math.abs(q2 - q1) || 1) / (Math.abs(p2 - p1) || 1);
-      set(mc - sp * fc, mc - sp * fc + sp);
-    }
-  });
-  const up = e => { pts.delete(e.pointerId); start(); };
-  box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+function pesoHtml() {
+  const b = st.baby, all = st.measures;
+  if (!st.growthOk) return '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
+  const rows = gRows();
+  let h = `<section class="card trp"><div class="seg2" role="tablist">${[['weight', 'Peso'], ['length', 'Comprimento']].map(([k, n]) => `<button role="tab" aria-selected="${G.kind === k}" class="${G.kind === k ? 'on' : ''}" data-act="gKind" data-val="${k}">${n}</button>`).join('')}</div>`;
+  if (rows.length >= 2) h += `<div class="svgbox">${weightChart(rows, G.kind)}</div>`;
+  h += '</section><button class="ghost" data-act="newWeight">Anotar peso</button>';
+  h += '<div class="sec"><h4>Pesos anotados</h4>' + (all.length
+    ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
+    : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>') + '</div>';
+  return h + '<p class="dim">Só o que foi anotado. Sem comparação com outros bebês nem curvas.</p>';
 }
 
 // Tendências: a 5ª aba (item 58). A janela aberta pode ir além dos 60 dias que o app carrega: busca o
@@ -2972,7 +2932,7 @@ function drawTrendsPane() {
     const { a } = trendWindow(t.mode, t.off, now, first);
     if (olderMissing(a)) { loadOlder(a); loading = olderFailed() ? 'Não foi possível carregar os registros.' : 'Carregando…'; }
   }
-  el.innerHTML = trendsHtml({ t, evs: sortedEntries(), now, first, pump: isOn('pump'), loading, rule: ruleOf(b), night: { de: deName(b), c: nightNow(b) },
+  el.innerHTML = trendsHtml({ t, peso: t.tab === 'peso' ? pesoHtml() : '', evs: sortedEntries(), now, first, pump: isOn('pump'), loading, rule: ruleOf(b), night: { de: deName(b), c: nightNow(b) },
     who: [b.name, ageText(b.birth_date)].filter(Boolean).join(' · '), chips: st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '' });
 }
 /* ---------- dúvidas para a consulta ---------- */
@@ -3349,7 +3309,7 @@ async function saveName(btn) {
 // Família (item 75, etapa 2): juntou a antiga aba do bebê com a Família. Nesta ordem: o bebê (nome, idade,
 // escolha entre bebês) e a fileira de atalhos; a Rotina; os Dados do bebê; Nossa família; sair ou apagar.
 // Prévia aprovada em 17/11: https://claude.ai/artifact/Kd41UYQRrJE8JZbpvJGMZS
-// O peso fica aqui, como estava na aba do bebê, até a etapa 3 levá-lo para Tendências › Peso.
+// O peso mora em Tendências › Peso (etapa 3): o número "último peso" leva até lá.
 const FP = { invite: null };   // o link de convite gerado
 const NONE = 'Não informado';
 // Uma linha da Família: título, uma ou duas linhas pequenas embaixo e, à direita, o que o toque faz.
@@ -3362,11 +3322,11 @@ function famBaby(b) {
   let h = `<div class="ptitle"><h2>${esc(b.name)}</h2>${b.birth_date ? `<small>${esc(ageText(b.birth_date))}</small>` : ''}</div>`;
   if (st.babies.length > 1) h += `<div class="babies">${babyChips()}</div>`;
   h += '<div class="babies fnav" role="group" aria-label="Ir para"><button data-act="jump" data-val="famRotina">Rotina</button><button data-act="jump" data-val="babyData">Dados do bebê</button><button data-act="jump" data-val="famNossa">Família</button></div>';
-  // Os três números do alto: o peso leva à seção do peso; remédios e marcos abrem a própria tela.
+  // Os três números do alto: o peso leva à guia Peso de Tendências; remédios e marcos abrem a própria tela.
   const lw = ws.at(-1), lm = ms.at(-1), next = dosesFrom(now, now + DAY).find(d => !d.e);
   const medText = !meds.length ? 'nenhum' : next ? (dayWord(next.due) || 'hoje') + ' ' + next.hhmm : 'quando precisar';
   const tile = (act, val, color, k, v, t) => `<button data-act="${act}"${val ? ` data-val="${val}"` : ''} style="--sw:var(${color})"><span class="k"><i></i>${k}</span><b>${esc(v)}</b><span>${esc(t)}</span></button>`;
-  h += '<div class="jump">' + tile('jump', 'babyWeight', '--c-weight', 'último peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
+  h += '<div class="jump">' + tile('openWeight', '', '--c-weight', 'último peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
     + tile('openMeds', '', '--c-med', 'remédios', String(meds.length), medText)
     + tile('openMarcos', '', '--accent', 'marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
   // Rotina de [nome]: cada linha abre a tela que já existia.
@@ -3377,16 +3337,6 @@ function famBaby(b) {
     + famRow('openTasks', null, 'Tarefas', nr ? nr + ' na rotina' : 'Nenhuma na rotina')
     + famRow('openMarcos', null, 'Marcos', nm ? `${nm} ${nm === 1 ? 'anotado' : 'anotados'}` : 'Nenhum anotado')
     + famRow('openConsult', null, 'Relatório e dúvidas', 'Relatório para o pediatra, dúvidas para a consulta') + '</div>';
-  // Peso e comprimento, como na aba do bebê (sai daqui na etapa 3 do item 75).
-  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
-  else {
-    h += '<div class="sec" id="babyWeight"><h4>Peso e comprimento</h4>' + growthHtml();
-    const all = st.measures;
-    h += all.length
-      ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
-      : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>';
-    h += '<button class="ghost" data-act="newWeight">+ Anotar medida</button></div>';
-  }
   // Dados de [nome]: nome, nascimento e menina ou menino abrem a edição do bebê; a noite tem a sua.
   const c = nightNow(b);
   h += `<div class="sec fsec" id="babyData"><h4>Dados de ${esc(b.name)}</h4>`
@@ -3422,7 +3372,6 @@ function drawFamilyPane() {
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
   $('paneFamily').innerHTML = h;
-  if (b) bindZoom();
 }
 // Mudar o nome da família: só quem criou (é a regra do banco).
 function famNameSheet() {
@@ -3599,16 +3548,13 @@ async function afterLeavingFamily() {
 // Os toques nas abas Família e Perfil.
 async function paneAction(a, v, btn) {
   const f = st.family;
-  // Rotina e Peso
+  // Rotina
   if (a === 'jump') return spotlight(v);
   if (a === 'openMeds') return medsSheet();
   if (a === 'openTasks') return tasksSheet();
   if (a === 'openMarcos') return milestonesSheet();
   if (a === 'openConsult') return consultSheet();
-  if (a === 'gKind') { G.kind = v; G.win = null; return render(); }
-  if (a === 'gWin') { G.win = [0, +v]; return render(); }
-  if (a === 'newWeight') return logForm('weight');
-  if (a === 'editWeight') return logForm('weight', st.measures.find(w => w.id === v));
+  if (a === 'openWeight') { st.trend.tab = 'peso'; st.trend.info = null; return goTab('trends'); }
   if (a === 'allMeds') return medsSheet();
   if (a === 'newMed') return medForm(null, 'pane');
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
@@ -3839,6 +3785,12 @@ $('paneTrends').addEventListener('click', e => {
   const t = st.trend, g = s => e.target.closest(s); let x;
   if ((x = g('[data-baby]'))) return selectBaby(x.dataset.baby);
   if ((x = g('[data-tinfo]'))) { const k = x.dataset.tinfo; t.info = t.info === k ? null : k; return redrawTrends(`[data-tinfo="${k}"]`); }
+  if ((x = g('[data-act]'))) {   // guia Peso: Peso ou Comprimento, anotar e editar
+    const a = x.dataset.act, v = x.dataset.val;
+    if (a === 'gKind') { G.kind = v; return redrawTrends(`[data-act="gKind"][data-val="${v}"]`); }
+    if (a === 'newWeight') return logForm('weight');
+    if (a === 'editWeight') return logForm('weight', st.measures.find(w => w.id === v));
+  }
   if ((x = g('[data-ttab]'))) { t.tab = x.dataset.ttab; t.info = null; return redrawTrends(`[data-ttab="${t.tab}"]`); }
   if ((x = g('[data-tmode]'))) { if (t.mode !== x.dataset.tmode) { t.mode = x.dataset.tmode; t.off = 0; t.sel = null; } return redrawTrends(`[data-tmode="${t.mode}"]`); }
   if ((x = g('[data-tnav]'))) { if (x.disabled) return; t.off = Math.max(0, t.off - +x.dataset.tnav); t.sel = null; return redrawTrends(`[data-tnav="${x.dataset.tnav}"]`); }
