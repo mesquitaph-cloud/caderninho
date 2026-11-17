@@ -590,9 +590,8 @@ mesmos, porque o texto cita os itens pelo número.
   `Mamada` (iOS: `MamadaPlugin.swift`; Android: `MamadaPlugin.java`), **que só vale em compilação nova**.
   **Os interruptores mostram o estado de verdade, não "tudo ligado":** Janela de sono, Remédios e Tarefas só
   ficam ligados depois de a pessoa dizer Sim (ou programar o primeiro remédio ou tarefa), como já era; só o
-  central e "Me lembrar de registrar" começam ligados. **Texto provisório, não aprovado**, em `NOTIF_BLOCK`
-  (`app.js`): o título "Notificações bloqueadas" e o botão "Abrir ajustes" (o corpo é a frase que já existia,
-  "Permita as notificações do Soneca nas configurações do celular.").
+  central e "Me lembrar de registrar" começam ligados. **Aviso de bloqueio, textos aprovados (17/11)**, em `NOTIF_BLOCK` (`app.js`): título "Notificações bloqueadas", botão
+  "Abrir ajustes" e corpo "Permita as notificações do Soneca nas configurações do celular."
   **Conferir no celular (iPhone e Android):** com as notificações bloqueadas nos ajustes do celular, ligar o
   central ou um aviso e ver o aviso de bloqueio levar aos ajustes do Soneca (e voltar); desligar o central e
   ver que nenhum aviso toca (remédio, tarefa, janela, lembrete); ligar de novo e ver cada um voltar como

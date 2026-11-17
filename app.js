@@ -3526,8 +3526,8 @@ function notifBlock() {
     + '<p class="dim">Ao ligar de novo, cada aviso volta como estava.</p></div>';
 }
 // Se o iPhone ou o Android bloquear as notificações do Soneca, o toque leva aos ajustes do celular (item 63).
-// TEXTO PROVISÓRIO, NÃO APROVADO: o título e o botão abaixo (o corpo é NOTIF_DENIED, que já existia). Trocar
-// quando o Patrick aprovar. openSettings é um método novo do plugin nativo Mamada (iOS e Android).
+// Textos aprovados pelo Patrick em 17/11: o título e o botão abaixo; o corpo é NOTIF_DENIED. openSettings é um
+// método novo do plugin nativo Mamada (iOS e Android).
 const NOTIF_BLOCK = { title: 'Notificações bloqueadas', go: 'Abrir ajustes' };
 function notifBlocked() {
   askConfirm(NOTIF_BLOCK.title, NOTIF_DENIED, NOTIF_BLOCK.go, async () => {
