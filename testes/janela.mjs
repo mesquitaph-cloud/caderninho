@@ -1,7 +1,7 @@
 // Testes da janela de sono do próprio bebê (item 60, 2ª etapa, e contador do item 73; regra aprovada pelo
 // Patrick em 16/11, prévia 13: https://claude.ai/artifact/3q6Hzf8QKppDALfn8DBthA). Sem navegador nem banco:
 // `node --no-warnings testes/janela.mjs`. Sai com erro (código 1) se algum caso falhar.
-import { ownWindow, babyWin, dayWindows, mergeShort, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur } from '../janela.js';
+import { ownWindow, babyWin, dayWindows, mergeShort, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur, infoHtml, INFO_TITLE } from '../janela.js';
 import { nightRule } from '../noite.js';
 import { addDays, localDate, HOUR, MIN } from '../util.js';
 const ok = (c, m) => { if (!c) { console.log('FALHOU:', m); process.exitCode = 1; } else console.log('ok:', m); };
@@ -104,3 +104,14 @@ ok(nearNight(N - 168 * MIN, w3age.ref, N, null, w3age.mid) === 'direto' && nearN
 const w3own = babyWin(days([1, 2, 3, 4, 5]), rule0, birth3, NOW);
 ok(w3own.own && w3own.mid === 75 * MIN && faixa(w3own.ref) === '55 min–1h40', '3 meses com janela própria: centro = mediana do bebê (1h15), faixa da tela igual');
 ok(!winNotice(N - 150 * MIN, { ref, nap, mid: 100 * MIN }, ana, rule0), '3 meses ou mais, direto pelo 1,5 ×: sem aviso no celular');
+
+// 9. Botão i da faixa (item 74, texto B aprovado em 16/11): os números do quadro Hoje vêm do babyWin.
+ok(w7.n === 10, `quadro Hoje: 10 janelas nos 5 dias (${w7.n})`);
+const iOwn = infoHtml(w7, { name: 'Bia', sex: 'F' }, 2), iAge = infoHtml(wAge, { name: 'Leo', sex: null }, 1);
+ok(INFO_TITLE === 'Como funciona a janela de sono', 'título da folha');
+ok(iOwn.includes('<b>55 min a 1h40 acordada</b>') && iOwn.includes('A partir de 10 vezes em que a Bia ficou acordada antes de uma soneca, nos últimos 7 dias.'), 'janela própria: quadro Hoje');
+ok(iOwn.includes('Como a conta é feita') && !iOwn.includes('Cleveland') && !iOwn.includes('Nos primeiros dias'), 'janela própria: com a lista, sem a fonte');
+ok(iAge.includes('<b>1h a 2h acordado/a</b>') && iAge.includes('Referência para 1 mês. Faltam 2 dias de sonecas anotadas para a janela vir dos registros do/a Leo.'), 'pela idade: quadro Hoje, sem sexo anotado com barra');
+ok(iAge.includes('registros do/a próprio/a Leo.') && iAge.includes('Cleveland Clinic') && !iAge.includes('Como a conta'), 'pela idade: sem a lista, com a fonte');
+ok(infoHtml({ ...wAge, valid: 4 }, { name: 'Leo', sex: 'M' }, 2).includes('Referência para 2 meses. Falta 1 dia de sonecas anotadas para a janela vir dos registros do Leo.'), 'pela idade: Falta 1 dia, no singular');
+ok(infoHtml(w7, { name: '<b>', sex: 'M' }, 2).includes('o &lt;b&gt; costuma ficar acordado'), 'nome escapado');

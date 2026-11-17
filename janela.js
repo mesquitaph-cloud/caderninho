@@ -4,7 +4,7 @@
 // Com o bebê acordado, o cartão do bebê mostra há quanto tempo e, até 12 meses, a faixa da referência da
 // idade em duração (nunca hora no relógio). Sem estado: o app.js passa a hora do "Acordou", o nascimento
 // e menina ou menino. Os textos foram aprovados palavra por palavra pelo Patrick em 13/11.
-import { MIN, HOUR, pad, startOfDay, addDays } from './util.js';
+import { MIN, HOUR, pad, startOfDay, addDays, esc } from './util.js';
 import { NIGHT_START, NIGHT_END } from './noite.js';
 
 // Tempo acordado entre um sono e outro, por idade, da Cleveland Clinic ("Wake Windows by Age",
@@ -142,7 +142,8 @@ export function ownWindow(ws) {
 // A janela que o app usa para o bebê agora. Dados: os últimos 7 dias (hoje e os 6 de antes), se houver 5
 // ou mais dias com soneca de dia que conta; senão, os últimos 14 com 5 ou mais; senão, a faixa da idade.
 // Só até 12 meses (de 12 meses em diante e sem nascimento, só o contador, como na 1ª etapa).
-// Devolve { ref, own, days, valid, nap, mid }: valid = dias que valem nos últimos 14 (contador do item 73);
+// Devolve { ref, own, days, n, valid, nap, mid }: n = quantas janelas entraram na conta (o quadro Hoje do
+// botão i, item 74); valid = dias que valem nos últimos 14 (contador do item 73);
 // nap = soneca típica para a regra perto da noite (mediana das sonecas que começam a partir das 15h, se
 // houver 5 ou mais, senão de todas, no máximo 1 h; null sem sonecas); mid = o centro da janela para o
 // "direto até a noite" de 3 meses em diante (a mediana do bebê, ou o meio da faixa da idade; null abaixo
@@ -150,7 +151,7 @@ export function ownWindow(ws) {
 export const NEED_DAYS = 5, MID_MONTHS = 3;
 export function babyWin(sleeps, rule, birth, now) {
   const age = wakeRef(birth, now);
-  if (!age) return { ref: null, own: false, days: 0, valid: 0, nap: null, mid: null };
+  if (!age) return { ref: null, own: false, days: 0, n: 0, valid: 0, nap: null, mid: null };
   sleeps = mergeShort(sleeps);
   const today = startOfDay(now), per = [];
   for (let k = 0; k < 14; k++) per.push(dayWindows(sleeps, rule, addDays(today, -k)));
@@ -164,7 +165,7 @@ export function babyWin(sleeps, rule, birth, now) {
   const nap = use.length ? Math.min(pct(use.map(([x, y]) => y - x), .5), HOUR) : null;
   const ref = days ? ownWindow(ws) : age;
   const mid = monthsOld(birth, now) < MID_MONTHS ? null : days ? ref.med : (age[0] + age[1]) / 2;
-  return { ref, own: !!days, days, valid, nap, mid };
+  return { ref, own: !!days, days, n: ws.length, valid, nap, mid };
 }
 // Perto da noite (A = hora do "Acordou", N = começo da noite daquele dia, nap = soneca típica, mid = o
 // centro do babyWin): 'direto' se dá para ir até a noite dentro da janela (N − A ≤ até; de 3 meses em
@@ -216,6 +217,36 @@ export const swapTitle = b => 'A janela de sono ' + forms(b.sex).da + ' ' + b.na
 export function swapText(b, ref) {
   const f = forms(b.sex);
   return 'Agora ela vem dos registros ' + f.dela + ': ' + fmtDur(ref[0]) + ' a ' + fmtDur(ref[1]) + ' ' + f.ac + '. Antes, era a referência para a idade.';
+}
+
+/* ---------- o botão i da faixa (item 74, texto B aprovado palavra por palavra em 16/11) ---------- */
+// Prévia: https://claude.ai/artifact/CwMbW5wBXU16qahyEjvv8G. A folha que explica as regras da janela.
+// bw: o babyWin; baby: { name, sex }; months: a idade em meses (monthsOld). Devolve o HTML do meio da folha
+// (o título e o "Entendi" ficam com o app.js). Na janela do próprio bebê, o quadro Hoje e "Como a conta é
+// feita"; ainda pela idade, o quadro com a referência e a fonte.
+export const INFO_TITLE = 'Como funciona a janela de sono';
+export function infoHtml(bw, baby, months) {
+  const f = forms(baby.sex), nm = esc(baby.name), a = f.art.toLowerCase() + nm, da = f.da + ' ' + nm;
+  const faixa = fmtDur(bw.ref[0]) + ' a ' + fmtDur(bw.ref[1]) + ' ' + f.ac;
+  let h = `<p>A janela de sono é o tempo que ${a} costuma ficar ${f.ac} entre um sono e outro, durante o dia.</p>`;
+  if (bw.own) {
+    h += `<div class="wtoday"><span class="wsub">Hoje</span><b>${faixa}</b><span class="wsm">A partir de ${bw.n} vezes em que ${a} ficou ${f.ac} antes de uma soneca, nos últimos ${bw.days} dias.</span></div>`
+      + '<span class="wsub">Como a conta é feita</span><ul class="wlist">'
+      + `<li>Só conta o tempo ${f.ac} antes de uma soneca de dia. O tempo antes do sono da noite fica de fora.</li>`
+      + `<li>Se ${a} acorda e volta a dormir em menos de 15 min, conta como o mesmo sono.</li>`
+      + `<li>A janela fica em volta do tempo mais comum ${da}, com 45 min a 1h30 de largura, e nunca começa antes de 30 min ${f.ac}.</li>`
+      + `<li>A conta é refeita todo dia com os últimos 7 dias (ou 14, quando faltam registros). Por isso a janela acompanha ${a} crescendo.</li></ul>`;
+  } else {
+    const n = Math.max(1, NEED_DAYS - bw.valid), idade = months === 1 ? '1 mês' : months + ' meses';
+    h += `<div class="wtoday"><span class="wsub">Hoje</span><b>${faixa}</b><span class="wsm">Referência para ${idade}. `
+      + (n === 1 ? 'Falta 1 dia' : 'Faltam ' + n + ' dias') + ` de sonecas anotadas para a janela vir dos registros ${da}.</span></div>`
+      + `<p>Nos primeiros dias, ela vem de uma referência para a idade. Com 5 dias de sonecas anotadas, passa a vir dos registros ${f.da} ${f.propria} ${nm}.</p>`;
+  }
+  h += `<p>Se o aviso no celular estiver ligado, ele chega 5 min antes da janela, só durante o dia ${da}.</p>`
+    + '<p>Perto da noite, quando uma soneca pode atrapalhar o sono da noite, o Soneca diz isso no lugar da janela.</p>'
+    + `<p class="wrem">A janela é uma estimativa. Os sinais de sono ${da} valem mais que o relógio.</p>`;
+  if (!bw.own) h += '<p class="dim">Referência: Cleveland Clinic. Em bebês prematuros, vale a idade corrigida.</p>';
+  return h + '<p class="dim">Para desligar a janela: Família &gt; Sono.</p>';
 }
 
 // Um "Acordou" de mais de 12 horas atrás não vira contador: faltou anotar um sono.
