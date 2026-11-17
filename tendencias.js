@@ -47,7 +47,8 @@ export function trendWindow(mode, off, now, first) {
   if (mode === 'd') {
     const end = addDays(Y, -DAY_SPAN * off), a0 = addDays(end, -(DAY_SPAN - 1)), a = Math.max(a0, first);
     const days = []; for (let d = a; d <= end; d = addDays(d, 1)) days.push(d);
-    return { a, z: end, days, weeks: null, canBack: a0 > first, canFwd: off > 0 };
+    if (off === 0) days.push(addDays(Y, 1));        // hoje: uma coluna a mais, tracejada, só na janela mais recente
+    return { a, z: days.at(-1), days, weeks: null, canBack: a0 > first, canFwd: off > 0 };
   }
   const weeks = [];
   let a0 = null;
@@ -101,7 +102,8 @@ export function dayRows(days, evs, now, rule) {
 function items(win, evs, now, rule) {
   const rows = dayRows(win.days, evs, now, rule);
   const item = (r, few, nfew) => ({ ...r, total: r.night + r.nap, napEach: r.naps ? r.nap / r.naps : 0, sFew: few, nFew: nfew });
-  if (!win.weeks) return rows.map(r => item(r, r.few, !r.whole));
+  const t0 = startOfDay(now);
+  if (!win.weeks) return rows.map(r => r.d === t0 ? { ...item(r, true, true), today: true } : item(r, r.few, !r.whole));
   return win.weeks.map(w => {
     const ds = rows.filter(r => r.d >= w.a && r.d <= w.e), rec = ds.filter(r => r.any), nl = ds.filter(r => r.hasNight);
     const beds = nl.filter(r => r.bed !== null), wakes = nl.filter(r => r.wake !== null), long = ds.filter(r => r.longest);
@@ -135,7 +137,7 @@ const selBox = (x, bw, ch) => `<rect class="trsel" x="${f1(x - 2)}" y="${T - 2}"
 const label = (x, H, its, i, week, on) => {
   const d = tickDate(its[i], week), m = d.getMonth(), show = i === 0 || tickDate(its[i - 1], week).getMonth() !== m;
   return `<text x="${f1(x)}" y="${H - 14}" text-anchor="middle"${on ? ' class="on"' : ''}>${d.getDate()}</text>`
-    + (show ? `<text x="${f1(x)}" y="${H - 4}" text-anchor="middle" class="mo">${MESES[m]}</text>` : '');
+    + (its[i].today ? `<text x="${f1(x)}" y="${H - 4}" text-anchor="middle" class="mo">hoje</text>` : show ? `<text x="${f1(x)}" y="${H - 4}" text-anchor="middle" class="mo">${MESES[m]}</text>` : '');
 };
 const hit = (i, x, w, H) => `<rect class="hit" data-ti="${i}" x="${f1(x)}" y="0" width="${f1(w)}" height="${H}"/>`;
 // Barras, empilhadas quando há mais de uma série (a primeira embaixo).
@@ -145,7 +147,7 @@ function bars({ its, series, max, step, fmt, sel, week, h = 96, name, few }) {
   for (let g = 0; g <= max; g += step) { const y = T + ch - ch * g / max; s += `<line class="gl" x1="${L}" x2="${VW - R}" y1="${f1(y)}" y2="${f1(y)}"/><text x="${L - 5}" y="${f1(y + 3)}" text-anchor="end">${fmt(g)}</text>`; }
   its.forEach((it, i) => {
     const x = L + slot * i + (slot - bw) / 2; let acc = 0;
-    s += `<g${few(it) ? ' class="few"' : ''}>`;
+    s += `<g${it.today ? ' class="today"' : few(it) ? ' class="few"' : ''}>`;
     for (const [k, cls] of series) {
       const v = it[k] || 0, y = T + ch - ch * (acc + v) / max; acc += v;
       if (v > 0) s += `<rect class="${cls}" x="${f1(x)}" y="${f1(y)}" width="${f1(bw)}" height="${f1(ch * v / max)}" rx="${f1(Math.min(3, bw / 3))}"/>`;
@@ -170,7 +172,7 @@ function band({ its, sel, week }) {
     const x = L + slot * i + (slot - bw) / 2;
     if (it.bed !== null && it.wake !== null) {
       const a = Y(it.bed / HOUR), b = Y(24 + it.wake / HOUR), wk = week ? [] : it.wk;
-      s += `<g${it.nFew ? ' class="few"' : ''}><rect class="tb-night" x="${f1(x)}" y="${f1(a)}" width="${f1(bw)}" height="${f1(Math.max(1, b - a))}" rx="${f1(bw / 2)}"/>`;
+      s += `<g${it.today ? ' class="today"' : it.nFew ? ' class="few"' : ''}><rect class="tb-night" x="${f1(x)}" y="${f1(a)}" width="${f1(bw)}" height="${f1(Math.max(1, b - a))}" rx="${f1(bw / 2)}"/>`;
       if (bw >= 6) for (const t of wk) s += `<circle class="tb-dot" cx="${f1(x + bw / 2)}" cy="${f1(Y(t / HOUR))}" r="1.8"/>`;
       s += '</g>';
     }
@@ -238,7 +240,7 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   if (loading) return h + `<div class="empty">${loading}</div>`;
   const its = items(win, evs, now, rule);
   if (!its.length) return h + '<div class="empty">Nada anotado nestes dias.</div>';
-  if (t.sel == null || t.sel >= its.length) t.sel = its.length - 1;
+  if (t.sel == null || t.sel >= its.length) t.sel = its.length - 1 - (its.at(-1).today && its.length > 1 ? 1 : 0);   // abre em ontem, não em hoje
   const cur = its[t.sel], sel = t.sel;
   const lab = week ? rangeTitle(cur.d, cur.e) : dLong(cur.d), per = week ? ' · média por dia' : '';
   const nlab = week ? rangeTitle(cur.d, cur.e) + ' · média por noite' : nightName(cur.d);
