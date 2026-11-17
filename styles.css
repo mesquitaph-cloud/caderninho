@@ -521,7 +521,7 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 button.ptitle{text-align:left;border-radius:14px;padding:4px 6px;margin:-4px -6px 0}
 button.ptitle:active{background:var(--surface2)}
 /* Família (item 75): a fileira de atalhos fica presa no alto enquanto a tela rola */
-.fnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
+.fnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 65px);z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
 .fnav button.on{background:var(--feed);color:var(--feed-ink);border-color:currentColor}
 .fsec{scroll-margin-top:64px}
 .li.tg .go{flex:none}
@@ -935,7 +935,7 @@ a.li{color:inherit;text-decoration:none}
    ficam a 6 px do relógio (2 px aqui e 4 px do botão), sem o vão de antes; no Android, sem os 20 px a mais. */
 .hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:2px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
 [data-app="android"] .hcard{margin-top:calc(-20px - env(safe-area-inset-top,0px))}
-body:has(#paneHome:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
+body:has(#paneHome:not([hidden]))::before,body:has(#paneFamily:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
 /* A data com as setas e o "Hoje" à esquerda e Dia | Semana | Mês, pequeno, à direita, sempre numa
    linha (08/11, prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). As datas curtas são de util.js. */
 #paneHome{gap:10px}
@@ -1143,7 +1143,8 @@ body.pull-back .ptr svg{transition:opacity .2s}
 .trh h2{display:flex;align-items:center;gap:8px;margin:0;font-family:var(--display);font-weight:500;font-size:24px;line-height:1.15}
 .trh h2 .capi{width:42px;height:auto;flex:none;stroke-width:1.6px}
 .trh>span{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow-wrap:anywhere}
-.trt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
+.trs{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;display:flex;flex-direction:column;gap:8px;margin:0 -24px;padding:8px 24px;background:var(--bg)}
+.trt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -24px;padding:0 24px}
 .trt::-webkit-scrollbar{display:none}
 .trt button{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;white-space:nowrap}
 .trt button i{width:8px;height:8px;border-radius:50%}
@@ -1171,6 +1172,7 @@ body.pull-back .ptr svg{transition:opacity .2s}
 svg.trc{width:100%;height:auto;display:block;overflow:visible}
 svg.trc text{font-family:var(--body);font-size:9.5px;fill:var(--muted)}
 svg.trc text.on{fill:var(--ink)}
+svg.trc text.mo{font-size:8.5px}
 svg.trc .gl{stroke:var(--line);stroke-width:1}
 svg.trc .hit{fill:transparent;cursor:pointer}
 svg.trc .few{opacity:.35}

@@ -753,6 +753,9 @@ function spotlight(id) {
   el.classList.remove('spot'); void el.offsetWidth; el.classList.add('spot');
   clearTimeout(spotlight.t); spotlight.t = setTimeout(() => el.classList.remove('spot'), 2200);
 }
+// O cartão do bebê (foto, nome e idade): o mesmo no alto do Diário e da Família.
+const babyIdent = b => `<div class="av">${esc((b ? b.name : '?').charAt(0).toUpperCase())}</div><div><div class="bn">${esc(b ? b.name : 'Sem bebê')}</div><div class="ba">${esc(!b ? 'toque para cadastrar'
+  : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · '))}</div></div>`;
 const babyChips = () => st.babies.map(x => `<button data-baby="${esc(x.id)}" class="${x.id === st.baby?.id ? 'on' : ''}">${esc(x.name)}</button>`).join('');
 
 // Sono que nunca terminou (Bruno, 17/10): um "Dormiu" sem "Acordou" há mais de 14 horas (decidido em
@@ -762,10 +765,7 @@ const DIAS_LONGOS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta'
 
 function renderHome() {
   const evs = sortedEntries(), now = Date.now(), b = st.baby;
-  $('babyName').textContent = b ? b.name : 'Sem bebê';
-  $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
-  $('babyAge').textContent = !b ? 'toque para cadastrar'
-    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ');
+  $('babyBtn').innerHTML = babyIdent(b);
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
@@ -3429,7 +3429,7 @@ function famRow(act, val, title, subs, go) {
 }
 function famBaby(b) {
   const ws = st.weights, ms = st.milestones, now = Date.now(), meds = st.meds.filter(m => medEnd(m) > startOfDay(now));
-  let h = `<div class="ptitle"><h2>${esc(b.name)}</h2>${b.birth_date ? `<small>${esc(ageText(b.birth_date))}</small>` : ''}</div>`;
+  let h = `<header class="hcard"><div class="baby">${babyIdent(b)}</div></header>`;
   if (st.babies.length > 1) h += `<div class="babies">${babyChips()}</div>`;
   h += '<div class="babies fnav" role="group" aria-label="Ir para"><button data-act="jump" data-val="famRotina">Rotina</button><button data-act="jump" data-val="babyData">Dados do bebê</button><button data-act="jump" data-val="famNossa">Família</button></div>';
   // Os três números do alto: o peso leva à guia Peso de Tendências; remédios e marcos abrem a própria tela.
