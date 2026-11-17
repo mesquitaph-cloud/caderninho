@@ -15,7 +15,8 @@
 //   noites assim. Os cortes são provisórios.
 //   Desde o item 65 (13/11), cada bebê tem a sua noite (noite.js): os dias de antes do primeiro horário
 //   guardado seguem a regra antiga (acima); os outros, a noite e as sonecas da regra nova.
-// Nesta versão só a guia Sono tem gráficos; Mamadas, Fraldas, Ordenha e Peso mostram "Em construção".
+// Nesta versão só Sono e Peso têm conteúdo; Mamadas, Fraldas e Ordenha mostram "Em construção". O Peso (item 75, etapa 3)
+// vem pronto do app, em `peso`, porque a lista e a folha de anotar moram lá.
 import { HOUR, addDays, startOfDay, dur, esc, MESES, DIAS, CAPI, rangeTitle, sleepIntervals } from './util.js';
 import { nights, nightName } from './noites.js';
 import { OLD_RULE, bounds, napsOf } from './noite.js';
@@ -204,16 +205,17 @@ const fewDay = (it, week) => it.sFew ? 'Poucos registros' + (week ? ` (${it.ok} 
 const fewNight = (it, week) => it.nFew ? (week ? `Poucas noites anotadas do começo ao fim (${it.okN} de ${it.n})` : 'Noite não anotada do começo ao fim') + ': o número pode não ser fiel.' : '';
 
 const TABS = [['sono', 'Sono', '--c-sleep'], ['mam', 'Mamadas', '--c-feed'], ['fr', 'Fraldas', '--c-diaper'], ['ord', 'Ordenha', '--c-pump'], ['peso', 'Peso', '--c-weight']];
-const SUBJ = { mam: 'mamadas', fr: 'fraldas', ord: 'ordenha', peso: 'peso' };
+const SUBJ = { mam: 'mamadas', fr: 'fraldas', ord: 'ordenha' };
 
 // t: o estado da tela ({ tab, mode, off, sel, info }); o app guarda e troca.
 // who: "Helena · 3 meses"; chips: os bebês da família, quando há mais de um.
 // rule: a regra de cada dia (nightRule, noite.js); night: { de: "da Marina", c: a noite de hoje } para os textos do i.
-export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading = '', rule = OLD_RULE, night = { de: 'do bebê', c: { start: 18, end: 6 } } }) {
+export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading = '', peso = '', rule = OLD_RULE, night = { de: 'do bebê', c: { start: 18, end: 6 } } }) {
   const tabs = TABS.filter(([k]) => k !== 'ord' || pump);
   if (!tabs.some(([k]) => k === t.tab)) t.tab = 'sono';
   let h = `<header class="trh"><h2>${CAPI}Tendências</h2>${who ? `<span>${esc(who)}</span>` : ''}</header>${chips}`;
   h += `<div class="trt" role="tablist" aria-label="Assunto">${tabs.map(([k, name, c]) => `<button role="tab" data-ttab="${k}" aria-selected="${t.tab === k}"><i style="background:var(${c})"></i>${name}</button>`).join('')}</div>`;
+  if (t.tab === 'peso') return h + peso;
   if (t.tab !== 'sono')
     return h + `<section class="card trb">${CAPI_HAT}<h3>Em construção</h3><p>Os gráficos de ${SUBJ[t.tab]} chegam numa próxima versão. Por enquanto, Tendências mostra o sono.</p></section>`;
   const week = t.mode === 'w';
