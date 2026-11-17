@@ -604,6 +604,20 @@ mesmos, porque o texto cita os itens pelo número.
   fica vazia (com idade e/ou peso, igual a antes). O `aria-label` do botão do bebê já dizia "Abrir a aba
   Família: dados do bebê, rotina e família" (#109). **Conferir no celular:** o cartão do bebê sem nascimento
   nem peso, e o título "Anotado" nas duas abas.
+- **77 · Cartão de novidades ao abrir a versão nova** (Patrick, 17/11; prévia aprovada, dia e noite:
+  https://claude.ai/artifact/Um2XFygBDM8aqeB5ebhami; textos aprovados palavra por palavra; entra na 1.0.4, com
+  nova compilação). Um cartão único, "Novidades do Soneca", com três itens e o botão "Entendi", aberto uma
+  vez na primeira abertura do app depois de atualizar, na tela Hoje. Só no app (no site não há versão). A
+  última versão vista fica no celular, na chave `cad-novidades`; **sem SQL**. Instalação nova não vê: o
+  onboarding grava a marca (`novSeen`, em `onbStart`). Quem reinstala e entra numa família que já existe vê o
+  cartão uma vez. Não bloqueia o uso, sem capivara, sem cobrança. Vem antes do aviso de versão nova (item 72,
+  que espera 2,5 s e só abre com a janela livre); o aviso de notificações bloqueadas (item 63) só abre por
+  toque da pessoa, então não coincide. **Para as próximas versões:** acrescentar uma entrada em `NOVIDADES`
+  (`novidades.js`), com a versão do app como chave; versão sem entrada não mostra nada. Código em
+  `novidades.js` e `app.js` (`novCardLater`, `novSeen`); estilos `.cbox.nov` no `styles.css`; testes em
+  `testes/novidades.mjs`. **Conferir no celular (iPhone e Android, compilação nova):** atualizar da 1.0.3 e ver
+  o cartão uma vez, fechar e reabrir sem ele; instalação nova com onboarding sem ele; com o aviso de versão
+  nova do item 72 pendente, só o cartão de novidades aparece primeiro; claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
