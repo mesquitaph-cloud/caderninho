@@ -576,6 +576,28 @@ mesmos, porque o texto cita os itens pelo número.
   ver o lado sumir; Família › Membros: a linha "Você" abre e fecha com "Pronto", e os outros membros
   aparecem com o parentesco (use duas contas); a linha "Contatar administração" abre o e-mail; claro e
   escuro, a lista quebrando sem rolar para o lado em tela pequena.
+  **Etapa 5 (notificações por aviso, PR `claude/item-75-avisos-4a02f6`, 17/11, sem SQL; empilhado na etapa
+  4, porque as duas mexem no Perfil):** Perfil › "Notificações neste celular" com o botão central "Todas as
+  notificações" ("Só neste celular. Os outros membros não mudam.") e um interruptor por aviso: Janela de sono,
+  Remédios, Tarefas e "Me lembrar de registrar" (era "Anotar depois de 3 horas sem registro"), mais "Ao ligar
+  de novo, cada aviso volta como estava." O central fica numa chave só no celular, `cad-avisos` (ausente =
+  ligado, `'0'` = desligado), sem tocar em `cad-janela`, `cad-lembrete`, `cad-medalert-<bebê>` nem
+  `cad-tarefaalert-<bebê>`; as quatro rotinas de agendamento (`winSync`, `remSync`, `medAlertsSync`,
+  `taskAlertsSync`) olham `allOn()`, e desligar cancela tudo o que estava agendado. Remédios e Tarefas
+  (guardados por bebê) são ligados e desligados para todos os bebês da família. O "Agora não" do aviso da
+  janela no onboarding já desligava só esse aviso (`setWinAlert(false)`); nada mudou ali. Notificação
+  bloqueada pelo celular: o toque abre os ajustes, por um método novo `openSettings` do plugin nativo
+  `Mamada` (iOS: `MamadaPlugin.swift`; Android: `MamadaPlugin.java`), **que só vale em compilação nova**.
+  **Os interruptores mostram o estado de verdade, não "tudo ligado":** Janela de sono, Remédios e Tarefas só
+  ficam ligados depois de a pessoa dizer Sim (ou programar o primeiro remédio ou tarefa), como já era; só o
+  central e "Me lembrar de registrar" começam ligados. **Texto provisório, não aprovado**, em `NOTIF_BLOCK`
+  (`app.js`): o título "Notificações bloqueadas" e o botão "Abrir ajustes" (o corpo é a frase que já existia,
+  "Permita as notificações do Soneca nas configurações do celular.").
+  **Conferir no celular (iPhone e Android):** com as notificações bloqueadas nos ajustes do celular, ligar o
+  central ou um aviso e ver o aviso de bloqueio levar aos ajustes do Soneca (e voltar); desligar o central e
+  ver que nenhum aviso toca (remédio, tarefa, janela, lembrete); ligar de novo e ver cada um voltar como
+  estava; desligar só um aviso e ver os outros seguirem; com dois bebês, Remédios e Tarefas valendo para os
+  dois; a conta de outro membro sem mudança; claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

@@ -930,6 +930,12 @@ $('sleepWin').addEventListener('click', e => {
 });
 // O aviso no celular: quem disse Sim no onboarding, e só com "Acompanhar o sono" ligado na família (item 65). Fica no perfil da pessoa
 // (sleep_alert, 024) e, sem o 024, só neste celular.
+/* Botão central das notificações (item 63, no item 75): vale só neste celular, numa chave só. Ausente = ligado;
+   '0' = desligado. Não mexe nas chaves de cada aviso (cad-janela, cad-lembrete, cad-medalert-<bebê>,
+   cad-tarefaalert-<bebê>): por isso, ao ligar de novo, cada aviso volta como estava. Desligado, nada é agendado
+   (as quatro rotinas de agendamento olham allOn()) e o que já estava agendado é cancelado. */
+const NOTIF_ALL = 'cad-avisos';
+const allOn = () => lsGet(NOTIF_ALL) !== '0';
 const winOn = () => lsGet('cad-janela') === '1' || (lsGet('cad-janela') == null && !!st.profile?.sleep_alert);
 async function setWinAlert(on, quiet) {
   lsSet('cad-janela', on ? '1' : '0');
@@ -949,7 +955,7 @@ async function winSync() {
     const now = Date.now(), evs = sortedEntries();
     const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
     const { out, open: open0 } = sleepIntervals(evs), open = liveOpen(open0, now), w = lastWake(last, open, now);
-    const n = w && winOn() && st.track !== false && winNotice(w.t, winOf(b, out, now), b, ruleOf(b));
+    const n = w && winOn() && allOn() && st.track !== false && winNotice(w.t, winOf(b, out, now), b, ruleOf(b));
     const want = n && n.at > now + 5000 ? n.at + '|' + n.title + '|' + n.body : '';
     const key = 'cad-janela-at-' + b.id;
     if ((lsGet(key) || '') === want) return;
@@ -1495,7 +1501,7 @@ async function remSync(base) {
     await remCancel();
     lsSet('cad-lembrete-at', null);
     const b = st.baby;
-    if (!b || !remOn() || !(await notifGranted())) return;
+    if (!b || !remOn() || !allOn() || !(await notifGranted())) return;
     if (ANDROID) await medNotif.createChannel({ id: 'lembrete', name: 'Lembrete para anotar', importance: 3, visibility: 1 });
     const now = Date.now(), onb = onbList(b), onbDays = new Set(onb.map(x => startOfDay(x.t)));
     const slots = [];
@@ -1521,7 +1527,7 @@ async function remAfterEntry(e) {
     lsSet('cad-lembrete-1o', before ? '0' : String(Date.now()));
   }
   let asked = false;
-  if (remOn() && lsGet('cad-lembrete-pedido') == null) {
+  if (remOn() && allOn() && lsGet('cad-lembrete-pedido') == null) {
     lsSet('cad-lembrete-pedido', '1');
     const p = await notifPerm(); asked = p.asked;
     if (!p.ok) lsSet(REM, '0');
@@ -1693,10 +1699,10 @@ function confirmSave(btn, icon) {
 // Caixa de confirmação para apagar (e sair, remover): o primeiro toque abre a caixa, só o botão de
 // dentro age. Cancelar, Esc ou um toque fora fecham sem fazer nada.
 let askYes = null;
-function askConfirm(title, text, yes, onYes) {
+function askConfirm(title, text, yes, onYes, cls = 'go-del') {
   askYes = onYes;
   $('ask').innerHTML = `<div class="cbox" role="alertdialog" aria-modal="true" aria-labelledby="askT" aria-describedby="askP"><h3 id="askT">${esc(title)}</h3><p id="askP">${esc(text)}</p>
-    <div class="row2"><button class="ghost" data-ask="no">Cancelar</button><button class="go-del" data-ask="yes">${esc(yes)}</button></div></div>`;
+    <div class="row2"><button class="ghost" data-ask="no">Cancelar</button><button class="${cls}" data-ask="yes">${esc(yes)}</button></div></div>`;
   $('ask').hidden = false; $('ask').querySelector('[data-ask="no"]').focus();
 }
 function closeAsk() { $('ask').hidden = true; $('ask').innerHTML = ''; askYes = null; }
@@ -2538,7 +2544,7 @@ const medAlertsLater = () => { if (medNotif) { clearTimeout(alertTimer); alertTi
 async function medAlertsSync() {
   const b = st.baby; if (!medNotif || !b) return;
   try {
-    const now = Date.now(), ok = alertOn() && await notifGranted();
+    const now = Date.now(), ok = alertOn() && allOn() && await notifGranted();
     const want = (ok ? dosesFrom(now + 5000, now + ALERT_DAYS * DAY).filter(d => !d.e).slice(0, ALERT_MAX) : []).map(d => alertFor(d, b));
     if (ANDROID && want.length) await medNotif.createChannel({ id: 'remedio', name: 'Hora do remédio', importance: 4, visibility: 1, vibration: true });
     const { notifications: old } = await medNotif.getPending();
@@ -2897,7 +2903,7 @@ function taskSlotsFrom(a, z) {
 async function taskAlertsSync() {
   const b = st.baby; if (!medNotif || !b) return;
   try {
-    const now = Date.now(), ok = taskAlertOn() && await notifGranted();
+    const now = Date.now(), ok = taskAlertOn() && allOn() && await notifGranted();
     const want = (ok ? taskSlotsFrom(now + 5000, now + ALERT_DAYS * DAY).filter(x => !x.e && !isOff(x.id)).slice(0, TASK_ALERT_MAX) : []).map(x => taskAlertFor(x.r, x, b));
     if (ANDROID && want.length) await medNotif.createChannel({ id: 'tarefa', name: 'Hora da tarefa', importance: 4, visibility: 1, vibration: true });
     const { notifications: old } = await medNotif.getPending();
@@ -3503,19 +3509,66 @@ async function saveFamName(btn) {
 // O que é só da pessoa: o nome, a aparência neste celular, as famílias de que participa, indicar o
 // Soneca, falar com quem cuida dele e desconectar.
 const THEMES = [['light', 'Claro'], ['dark', 'Escuro'], ['', 'Do celular']];
+// Notificações neste celular (item 63 no item 75; textos aprovados em 17/11): o botão central e um interruptor por
+// aviso. Os avisos de remédios e de tarefas são guardados por bebê; aqui valem para todos os bebês da família.
+const medAny = () => st.babies.some(b => lsGet(alertKey(b.id)) === '1');
+const taskAny = () => st.babies.some(b => lsGet(taskAlertKey(b.id)) === '1');
+function notifBlock() {
+  remCheck();
+  const all = allOn(), rem = remOn(), off = !all;
+  const row = (act, on, title, sub) => `<button class="li tg" role="switch" aria-checked="${on}" data-act="${act}"${act !== 'nAll' && off ? ' disabled' : ''}><span>${title}${sub ? `<small class="tsub">${sub}</small>` : ''}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+  const remSub = !rem && lsGet('cad-lembrete-auto') ? 'Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser.'
+    : 'Avisa depois de 3 horas sem registro feito neste celular. Entre 18h e 7h, não avisa. Vale só neste aparelho.';
+  return '<div class="sec"><h4>Notificações neste celular</h4>'
+    + row('nAll', all, 'Todas as notificações', 'Só neste celular. Os outros membros não mudam.')
+    + row('nWin', winOn(), 'Janela de sono') + row('nMed', medAny(), 'Remédios') + row('nTask', taskAny(), 'Tarefas')
+    + row('nRem', rem, 'Me lembrar de registrar', esc(remSub))
+    + '<p class="dim">Ao ligar de novo, cada aviso volta como estava.</p></div>';
+}
+// Se o iPhone ou o Android bloquear as notificações do Soneca, o toque leva aos ajustes do celular (item 63).
+// TEXTO PROVISÓRIO, NÃO APROVADO: o título e o botão abaixo (o corpo é NOTIF_DENIED, que já existia). Trocar
+// quando o Patrick aprovar. openSettings é um método novo do plugin nativo Mamada (iOS e Android).
+const NOTIF_BLOCK = { title: 'Notificações bloqueadas', go: 'Abrir ajustes' };
+function notifBlocked() {
+  askConfirm(NOTIF_BLOCK.title, NOTIF_DENIED, NOTIF_BLOCK.go, async () => {
+    try { await mamadaPlugin.openSettings(); } catch { toast(NOTIF_DENIED); }
+  }, 'save');
+  drawProfilePane();
+}
+async function cancelAllNotif() {
+  try {
+    const { notifications = [] } = await medNotif.getPending();
+    if (notifications.length) await medNotif.cancel({ notifications: notifications.map(n => ({ id: +n.id })) });
+  } catch {}
+  for (const b of st.babies) lsSet('cad-janela-at-' + b.id, null);
+  lsSet('cad-lembrete-at', null);
+}
+// Um interruptor de aviso: ligar pede a permissão se ainda não tem; bloqueada, mostra o caminho dos ajustes.
+async function notifSwitch(a) {
+  const on = { nWin: !winOn(), nMed: !medAny(), nTask: !taskAny(), nRem: !remOn() }[a];
+  if (on && !(await notifPerm()).ok) return notifBlocked();
+  if (a === 'nRem') return setReminder(on);
+  if (a === 'nWin') { await setWinAlert(on); drawProfilePane(); return; }
+  const key = a === 'nMed' ? alertKey : taskAlertKey;
+  for (const b of st.babies) lsSet(key(b.id), on ? '1' : '0');
+  drawProfilePane();
+  return a === 'nMed' ? medAlertsSync() : taskAlertsSync();
+}
+// O botão central. Ligar de novo religa só a chave central: cada aviso volta como estava.
+async function setAllNotif(on) {
+  if (on && !(await notifPerm()).ok) return notifBlocked();
+  lsSet(NOTIF_ALL, on ? null : '0');
+  drawProfilePane();
+  if (!on) return cancelAllNotif();
+  winSync(); medAlertsSync(); taskAlertsSync(); remSync(Date.now());
+}
 function drawProfilePane() {
   const theme = lsGet('cad-theme') || '';
   // Ordem (item 75, aprovada em 17/11): Sobre você · Notificações · Aparência · Minhas famílias · Ajuda ·
   // Privacidade · Conta. O bloco das notificações é reorganizado na etapa 5.
   let h = `<div class="ptitle"><h2>${esc(st.profile.display_name)}</h2><small>Seu nome e os ajustes que valem só para você</small></div>`;
   h += `<div class="sec"><h4>Sobre você</h4><div class="li"><span>Seu nome<small class="tsub">Como você aparece para a família</small><small class="tsub">${esc(st.profile.display_name)}</small></span><button data-act="rename">Mudar</button></div>${kinEditor()}</div>`;
-  if (medNotif) {
-    remCheck();
-    const on = remOn();
-    h += `<div class="sec"><h4>Lembrete</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="reminder"><span>Lembrete para anotar</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`
-      + `<p class="dim">${!on && lsGet('cad-lembrete-auto') ? 'Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser.'
-          : 'Avisa depois de 3 horas sem registro feito neste celular. Entre 18h e 7h, não avisa. Vale só neste aparelho.'}</p></div>`;
-  }
+  if (medNotif) h += notifBlock();
   h += `<div class="sec"><h4>Aparência</h4><div class="seg3" role="group" aria-label="Aparência">${THEMES.map(([v, t]) => `<button data-act="theme" data-val="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div>`
     + '<p class="dim">"Do celular" segue o modo noturno do celular. Vale só neste aparelho.</p></div>';
   h += '<div class="sec"><h4>Minhas famílias</h4>' + st.families.map(x => x.id === st.family.id
@@ -3715,6 +3768,8 @@ async function paneAction(a, v, btn) {
   if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
+  if (a === 'nAll') return setAllNotif(!allOn());
+  if (['nWin', 'nMed', 'nTask', 'nRem'].includes(a)) return notifSwitch(a);
   if (a === 'reminder') return setReminder(!remOn());
   // Fora da conta, nenhum lembrete com o nome do bebê.
   if (a === 'logout') { await remCancel().catch(() => {}); await sb.auth.signOut(); location.href = '/'; }

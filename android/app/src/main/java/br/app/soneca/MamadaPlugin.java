@@ -45,6 +45,15 @@ public class MamadaPlugin extends Plugin {
         if (current != null) current.notifyListeners("changed", new JSObject());
     }
 
+    // Item 63: com as notificações bloqueadas, o botão das notificações do Perfil leva aos ajustes de notificação do Soneca.
+    @PluginMethod
+    public void openSettings(PluginCall call) {
+        Intent i = new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+            .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getContext().getPackageName())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try { getContext().startActivity(i); call.resolve(); } catch (Exception e) { call.reject("Não foi possível abrir os ajustes"); }
+    }
+
     @PluginMethod
     public void update(PluginCall call) {
         String s = call.getString("state");

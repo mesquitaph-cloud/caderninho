@@ -11,6 +11,7 @@ public class MamadaPlugin: CAPPlugin, CAPBridgedPlugin {
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "update", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "get", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "openSettings", returnType: CAPPluginReturnPromise),
     ]
 
     override public func load() {
@@ -25,6 +26,14 @@ public class MamadaPlugin: CAPPlugin, CAPBridgedPlugin {
             Task { await MamadaLive.sync(); call.resolve() }
         } else {
             call.resolve()
+        }
+    }
+
+    // Item 63: com as notificações bloqueadas, o botão das notificações do Perfil leva aos ajustes do Soneca no iPhone.
+    @objc func openSettings(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            guard let url = URL(string: UIApplication.openSettingsURLString) else { return call.reject("Sem ajustes") }
+            UIApplication.shared.open(url) { _ in call.resolve() }
         }
     }
 
