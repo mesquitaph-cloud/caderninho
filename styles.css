@@ -673,6 +673,16 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 .cbox.rate .save{display:block;text-decoration:none;font-size:17px}
 .cbox.rate .link{align-self:center}
 .cbox.ver p{color:var(--muted);font-family:inherit;font-size:15px;font-weight:400}
+/* Cartão de novidades da versão (item 77): três itens com ícone em chip na cor de cada registro */
+.cbox.nov{gap:0;padding:22px 20px 18px;max-height:calc(100dvh - 48px);overflow-y:auto}
+.cbox.nov .novin{margin:4px 0 14px;font-size:14px}
+.novit{display:grid;grid-template-columns:36px 1fr;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.novic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center}
+.novic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.novic.sleep{background:var(--sleep);color:var(--sleep-ink)}.novic.feed{background:var(--feed);color:var(--feed-ink)}.novic.diaper{background:var(--diaper);color:var(--diaper-ink)}
+.cbox.nov h4{margin:1px 0 2px;font-size:15px;font-weight:500}
+.cbox.nov .novit p{font-size:13.5px;line-height:1.42}
+.cbox.nov .save{margin-top:12px;width:100%;font-size:17px}
 /* Cartão "Tudo pronto": a última mamada (item 30) */
 .bv .bvside{background:none}.bv .bvside .opt{flex:1}
 .bv .err{margin:0}

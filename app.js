@@ -9,6 +9,7 @@ import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmTe
 import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml } from './report.js';
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
+import { NOV_KEY, novFor, novHtml as novCardHtml } from './novidades.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
@@ -410,6 +411,7 @@ $('fPaste').addEventListener('submit', e => {
 // só na memória até "Criar família": antes disso, nada é gravado.
 let O = null;
 function onbStart(from) {
+  novSeen();   // instalação nova: não é novidade (item 77)
   O = { from, i: 0, name: '', birth: '', sex: null, feed: null, milk: null, food: null, sleep: null, at: '', track: null, alert: null, night: NIGHT_START, fam: '', ok: false };
   show('scrOnb'); onbDraw(); window.scrollTo(0, 0);
 }
@@ -779,7 +781,7 @@ function renderHome() {
   renderWin(last, open, now, intervals);
   renderDock(last, open, now);
   renderLast(last, open, now);
-  renderMeds(); renderTasks(); verCardLater();
+  renderMeds(); renderTasks(); novCardLater(); verCardLater();
 
   const today = startOfDay(now), week = st.view === 'week', month = st.view === 'month';
   $('tabDay').setAttribute('aria-selected', st.view === 'day'); $('tabWeek').setAttribute('aria-selected', week); $('tabMonth').setAttribute('aria-selected', month);
@@ -1432,6 +1434,30 @@ $('ask').addEventListener('click', e => {
   if (b.dataset.rate === 'go') lsSet('cad-review-feito', '1');
   closeAsk();
 });
+
+/* ---------- Cartão de novidades da versão (item 77, prévia aprovada em 17/11) ---------- */
+// Uma vez por versão, na primeira abertura do app depois de atualizar, na tela Hoje. A última versão vista fica
+// neste aparelho (NOV_KEY); sem SQL. Quem acaba de instalar e passa pelo onboarding não vê (novSeen grava a marca).
+// Vem antes do aviso de versão nova (item 72, que espera 2,5 s e só abre se a janela estiver livre). O aviso de
+// notificações bloqueadas (item 63) só abre por toque da pessoa, então não coincide. Os textos ficam em novidades.js.
+let novVer = null;   // a versão do app, lida uma vez
+const novVersion = async () => novVer ||= (await appPlugin.getInfo().catch(() => null))?.version || '';
+async function novSeen() { if (NATIVE && appPlugin) { const v = await novVersion(); if (v) lsSet(NOV_KEY, v); } }
+let novBusy = false;
+async function novCardLater() {
+  if (!NATIVE || !appPlugin || novBusy) return;
+  novBusy = true;
+  try {
+    const v = await novVersion(), n = novFor(v, lsGet(NOV_KEY));
+    if (!n) return;
+    // Só na tela Hoje, sem outra janela aberta; se não der agora, tenta na próxima vez que a tela Hoje desenhar.
+    if (st.tab !== 'home' || S || !$('ask').hidden || !$('sheet').hidden || !$('rpView').hidden || $('scrMain').hidden) return;
+    lsSet(NOV_KEY, v);
+    $('ask').innerHTML = novCardHtml(n);
+    $('ask').hidden = false; $('ask').querySelector('.save').focus();
+  } finally { novBusy = false; }
+}
+$('ask').addEventListener('click', e => { if (e.target.closest('[data-nov]')) closeAsk(); });
 
 /* ---------- Aviso de versão nova (item 72, prévia aprovada em 17/11: o cartão) ---------- */
 // No app, na tela Hoje: se a loja já liberou uma versão maior que a instalada (tabela app_versions, 026),
