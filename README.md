@@ -521,6 +521,23 @@ mesmos, porque o texto cita os itens pelo número.
   do celular (`cad-janela`, `cad-lembrete`, `cad-medalert-<bebê>`, `cad-tarefaalert-<bebê>`); o botão
   central e os interruptores ficam no celular também (ver a descrição do PR). LGPD: parentesco e lado
   são dado pessoal novo, a Política precisa citar (por ora sem alteração, decisão de 17/11).
+  **Etapa 2 (juntar as abas, PR `claude/item-75-abas-40d1a7`, 17/11, sem mudança no banco):** a barra
+  ficou com Tendências, Diário, Família e Perfil; a aba do bebê acabou. Família, nesta ordem: bebê (nome,
+  idade, escolha entre bebês), três números e fileira de atalhos presa no alto (Rotina, Dados do bebê,
+  Família); **Rotina de [nome]** com Remédios (folha "Remédios e horários"), Tarefas (folha Tarefas, onde
+  se programa e se tira da rotina), Marcos e Relatório e dúvidas (duas folhas novas, com o conteúdo que
+  estava na aba do bebê; anotar ou apagar volta para a folha); o peso e a curva seguem na Família, como
+  seção "Peso e comprimento", até a etapa 3; **Dados de [nome]** (nome, nascimento, menina ou menino, noite
+  do bebê); **Nossa família** (nome, membros e convite, bebês, adicionar bebê, Acompanhar o sono); no fim,
+  sair ou apagar a família. Tocar no nome ou na foto do bebê no Diário abre a Família. "Botões da tela
+  inicial" já tinha saído da Família em 07/11 e `isOn()` devolve sempre verdadeiro: nada depende de
+  interruptores. O texto de Tendências › Noite agora diz "na aba Família". Código em `app.js`
+  (`drawFamilyPane`, `milestonesSheet`, `consultSheet`).
+  **Conferir no celular (iPhone e Android):** a barra com 4 abas, sem a do bebê; tocar no nome do bebê no
+  Diário e cair na Família; os atalhos Rotina, Dados do bebê e Família rolando até a seção e ficando presos
+  no alto; cada linha da Rotina (Remédios, Tarefas, Marcos, Relatório e dúvidas) e voltar; anotar um marco
+  e uma dúvida e ver a folha voltar; com dois bebês, trocar na Família e ver tudo mudar; Dados de [nome]
+  (editar e noite); convidar alguém e apagar ou sair da família; claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

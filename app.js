@@ -38,7 +38,7 @@ const st = {
   questions: [],               // dúvidas para a consulta do bebê aberto (as perguntadas também)
   questionsOk: true,           // falso se não deu para carregar (por exemplo, antes do 010)
   settings: { hidden: [] },    // botões que a família desligou (vale para todos da família)
-  tab: 'home',                 // aba aberta na barra de baixo: 'trends' (Tendências), 'baby', 'home' (Diário), 'family' ou 'profile'
+  tab: 'home',                 // aba aberta na barra de baixo: 'trends' (Tendências), 'home' (Diário), 'family' ou 'profile'
   trend: { tab: 'sono', mode: 'd', off: 0, sel: null, info: null }, // Tendências: guia, dia a dia ou semana a semana, janelas para trás, barra tocada e botão i aberto
   view: 'day',                 // 'day' (linha do tempo), 'week' (painel da semana) ou 'month' (resumo do mês)
   viewDay: startOfDay(Date.now()),
@@ -698,15 +698,13 @@ const lastBreast = evs => evs.findLast(e => e.kind === 'feed' && e.side);
 
 // Redesenha a aba aberta e a barra de baixo. Hoje é redesenhada sempre, mesmo escondida: é leve e
 // fica pronta para quando a pessoa voltar.
-const PANES = { trends: 'paneTrends', home: 'paneHome', baby: 'paneBaby', family: 'paneFamily', profile: 'paneProfile' };
+const PANES = { trends: 'paneTrends', home: 'paneHome', family: 'paneFamily', profile: 'paneProfile' };
 function render() {
   if ($('scrMain').hidden) return;
   for (const k in PANES) $(PANES[k]).hidden = k !== st.tab;
   $('dock').hidden = st.tab !== 'home'; if (st.tab !== 'home') closePop();
   document.querySelectorAll('#tabbar [data-tab]').forEach(x => x.dataset.tab === st.tab ? x.setAttribute('aria-current', 'page') : x.removeAttribute('aria-current'));
-  $('tabBabyName').textContent = st.baby ? st.baby.name : 'Bebê';
-  $('tabBabyInitial').textContent = (st.baby ? st.baby.name : '?').charAt(0).toUpperCase();
-  if (st.tab === 'baby') drawBabyPane(); else if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
+  if (st.tab === 'family') drawFamilyPane(); else if (st.tab === 'profile') drawProfilePane();
   else if (st.tab === 'trends') drawTrendsPane();
   renderHome(); renderBv(); medAlertsLater(); taskAlertsLater(); winSyncLater(); dockSize(); winMsgs();
 }
@@ -2422,7 +2420,7 @@ function drawDose() {
 }
 const leaveDose = () => S.back === 'meds' ? medsSheet() : closeSheet();
 
-// Programar ou editar um remédio. "back" é 'pane' quando veio da aba do bebê: ao salvar, volta para ela.
+// Programar ou editar um remédio. "back" é 'pane' quando veio da aba Família: ao salvar, volta para ela.
 function medForm(m, back) {
   const sched = m?.schedule || 'fixed', times = m && sched !== 'prn' ? medTimes(m) : ['09:00'];
   S = { mode: 'medform', edit: m || null, name: m?.name || '', amount: m?.amount || '', sched, times,
@@ -2896,7 +2894,7 @@ async function setTaskAlert(on) {
   taskAlertsSync();
 }
 
-/* ---------- aba do bebê ---------- */
+/* ---------- peso e marcos (Família › Rotina e Peso) ---------- */
 // Peso e comprimento (sobre as curvas da OMS), remédios programados, marcos e, no fim, nome e
 // nascimento. Só guarda o que a família anota; as curvas mostram as linhas, sem avaliar o bebê.
 const LOG = {
@@ -2926,7 +2924,7 @@ function growthHtml() {
   const svg = growthSvg();
   if (svg) h += `<div class="svgbox${curves ? ' gzoom' : ''}" id="gBox">${svg}</div>`;
   if (curves) h += `<p class="dim">Curvas da OMS adotadas pela SBP · ${b.sex === 'F' ? 'meninas' : 'meninos'} · percentis 3, 15, 50, 85 e 97. Pinça ou rodinha para zoom; arraste para os lados.</p>`;
-  else h += `<p class="dim">${!gRows().length ? (w ? 'Nenhum peso anotado. ' : 'Nenhum comprimento anotado. ') : ''}Para ver as curvas da OMS, anote ${!b.birth_date && !b.sex ? 'o nascimento e se é menina ou menino' : !b.birth_date ? 'o nascimento' : 'se é menina ou menino'} em <button class="lnk inl" data-act="editBaby" data-val="${esc(b.id)}">Nome e nascimento</button>.</p>`;
+  else h += `<p class="dim">${!gRows().length ? (w ? 'Nenhum peso anotado. ' : 'Nenhum comprimento anotado. ') : ''}Para ver as curvas da OMS, anote ${!b.birth_date && !b.sex ? 'o nascimento e se é menina ou menino' : !b.birth_date ? 'o nascimento' : 'se é menina ou menino'} em <button class="lnk inl" data-act="editBaby" data-val="${esc(b.id)}">Dados do bebê</button>.</p>`;
   return h;
 }
 // Zoom no gráfico: rodinha do mouse, pinça com dois dedos e arrastar para os lados.
@@ -2977,62 +2975,6 @@ function drawTrendsPane() {
   el.innerHTML = trendsHtml({ t, evs: sortedEntries(), now, first, pump: isOn('pump'), loading, rule: ruleOf(b), night: { de: deName(b), c: nightNow(b) },
     who: [b.name, ageText(b.birth_date)].filter(Boolean).join(' · '), chips: st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '' });
 }
-function drawBabyPane() {
-  const b = st.baby, el = $('paneBaby');
-  if (!b) {
-    el.innerHTML = '<div class="ptitle"><h2>Bebê</h2></div><div class="soft">Cadastre o bebê da família para anotar o peso, os remédios e os marcos.</div><button class="save" data-act="addBaby">Adicionar bebê</button>';
-    return;
-  }
-  const ws = st.weights, ms = st.milestones, now = Date.now(), meds = st.meds.filter(m => medEnd(m) > startOfDay(now));
-  const sub = [ageText(b.birth_date), b.birth_date ? 'nasceu em ' + fullDate(b.birth_date) : ''].filter(Boolean).join(' · ');
-  let h = st.babies.length > 1 ? `<div class="babies">${babyChips()}</div>` : '';
-  h += `<button class="ptitle" data-act="jump" data-val="babyData" aria-label="${esc(b.name)}: editar nome e nascimento"><h2>${esc(b.name)}<span class="pen" aria-hidden="true">${ICON.pencil}</span></h2>${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
-  // Os três números do alto: cada um leva à sua seção.
-  const lw = ws.at(-1), lm = ms.at(-1), next = dosesFrom(now, now + DAY).find(d => !d.e);
-  const medText = !meds.length ? 'nenhum' : next ? (dayWord(next.due) || 'hoje') + ' ' + next.hhmm : 'quando precisar';
-  const tile = (sec, color, k, v, t) => `<button data-act="jump" data-val="${sec}" style="--sw:var(${color})"><span class="k"><i></i>${k}</span><b>${esc(v)}</b><span>${esc(t)}</span></button>`;
-  h += '<div class="jump">' + tile('babyWeight', '--c-weight', 'Peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
-    + tile('babyMeds', '--c-med', 'Remédios', String(meds.length), medText)
-    + tile('babyMilestones', '--accent', 'Marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
-  // Para a consulta: o relatório e, logo embaixo, as dúvidas.
-  h += `<button class="consult" data-act="report"><span class="ci" aria-hidden="true">${ICON.clip}</span><span><b>Emitir relatório para pediatra</b><small>Em PDF, com as últimas semanas</small></span><span class="go" aria-hidden="true">›</span></button>`;
-  h += questionsHtml();
-  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
-  else {
-    h += '<div class="sec" id="babyWeight"><h4>Peso e comprimento</h4>' + growthHtml();
-    const all = st.measures;
-    h += all.length
-      ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
-      : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>';
-    h += '<button class="ghost" data-act="newWeight">+ Anotar medida</button></div>';
-  }
-  h += '<div class="sec" id="babyMeds"><h4>Remédios programados</h4>';
-  h += meds.length
-    ? meds.map(m => {
-        const when = m.schedule === 'prn' ? 'só quando precisar' + (m.every_hours ? ` · de ${m.every_hours} em ${m.every_hours} horas` : '') : medWhen(m);
-        const times = m.schedule !== 'prn' && medTimes(m).length <= 4 ? `<span class="mtimes">${medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')}</span>` : '';
-        return `<button class="mrow" data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}"><span><b>${esc(m.name)}</b><small>${esc([m.amount, when].filter(Boolean).join(' · '))}</small></span>${times}</button>`;
-      }).join('') + '<div class="row2"><button class="ghost" data-act="allMeds">Ver doses</button><button class="ghost" data-act="newMed">+ Programar</button></div>'
-    : `<div class="soft">Nenhum remédio programado. Programe os remédios de ${esc(b.name)} para as doses aparecerem na hora, no alto do Diário.</div><button class="ghost" data-act="newMed">+ Programar remédio</button>`;
-  h += '</div>';
-  if (st.growthOk) {
-    h += '<div class="sec" id="babyMilestones"><h4>Marcos</h4>';
-    h += `<div class="card"><h3>Marcos motores</h3><p class="cap">Faixa de idade em que bebês saudáveis chegam a cada marco, pela OMS.</p>${motorChart(b.birth_date, ms)}
-      <p class="foot">${b.birth_date ? '' : 'Anote o nascimento em Nome e nascimento para ver a idade de hoje e os marcos de ' + esc(b.name) + ' nas faixas. '}Cada bebê tem seu tempo. Quem avalia o desenvolvimento é o pediatra.</p></div>`;
-    h += ms.length
-      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on), motorRange(m.title)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
-      : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
-    h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button></div>';
-  }
-  h += `<div class="sec" id="babyNight"><h4>Noite</h4><div class="li"><span>${nightText(nightNow(b))}<small class="tsub">O que conta como noite em Tendências</small></span><button data-act="editNight" data-val="${esc(b.id)}">Mudar</button></div></div>`;
-  h += `<div class="sec" id="babyData"><h4>Nome e nascimento</h4><div class="li"><span>${esc(b.name)}${b.birth_date || b.sex ? ' <small>' + esc([b.birth_date && fullDate(b.birth_date), { F: 'menina', M: 'menino' }[b.sex]].filter(Boolean).join(' · ')) + '</small>' : ''}</span><button data-act="editBaby" data-val="${esc(b.id)}">Editar</button></div></div>`;
-  // Só o criador apaga um bebê: o botão abre a edição já na confirmação.
-  if (st.family.creator_id === st.user.id) h += `<button class="danger-btn" data-act="delBabyAsk" data-val="${esc(b.id)}">Apagar bebê</button>`;
-  h += '<p class="dim">O Soneca só guarda o que a família anota. As curvas são as da OMS, adotadas pela SBP; quem avalia o crescimento é o pediatra.</p>';
-  el.innerHTML = h;
-  bindZoom();
-}
-
 /* ---------- dúvidas para a consulta ---------- */
 // A família anota a dúvida quando lembra; na consulta, marca "perguntei" e, se quiser, o que o
 // pediatra disse. As que faltam perguntar vão no relatório. O Soneca só guarda.
@@ -3055,13 +2997,13 @@ function questionsHtml() {
 async function setAsked(id, asked_on) {
   const { data, error } = await sb.from('questions').update({ asked_on }).eq('id', id).select().single();
   if (error) { toast('Não foi possível salvar. Confira a conexão.'); return null; }
-  putQuestion(data); render(); return data;
+  putQuestion(data); render(); if (S?.mode === 'consult') consultSheet(); return data;
 }
 async function askQuestion(id) {
   if (await setAsked(id, localDate(Date.now()))) toast('Foi para Respostas do pediatra', () => setAsked(id, null));
 }
-function questionForm(q) {
-  S = { mode: 'question', edit: q || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', err: '' };
+function questionForm(q, back) {
+  S = { mode: 'question', edit: q || null, back: back || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', err: '' };
   drawQuestion(); $('sheet').scrollTop = 0;
 }
 function drawQuestion() {
@@ -3097,7 +3039,7 @@ async function saveQuestion(btn) {
   const { data, error } = await q.select().single();
   busy(btn, false);
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawQuestion(); }
-  putQuestion(data); closeSheet(); toast('Salvo');
+  putQuestion(data); leaveForm(S.back); toast('Salvo');
 }
 async function delQuestion(btn) {
   const id = S.edit.id;
@@ -3106,7 +3048,7 @@ async function delQuestion(btn) {
   busy(btn, false);
   if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawQuestion(); }
   st.questions = st.questions.filter(x => x.id !== id);
-  closeSheet(); toast('Apagado');
+  leaveForm(S.back); toast('Apagado');
 }
 // Respostas do pediatra: as já perguntadas, da mais recente para a mais antiga, para consultar depois.
 function answersSheet() {
@@ -3196,10 +3138,54 @@ function reportAction(a, v) {
   if (a === 'rpCopy') return navigator.clipboard.writeText(reportPlain(reportArgs())).then(() => toast('Texto copiado'), () => toast('Não foi possível copiar'));
 }
 
-// Anotar ou editar uma medida (peso, comprimento ou os dois) ou um marco.
-function logForm(kind, row) {
+/* ---------- Rotina de [nome]: Marcos, e Relatório e dúvidas (item 75) ---------- */
+// Marcos e dúvidas viviam na antiga aba do bebê; agora cada um abre numa folha, com o mesmo conteúdo.
+// Anotar ou editar volta para a folha (S.back).
+function milestonesSheet() {
+  S = { mode: 'milestones' };
+  const b = st.baby, ms = st.milestones;
+  let h = `<div class="grab"></div><div class="shead"><h3>Marcos<span class="ps">de ${esc(b.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
+  else {
+    h += `<div class="card"><h3>Marcos motores</h3><p class="cap">Faixa de idade em que bebês saudáveis chegam a cada marco, pela OMS.</p>${motorChart(b.birth_date, ms)}
+      <p class="foot">${b.birth_date ? '' : 'Anote o nascimento em Dados de ' + esc(b.name) + ' para ver a idade de hoje e os marcos de ' + esc(b.name) + ' nas faixas. '}Cada bebê tem seu tempo. Quem avalia o desenvolvimento é o pediatra.</p></div>`;
+    h += ms.length
+      ? `<div class="recs">${ms.slice().reverse().map(m => `<button class="rec" data-act="editMilestone" data-val="${esc(m.id)}"><span><b>${esc(m.title)}</b><small>${esc([fullDate(m.happened_on), ageOn(b.birth_date, m.happened_on), motorRange(m.title)].filter(Boolean).join(' · '))}</small>${m.note ? `<small class="nt">${esc(m.note)}</small>` : ''}</span></button>`).join('')}</div>`
+      : `<div class="soft">Anote as primeiras vezes de ${esc(b.name)}, com o dia: o primeiro sorriso, o primeiro dente…</div>`;
+    h += '<button class="ghost" data-act="newMilestone">+ Anotar marco</button>';
+  }
+  openPanel(h); $('sheet').scrollTop = 0;
+}
+function consultSheet() {
+  S = { mode: 'consult' };
+  const top = $('sheet').scrollTop;
+  openPanel(`<div class="grab"></div><div class="shead"><h3>Relatório e dúvidas<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`
+    + `<button class="consult" data-act="report"><span class="ci" aria-hidden="true">${ICON.clip}</span><span><b>Emitir relatório para pediatra</b><small>Em PDF, com as últimas semanas</small></span><span class="go" aria-hidden="true">›</span></button>`
+    + questionsHtml());
+  $('sheet').scrollTop = top;
+}
+function milestonesAction(a, v) {
+  if (a === 'newMilestone') return logForm('milestone', null, 'marcos');
+  if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v), 'marcos');
+}
+function consultAction(a, v) {
+  if (a === 'report') return reportSheet();
+  if (a === 'newQ') return questionForm(null, 'consult');
+  if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'consult');
+  if (a === 'askQ') return askQuestion(v);
+  if (a === 'answers') return answersSheet();
+}
+// Depois de salvar ou apagar, volta para a folha de onde veio (ou fecha, se veio de outro lugar).
+function leaveForm(back) {
+  if (back === 'marcos') { render(); return milestonesSheet(); }
+  if (back === 'consult') { render(); return consultSheet(); }
+  closeSheet();
+}
+
+// Anotar ou editar uma medida (peso, comprimento ou os dois) ou um marco. back: a folha para onde voltar.
+function logForm(kind, row, back) {
   const today = localDate(Date.now());
-  S = { mode: kind, edit: row || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '',
+  S = { mode: kind, edit: row || null, back: back || null, date: row?.[LOG[kind].day] || today, note: row?.note || '', err: '',
         kg: row?.grams ? (row.grams / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) : '',
         cm: row?.cm != null ? Number(row.cm).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '', title: row?.title || '' };
   drawLog(); $('sheet').scrollTop = 0;
@@ -3259,7 +3245,7 @@ async function saveLog(btn) {
   if (error) return fail('Não foi possível salvar. Confira a conexão e tente de novo.');
   st[L.list] = L.sort([...st[L.list].filter(x => x.id !== data.id), data]);
   if (kind === 'weight') splitMeasures();
-  closeSheet(); toast('Salvo');
+  leaveForm(S.back); toast('Salvo');
 }
 async function delLog(btn) {
   const L = LOG[S.mode], id = S.edit.id;
@@ -3269,7 +3255,7 @@ async function delLog(btn) {
   if (error) { S.err = 'Não foi possível apagar. Confira a conexão e tente de novo.'; return drawLog(); }
   st[L.list] = st[L.list].filter(x => x.id !== id);
   if (S.mode === 'weight') splitMeasures();
-  closeSheet(); toast('Apagado');
+  leaveForm(S.back); toast('Apagado');
 }
 function growthAction(a, v, btn) {
   if (a === 'sug') { S.title = v; S.err = ''; return drawLog(); }
@@ -3360,13 +3346,62 @@ async function saveName(btn) {
 }
 
 /* ---------- Família ---------- */
-// O que vale para todos: nome da família, membros e convite, bebês, botões da tela inicial e sair.
+// Família (item 75, etapa 2): juntou a antiga aba do bebê com a Família. Nesta ordem: o bebê (nome, idade,
+// escolha entre bebês) e a fileira de atalhos; a Rotina; os Dados do bebê; Nossa família; sair ou apagar.
+// Prévia aprovada em 17/11: https://claude.ai/artifact/Kd41UYQRrJE8JZbpvJGMZS
+// O peso fica aqui, como estava na aba do bebê, até a etapa 3 levá-lo para Tendências › Peso.
 const FP = { invite: null };   // o link de convite gerado
+const NONE = 'Não informado';
+// Uma linha da Família: título, uma ou duas linhas pequenas embaixo e, à direita, o que o toque faz.
+function famRow(act, val, title, subs, go) {
+  const sub = [].concat(subs || []).filter(Boolean).map(t => `<small class="tsub">${esc(t)}</small>`).join('');
+  return `<button class="li tg" data-act="${act}"${val != null ? ` data-val="${esc(val)}"` : ''}><span>${esc(title)}${sub}</span><span class="go">${go || '›'}</span></button>`;
+}
+function famBaby(b) {
+  const ws = st.weights, ms = st.milestones, now = Date.now(), meds = st.meds.filter(m => medEnd(m) > startOfDay(now));
+  let h = `<div class="ptitle"><h2>${esc(b.name)}</h2>${b.birth_date ? `<small>${esc(ageText(b.birth_date))}</small>` : ''}</div>`;
+  if (st.babies.length > 1) h += `<div class="babies">${babyChips()}</div>`;
+  h += '<div class="babies fnav" role="group" aria-label="Ir para"><button data-act="jump" data-val="famRotina">Rotina</button><button data-act="jump" data-val="babyData">Dados do bebê</button><button data-act="jump" data-val="famNossa">Família</button></div>';
+  // Os três números do alto: o peso leva à seção do peso; remédios e marcos abrem a própria tela.
+  const lw = ws.at(-1), lm = ms.at(-1), next = dosesFrom(now, now + DAY).find(d => !d.e);
+  const medText = !meds.length ? 'nenhum' : next ? (dayWord(next.due) || 'hoje') + ' ' + next.hhmm : 'quando precisar';
+  const tile = (act, val, color, k, v, t) => `<button data-act="${act}"${val ? ` data-val="${val}"` : ''} style="--sw:var(${color})"><span class="k"><i></i>${k}</span><b>${esc(v)}</b><span>${esc(t)}</span></button>`;
+  h += '<div class="jump">' + tile('jump', 'babyWeight', '--c-weight', 'último peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
+    + tile('openMeds', '', '--c-med', 'remédios', String(meds.length), medText)
+    + tile('openMarcos', '', '--accent', 'marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
+  // Rotina de [nome]: cada linha abre a tela que já existia.
+  const nr = st.routines.length, nm = ms.length, nmed = meds.length;
+  const medSubTxt = !nmed ? 'Nenhum remédio programado' : `${nmed} ${nmed === 1 ? 'programado' : 'programados'}` + (next && !dayWord(next.due) ? ', próximo às ' + next.hhmm : '');
+  h += `<div class="sec fsec" id="famRotina"><h4>Rotina de ${esc(b.name)}</h4>`
+    + famRow('openMeds', null, 'Remédios', medSubTxt)
+    + famRow('openTasks', null, 'Tarefas', nr ? nr + ' na rotina' : 'Nenhuma na rotina')
+    + famRow('openMarcos', null, 'Marcos', nm ? `${nm} ${nm === 1 ? 'anotado' : 'anotados'}` : 'Nenhum anotado')
+    + famRow('openConsult', null, 'Relatório e dúvidas', 'Relatório para o pediatra, dúvidas para a consulta') + '</div>';
+  // Peso e comprimento, como na aba do bebê (sai daqui na etapa 3 do item 75).
+  if (!st.growthOk) h += '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
+  else {
+    h += '<div class="sec" id="babyWeight"><h4>Peso e comprimento</h4>' + growthHtml();
+    const all = st.measures;
+    h += all.length
+      ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
+      : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>';
+    h += '<button class="ghost" data-act="newWeight">+ Anotar medida</button></div>';
+  }
+  // Dados de [nome]: nome, nascimento e menina ou menino abrem a edição do bebê; a noite tem a sua.
+  const c = nightNow(b);
+  h += `<div class="sec fsec" id="babyData"><h4>Dados de ${esc(b.name)}</h4>`
+    + famRow('editBaby', b.id, 'Nome', b.name, 'Editar')
+    + famRow('editBaby', b.id, 'Nascimento', b.birth_date ? fullDate(b.birth_date) : NONE, 'Editar')
+    + famRow('editBaby', b.id, 'Menina ou menino', { F: 'Menina', M: 'Menino' }[b.sex] || NONE, 'Editar')
+    + famRow('editNight', b.id, 'Noite do bebê', ['Define quando o dia começa', nightText(c) + (isDefault(c) ? ' · padrão' : '')], 'Mudar') + '</div>';
+  return h;
+}
 function drawFamilyPane() {
-  const f = st.family, creator = f.creator_id === st.user.id, n = st.members.length, nb = st.babies.length;
-  let h = `<div class="ptitle"><h2>${esc(f.name)}</h2><small>${n} ${n === 1 ? 'membro' : 'membros'} · ${nb} ${nb === 1 ? 'bebê' : 'bebês'}</small></div>`;
-  h += `<div class="sec"><h4>Nome da família</h4><div class="li"><span>${esc(f.name)}</span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`
-    + (creator ? '' : '<p class="dim">Só quem criou a família muda o nome.</p>') + '</div>';
+  const f = st.family, creator = f.creator_id === st.user.id, b = st.baby;
+  let h = b ? famBaby(b)
+    : `<div class="ptitle"><h2>${esc(f.name)}</h2></div><div class="soft">Cadastre o bebê da família para anotar o peso, os remédios e os marcos.</div>`;
+  // Nossa família: o nome, os membros e o convite, os bebês e adicionar bebê.
+  h += `<div class="sec fsec" id="famNossa"><h4>Nossa família</h4><div class="li"><span>Nome da família<small class="tsub">${esc(f.name)}</small><small class="tsub">Só quem criou muda</small></span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`;
   h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
     const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
     const rm = creator && m.user_id !== st.user.id
@@ -3375,20 +3410,19 @@ function drawFamilyPane() {
   }).join('');
   if (creator) h += FP.invite
     ? `<div class="invite">${esc(FP.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
-    : '<button class="ghost" data-act="invite">Convidar para esta família</button>';
+    : '<button class="ghost" data-act="invite">Convidar alguém</button>';
   h += '</div><div class="sec"><h4>Bebês</h4>' +
-    st.babies.map(b => `<button class="li tg" data-act="openBaby" data-val="${esc(b.id)}"><span>${esc(b.name)}${b.birth_date ? ' <small>' + esc(ageText(b.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
-    '<button class="ghost" data-act="addBaby">+ Adicionar bebê</button></div>';
-  // Sono (item 65): "Acompanhar o sono" liga e desliga a janela de sono; a noite de cada bebê fica sempre.
+    st.babies.map(x => `<button class="li tg" data-act="openBaby" data-val="${esc(x.id)}"><span>${esc(x.name)}${x.birth_date ? ' <small>' + esc(ageText(x.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
+    '<button class="ghost" data-act="addBaby">Adicionar bebê</button></div>';
+  // Sono (item 65): "Acompanhar o sono" liga e desliga a janela de sono para a família toda. A noite de cada
+  // bebê fica em "Dados de [nome]".
   const on = st.track !== false;
-  h += `<div class="sec" id="famSleep"><h4>Sono</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="sleepTrack"><span>Acompanhar o sono<small class="tsub">Para todos da família</small></span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`
-    + st.babies.map(b => { const c = nightNow(b);
-      return `<div class="li"><span>${esc(nightTitle(b))}<small class="tsub">${nightText(c)}${isDefault(c) ? ' · padrão' : ''}</small></span><button data-act="editNight" data-val="${esc(b.id)}">Mudar</button></div>`; }).join('')
-    + '</div>';
+  h += `<div class="sec" id="famSleep"><h4>Sono</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="sleepTrack"><span>Acompanhar o sono<small class="tsub">Para todos da família</small></span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button></div></div>`;
   h += creator
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
   $('paneFamily').innerHTML = h;
+  if (b) bindZoom();
 }
 // Mudar o nome da família: só quem criou (é a regra do banco).
 function famNameSheet() {
@@ -3562,30 +3596,27 @@ async function afterLeavingFamily() {
   if (st.families.length) openFamily(st.families[0].id);
   else show('scrStart');
 }
-// Os toques nas abas do bebê, Família e Perfil.
+// Os toques nas abas Família e Perfil.
 async function paneAction(a, v, btn) {
   const f = st.family;
-  // Aba do bebê
+  // Rotina e Peso
   if (a === 'jump') return spotlight(v);
+  if (a === 'openMeds') return medsSheet();
+  if (a === 'openTasks') return tasksSheet();
+  if (a === 'openMarcos') return milestonesSheet();
+  if (a === 'openConsult') return consultSheet();
   if (a === 'gKind') { G.kind = v; G.win = null; return render(); }
   if (a === 'gWin') { G.win = [0, +v]; return render(); }
   if (a === 'newWeight') return logForm('weight');
-  if (a === 'newMilestone') return logForm('milestone');
   if (a === 'editWeight') return logForm('weight', st.measures.find(w => w.id === v));
-  if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v));
   if (a === 'allMeds') return medsSheet();
-  if (a === 'report') return reportSheet();
-  if (a === 'newQ') return questionForm(null);
-  if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v));
-  if (a === 'askQ') return askQuestion(v);
-  if (a === 'answers') return answersSheet();
   if (a === 'newMed') return medForm(null, 'pane');
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
   if (a === 'editBaby') return babySheet(st.babies.find(b => b.id === v));
   if (a === 'addBaby') return babySheet(null);
   if (a === 'delBabyAsk') { babySheet(st.babies.find(b => b.id === v)); return askDelBaby(); }
   // Família
-  if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return goTab('baby'); }
+  if (a === 'openBaby') { if (v !== st.baby?.id) await selectBaby(v); return window.scrollTo({ top: 0, behavior: smooth() }); }
   if (a === 'famName') return famNameSheet();
   if (a === 'sleepTrack') return setTrack(st.track === false);
   if (a === 'editNight') return nightSheet(st.babies.find(b => b.id === v));
@@ -3673,6 +3704,8 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'cal') return calAction(a, v);
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);
+  if (S.mode === 'milestones') return milestonesAction(a, v);
+  if (S.mode === 'consult') return consultAction(a, v);
   if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
   if (S.mode === 'question' || S.mode === 'answers') return questionAction(a, v, b);
   if (S.mode === 'report') return reportAction(a, v);
@@ -3796,7 +3829,7 @@ $('tasks').addEventListener('click', e => {
   if (a === 'allTasks') return tasksSheet();
   if (a === 'topen') { const r = st.routines.find(x => x.id === v); if (r) taskScreen(r, 'home'); }
 });
-$('babyBtn').onclick = () => st.baby ? goTab('baby') : babySheet(null);
+$('babyBtn').onclick = () => st.baby ? goTab('family') : babySheet(null);
 $('babyTabs').addEventListener('click', e => { const b = e.target.closest('[data-baby]'); if (b) selectBaby(b.dataset.baby); });
 $('tabbar').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) goTab(b.dataset.tab); });
 // Tendências (tendencias.js): guias, visão, setas, toque numa barra e botão i. Redesenha só a aba e
@@ -3811,7 +3844,7 @@ $('paneTrends').addEventListener('click', e => {
   if ((x = g('[data-tnav]'))) { if (x.disabled) return; t.off = Math.max(0, t.off - +x.dataset.tnav); t.sel = null; return redrawTrends(`[data-tnav="${x.dataset.tnav}"]`); }
   if ((x = g('[data-ti]'))) { t.sel = +x.dataset.ti; return redrawTrends(); }
 });
-for (const id of ['paneBaby', 'paneFamily', 'paneProfile']) $(id).addEventListener('click', e => {
+for (const id of ['paneFamily', 'paneProfile']) $(id).addEventListener('click', e => {
   const c = e.target.closest('[data-baby]'); if (c) return selectBaby(c.dataset.baby);
   const b = e.target.closest('[data-act]'); if (b) paneAction(b.dataset.act, b.dataset.val, b);
 });
@@ -3930,7 +3963,7 @@ document.addEventListener('visibilitychange', () => {
   if (st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
 // A cada 30 segundos, a tela Hoje atualiza o "há quanto tempo" e as doses. As outras abas não: redesenhar
-// a aba do bebê no meio de um arrasto no gráfico de peso cortava o gesto.
+// outra aba no meio de um arrasto no gráfico de peso cortava o gesto.
 setInterval(() => { if (st.tab === 'home') refresh(); }, 30000);
 
 // Puxar para atualizar (Patrick, 07/11): no alto da aba Hoje, puxar para baixo e soltar depois de 80 px.

@@ -188,7 +188,7 @@ fixa, e o aviso da janela de sono continua só entre 6h e 18h.
 _Evite_: hora ideal de dormir, horário certo, rotina recomendada
 
 **Acompanhar o sono** (13/11, item 65):
-O interruptor da família toda (aba Família, seção Sono; no onboarding, "Quer que o Soneca acompanhe o sono
+O interruptor da família toda (aba Família, Nossa família › Sono; no onboarding, "Quer que o Soneca acompanhe o sono
 da Marina com você?"). Liga e desliga só a **janela de sono**: a faixa no cartão do bebê e o aviso no
 celular (que também depende do Sim de cada pessoa). Desligado, a noite do bebê continua à vista, editável
 e usada em Tendências e nos resumos. Ligado por padrão.
@@ -196,8 +196,8 @@ _Evite_: ajuda com o sono, otimizar o sono, treinar o sono
 
 **Botões da tela inicial**:
 Os botões de registro, três por linha, no Diário. Mamada, Sono e Fralda aparecem sempre, e Outros
-também. Os outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) cada família liga ou
-desliga na aba Família (o botão Editar, ao lado de Outros, leva até lá), e vale para todos da família.
+também. Os outros (Remédio, Sintomas, Ordenha, Massagem, Banho, Lavagem nasal) a família antes ligava ou
+desliga: desde 07/11 todos os registros aparecem para todas as famílias, e não há mais o que configurar.
 _Evite_: atalhos, menu, configurações
 
 **Linha do tempo**:
@@ -240,20 +240,20 @@ _Evite_: administração, aplicação
 **Remédios e horários**:
 A tela onde a família programa os remédios de um bebê e vê as doses de hoje, cada uma com caixinha.
 Abre pelo botão Remédio, por "Ver todas", no cartão de remédios da tela inicial (que mostra só as
-doses a uma hora do horário ou atrasadas sem marcar), e por "Ver doses", na aba do bebê.
+doses a uma hora do horário ou atrasadas sem marcar), e pela linha Remédios, em Família › Rotina.
 _Evite_: farmácia, receituário
 
 ## Abas
 
 **Barra de baixo**:
-As cinco abas do app, sempre à mostra, nesta ordem: Tendências, a aba do bebê (com o nome dele), Diário,
-Família e Perfil. O Diário fica no centro, e o app abre nele.
+As quatro abas do app, sempre à mostra, nesta ordem: Tendências, Diário, Família e Perfil (desde o item 75,
+17/11, não há mais a aba do bebê). O app abre no Diário.
 _Evite_: menu, navegação, rodapé
 
 **Diário** (antes "Hoje", até 13/11):
 A aba dos registros do dia a dia, no centro da barra de baixo e a que abre com o app: os botões da
 tela inicial, o cartão de remédios, a linha do tempo, o painel da semana e o resumo do mês (Dia | Semana
-| Mês). No alto, o nome e a idade do bebê levam à aba do bebê.
+| Mês). No alto, o nome e a idade do bebê levam à aba Família.
 _Evite_: home, início, painel, Hoje (nome antigo; "Hoje" continua sendo o dia de hoje)
 
 **Tendências** (13/11):
@@ -267,7 +267,7 @@ noite (da hora de dormir até a de acordar), o maior sono seguido e as sonecas. 
 um dia com poucos registros ou uma semana com menos de 4 dias anotados; nos cartões da noite, uma noite
 que não foi anotada do começo ao fim. Um número baixo nunca deixa a barra clara. Só junta o que foi
 anotado; não compara com outros bebês nem diz o que é normal. "Estatísticas" também serve.
-_Evite_: normal, meta, desempenho, evolução do bebê, gráfico de crescimento (esse é o da aba do bebê)
+_Evite_: normal, meta, desempenho, evolução do bebê, gráfico de crescimento (esse é o da aba Família)
 
 **Guias**:
 Os botões no alto de Tendências que separam um assunto do outro: Sono, Mamadas, Fraldas, Ordenha (só
@@ -275,17 +275,18 @@ com o botão Ordenha ligado) e Peso. A tela abre em Sono. Na primeira versão, s
 outras mostram "Em construção", com a capivara de capacete de obra.
 _Evite_: abas (aba é a da barra de baixo), filtros, categorias
 
-**Aba do bebê**:
-Leva o nome do bebê na barra de baixo. Nesta ordem: o botão do relatório para pediatra, as dúvidas
-para a consulta, o peso, os remédios programados, os marcos e, no fim, o nome e o nascimento. No alto, o nome e a idade; tocar neles leva até o nome e o nascimento,
-para editar. Logo abaixo, três números (último peso, remédios, marcos) levam a cada parte. Só guarda
-o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês.
-_Evite_: perfil do bebê, ficha, prontuário, tela do bebê
-
-**Aba Família**:
-O que vale para todos da família aberta: o nome da família (só o criador muda), os membros e o
-convite, os bebês, os botões da tela inicial e, no fim, sair da família ou apagá-la.
-_Evite_: configurações, grupo
+**Aba Família** (item 75, 17/11; antes eram duas abas, a do bebê e a Família):
+Tudo o que é do bebê e da família aberta, numa aba só, nesta ordem. No alto, o nome e a idade do bebê (com
+dois bebês, a escolha fica aqui), os três números (último peso, remédios, marcos) e a fileira de atalhos
+que fica presa enquanto a tela rola: Rotina, Dados do bebê, Família. **Rotina de [nome]**: as linhas
+Remédios, Tarefas, Marcos e Relatório e dúvidas, cada uma abrindo a sua tela (Tarefas é a mesma de
+programar e tirar da rotina). **Dados de [nome]**: nome, nascimento, menina ou menino e a noite do bebê.
+**Nossa família**: o nome da família (só o criador muda), os membros e o convite, os bebês, adicionar bebê
+e o interruptor Acompanhar o sono. No fim, sair da família ou apagá-la. O peso e a curva continuam aqui até
+a etapa 3 do item 75 levá-los para Tendências › Peso. Só guarda o que a família anota; não compara com
+curvas de crescimento nem com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
+aqui.
+_Evite_: configurações, grupo, perfil do bebê, ficha, prontuário, tela do bebê, aba do bebê (não existe mais)
 
 **Perfil**:
 A aba do que é só da pessoa: o nome de exibição, a aparência, as famílias de que participa (abrir
@@ -324,8 +325,8 @@ _Evite_: marco esperado, atraso, desenvolvimento normal
 ## Consulta com o pediatra
 
 **Relatório para pediatra**:
-A folha que a família leva à consulta, emitida pelo botão "Emitir relatório para pediatra", na aba do
-bebê. Junta o peso (em gráfico) e os marcos desde o nascimento e, do período escolhido (7, 14 ou 30
+A folha que a família leva à consulta, emitida pelo botão "Emitir relatório para pediatra", em Família ›
+Rotina › Relatório e dúvidas. Junta o peso (em gráfico) e os marcos desde o nascimento e, do período escolhido (7, 14 ou 30
 dias, ou desde o último peso de consulta), a média por dia da rotina, os dias lado a lado, os
 sintomas e vômitos, as doses de remédio e as dúvidas que faltam perguntar. Sai em PDF pelo imprimir
 do celular ou em texto para copiar. É sempre clara, mesmo com o app no escuro. Só junta o que foi
@@ -333,7 +334,7 @@ registrado; não avalia o bebê nem compara com outros bebês.
 _Evite_: laudo, prontuário, ficha, exame (e "relatório" para o painel da semana e os resumos)
 
 **Dúvida**:
-O que a família quer perguntar na próxima consulta, anotado na aba do bebê quando lembra. Não mostra
+O que a família quer perguntar na próxima consulta, anotado em Família › Rotina › Relatório e dúvidas quando lembra. Não mostra
 quem anotou. Enquanto ninguém marca que perguntou, vai no relatório para pediatra.
 _Evite_: pergunta médica, consulta online, orientação
 
