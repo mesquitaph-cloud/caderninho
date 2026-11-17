@@ -276,10 +276,12 @@ outras mostram "Em construção", com a capivara de capacete de obra.
 _Evite_: abas (aba é a da barra de baixo), filtros, categorias
 
 **Guia Peso** (item 75, etapa 3; em Tendências):
-O peso e o comprimento do bebê, só o que a família anotou: os pontos no tempo (guia Peso ou Comprimento), o
-botão Anotar peso (a mesma folha de antes, com peso, comprimento ou os dois) e a lista Pesos anotados, onde
-tocar numa linha edita ou apaga. Sem curva de referência e sem comparar com outros bebês.
-_Evite_: curva de crescimento, percentil, acima ou abaixo do normal, aba Peso (aba é a da barra de baixo)
+O peso e o comprimento do bebê: o gráfico (Peso ou Comprimento) com os pontos que a família anotou, sobre as
+curvas da OMS (percentis 3, 15, 50, 85 e 97) quando há nascimento e menina ou menino, com zoom; o botão
+Anotar peso (a folha de anotar, com peso, comprimento ou os dois) e a lista Pesos anotados, onde tocar numa
+linha edita ou apaga. As curvas só mostram a linha e o ponto: o app não diz se o bebê está acima ou abaixo
+de nada.
+_Evite_: normal, abaixo ou acima da curva, aba Peso (aba é a da barra de baixo)
 
 **Aba Família** (item 75, 17/11; antes eram duas abas, a do bebê e a Família):
 Tudo o que é do bebê e da família aberta, numa aba só, nesta ordem. No alto, o nome e a idade do bebê (com
@@ -290,7 +292,7 @@ programar e tirar da rotina). **Dados de [nome]**: nome, nascimento, menina ou m
 **Nossa família**: o nome da família (só o criador muda), os membros e o convite, os bebês, adicionar bebê
 e o interruptor Acompanhar o sono. No fim, sair da família ou apagá-la. O peso e o comprimento não ficam
 aqui (etapa 3 do item 75): moram em Tendências › Peso, e o número "último peso" do alto leva até lá. Só
-guarda o que a família anota; não compara com curvas de crescimento nem com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
+guarda o que a família anota; não avalia o bebê nem o compara com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
 aqui.
 _Evite_: configurações, grupo, perfil do bebê, ficha, prontuário, tela do bebê, aba do bebê (não existe mais)
 
