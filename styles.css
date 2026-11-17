@@ -1193,8 +1193,13 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .onbsteps i.on{background:var(--accent)}
 .pick2,.pick3{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pick3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.pick2 .opt,.pick3 .opt{text-align:center;padding-inline:6px;min-width:0;overflow-wrap:anywhere}
-.pick2 .opt.on,.pick3 .opt.on{border-color:var(--ink);background:var(--surface2)}
+.pick4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pick2 .opt,.pick3 .opt,.pick4 .opt{text-align:center;padding-inline:6px;min-width:0;overflow-wrap:anywhere}
+.pick2 .opt.on,.pick3 .opt.on,.pick4 .opt.on,.kins .opt.on{border-color:var(--ink);background:var(--surface2)}
+/* "Você é" (item 75): a lista de parentescos à vista, em linhas que quebram; o lado vem embaixo. */
+.kins{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.kins .opt{padding:10px 14px;font-size:15px}
+.kinbox{padding:4px 0 8px}.kinbox .lbl{margin:10px 0 6px}.kinbox .kins{margin-top:0}
 .big{display:flex;flex-direction:column;gap:10px}
 .big button{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;font-size:17px;font-weight:500;min-height:60px}
 .big button[aria-pressed="true"]{border-color:var(--ink);background:var(--surface2)}

@@ -551,6 +551,23 @@ mesmos, porque o texto cita os itens pelo número.
   peso (e um só comprimento), ver o gráfico e a lista; tocar numa linha, editar e apagar; Peso e Comprimento
   trocando o gráfico; com dois bebês, trocar e ver o peso de cada um; a Família sem a seção de peso;
   claro e escuro.
+  **Etapa 4 (Perfil, parentesco e lado, PR `claude/item-75-perfil-4a02f6`, 17/11, sem SQL novo; exige o
+  027 já rodado):** (a) **Onboarding**, tela do nome: "Você é" com Pai · Mãe · Avó · Outros; "Outros" abre
+  avô, tia, tio, prima, primo, babá e outro cuidador; para avó, avô, tia, tio, prima e primo vem "De que lado
+  da família?" (Lado da mãe, Lado do pai); "Pode pular. Muda depois." Substitui o Mãe · Pai · Outro
+  cuidador do 024; grava `caregiver` e `family_side` juntos, depois do nome. (b) **Perfil** na ordem Sobre
+  você · Notificações (bloco do lembrete, intacto) · Aparência · Minhas famílias · Ajuda · Privacidade ·
+  Conta; "Falar com o encarregado" virou "Contatar administração"; Política e Termos sem alteração
+  (decisão de 17/11; o parentesco é dado pessoal novo que ela ainda não cita). (c) **Família › Nossa
+  família › Membros**: cada um com o parentesco; "Você" abre o mesmo editor do Perfil, com "Pronto". Código
+  em `app.js` (`KINS`, `kinText`, `kinEditor`, `saveKin`, `kinOnb`, `drawProfilePane`). Cada toque grava na
+  hora; ao trocar para parentesco sem lado, o lado vai vazio. O texto "Para [nome do bebê]" da prévia ficou
+  de fora (o lado vale por pessoa) e a frase "Mais adiante, isso pode formar a árvore da família." não entra.
+  **Conferir no celular (iPhone e Android):** criar conta nova e escolher Pai, Mãe, Avó, e em Outros uma tia
+  com o lado; entrar por convite e responder; Perfil › Sobre você: trocar de avó (lado da mãe) para babá e
+  ver o lado sumir; Família › Membros: a linha "Você" abre e fecha com "Pronto", e os outros membros
+  aparecem com o parentesco (use duas contas); a linha "Contatar administração" abre o e-mail; claro e
+  escuro, a lista quebrando sem rolar para o lado em tela pequena.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
@@ -643,7 +660,7 @@ Fralda continuam sempre completos, e a autorização da amamentação está na c
   usa e a cada versão nova; cartão "Dados do bebê e de saúde" ao criar a família, ao adicionar bebê e, nas
   famílias que já existem, para quem criou, antes de abrir; compromisso de quem entra por convite. Cada um
   vai para `consents` (só acrescenta; a prova fica mesmo depois de apagar a conta).
-- **Perfil › Privacidade:** política, termos, "Cópia dos seus dados" e "Falar com o encarregado" (abrem um
+- **Perfil › Privacidade:** política, termos, "Cópia dos seus dados" e "Contatar administração" (antes "Falar com o encarregado"; a Política ainda cita o nome antigo) (abrem um
   e-mail endereçado), e a versão aceita com a data.
 - **Sair da família sem deixar o nome:** quem sai ou é removido deixa registros, remédios, medidas, marcos e
   dúvidas na família sem autor (gatilho `member_left` do 015). O segundo toque de "Sair da família" avisa.
