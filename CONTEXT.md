@@ -305,12 +305,22 @@ _Evite_: configurações, grupo, perfil do bebê, ficha, prontuário, tela do be
 
 **Perfil**:
 A aba do que é só da pessoa (item 75, etapa 4), nesta ordem: **Sobre você** (o nome e o "Você é" com a
-lista completa e o lado; a linha "Aparece para a família como: Avó, lado da mãe"), Notificações (por ora
-o lembrete para anotar; a etapa 5 reorganiza), **Aparência**, **Minhas famílias** (abrir outra ou criar
+lista completa e o lado; a linha "Aparece para a família como: Avó, lado da mãe"), **Notificações neste
+celular** (ver abaixo), **Aparência**, **Minhas famílias** (abrir outra ou criar
 uma nova), **Ajuda** (sugestões e problemas, avaliar, indicar o Soneca), **Privacidade** (Política,
 Termos, cópia dos dados e "Contatar administração") e **Conta** (desconectar deste celular, apagar minha
 conta).
 _Evite_: conta (como nome da aba), configurações, você
+
+**Notificações neste celular** (item 63 no item 75, 17/11):
+O bloco do Perfil, só no app, que decide quais avisos chegam **neste celular**. Um botão central, "Todas as
+notificações", e um interruptor por aviso: Janela de sono, Remédios, Tarefas e "Me lembrar de registrar" (o
+aviso de 3 horas sem registro). Tudo vale só para quem usa o celular; os outros membros não mudam. Com o
+central desligado nenhum aviso chega, e ao ligar de novo cada aviso volta como estava (o central tem a sua
+chave, `cad-avisos`, e não mexe nas dos avisos). Remédios e Tarefas, que são guardados por bebê, aqui valem
+para todos os bebês da família. Se o iPhone ou o Android bloquear as notificações do Soneca, o toque leva
+aos ajustes do celular.
+_Evite_: configurações, alertas (no texto da tela: avisos), push
 
 **Aparência**:
 Claro, escuro ou do celular, em Perfil. "Do celular" segue o modo noturno do aparelho. Vale só no
