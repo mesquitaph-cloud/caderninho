@@ -539,18 +539,26 @@ mesmos, porque o texto cita os itens pelo número.
   e uma dúvida e ver a folha voltar; com dois bebês, trocar na Família e ver tudo mudar; Dados de [nome]
   (editar e noite); convidar alguém e apagar ou sair da família; claro e escuro.
   **Etapa 3 (peso em Tendências, PR `claude/item-75-peso-3fc438`, 17/11, sem mudança no banco):** a seção
-  "Peso e comprimento" saiu da Família e foi para a guia **Peso** de Tendências (antes "Em construção"):
-  as abas Peso e Comprimento, o gráfico dos pontos anotados (com duas ou mais medidas), o botão **Anotar
-  peso**, a lista **Pesos anotados** (tocar edita ou apaga; é a mesma folha de anotar, com peso, comprimento
-  ou os dois) e a nota "Só o que foi anotado. Sem comparação com outros bebês nem curvas." O número "último
-  peso" no alto da Família agora abre a guia Peso. **Sem curva da OMS na guia**: o gráfico mostra só o que
-  foi anotado, como diz a nota (as curvas e o zoom do gráfico saíram do app; o código das curvas segue em
-  `growth.js` e o relatório para pediatra continua com elas). Código em `app.js` (`pesoHtml`, `logForm`,
-  `saveLog`) e `tendencias.js` (recebe o HTML do peso em `peso`).
+  "Peso e comprimento" saiu da Família e foi para a guia **Peso** de Tendências (antes "Em construção"),
+  com o mesmo gráfico de antes: abas Peso e Comprimento, curvas da OMS (percentis 3, 15, 50, 85 e 97) com
+  6 meses, 1 ano, 2 anos e 5 anos, pinça e rodinha para zoom e arrastar (sem nascimento ou sem menina ou
+  menino, só os pontos, com o aviso de onde anotar), mais o botão **Anotar peso** e a lista **Pesos
+  anotados** (tocar edita ou apaga; mesma folha de anotar, com peso, comprimento ou os dois). O número
+  "último peso" no alto da Família abre a guia Peso. A nota "Só o que foi anotado. Sem comparação com outros
+  bebês nem curvas." chegou a entrar e saiu (Patrick, 17/11: as curvas ficam). O relatório para pediatra não
+  mudou. Código em `app.js` (`growthHtml`, `bindZoom`, `pesoHtml`) e `tendencias.js` (recebe o HTML do peso em `peso`).
   **Conferir no celular (iPhone e Android):** Família › "último peso" abre Tendências na guia Peso; anotar um
-  peso (e um só comprimento), ver o gráfico e a lista; tocar numa linha, editar e apagar; Peso e Comprimento
-  trocando o gráfico; com dois bebês, trocar e ver o peso de cada um; a Família sem a seção de peso;
-  claro e escuro.
+  peso (e uma medida só de comprimento), ver o gráfico e a lista; tocar numa linha, editar e apagar; Peso e
+  Comprimento trocando o gráfico; as curvas com 6 meses, 1 ano, 2 anos e 5 anos; **pinça com dois dedos e
+  arrastar para os lados no gráfico** (a página não pode rolar de lado nem travar); sem nascimento ou sem
+  menina ou menino, só os pontos; com dois bebês, trocar e ver o peso de cada um; a Família sem a seção de
+  peso; claro e escuro.
+  **Guias de Tendências fixas ao rolar (item 58, Patrick, 17/11, mesmo PR):** a fileira Sono · Mamadas · Fraldas ·
+  Ordenha · Peso fica presa no alto, abaixo da faixa segura do iPhone, com o fundo do tema (mesmo jeito dos
+  atalhos fixos da Família). Só ela fica fixa; Dia a dia | Semana a semana e os cartões rolam. Trocar de guia
+  volta ao topo. Sem texto novo. **Conferir no celular:** rolar em Sono com os cartões longos (a fileira
+  fica no alto, sem cobrir o conteúdo), trocar de guia no meio da rolagem, e a fileira com Ordenha ligada
+  e desligada; claro e escuro.
   **Etapa 4 (Perfil, parentesco e lado, PR `claude/item-75-perfil-4a02f6`, 17/11, sem SQL novo; exige o
   027 já rodado):** (a) **Onboarding**, tela do nome: "Você é" com Pai · Mãe · Avó · Outros; "Outros" abre
   avô, tia, tio, prima, primo, babá e outro cuidador; para avó, avô, tia, tio, prima e primo vem "De que lado
