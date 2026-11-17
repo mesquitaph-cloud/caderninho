@@ -43,3 +43,13 @@ ok(deName({ name: 'Theo', sex: 'M' }) === 'do Theo' && deName({ name: 'Alex' }) 
 // resumo: sono de dia e texto
 const ps = periodStats({ a: D, z: D1, evs: [{ t: H(D, 9), kind: 'feed' }], sleep: { out: sleeps, open: null }, now, weights: [], milestones: [], rule });
 ok(ps.napDay === HOUR && ps.napSpan === 'das 6h às 20h', 'resumo: sono de dia ' + ps.napDay / MIN + ' min, ' + ps.napSpan);
+// Tendências (item 58): a bolinha de cada despertar fica na hora do acordou, desde 0h do dia da noite.
+// Noite do dia D: dorme 20h, acorda 2h30 (dia seguinte), volta a dormir 3h, acorda 6h -> 26,5 h na escala.
+{
+  const { dayRows } = await import('../tendencias.js');
+  const s5 = [[H(D, 20), H(D1, 2, 30)], [H(D1, 3), H(D1, 6)]];
+  const r = dayRows([D], s5.flatMap(([x, y]) => [{ kind: 'sleep', t: x }, { kind: 'wake', t: y }]), now, rule)[0];
+  ok(r.desp === 1 && r.wk.length === 1, 'Tendências: um despertar, uma bolinha');
+  ok(r.wk[0] / HOUR === 26.5, 'Tendências: despertar às 2h30 fica em 26,5 h');
+  ok(r.desp === nights(D, D1, [], s5, now, rule)[0].wakes.length, 'Tendências conta os mesmos despertares de "Como foram as noites"');
+}
