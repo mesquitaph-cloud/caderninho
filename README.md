@@ -508,6 +508,19 @@ mesmos, porque o texto cita os itens pelo número.
   **Como a conta é feita** (só na janela do bebê), o aviso 5 min antes, a frase perto da noite, o lembrete
   "A janela é uma estimativa…", a fonte (só pela idade) e "Para desligar a janela: Família > Sono.".
   Textos em `janela.js` (`infoHtml`); testes em `testes/janela.mjs`. Sem mudança no banco.
+- **75 · Bebê e família numa aba só, Perfil como configurações** (Patrick, 17/11; desenho aprovado na
+  prévia https://claude.ai/artifact/Kd41UYQRrJE8JZbpvJGMZS e, para o onboarding, https://claude.ai/artifact/5XXuXWC9ai2hQVBngtLNvf;
+  entra na 1.0.4, primeiro no TestFlight, com nova compilação). Barra de 5 para 4 abas (Tendências, Diário,
+  Família, Perfil); peso na guia Peso de Tendências; Perfil com "Você é", Notificações e apagar conta.
+  Ordem: 1) SQL, 2) juntar as abas, 3) peso, 4) Perfil, 5) notificações; um PR de cada. **Etapa 1 (só
+  dados, PR `claude/item-75-dados-5f303a`, 17/11):** `supabase/027_parentesco_e_lado.sql` (a rodar no SQL
+  Editor). Item 47: `profiles.caregiver`, que o 024 já criou (vazia nas 98 pessoas), passa a guardar o
+  parentesco (mae, pai, avoa, avo, tia, tio, prima, primo, baba, outro) e nasce `profiles.family_side`
+  ('mae' ou 'pai', só para avó, avô, tia, tio, prima e primo; o banco recusa a combinação errada). Cada
+  pessoa grava só o próprio perfil e a família lê, como o nome. Item 63: **sem SQL**, porque os avisos são
+  do celular (`cad-janela`, `cad-lembrete`, `cad-medalert-<bebê>`, `cad-tarefaalert-<bebê>`); o botão
+  central e os interruptores ficam no celular também (ver a descrição do PR). LGPD: parentesco e lado
+  são dado pessoal novo, a Política precisa citar (por ora sem alteração, decisão de 17/11).
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
