@@ -695,6 +695,10 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 .seg2{display:flex;background:var(--surface2);border-radius:12px;padding:3px;gap:3px}
 .seg2 button{flex:1;padding:8px 0;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted)}
 .seg2 button.on{background:var(--surface);color:var(--ink)}
+.gpre{display:flex;gap:6px}
+.gpre button{flex:1;font-size:13px;font-weight:500;border-radius:999px;padding:6px 0;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.gpre button.on{background:var(--surface2);border-color:var(--surface2);color:var(--ink)}
+.gzoom{touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab}
 .lnk.inl{padding:0;font-size:inherit;text-decoration:underline;text-underline-offset:2px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .two .ml input{width:100%;min-width:0}
