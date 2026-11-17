@@ -1,7 +1,7 @@
 // Testes da janela de sono do próprio bebê (item 60, 2ª etapa, e contador do item 73; regra aprovada pelo
 // Patrick em 16/11, prévia 13: https://claude.ai/artifact/3q6Hzf8QKppDALfn8DBthA). Sem navegador nem banco:
 // `node --no-warnings testes/janela.mjs`. Sai com erro (código 1) se algum caso falhar.
-import { ownWindow, babyWin, dayWindows, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur } from '../janela.js';
+import { ownWindow, babyWin, dayWindows, mergeShort, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur } from '../janela.js';
 import { nightRule } from '../noite.js';
 import { addDays, localDate, HOUR, MIN } from '../util.js';
 const ok = (c, m) => { if (!c) { console.log('FALHOU:', m); process.exitCode = 1; } else console.log('ok:', m); };
@@ -75,3 +75,32 @@ ok(novText(caio, true) === 'Agora o Soneca mostra a janela de sono a partir dos 
 ok(novText(ana, false) === 'Agora o Soneca vai passar a mostrar a janela de sono a partir dos registros da Ana quando houver 5 dias de sono anotados. Para desligar, vá em Família > Sono.', 'novidade antes dos 5 dias');
 ok(swapTitle(ana) === 'A janela de sono da Ana mudou' && swapText(ana, [30 * MIN, 80 * MIN]) === 'Agora ela vem dos registros dela: 30 min a 1h20 acordada. Antes, era a referência para a idade.', 'troca de faixa');
 ok(swapText(caio, ref) === 'Agora ela vem dos registros dele: 1h a 1h45 acordado. Antes, era a referência para a idade.', 'troca de faixa, masculino');
+
+// 8. Despertar curto (16/11): menos de 15 min acordado entre dois sonos é interrupção do sono, não janela.
+const h = (x, m = 0) => d + x * HOUR + m * MIN, noite = [addDays(d, -1) + 19 * HOUR, d + 7 * HOUR];
+const s10 = [noite, [h(8, 30), h(9, 30)], [h(9, 40), h(10, 30)]];
+ok(mergeShort(s10).length === 2 && mergeShort(s10)[1].join() === [h(8, 30), h(10, 30)].join(), 'despertar de 10 min: a soneca vira uma só, das 8h30 às 10h30');
+ok(dayWindows(mergeShort(s10), rule0, d).join() === String(90 * MIN), 'despertar de 10 min: não gera janela (só a de 1h30 antes da soneca)');
+const s15 = [noite, [h(8, 30), h(9, 30)], [h(9, 45), h(10, 30)]];
+ok(mergeShort(s15).length === 3 && dayWindows(mergeShort(s15), rule0, d).join() === [90 * MIN, 15 * MIN].join(), 'despertar de exatamente 15 min: não junta, é janela');
+const sCad = [noite, [h(8, 30), h(9)], [h(9, 5), h(9, 30)], [h(9, 40), h(10, 30)]];
+ok(mergeShort(sCad).length === 2 && mergeShort(sCad)[1].join() === [h(8, 30), h(10, 30)].join(), 'dois despertares curtos seguidos: juntam em cadeia');
+ok(s10.length === 3 && s10[1][1] === h(9, 30), 'mergeShort não muda a lista de sonos recebida');
+// Soneca típica: soneca das 9h às 9h45 e outra das 13h às 13h45 com um despertar de 10 min no meio.
+const diaCurto = k => { const x = addDays(T, -k); return [[addDays(x, -1) + 19 * HOUR, x + 7 * HOUR], [x + 9 * HOUR, x + 9 * HOUR + 45 * MIN], [x + 13 * HOUR, x + 13 * HOUR + 15 * MIN], [x + 13 * HOUR + 25 * MIN, x + 13 * HOUR + 45 * MIN]]; };
+const wCurto = babyWin([1, 2, 3, 4, 5].flatMap(diaCurto).sort((a, b) => a[0] - b[0]), rule0, birth, NOW);
+ok(wCurto.nap === 45 * MIN, `soneca típica depois da junção: 45 min (${fmtDur(wCurto.nap)}; sem juntar seria 20 min)`);
+
+// 9. "Direto até a noite" com 1,5 × o centro, de 3 meses em diante (16/11). Janela 1h a 1h45, noite às 18h.
+ok(nearNight(N - 150 * MIN, ref, N, nap, null) === 'soneca', '2 meses (sem centro): regra antiga, N − A = 2h30 não é direto');
+ok(w7.mid === null && wAge.mid === null, '2 meses: babyWin não manda centro (regra antiga)');
+ok(nearNight(N - 150 * MIN, ref, N, nap, 100 * MIN) === 'direto', '3 meses ou mais, centro 1h40: N − A = 1,5 × centro (2h30) é direto');
+ok(nearNight(N - 151 * MIN, ref, N, nap, 100 * MIN) !== 'direto', '3 meses ou mais, centro 1h40: N − A = 2h31 não é direto');
+ok(nearNight(N - 105 * MIN, ref, N, nap, 60 * MIN) === 'direto' && nearNight(N - 106 * MIN, ref, N, nap, 60 * MIN) !== 'direto', '1,5 × centro abaixo do fim da janela: vale o fim da janela');
+const birth3 = localDate(addDays(T, -100));
+const w3age = babyWin(days([1, 2, 9]), rule0, birth3, NOW);
+ok(!w3age.own && faixa(w3age.ref) === '1h15–2h30' && w3age.mid === 112.5 * MIN, '3 meses com a faixa da idade: centro = meio da faixa (1h52,5)');
+ok(nearNight(N - 168 * MIN, w3age.ref, N, null, w3age.mid) === 'direto' && nearNight(N - 169 * MIN, w3age.ref, N, null, w3age.mid) === null, 'faixa da idade: direto até 1,5 × 1h52,5 = 2h48,75');
+const w3own = babyWin(days([1, 2, 3, 4, 5]), rule0, birth3, NOW);
+ok(w3own.own && w3own.mid === 75 * MIN && faixa(w3own.ref) === '55 min–1h40', '3 meses com janela própria: centro = mediana do bebê (1h15), faixa da tela igual');
+ok(!winNotice(N - 150 * MIN, { ref, nap, mid: 100 * MIN }, ana, rule0), '3 meses ou mais, direto pelo 1,5 ×: sem aviso no celular');

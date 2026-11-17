@@ -93,9 +93,24 @@ function napsWithPrev(sleeps, rule, d) {
   }
   return out;
 }
+// Despertar curto (decisão do Patrick em 16/11, depois da simulação com dados reais): acordar por menos de
+// 15 min e voltar a dormir é interrupção do sono, não janela. Só para a conta da janela: os sonos com um
+// despertar curto entre eles viram um só, do primeiro "Dormiu" ao último "Acordou" (em cadeia). Os totais
+// de sono, o Diário, as Tendências e o relatório seguem com os sonos como foram anotados.
+export const WAKE_SHORT = 15 * MIN;
+export function mergeShort(sleeps) {
+  const out = [];
+  for (const [x, y] of sleeps) {
+    const p = out[out.length - 1];
+    if (p && x - p[1] < WAKE_SHORT) p[1] = Math.max(p[1], y);
+    else out.push([x, y]);
+  }
+  return out;
+}
 // As janelas que contam no dia d, em ms: do "Acordou" de dia (o fim do sono de antes, depois do fim da
-// noite) até o "Dormiu" de uma soneca de dia, de 10 min a 6 h. A que termina no sono da noite fica fora.
-export const WIN_MIN = 10 * MIN, WIN_MAX = 6 * HOUR;
+// noite) até o "Dormiu" de uma soneca de dia, de 15 min (WAKE_SHORT) a 6 h. A que termina no sono da noite
+// fica fora. sleeps já com os despertares curtos juntados (mergeShort).
+export const WIN_MIN = WAKE_SHORT, WIN_MAX = 6 * HOUR;
 export function dayWindows(sleeps, rule, d) {
   const out = [];
   for (const { nap, prev, day0 } of napsWithPrev(sleeps, rule, d)) {
@@ -113,24 +128,30 @@ export function pct(list, p) {
 const r5 = m => Math.round(m / 5) * 5;
 // A faixa do bebê a partir das janelas (ms): centro na mediana; largura do P25 ao P75, de 45 min a 1h30,
 // centrada na mediana; nunca começa antes de 30 min (se cair antes, começa aos 30 com a mesma largura);
-// começo e fim arredondados de 5 em 5 min. Devolve [de, até] em ms.
+// começo e fim arredondados de 5 em 5 min. Devolve [de, até] em ms, com a mediana (sem arredondar, em ms)
+// em .med, para a regra perto da noite.
 export function ownWindow(ws) {
   const m = ws.map(x => x / MIN), med = pct(m, .5);
   const w = Math.min(Math.max(pct(m, .75) - pct(m, .25), 45), 90);
   let s = med - w / 2, e = med + w / 2;
   if (s < 30) { s = 30; e = 30 + w; }
-  return [r5(s) * MIN, r5(e) * MIN];
+  const r = [r5(s) * MIN, r5(e) * MIN];
+  r.med = med * MIN;
+  return r;
 }
 // A janela que o app usa para o bebê agora. Dados: os últimos 7 dias (hoje e os 6 de antes), se houver 5
 // ou mais dias com soneca de dia que conta; senão, os últimos 14 com 5 ou mais; senão, a faixa da idade.
 // Só até 12 meses (de 12 meses em diante e sem nascimento, só o contador, como na 1ª etapa).
-// Devolve { ref, own, days, valid, nap }: valid = dias que valem nos últimos 14 (contador do item 73);
+// Devolve { ref, own, days, valid, nap, mid }: valid = dias que valem nos últimos 14 (contador do item 73);
 // nap = soneca típica para a regra perto da noite (mediana das sonecas que começam a partir das 15h, se
-// houver 5 ou mais, senão de todas, no máximo 1 h; null sem sonecas).
-export const NEED_DAYS = 5;
+// houver 5 ou mais, senão de todas, no máximo 1 h; null sem sonecas); mid = o centro da janela para o
+// "direto até a noite" de 3 meses em diante (a mediana do bebê, ou o meio da faixa da idade; null abaixo
+// de 3 meses). Os sonos entram com os despertares curtos juntados (mergeShort).
+export const NEED_DAYS = 5, MID_MONTHS = 3;
 export function babyWin(sleeps, rule, birth, now) {
   const age = wakeRef(birth, now);
-  if (!age) return { ref: null, own: false, days: 0, valid: 0, nap: null };
+  if (!age) return { ref: null, own: false, days: 0, valid: 0, nap: null, mid: null };
+  sleeps = mergeShort(sleeps);
   const today = startOfDay(now), per = [];
   for (let k = 0; k < 14; k++) per.push(dayWindows(sleeps, rule, addDays(today, -k)));
   const count = n => per.slice(0, n).filter(x => x.length).length;
@@ -141,15 +162,18 @@ export function babyWin(sleeps, rule, birth, now) {
   const late = naps.filter(([x]) => new Date(x).getHours() >= 15);
   const use = late.length >= 5 ? late : naps;
   const nap = use.length ? Math.min(pct(use.map(([x, y]) => y - x), .5), HOUR) : null;
-  return { ref: days ? ownWindow(ws) : age, own: !!days, days, valid, nap };
+  const ref = days ? ownWindow(ws) : age;
+  const mid = monthsOld(birth, now) < MID_MONTHS ? null : days ? ref.med : (age[0] + age[1]) / 2;
+  return { ref, own: !!days, days, valid, nap, mid };
 }
-// Perto da noite (A = hora do "Acordou", N = começo da noite daquele dia, nap = soneca típica):
-// 'direto' se dá para ir até a noite dentro da janela (N − A ≤ até): só o "Acordada há", sem faixa, frase
-// nem aviso; 'soneca' se uma soneca no começo da janela acabaria a menos de `de` da noite
+// Perto da noite (A = hora do "Acordou", N = começo da noite daquele dia, nap = soneca típica, mid = o
+// centro do babyWin): 'direto' se dá para ir até a noite dentro da janela (N − A ≤ até; de 3 meses em
+// diante, até o maior entre o fim da janela e 1,5 × o centro, decisão de 16/11): só o "Acordada há", sem
+// faixa, frase nem aviso; 'soneca' se uma soneca no começo da janela acabaria a menos de `de` da noite
 // (N − (A + de + nap) < de): a frase no lugar da faixa, sem aviso; null no resto do dia.
-export function nearNight(A, ref, N, nap) {
+export function nearNight(A, ref, N, nap, mid = null) {
   if (!ref) return null;
-  if (N - A <= ref[1]) return 'direto';
+  if (N - A <= (mid == null ? ref[1] : Math.max(ref[1], 1.5 * mid))) return 'direto';
   if (nap != null && N - (A + ref[0] + nap) < ref[0]) return 'soneca';
   return null;
 }
@@ -162,7 +186,7 @@ export const nightOf = (rule, wake) => dayBounds(rule, startOfDay(wake)).night;
 export const NOTICE_BEFORE = 5 * MIN, NOTICE_FLOOR = 30 * MIN;
 export function winNotice(wake, w, baby, rule) {
   const ref = w?.ref; if (!ref) return null;
-  if (nearNight(wake, ref, nightOf(rule, wake), w.nap)) return null;
+  if (nearNight(wake, ref, nightOf(rule, wake), w.nap, w.mid)) return null;
   const at0 = wake + ref[0] - NOTICE_BEFORE, floor = at0 < wake + NOTICE_FLOOR, at = floor ? wake + NOTICE_FLOOR : at0;
   const { day0, night } = dayBounds(rule, startOfDay(at));
   if (at < day0 || at >= night) return null;
