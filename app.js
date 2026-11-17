@@ -765,7 +765,7 @@ function renderHome() {
   $('babyName').textContent = b ? b.name : 'Sem bebê';
   $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
   $('babyAge').textContent = !b ? 'toque para cadastrar'
-    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso, remédios e marcos';
+    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ');
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
@@ -3001,7 +3001,7 @@ function pesoHtml() {
   const b = st.baby, all = st.measures;
   if (!st.growthOk) return '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
   let h = `<section class="card trp">${growthHtml()}</section><button class="ghost" data-act="newWeight">Anotar peso</button>`;
-  h += '<div class="sec"><h4>Pesos anotados</h4>' + (all.length
+  h += '<div class="sec"><h4>Anotado</h4>' + (all.length
     ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
     : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>') + '</div>';
   return h;
