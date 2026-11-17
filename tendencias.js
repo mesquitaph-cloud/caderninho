@@ -122,14 +122,21 @@ function items(win, evs, now, rule) {
 const clock = ms => { const m = ((Math.round(ms / 60000) % 1440) + 1440) % 1440; return Math.floor(m / 60) + 'h' + String(m % 60).padStart(2, '0'); };
 const dec = x => (Math.round(x * 10) / 10).toLocaleString('pt-BR');
 const dLong = d0 => { const d = new Date(d0); return DIAS[d.getDay()].toLowerCase() + ', ' + d.getDate() + ' ' + MESES[d.getMonth()]; };
-const tick = (it, w) => { const d = new Date(w ? it.e : it.d); return w ? d.getDate() + '/' + (d.getMonth() + 1) : String(d.getDate()); };
+// O dia de cada coluna (na semana, o último dia dela), com o mês embaixo na primeira coluna e quando muda.
+const tickDate = (it, w) => new Date(w ? it.e : it.d);
 const f1 = v => v.toFixed(1);
 const niceMax = (v, step) => Math.max(step, Math.ceil(v / step) * step);
 
 /* ---------- gráficos ---------- */
-const VW = 300, L = 28, R = 4, T = 8, B = 18;
+const VW = 300, L = 28, R = 4, T = 8, B = 28;
 const selBox = (x, bw, ch) => `<rect class="trsel" x="${f1(x - 2)}" y="${T - 2}" width="${f1(bw + 4)}" height="${ch + 4}" rx="4"/>`;
-const label = (x, H, txt, on) => `<text x="${f1(x)}" y="${H - 4}" text-anchor="middle"${on ? ' class="on"' : ''}>${txt}</text>`;
+// Toda coluna leva a data. O mês vem embaixo do dia na primeira e quando muda (12 colunas de semana não
+// cabem com "17/11" lado a lado a 375 px).
+const label = (x, H, its, i, week, on) => {
+  const d = tickDate(its[i], week), m = d.getMonth(), show = i === 0 || tickDate(its[i - 1], week).getMonth() !== m;
+  return `<text x="${f1(x)}" y="${H - 14}" text-anchor="middle"${on ? ' class="on"' : ''}>${d.getDate()}</text>`
+    + (show ? `<text x="${f1(x)}" y="${H - 4}" text-anchor="middle" class="mo">${MESES[m]}</text>` : '');
+};
 const hit = (i, x, w, H) => `<rect class="hit" data-ti="${i}" x="${f1(x)}" y="0" width="${f1(w)}" height="${H}"/>`;
 // Barras, empilhadas quando há mais de uma série (a primeira embaixo).
 function bars({ its, series, max, step, fmt, sel, week, h = 96, name, few }) {
@@ -145,7 +152,7 @@ function bars({ its, series, max, step, fmt, sel, week, h = 96, name, few }) {
     }
     s += '</g>';
     if (i === sel) s += selBox(x, bw, ch);
-    if ((n - 1 - i) % (week ? 3 : 2) === 0) s += label(x + bw / 2, H, tick(it, week), i === sel);
+    s += label(x + bw / 2, H, its, i, week, i === sel);
     s += hit(i, L + slot * i, slot, H);
   });
   return s + '</svg>';
@@ -168,7 +175,7 @@ function band({ its, sel, week }) {
       s += '</g>';
     }
     if (i === sel) s += selBox(x, bw, ch);
-    if ((n - 1 - i) % (week ? 3 : 2) === 0) s += label(x + bw / 2, H, tick(it, week), i === sel);
+    s += label(x + bw / 2, H, its, i, week, i === sel);
     s += hit(i, L + slot * i, slot, H);
   });
   return s + '</svg>';
@@ -214,12 +221,13 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   const tabs = TABS.filter(([k]) => k !== 'ord' || pump);
   if (!tabs.some(([k]) => k === t.tab)) t.tab = 'sono';
   let h = `<header class="trh"><h2>${CAPI}Tendências</h2>${who ? `<span>${esc(who)}</span>` : ''}</header>${chips}`;
-  h += `<div class="trt" role="tablist" aria-label="Assunto">${tabs.map(([k, name, c]) => `<button role="tab" data-ttab="${k}" aria-selected="${t.tab === k}"><i style="background:var(${c})"></i>${name}</button>`).join('')}</div>`;
-  if (t.tab === 'peso') return h + peso;
+  // As guias e, na guia Sono, "Dia a dia | Semana a semana" ficam presas no alto juntas (.trs).
+  h += `<div class="trs"><div class="trt" role="tablist" aria-label="Assunto">${tabs.map(([k, name, c]) => `<button role="tab" data-ttab="${k}" aria-selected="${t.tab === k}"><i style="background:var(${c})"></i>${name}</button>`).join('')}</div>`;
+  if (t.tab === 'peso') return h + '</div>' + peso;
   if (t.tab !== 'sono')
-    return h + `<section class="card trb">${CAPI_HAT}<h3>Em construção</h3><p>Os gráficos de ${SUBJ[t.tab]} chegam numa próxima versão. Por enquanto, Tendências mostra o sono.</p></section>`;
+    return h + '</div>' + `<section class="card trb">${CAPI_HAT}<h3>Em construção</h3><p>Os gráficos de ${SUBJ[t.tab]} chegam numa próxima versão. Por enquanto, Tendências mostra o sono.</p></section>`;
   const week = t.mode === 'w';
-  h += `<div class="seg2" role="group" aria-label="Visão"><button data-tmode="d" class="${week ? '' : 'on'}" aria-pressed="${!week}">Dia a dia</button><button data-tmode="w" class="${week ? 'on' : ''}" aria-pressed="${week}">Semana a semana</button></div>`;
+  h += `<div class="seg2" role="group" aria-label="Visão"><button data-tmode="d" class="${week ? '' : 'on'}" aria-pressed="${!week}">Dia a dia</button><button data-tmode="w" class="${week ? 'on' : ''}" aria-pressed="${week}">Semana a semana</button></div></div>`;
   // Ainda sem dias anotados que bastem para ver alguma mudança.
   const today = startOfDay(now), done = new Set(evs.filter(e => e.t < today).map(e => startOfDay(e.t)));
   if (done.size < EMPTY_DAYS || addDays(today, -1) < first)
