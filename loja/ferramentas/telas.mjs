@@ -40,11 +40,11 @@ for (const scheme of ['light', 'dark']) {
   await page.click('#tabDay'); await top();
   // listinha dos últimos 3 dias da mamada
   const pl = page.locator('.cell .pl').first(); if (await pl.count()) { await pl.click(); await snap('hist'); await page.keyboard.press('Escape'); await page.evaluate(() => { const s = document.getElementById('scrim'); s && s.click(); }); }
-  await page.click('#tabbar [data-tab="baby"]'); await top(); await snap('baby');
+  await page.click('#tabbar [data-tab="family"]'); await top(); await snap('baby');
   await page.evaluate(() => document.getElementById('babyWeight')?.scrollIntoView({ block: 'start' })); await page.evaluate(() => window.scrollBy(0, -20)); await snap('growth');
-  await page.click('#tabbar [data-tab="family"]'); await top(); await snap('family');
-  await page.click('#tabbar [data-tab="baby"]'); await top();
-  await page.click('[data-act="report"]'); await snap('reportsheet');
+  await page.evaluate(() => document.getElementById('famNossa')?.scrollIntoView({ block: 'start' })); await snap('family');
+  await page.click('#tabbar [data-tab="family"]'); await top();
+  await page.click('[data-act="openConsult"]'); await page.click('[data-act="report"]'); await snap('reportsheet');
   const v = page.locator('[data-act="rpView"]'); if (await v.count()) { await v.first().click(); await snap('report'); }
   await ctx.close();
 }

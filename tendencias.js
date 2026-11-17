@@ -183,7 +183,7 @@ function defs(k, de, c) {
   return {
     sono: `A noite ${de} vai das ${s} às ${e}, como a família escolheu. Todo sono que começa nesse horário conta como noite, e um sono que começa antes das ${s} e passa delas também conta inteiro. Os outros são sonecas.`,
     desp: `Despertar é acordar e voltar a dormir durante a noite ${de} (${s} às ${e}), depois do primeiro sono. Acordar de uma soneca não conta.`,
-    faixa: `A família escolhe o começo e o fim da noite de cada bebê. A ${de} vai das ${s} às ${e}. Para mudar, toque em Noite, na aba Bebê.`,
+    faixa: `A família escolhe o começo e o fim da noite de cada bebê. A ${de} vai das ${s} às ${e}. Para mudar, toque em Noite do bebê, na aba Família.`,
     long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que o sono começou.',
     naps: `Soneca é cada sono fora da noite ${de}, entre ${e} e ${s}.`,
   }[k];
