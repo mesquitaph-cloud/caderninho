@@ -24,10 +24,17 @@ _Evite_: usuário, participante, cuidador
 Como a pessoa aparece para as famílias de que participa, escolhido por ela no primeiro acesso.
 _Evite_: apelido, username, e-mail
 
-**Você é** (13/11):
-O que a pessoa responde nas boas-vindas, ao lado do nome: Mãe, Pai ou Outro cuidador. Opcional e de cada
-pessoa (quem entra por convite responde por si), não da família.
-_Evite_: papel, parentesco, tipo de usuário
+**Você é** (13/11; ampliado no item 75, 17/11):
+O parentesco da pessoa com o bebê e a família, escolhido uma vez e guardado em `profiles.caregiver`: mãe,
+pai, avó, avô, tia, tio, prima, primo, babá ou outro cuidador. Nas boas-vindas, ao lado do nome, aparecem
+Pai · Mãe · Avó · Outros ("Outros" abre o resto); no Perfil, a lista completa fica à vista. Para avó, avô,
+tia, tio, prima e primo vem "De que lado da família?" (Lado da mãe ou Lado do pai), guardado à parte em
+`profiles.family_side`; o lado vale por pessoa, não por bebê. Opcional ("Pode pular. Muda depois.") e de
+cada pessoa (quem entra por convite responde por si), não da família. É o mesmo campo no Perfil › Sobre você
+e em Família › Nossa família › Membros (toque em "Você"); nessa lista os outros membros aparecem com o
+parentesco ("Avó, lado da mãe") e só cada um muda o próprio. Ao trocar para um parentesco sem lado, o app
+manda o lado vazio junto (o banco recusa a combinação errada).
+_Evite_: papel, tipo de usuário, relação
 
 **Onboarding** (13/11):
 As telas de quem acabou de entrar, uma pergunta por tela: boas-vindas (nome e "Você é"), "Como você vai
@@ -289,7 +296,7 @@ dois bebês, a escolha fica aqui), os três números (último peso, remédios, m
 que fica presa enquanto a tela rola: Rotina, Dados do bebê, Família. **Rotina de [nome]**: as linhas
 Remédios, Tarefas, Marcos e Relatório e dúvidas, cada uma abrindo a sua tela (Tarefas é a mesma de
 programar e tirar da rotina). **Dados de [nome]**: nome, nascimento, menina ou menino e a noite do bebê.
-**Nossa família**: o nome da família (só o criador muda), os membros e o convite, os bebês, adicionar bebê
+**Nossa família**: o nome da família (só o criador muda), os membros (cada um com o parentesco; "Você" abre o editor) e o convite, os bebês, adicionar bebê
 e o interruptor Acompanhar o sono. No fim, sair da família ou apagá-la. O peso e o comprimento não ficam
 aqui (etapa 3 do item 75): moram em Tendências › Peso, e o número "último peso" do alto leva até lá. Só
 guarda o que a família anota; não avalia o bebê nem o compara com a idade de outros bebês. Tocar no nome ou na foto do bebê no Diário leva até
@@ -297,9 +304,23 @@ aqui.
 _Evite_: configurações, grupo, perfil do bebê, ficha, prontuário, tela do bebê, aba do bebê (não existe mais)
 
 **Perfil**:
-A aba do que é só da pessoa: o nome de exibição, a aparência, as famílias de que participa (abrir
-outra ou criar uma nova), a indicação, as sugestões e problemas e desconectar do celular.
-_Evite_: conta, configurações, você
+A aba do que é só da pessoa (item 75, etapa 4), nesta ordem: **Sobre você** (o nome e o "Você é" com a
+lista completa e o lado; a linha "Aparece para a família como: Avó, lado da mãe"), **Notificações neste
+celular** (ver abaixo), **Aparência**, **Minhas famílias** (abrir outra ou criar
+uma nova), **Ajuda** (sugestões e problemas, avaliar, indicar o Soneca), **Privacidade** (Política,
+Termos, cópia dos dados e "Contatar administração") e **Conta** (desconectar deste celular, apagar minha
+conta).
+_Evite_: conta (como nome da aba), configurações, você
+
+**Notificações neste celular** (item 63 no item 75, 17/11):
+O bloco do Perfil, só no app, que decide quais avisos chegam **neste celular**. Um botão central, "Todas as
+notificações", e um interruptor por aviso: Janela de sono, Remédios, Tarefas e "Me lembrar de registrar" (o
+aviso de 3 horas sem registro). Tudo vale só para quem usa o celular; os outros membros não mudam. Com o
+central desligado nenhum aviso chega, e ao ligar de novo cada aviso volta como estava (o central tem a sua
+chave, `cad-avisos`, e não mexe nas dos avisos). Remédios e Tarefas, que são guardados por bebê, aqui valem
+para todos os bebês da família. Se o iPhone ou o Android bloquear as notificações do Soneca, o toque leva
+aos ajustes do celular.
+_Evite_: configurações, alertas (no texto da tela: avisos), push
 
 **Aparência**:
 Claro, escuro ou do celular, em Perfil. "Do celular" segue o modo noturno do aparelho. Vale só no

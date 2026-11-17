@@ -28,7 +28,7 @@ const st = {
   consents: [],                // aceites da pessoa (Política e Termos, dados do bebê, convite), do 015
   families: [], family: null,
   babies: [], baby: null,
-  members: [], names: {},
+  members: [], names: {}, kin: {},
   entries: new Map(),          // id -> registro (com t = ms)
   meds: [],                    // remédios programados do bebê aberto (sem os parados)
   routines: [],                // tarefas programadas do bebê aberto (sem as tiradas da rotina), do 023
@@ -95,7 +95,7 @@ async function boot() {
     if (!$('nameIn').value) $('nameIn').value = String(meta.full_name || meta.name || '').trim().slice(0, 40);
     show('scrName'); $('nameIn').focus(); return;
   }
-  st.profile = prof; st.names[prof.id] = prof.display_name;
+  st.profile = prof; st.names[prof.id] = prof.display_name; st.kin[prof.id] = [prof.caregiver || null, prof.family_side || null];
 
   await loadConsents();
   if (!hasConsent('terms')) return showTerms();
@@ -270,18 +270,46 @@ $('fName').addEventListener('submit', async e => {
   if (!await addConsent('terms')) { busy(btn, false); return err('errName', 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.'); }
   const { error } = await sb.from('profiles').insert({ id: st.user.id, display_name: name });
   if (error) { busy(btn, false); return err('errName', errMsg(error)); }
-  // "Você é" vai à parte: sem o 024, o nome salva do mesmo jeito.
-  if (role) await sb.from('profiles').update({ caregiver: role }).eq('id', st.user.id);
+  // "Você é" vai à parte: sem o 027, o nome salva do mesmo jeito.
+  if (role) await sb.from('profiles').update({ caregiver: role, family_side: KIN_SIDED.has(role) ? roleSide : null }).eq('id', st.user.id);
   busy(btn, false);
   show('scrLoading'); boot();
 });
-// "Você é" (item 47): Mãe, Pai ou Outro cuidador; opcional, e tocar de novo desmarca.
-let role = null;
-$('rolePick').addEventListener('click', e => {
-  const b = e.target.closest('[data-role]'); if (!b) return;
-  role = role === b.dataset.role ? null : b.dataset.role;
-  for (const o of $('rolePick').children) { const on = o.dataset.role === role; o.classList.toggle('on', on); o.setAttribute('aria-pressed', on); }
+/* "Você é" (itens 47 e 75; textos e desenho aprovados em 17/11). O parentesco (profiles.caregiver) e o
+   lado da família (profiles.family_side) são dois campos; tudo opcional. O lado só vale para quem está em
+   KIN_SIDED, e o banco (027) recusa a combinação errada: por isso toda gravação manda os dois juntos. */
+const KINS = [['mae', 'Mãe'], ['pai', 'Pai'], ['avoa', 'Avó'], ['avo', 'Avô'], ['tia', 'Tia'], ['tio', 'Tio'],
+  ['prima', 'Prima'], ['primo', 'Primo'], ['baba', 'Babá'], ['outro', 'Outro cuidador']];
+const KIN_SIDED = new Set(['avoa', 'avo', 'tia', 'tio', 'prima', 'primo']);
+const SIDES = [['mae', 'Lado da mãe'], ['pai', 'Lado do pai']];
+const kinName = c => (KINS.find(k => k[0] === c) || [])[1] || '';
+// "Avó, lado da mãe"; vazio se a pessoa não respondeu.
+function kinText(c, side) {
+  if (!kinName(c)) return '';
+  const sd = KIN_SIDED.has(c) && SIDES.find(x => x[0] === side);
+  return kinName(c) + (sd ? ', ' + sd[1].toLowerCase() : '');
+}
+const kinBtns = (list, cur, act) => list.map(([v, t]) => `<button type="button" class="opt${cur === v ? ' on' : ''}" data-${act}="${v}" aria-pressed="${cur === v}">${t}</button>`).join('');
+// Onboarding: Pai · Mãe · Avó · Outros à vista; "Outros" abre o resto; o lado só para parentes.
+let role = null, roleSide = null, roleMore = false;
+const ONB_MAIN = ['pai', 'mae', 'avoa'];
+function kinOnb() {
+  const inMore = role && !ONB_MAIN.includes(role), open = roleMore || inMore;
+  $('rolePick').innerHTML = kinBtns(KINS.filter(k => ONB_MAIN.includes(k[0])).sort((a, b) => ONB_MAIN.indexOf(a[0]) - ONB_MAIN.indexOf(b[0])), role, 'role')
+    + `<button type="button" class="opt${inMore ? ' on' : ''}" data-more="1" aria-pressed="${open}" aria-expanded="${open}">Outros</button>`;
+  $('roleMore').hidden = !open;
+  $('roleMore').innerHTML = kinBtns(KINS.filter(k => !ONB_MAIN.includes(k[0])), role, 'role');
+  $('sideBox').hidden = !KIN_SIDED.has(role);
+  $('sidePick').innerHTML = kinBtns(SIDES, roleSide, 'side');
+}
+$('scrName').addEventListener('click', e => {
+  const b = e.target.closest('[data-role],[data-side],[data-more]'); if (!b) return;
+  if (b.dataset.more) roleMore = !(roleMore || (role && !ONB_MAIN.includes(role)));
+  else if (b.dataset.role) { role = role === b.dataset.role ? null : b.dataset.role; if (!KIN_SIDED.has(role)) roleSide = null; }
+  else roleSide = roleSide === b.dataset.side ? null : b.dataset.side;
+  kinOnb();
 });
+kinOnb();
 // "Como você vai começar?" e o link do convite.
 $('startCreate').onclick = () => onbStart('start');
 $('startJoin').onclick = () => { err('errPaste'); show('scrPaste'); $('pasteIn').focus(); };
@@ -535,8 +563,10 @@ async function openFamily(fid) {
 async function loadNames(ids) {
   const missing = [...new Set(ids)].filter(id => id && !(id in st.names));
   if (!missing.length) return;
-  const { data } = await sb.from('profiles').select('id,display_name').in('id', missing);
-  for (const p of data || []) st.names[p.id] = p.display_name;
+  let { data, error } = await sb.from('profiles').select('id,display_name,caregiver,family_side').in('id', missing);
+  // Sem o 027 (colunas ausentes) o nome vem do mesmo jeito.
+  if (error) ({ data } = await sb.from('profiles').select('id,display_name').in('id', missing));
+  for (const p of data || []) { st.names[p.id] = p.display_name; st.kin[p.id] = [p.caregiver || null, p.family_side || null]; }
 }
 
 // Recarregar não esvazia a tela: os registros antigos ficam até os novos chegarem inteiros. O que
@@ -735,7 +765,7 @@ function renderHome() {
   $('babyName').textContent = b ? b.name : 'Sem bebê';
   $('babyInitial').textContent = (b ? b.name : '?').charAt(0).toUpperCase();
   $('babyAge').textContent = !b ? 'toque para cadastrar'
-    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ') || 'peso, remédios e marcos';
+    : [ageText(b.birth_date), st.weights.length ? kg(st.weights.at(-1).grams) : ''].filter(Boolean).join(' · ');
 
   const tabs = $('babyTabs');
   tabs.hidden = st.babies.length < 2;
@@ -900,6 +930,12 @@ $('sleepWin').addEventListener('click', e => {
 });
 // O aviso no celular: quem disse Sim no onboarding, e só com "Acompanhar o sono" ligado na família (item 65). Fica no perfil da pessoa
 // (sleep_alert, 024) e, sem o 024, só neste celular.
+/* Botão central das notificações (item 63, no item 75): vale só neste celular, numa chave só. Ausente = ligado;
+   '0' = desligado. Não mexe nas chaves de cada aviso (cad-janela, cad-lembrete, cad-medalert-<bebê>,
+   cad-tarefaalert-<bebê>): por isso, ao ligar de novo, cada aviso volta como estava. Desligado, nada é agendado
+   (as quatro rotinas de agendamento olham allOn()) e o que já estava agendado é cancelado. */
+const NOTIF_ALL = 'cad-avisos';
+const allOn = () => lsGet(NOTIF_ALL) !== '0';
 const winOn = () => lsGet('cad-janela') === '1' || (lsGet('cad-janela') == null && !!st.profile?.sleep_alert);
 async function setWinAlert(on, quiet) {
   lsSet('cad-janela', on ? '1' : '0');
@@ -919,7 +955,7 @@ async function winSync() {
     const now = Date.now(), evs = sortedEntries();
     const last = kinds => { for (let i = evs.length - 1; i >= 0; i--) if (kinds.includes(evs[i].kind)) return evs[i]; return null; };
     const { out, open: open0 } = sleepIntervals(evs), open = liveOpen(open0, now), w = lastWake(last, open, now);
-    const n = w && winOn() && st.track !== false && winNotice(w.t, winOf(b, out, now), b, ruleOf(b));
+    const n = w && winOn() && allOn() && st.track !== false && winNotice(w.t, winOf(b, out, now), b, ruleOf(b));
     const want = n && n.at > now + 5000 ? n.at + '|' + n.title + '|' + n.body : '';
     const key = 'cad-janela-at-' + b.id;
     if ((lsGet(key) || '') === want) return;
@@ -1465,7 +1501,7 @@ async function remSync(base) {
     await remCancel();
     lsSet('cad-lembrete-at', null);
     const b = st.baby;
-    if (!b || !remOn() || !(await notifGranted())) return;
+    if (!b || !remOn() || !allOn() || !(await notifGranted())) return;
     if (ANDROID) await medNotif.createChannel({ id: 'lembrete', name: 'Lembrete para anotar', importance: 3, visibility: 1 });
     const now = Date.now(), onb = onbList(b), onbDays = new Set(onb.map(x => startOfDay(x.t)));
     const slots = [];
@@ -1491,7 +1527,7 @@ async function remAfterEntry(e) {
     lsSet('cad-lembrete-1o', before ? '0' : String(Date.now()));
   }
   let asked = false;
-  if (remOn() && lsGet('cad-lembrete-pedido') == null) {
+  if (remOn() && allOn() && lsGet('cad-lembrete-pedido') == null) {
     lsSet('cad-lembrete-pedido', '1');
     const p = await notifPerm(); asked = p.asked;
     if (!p.ok) lsSet(REM, '0');
@@ -1663,10 +1699,10 @@ function confirmSave(btn, icon) {
 // Caixa de confirmação para apagar (e sair, remover): o primeiro toque abre a caixa, só o botão de
 // dentro age. Cancelar, Esc ou um toque fora fecham sem fazer nada.
 let askYes = null;
-function askConfirm(title, text, yes, onYes) {
+function askConfirm(title, text, yes, onYes, cls = 'go-del') {
   askYes = onYes;
   $('ask').innerHTML = `<div class="cbox" role="alertdialog" aria-modal="true" aria-labelledby="askT" aria-describedby="askP"><h3 id="askT">${esc(title)}</h3><p id="askP">${esc(text)}</p>
-    <div class="row2"><button class="ghost" data-ask="no">Cancelar</button><button class="go-del" data-ask="yes">${esc(yes)}</button></div></div>`;
+    <div class="row2"><button class="ghost" data-ask="no">Cancelar</button><button class="${cls}" data-ask="yes">${esc(yes)}</button></div></div>`;
   $('ask').hidden = false; $('ask').querySelector('[data-ask="no"]').focus();
 }
 function closeAsk() { $('ask').hidden = true; $('ask').innerHTML = ''; askYes = null; }
@@ -2508,7 +2544,7 @@ const medAlertsLater = () => { if (medNotif) { clearTimeout(alertTimer); alertTi
 async function medAlertsSync() {
   const b = st.baby; if (!medNotif || !b) return;
   try {
-    const now = Date.now(), ok = alertOn() && await notifGranted();
+    const now = Date.now(), ok = alertOn() && allOn() && await notifGranted();
     const want = (ok ? dosesFrom(now + 5000, now + ALERT_DAYS * DAY).filter(d => !d.e).slice(0, ALERT_MAX) : []).map(d => alertFor(d, b));
     if (ANDROID && want.length) await medNotif.createChannel({ id: 'remedio', name: 'Hora do remédio', importance: 4, visibility: 1, vibration: true });
     const { notifications: old } = await medNotif.getPending();
@@ -2867,7 +2903,7 @@ function taskSlotsFrom(a, z) {
 async function taskAlertsSync() {
   const b = st.baby; if (!medNotif || !b) return;
   try {
-    const now = Date.now(), ok = taskAlertOn() && await notifGranted();
+    const now = Date.now(), ok = taskAlertOn() && allOn() && await notifGranted();
     const want = (ok ? taskSlotsFrom(now + 5000, now + ALERT_DAYS * DAY).filter(x => !x.e && !isOff(x.id)).slice(0, TASK_ALERT_MAX) : []).map(x => taskAlertFor(x.r, x, b));
     if (ANDROID && want.length) await medNotif.createChannel({ id: 'tarefa', name: 'Hora da tarefa', importance: 4, visibility: 1, vibration: true });
     const { notifications: old } = await medNotif.getPending();
@@ -2965,7 +3001,7 @@ function pesoHtml() {
   const b = st.baby, all = st.measures;
   if (!st.growthOk) return '<div class="soft">Não foi possível carregar o peso e os marcos. Confira a conexão e abra de novo.</div>';
   let h = `<section class="card trp">${growthHtml()}</section><button class="ghost" data-act="newWeight">Anotar peso</button>`;
-  h += '<div class="sec"><h4>Pesos anotados</h4>' + (all.length
+  h += '<div class="sec"><h4>Anotado</h4>' + (all.length
     ? `<div class="recs">${all.slice().reverse().map(w => `<button class="rec" data-act="editWeight" data-val="${esc(w.id)}"><span><b>${esc(fullDate(w.measured_on))}</b><small>${esc([ageOn(b.birth_date, w.measured_on), w.note].filter(Boolean).join(' · '))}</small></span><span class="v">${esc(w.grams != null ? kg(w.grams) : cmText(w.cm))}${w.grams != null && w.cm != null ? `<small>${esc(cmText(w.cm))}</small>` : ''}</span></button>`).join('')}</div>`
     : '<div class="soft">Anote o peso e o comprimento de cada consulta ou pesagem.</div>') + '</div>';
   return h;
@@ -3341,6 +3377,28 @@ async function selectBaby(id) {
   st.entries = new Map(); st.meds = []; st.routines = []; st.measures = st.weights = st.lengths = []; st.milestones = []; st.questions = [];
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]); render();
 }
+// "Você é" no Perfil e em Família › Membros (item 75): o mesmo campo nos dois lugares, a lista completa à vista e
+// o lado para os parentes. Cada pessoa grava só o próprio (regra do banco, 027). Textos aprovados em 17/11.
+const myKin = () => [st.profile.caregiver || null, st.profile.family_side || null];
+function kinEditor() {
+  const [c, sd] = myKin(), ok = kinText(c, sd);
+  let h = '<div class="kinbox"><div class="lbl">Você é</div><p class="dim">Pode pular. Muda depois.</p>'
+    + `<div class="kins" role="group" aria-label="Você é">${kinBtns(KINS, c, 'kin').replace(/data-kin=/g, 'data-act="kin" data-val=')}</div>`;
+  if (KIN_SIDED.has(c)) h += `<div class="lbl">De que lado da família?</div><div class="kins" role="group" aria-label="De que lado da família?">${kinBtns(SIDES, sd, 'side').replace(/data-side=/g, 'data-act="kinSide" data-val=')}</div>`;
+  if (ok) h += `<p class="dim">Aparece para a família como: <b>${esc(ok)}</b></p>`;
+  return h + '</div>';
+}
+// Grava parentesco e lado juntos: ao trocar para um parentesco sem lado, o lado vai vazio (senão o banco recusa).
+async function saveKin(c, sd) {
+  if (!KIN_SIDED.has(c)) sd = null;
+  const before = myKin();
+  st.profile.caregiver = c || null; st.profile.family_side = sd || null; st.kin[st.user.id] = [c || null, sd || null];
+  render();
+  const { error } = await sb.from('profiles').update({ caregiver: c || null, family_side: sd || null }).eq('id', st.user.id);
+  if (!error) return;
+  [st.profile.caregiver, st.profile.family_side] = before; st.kin[st.user.id] = before; render();
+  toast('Não foi possível salvar. Confira a conexão e tente de novo.');
+}
 function renameSheet() {
   S = { mode: 'rename' };
   openPanel(head('Seu nome') + `<div><div class="lbl">Como você quer aparecer para a família?</div><input class="field" id="rName" maxlength="40" value="${esc(st.profile.display_name)}"></div>
@@ -3362,7 +3420,7 @@ async function saveName(btn) {
 // escolha entre bebês) e a fileira de atalhos; a Rotina; os Dados do bebê; Nossa família; sair ou apagar.
 // Prévia aprovada em 17/11: https://claude.ai/artifact/Kd41UYQRrJE8JZbpvJGMZS
 // O peso mora em Tendências › Peso (etapa 3): o número "último peso" leva até lá.
-const FP = { invite: null };   // o link de convite gerado
+const FP = { invite: null, kin: false };   // o link de convite gerado
 const NONE = 'Não informado';
 // Uma linha da Família: título, uma ou duas linhas pequenas embaixo e, à direita, o que o toque faz.
 function famRow(act, val, title, subs, go) {
@@ -3404,11 +3462,15 @@ function drawFamilyPane() {
     : `<div class="ptitle"><h2>${esc(f.name)}</h2></div><div class="soft">Cadastre o bebê da família para anotar o peso, os remédios e os marcos.</div>`;
   // Nossa família: o nome, os membros e o convite, os bebês e adicionar bebê.
   h += `<div class="sec fsec" id="famNossa"><h4>Nossa família</h4><div class="li"><span>Nome da família<small class="tsub">${esc(f.name)}</small><small class="tsub">Só quem criou muda</small></span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`;
+  // Cada membro com o parentesco ("Avó, lado da mãe"). "Você" abre o editor, o mesmo do Perfil; os outros só mostram.
   h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
-    const tags = (m.user_id === f.creator_id ? ' <small>criador</small>' : '') + (m.user_id === st.user.id ? ' <small>você</small>' : '');
-    const rm = creator && m.user_id !== st.user.id
-      ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">Remover</button>` : '';
-    return `<div class="li"><span>${esc(st.names[m.user_id] || 'Alguém')}${tags}</span>${rm}</div>`;
+    const kin = kinText(...(st.kin[m.user_id] || [])), crt = m.user_id === f.creator_id ? ' <small>criador</small>' : '';
+    if (m.user_id === st.user.id) {
+      return `<button class="li tg" data-act="kinOpen" aria-expanded="${!!FP.kin}"><span>Você${crt}<small class="tsub">${esc(kin || 'Toque para dizer quem você é na família')}</small></span><span class="go">${FP.kin ? 'Fechar' : 'Editar'}</span></button>`
+        + (FP.kin ? kinEditor() + '<button class="save" data-act="kinOpen">Pronto</button>' : '');
+    }
+    const rm = creator ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">Remover</button>` : '';
+    return `<div class="li"><span>${esc(st.names[m.user_id] || 'Alguém')}${crt}<small class="tsub">${esc(kin ? kin + '. ' : '')}Cada pessoa muda o próprio.</small></span>${rm}</div>`;
   }).join('');
   if (creator) h += FP.invite
     ? `<div class="invite">${esc(FP.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
@@ -3447,42 +3509,90 @@ async function saveFamName(btn) {
 // O que é só da pessoa: o nome, a aparência neste celular, as famílias de que participa, indicar o
 // Soneca, falar com quem cuida dele e desconectar.
 const THEMES = [['light', 'Claro'], ['dark', 'Escuro'], ['', 'Do celular']];
+// Notificações neste celular (item 63 no item 75; textos aprovados em 17/11): o botão central e um interruptor por
+// aviso. Os avisos de remédios e de tarefas são guardados por bebê; aqui valem para todos os bebês da família.
+const medAny = () => st.babies.some(b => lsGet(alertKey(b.id)) === '1');
+const taskAny = () => st.babies.some(b => lsGet(taskAlertKey(b.id)) === '1');
+function notifBlock() {
+  remCheck();
+  const all = allOn(), rem = remOn(), off = !all;
+  const row = (act, on, title, sub) => `<button class="li tg" role="switch" aria-checked="${on}" data-act="${act}"${act !== 'nAll' && off ? ' disabled' : ''}><span>${title}${sub ? `<small class="tsub">${sub}</small>` : ''}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+  const remSub = !rem && lsGet('cad-lembrete-auto') ? 'Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser.'
+    : 'Avisa depois de 3 horas sem registro feito neste celular. Entre 18h e 7h, não avisa. Vale só neste aparelho.';
+  return '<div class="sec"><h4>Notificações neste celular</h4>'
+    + row('nAll', all, 'Todas as notificações', 'Só neste celular. Os outros membros não mudam.')
+    + row('nWin', winOn(), 'Janela de sono') + row('nMed', medAny(), 'Remédios') + row('nTask', taskAny(), 'Tarefas')
+    + row('nRem', rem, 'Me lembrar de registrar', esc(remSub))
+    + '<p class="dim">Ao ligar de novo, cada aviso volta como estava.</p></div>';
+}
+// Se o iPhone ou o Android bloquear as notificações do Soneca, o toque leva aos ajustes do celular (item 63).
+// TEXTO PROVISÓRIO, NÃO APROVADO: o título e o botão abaixo (o corpo é NOTIF_DENIED, que já existia). Trocar
+// quando o Patrick aprovar. openSettings é um método novo do plugin nativo Mamada (iOS e Android).
+const NOTIF_BLOCK = { title: 'Notificações bloqueadas', go: 'Abrir ajustes' };
+function notifBlocked() {
+  askConfirm(NOTIF_BLOCK.title, NOTIF_DENIED, NOTIF_BLOCK.go, async () => {
+    try { await mamadaPlugin.openSettings(); } catch { toast(NOTIF_DENIED); }
+  }, 'save');
+  drawProfilePane();
+}
+async function cancelAllNotif() {
+  try {
+    const { notifications = [] } = await medNotif.getPending();
+    if (notifications.length) await medNotif.cancel({ notifications: notifications.map(n => ({ id: +n.id })) });
+  } catch {}
+  for (const b of st.babies) lsSet('cad-janela-at-' + b.id, null);
+  lsSet('cad-lembrete-at', null);
+}
+// Um interruptor de aviso: ligar pede a permissão se ainda não tem; bloqueada, mostra o caminho dos ajustes.
+async function notifSwitch(a) {
+  const on = { nWin: !winOn(), nMed: !medAny(), nTask: !taskAny(), nRem: !remOn() }[a];
+  if (on && !(await notifPerm()).ok) return notifBlocked();
+  if (a === 'nRem') return setReminder(on);
+  if (a === 'nWin') { await setWinAlert(on); drawProfilePane(); return; }
+  const key = a === 'nMed' ? alertKey : taskAlertKey;
+  for (const b of st.babies) lsSet(key(b.id), on ? '1' : '0');
+  drawProfilePane();
+  return a === 'nMed' ? medAlertsSync() : taskAlertsSync();
+}
+// O botão central. Ligar de novo religa só a chave central: cada aviso volta como estava.
+async function setAllNotif(on) {
+  if (on && !(await notifPerm()).ok) return notifBlocked();
+  lsSet(NOTIF_ALL, on ? null : '0');
+  drawProfilePane();
+  if (!on) return cancelAllNotif();
+  winSync(); medAlertsSync(); taskAlertsSync(); remSync(Date.now());
+}
 function drawProfilePane() {
   const theme = lsGet('cad-theme') || '';
+  // Ordem (item 75, aprovada em 17/11): Sobre você · Notificações · Aparência · Minhas famílias · Ajuda ·
+  // Privacidade · Conta. O bloco das notificações é reorganizado na etapa 5.
   let h = `<div class="ptitle"><h2>${esc(st.profile.display_name)}</h2><small>Seu nome e os ajustes que valem só para você</small></div>`;
-  h += `<div class="sec"><h4>Seu nome</h4><div class="li"><span>${esc(st.profile.display_name)}</span><button data-act="rename">Mudar</button></div></div>`;
+  h += `<div class="sec"><h4>Sobre você</h4><div class="li"><span>Seu nome<small class="tsub">Como você aparece para a família</small><small class="tsub">${esc(st.profile.display_name)}</small></span><button data-act="rename">Mudar</button></div>${kinEditor()}</div>`;
+  if (medNotif) h += notifBlock();
   h += `<div class="sec"><h4>Aparência</h4><div class="seg3" role="group" aria-label="Aparência">${THEMES.map(([v, t]) => `<button data-act="theme" data-val="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div>`
     + '<p class="dim">"Do celular" segue o modo noturno do celular. Vale só neste aparelho.</p></div>';
-  if (medNotif) {
-    remCheck();
-    const on = remOn();
-    h += `<div class="sec"><h4>Lembrete</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="reminder"><span>Lembrete para anotar</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`
-      + `<p class="dim">${!on && lsGet('cad-lembrete-auto') ? 'Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser.'
-          : 'Avisa depois de 3 horas sem registro feito neste celular. Entre 18h e 7h, não avisa. Vale só neste aparelho.'}</p></div>`;
-  }
-  h += '<div class="sec"><h4>Suas famílias</h4>' + st.families.map(x => x.id === st.family.id
-      ? `<div class="li"><span>${esc(x.name)} <small>aberta</small></span></div>`
+  h += '<div class="sec"><h4>Minhas famílias</h4>' + st.families.map(x => x.id === st.family.id
+      ? `<div class="li"><span>${esc(x.name)} <small>Aberta agora</small></span></div>`
       : `<div class="li"><span>${esc(x.name)}</span><button data-act="switchFam" data-val="${esc(x.id)}">Abrir</button></div>`).join('')
-    + '<button class="ghost" data-act="newFam">Criar outra família</button></div>';
-  h += '<div class="sec"><h4>Indicar o Soneca</h4>' +
-    `<div class="invite">${esc(new URL(LINK_BASE).host)}</div>` +
-    `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>` +
-    '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
-  h += '<div class="sec"><h4>Fale com quem cuida do Soneca</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button>'
+    + '<button class="ghost" data-act="newFam">Criar uma família nova</button></div>';
+  h += '<div class="sec"><h4>Ajuda</h4><button class="li tg" data-act="feedback"><span>Sugestões e problemas</span><span class="go">Escrever</span></button>'
     // Item 23: a linha fica sempre aqui, só no app. O link abre a loja (o celular tira do app).
     + (NATIVE ? `<a class="li" href="${STORE_URL}"><span>Avaliar o Soneca na ${STORE_NAME}</span><span class="go">Avaliar</span></a><p class="dim">${esc(RATE_TEXT)}</p>` : '')
-    + '</div>';
+    + '<div class="lbl" style="margin-top:12px">Indicar o Soneca</div>'
+    + `<div class="invite">${esc(new URL(LINK_BASE).host)}</div>`
+    + `<div class="row2">${navigator.share ? '<button class="ghost" data-act="shareApp">Compartilhar</button>' : ''}<button class="ghost" data-act="copyApp">Copiar texto</button></div>`
+    + '<div class="lbl">Para outra família com bebê. Quem abrir cria a própria família e não vê os registros desta.</div></div>';
   const mail = subject => `mailto:${PRIVACY_EMAIL}?subject=${encodeURIComponent(subject)}`;
   const ok = st.consents.filter(c => c.kind === 'terms').pop();
   h += '<div class="sec"><h4>Privacidade</h4>' +
     '<a class="li" href="/privacidade" target="_blank" rel="noopener"><span>Política de Privacidade</span><span class="go">Ler</span></a>' +
     '<a class="li" href="/termos" target="_blank" rel="noopener"><span>Termos de Uso</span><span class="go">Ler</span></a>' +
     `<a class="li" href="${mail('Cópia dos meus dados no Soneca')}"><span>Cópia dos seus dados</span><span class="go">Pedir</span></a>` +
-    `<a class="li" href="${mail('Privacidade no Soneca')}"><span>Falar com o encarregado</span><span class="go">Escrever</span></a>` +
+    `<a class="li" href="${mail('Privacidade no Soneca')}"><span>Contatar administração</span><span class="go">Escrever</span></a>` +
     `<p class="dim">Pedidos sobre seus dados: ${esc(PRIVACY_EMAIL)}. Respondemos em até 15 dias.` +
     (ok ? ` Você aceitou a versão ${esc(ok.version)} em ${new Date(ok.created_at).toLocaleDateString('pt-BR')}.` : '') + '</p></div>';
-  h += '<button class="ghost" data-act="logout">Desconectar deste celular</button>';
-  h += '<button class="danger-btn" data-act="delAccount">Apagar minha conta</button>';
+  h += '<div class="sec"><h4>Conta</h4><button class="ghost" data-act="logout">Desconectar deste celular</button>';
+  h += '<button class="danger-btn" data-act="delAccount">Apagar minha conta</button><p class="dim">Pede um segundo toque</p></div>';
   $('paneProfile').innerHTML = h;
 }
 // "Do celular" apaga a escolha: o app volta a seguir o modo noturno do aparelho.
@@ -3649,12 +3759,17 @@ async function paneAction(a, v, btn) {
   }
   // Perfil
   if (a === 'rename') return renameSheet();
+  if (a === 'kin') { const [c, sd] = myKin(); return saveKin(c === v ? null : v, c === v ? null : sd); }
+  if (a === 'kinSide') { const [c, sd] = myKin(); return saveKin(c, sd === v ? null : v); }
+  if (a === 'kinOpen') { FP.kin = !FP.kin; return render(); }
   if (a === 'theme') return setTheme(v);
   if (a === 'switchFam') return openFamily(v);
   if (a === 'newFam') return onbStart('profile');
   if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
+  if (a === 'nAll') return setAllNotif(!allOn());
+  if (['nWin', 'nMed', 'nTask', 'nRem'].includes(a)) return notifSwitch(a);
   if (a === 'reminder') return setReminder(!remOn());
   // Fora da conta, nenhum lembrete com o nome do bebê.
   if (a === 'logout') { await remCancel().catch(() => {}); await sb.auth.signOut(); location.href = '/'; }

@@ -559,6 +559,51 @@ mesmos, porque o texto cita os itens pelo número.
   volta ao topo. Sem texto novo. **Conferir no celular:** rolar em Sono com os cartões longos (a fileira
   fica no alto, sem cobrir o conteúdo), trocar de guia no meio da rolagem, e a fileira com Ordenha ligada
   e desligada; claro e escuro.
+  **Etapa 4 (Perfil, parentesco e lado, PR `claude/item-75-perfil-4a02f6`, 17/11, sem SQL novo; exige o
+  027 já rodado):** (a) **Onboarding**, tela do nome: "Você é" com Pai · Mãe · Avó · Outros; "Outros" abre
+  avô, tia, tio, prima, primo, babá e outro cuidador; para avó, avô, tia, tio, prima e primo vem "De que lado
+  da família?" (Lado da mãe, Lado do pai); "Pode pular. Muda depois." Substitui o Mãe · Pai · Outro
+  cuidador do 024; grava `caregiver` e `family_side` juntos, depois do nome. (b) **Perfil** na ordem Sobre
+  você · Notificações (bloco do lembrete, intacto) · Aparência · Minhas famílias · Ajuda · Privacidade ·
+  Conta; "Falar com o encarregado" virou "Contatar administração"; Política e Termos sem alteração
+  (decisão de 17/11; o parentesco é dado pessoal novo que ela ainda não cita). (c) **Família › Nossa
+  família › Membros**: cada um com o parentesco; "Você" abre o mesmo editor do Perfil, com "Pronto". Código
+  em `app.js` (`KINS`, `kinText`, `kinEditor`, `saveKin`, `kinOnb`, `drawProfilePane`). Cada toque grava na
+  hora; ao trocar para parentesco sem lado, o lado vai vazio. O texto "Para [nome do bebê]" da prévia ficou
+  de fora (o lado vale por pessoa) e a frase "Mais adiante, isso pode formar a árvore da família." não entra.
+  **Conferir no celular (iPhone e Android):** criar conta nova e escolher Pai, Mãe, Avó, e em Outros uma tia
+  com o lado; entrar por convite e responder; Perfil › Sobre você: trocar de avó (lado da mãe) para babá e
+  ver o lado sumir; Família › Membros: a linha "Você" abre e fecha com "Pronto", e os outros membros
+  aparecem com o parentesco (use duas contas); a linha "Contatar administração" abre o e-mail; claro e
+  escuro, a lista quebrando sem rolar para o lado em tela pequena.
+  **Etapa 5 (notificações por aviso, PR `claude/item-75-avisos-4a02f6`, 17/11, sem SQL; empilhado na etapa
+  4, porque as duas mexem no Perfil):** Perfil › "Notificações neste celular" com o botão central "Todas as
+  notificações" ("Só neste celular. Os outros membros não mudam.") e um interruptor por aviso: Janela de sono,
+  Remédios, Tarefas e "Me lembrar de registrar" (era "Anotar depois de 3 horas sem registro"), mais "Ao ligar
+  de novo, cada aviso volta como estava." O central fica numa chave só no celular, `cad-avisos` (ausente =
+  ligado, `'0'` = desligado), sem tocar em `cad-janela`, `cad-lembrete`, `cad-medalert-<bebê>` nem
+  `cad-tarefaalert-<bebê>`; as quatro rotinas de agendamento (`winSync`, `remSync`, `medAlertsSync`,
+  `taskAlertsSync`) olham `allOn()`, e desligar cancela tudo o que estava agendado. Remédios e Tarefas
+  (guardados por bebê) são ligados e desligados para todos os bebês da família. O "Agora não" do aviso da
+  janela no onboarding já desligava só esse aviso (`setWinAlert(false)`); nada mudou ali. Notificação
+  bloqueada pelo celular: o toque abre os ajustes, por um método novo `openSettings` do plugin nativo
+  `Mamada` (iOS: `MamadaPlugin.swift`; Android: `MamadaPlugin.java`), **que só vale em compilação nova**.
+  **Os interruptores mostram o estado de verdade, não "tudo ligado":** Janela de sono, Remédios e Tarefas só
+  ficam ligados depois de a pessoa dizer Sim (ou programar o primeiro remédio ou tarefa), como já era; só o
+  central e "Me lembrar de registrar" começam ligados. **Texto provisório, não aprovado**, em `NOTIF_BLOCK`
+  (`app.js`): o título "Notificações bloqueadas" e o botão "Abrir ajustes" (o corpo é a frase que já existia,
+  "Permita as notificações do Soneca nas configurações do celular.").
+  **Conferir no celular (iPhone e Android):** com as notificações bloqueadas nos ajustes do celular, ligar o
+  central ou um aviso e ver o aviso de bloqueio levar aos ajustes do Soneca (e voltar); desligar o central e
+  ver que nenhum aviso toca (remédio, tarefa, janela, lembrete); ligar de novo e ver cada um voltar como
+  estava; desligar só um aviso e ver os outros seguirem; com dois bebês, Remédios e Tarefas valendo para os
+  dois; a conta de outro membro sem mudança; claro e escuro.
+  **Dois ajustes de texto aprovados por Patrick (17/11, prévia 15), em commit à parte:** na guia Peso de
+  Tendências a lista antes chamada "Pesos anotados" passa a "Anotado", nas abas Peso e Comprimento; no cartão
+  do bebê no Diário some o texto de reserva "peso, remédios e marcos": sem nascimento nem peso a segunda linha
+  fica vazia (com idade e/ou peso, igual a antes). O `aria-label` do botão do bebê já dizia "Abrir a aba
+  Família: dados do bebê, rotina e família" (#109). **Conferir no celular:** o cartão do bebê sem nascimento
+  nem peso, e o título "Anotado" nas duas abas.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
@@ -651,7 +696,7 @@ Fralda continuam sempre completos, e a autorização da amamentação está na c
   usa e a cada versão nova; cartão "Dados do bebê e de saúde" ao criar a família, ao adicionar bebê e, nas
   famílias que já existem, para quem criou, antes de abrir; compromisso de quem entra por convite. Cada um
   vai para `consents` (só acrescenta; a prova fica mesmo depois de apagar a conta).
-- **Perfil › Privacidade:** política, termos, "Cópia dos seus dados" e "Falar com o encarregado" (abrem um
+- **Perfil › Privacidade:** política, termos, "Cópia dos seus dados" e "Contatar administração" (antes "Falar com o encarregado"; a Política ainda cita o nome antigo) (abrem um
   e-mail endereçado), e a versão aceita com a data.
 - **Sair da família sem deixar o nome:** quem sai ou é removido deixa registros, remédios, medidas, marcos e
   dúvidas na família sem autor (gatilho `member_left` do 015). O segundo toque de "Sair da família" avisa.
