@@ -553,6 +553,12 @@ mesmos, porque o texto cita os itens pelo número.
   arrastar para os lados no gráfico** (a página não pode rolar de lado nem travar); sem nascimento ou sem
   menina ou menino, só os pontos; com dois bebês, trocar e ver o peso de cada um; a Família sem a seção de
   peso; claro e escuro.
+  **Guias de Tendências fixas ao rolar (item 58, Patrick, 17/11, mesmo PR):** a fileira Sono · Mamadas · Fraldas ·
+  Ordenha · Peso fica presa no alto, abaixo da faixa segura do iPhone, com o fundo do tema (mesmo jeito dos
+  atalhos fixos da Família). Só ela fica fixa; Dia a dia | Semana a semana e os cartões rolam. Trocar de guia
+  volta ao topo. Sem texto novo. **Conferir no celular:** rolar em Sono com os cartões longos (a fileira
+  fica no alto, sem cobrir o conteúdo), trocar de guia no meio da rolagem, e a fileira com Ordenha ligada
+  e desligada; claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

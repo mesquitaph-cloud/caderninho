@@ -1143,7 +1143,7 @@ body.pull-back .ptr svg{transition:opacity .2s}
 .trh h2{display:flex;align-items:center;gap:8px;margin:0;font-family:var(--display);font-weight:500;font-size:24px;line-height:1.15}
 .trh h2 .capi{width:42px;height:auto;flex:none;stroke-width:1.6px}
 .trh>span{font-size:13px;color:var(--muted);text-align:right;min-width:0;overflow-wrap:anywhere}
-.trt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -24px;padding:2px 24px}
+.trt{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
 .trt::-webkit-scrollbar{display:none}
 .trt button{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:14px;white-space:nowrap}
 .trt button i{width:8px;height:8px;border-radius:50%}

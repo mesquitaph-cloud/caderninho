@@ -3845,7 +3845,7 @@ $('paneTrends').addEventListener('click', e => {
     if (a === 'newWeight') return logForm('weight');
     if (a === 'editWeight') return logForm('weight', st.measures.find(w => w.id === v));
   }
-  if ((x = g('[data-ttab]'))) { t.tab = x.dataset.ttab; t.info = null; return redrawTrends(`[data-ttab="${t.tab}"]`); }
+  if ((x = g('[data-ttab]'))) { t.tab = x.dataset.ttab; t.info = null; window.scrollTo(0, 0); return redrawTrends(`[data-ttab="${t.tab}"]`); }
   if ((x = g('[data-tmode]'))) { if (t.mode !== x.dataset.tmode) { t.mode = x.dataset.tmode; t.off = 0; t.sel = null; } return redrawTrends(`[data-tmode="${t.mode}"]`); }
   if ((x = g('[data-tnav]'))) { if (x.disabled) return; t.off = Math.max(0, t.off - +x.dataset.tnav); t.sel = null; return redrawTrends(`[data-tnav="${x.dataset.tnav}"]`); }
   if ((x = g('[data-ti]'))) { t.sel = +x.dataset.ti; return redrawTrends(); }
