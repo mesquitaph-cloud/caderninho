@@ -62,7 +62,7 @@ export function trendWindow(mode, off, now, first) {
 }
 
 // Números de cada dia d, da manhã de d até a manhã seguinte.
-function dayRows(days, evs, now, rule) {
+export function dayRows(days, evs, now, rule) {
   if (!days.length) return [];
   const { out, open } = sleepIntervals(evs), ivs = out.filter(([x, y]) => y - x <= MAX_SLEEP);
   const nmap = new Map(nights(days[0], addDays(days.at(-1), 1), evs, out, now, rule).map(n => [n.d, n]));
@@ -88,6 +88,7 @@ function dayRows(days, evs, now, rule) {
       nap: sum(naps, ([x, y]) => y - x), naps: naps.length,
       night: sum(ns, ([x, y]) => y - x), hasNight: ns.length > 0, whole,
       desp: n ? n.wakes.length : 0,
+      wk: n ? n.wakes.map(w => w.at - d) : [],                 // cada despertar, na hora do acordou, desde 0h de d
       bed: n && n.hasBed ? n.t0 - d : null,                     // desde 0h de d
       wake: n && n.hasBed && last > n.t0 ? last - d1 : null,     // desde 0h do dia seguinte
       longest: started.length ? Math.max(...started.map(([x, y]) => y - x)) : 0,
@@ -160,9 +161,9 @@ function band({ its, sel, week }) {
   its.forEach((it, i) => {
     const x = L + slot * i + (slot - bw) / 2;
     if (it.bed !== null && it.wake !== null) {
-      const a = Y(it.bed / HOUR), b = Y(24 + it.wake / HOUR), k = week ? 0 : it.desp;
+      const a = Y(it.bed / HOUR), b = Y(24 + it.wake / HOUR), wk = week ? [] : it.wk;
       s += `<g${it.nFew ? ' class="few"' : ''}><rect class="tb-night" x="${f1(x)}" y="${f1(a)}" width="${f1(bw)}" height="${f1(Math.max(1, b - a))}" rx="${f1(bw / 2)}"/>`;
-      if (bw >= 6) for (let q = 1; q <= k; q++) s += `<circle class="tb-dot" cx="${f1(x + bw / 2)}" cy="${f1(a + (b - a) * q / (k + 1))}" r="1.8"/>`;
+      if (bw >= 6) for (const t of wk) s += `<circle class="tb-dot" cx="${f1(x + bw / 2)}" cy="${f1(Y(t / HOUR))}" r="1.8"/>`;
       s += '</g>';
     }
     if (i === sel) s += selBox(x, bw, ch);

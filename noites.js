@@ -47,7 +47,7 @@ export function nights(a, z, evs, sleeps, now, rule = OLD_RULE) {
     const wakes = ns.flatMap(([x, y], i) => {
       if (!(x >= from && y >= from && y < w1 && ns[i + 1])) return [];
       const back = ns[i + 1][0], inWake = e => e.t >= y && e.t < back;
-      return [{ awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
+      return [{ at: y, awake: back - y, fed: feeds.some(inWake), syms: syms.filter(inWake).map(e => e.kind === 'vomit' ? 'Vômito' : SYMPTOM[e.symptom] || 'Outro') }];
     });
     if (bed === null) {
       out.push({ d, c, t0: ns[0][0], hasBed: false, ns, longest, wakes, late: null, bath: null, feedSoon: null, napGap: null, ml: null, breast: null, nap: null });
