@@ -175,7 +175,7 @@ if (CEN === 'app-convite') {
 
 // "app-remedio": finge o app do Android, com avisos de mentira guardados em window.avisos (pendentes)
 // e window.tocarAviso(n) para fingir o toque. Mais um remédio de 8 em 8 horas.
-if (CEN === 'app-remedio' || CEN === 'app-tarefas' || CEN === 'app-janela' || CEN === 'app-conta-nova') {
+if (CEN === 'app-remedio' || CEN === 'app-tarefas' || CEN === 'app-janela' || CEN === 'app-conta-nova' || CEN === 'onb-app') {
   const real = window.Capacitor, perm = { display: 'prompt' }, taps = [];
   window.avisos = [];
   window.tocarAviso = n => taps.forEach(f => f({ notification: n }));
@@ -190,7 +190,8 @@ if (CEN === 'app-remedio' || CEN === 'app-tarefas' || CEN === 'app-janela' || CE
   };
   window.Capacitor = { ...real, isNativePlatform: () => true, getPlatform: () => 'android',
     registerPlugin: name => name === 'LocalNotifications' ? LN : name === 'App'
-      ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }) }
+      ? { getLaunchUrl: async () => ({}), addListener: () => ({ remove() {} }), getInfo: async () => ({ version: '1.0.4', build: '1' }) }
+      : name === 'SocialLogin' ? { initialize: async () => ({}), login: async () => ({ result: { idToken: 'token-de-teste', profile: { givenName: 'Nova' } } }) }
       : new Proxy({}, { get: () => async () => ({}) }) };
   if (CEN === 'app-remedio' || CEN === 'app-tarefas') T.medicines.push({ id: 'm-2', family_id: T.medicines[0].family_id, baby_id: T.medicines[0].baby_id, name: 'Amoxicilina', amount: '5 ml',
     schedule: 'every', times: ['06:00:00', '14:00:00', '22:00:00'], every_hours: 8, start_date: ymd(NOW - DAY), days: 7, stopped_at: null,
@@ -334,11 +335,31 @@ if (CEN === 'carrossel') {
   ];
 }
 
+// Onboarding v02 (18/11), o login no fim. "onb-novo": sem conta, sem família (o onboarding inteiro; abra com
+// ?convite=teste-convite para o convite). "onb-app": o mesmo no "app do Android" (avisos em window.avisos, login
+// do Google pela janela do celular). "onb-sem-familia": já com conta, nome e aceite, sem família (perguntas sem a
+// tela de login). Para "conta com família" use o cenário "normal". Sem conta, o login de mentira guarda a sessão
+// na aba (sessionStorage 'teste-logado'): o Google "sai da página" de verdade (recarrega) e volta com a sessão.
+// window.escritas lista tudo o que seria gravado no banco (inserir, atualizar, apagar, funções): antes do login e
+// antes de "Criar família" tem de estar vazia. Senha do código por e-mail de mentira: 123456.
+const SEM_CONTA = CEN === 'onb-novo' || CEN === 'onb-app';
+window.escritas = [];
+const thenLog = Q.prototype.then;
+Q.prototype.then = function (ok, ko) { if (this.op !== 'select') window.escritas.push(this.t + ':' + this.op); return thenLog.call(this, ok, ko); };
+const logado = () => !SEM_CONTA || sessionStorage.getItem('teste-logado') === '1';
+const entrar = () => sessionStorage.setItem('teste-logado', '1');
+
 const baseClient = createClient;
 createClient = (...a) => {
   const c = baseClient(...a);
-  c.auth.getSession = async () => ({ data: { session: { user: { id: ME, email: ME + '@exemplo.com', user_metadata: {} } } } });
+  c.auth.getSession = async () => ({ data: { session: logado() ? { user: { id: ME, email: ME + '@exemplo.com', user_metadata: { full_name: SEM_CONTA ? 'Nova Pessoa' : '' } } } : null } });
+  c.auth.signInWithOtp = async () => ({ error: null });
+  c.auth.verifyOtp = async ({ token }) => token === '123456' ? (entrar(), { error: null }) : { error: { message: 'invalid' } };
+  c.auth.signInWithOAuth = async () => { entrar(); location.replace(location.pathname + '?volta=google'); return { error: null }; };
+  c.auth.signInWithIdToken = async () => { entrar(); return { error: null }; };
+  c.auth.updateUser = async () => { window.escritas.push('auth:updateUser'); return { error: null }; };
   c.rpc = async (name, args) => {
+    if (!/^invite_(info|baby)$/.test(name)) window.escritas.push('rpc:' + name);
     const r = RPC[name] ? RPC[name](args || {}) : null;
     if (r && (r.error || 'data' in r)) return { data: r.data ?? null, error: r.error ?? null };
     return { data: r, error: null };
@@ -366,7 +387,7 @@ if (CEN === 'tarefas' || CEN === 'app-tarefas') {
 // "conta-nova" (e "app-conta-nova", que finge o app do Android, com os avisos em window.avisos): conta
 // recém-criada, sem nome nem família, para passar por todas as telas. O convite "teste-convite" vale e
 // mostra a Família Andrade com a Helena. O que "Criar família" grava fica em T (window.testeT).
-if (CEN === 'conta-nova' || CEN === 'app-conta-nova') {
+if (CEN === 'conta-nova' || CEN === 'app-conta-nova' || CEN.startsWith('onb-')) {
   ME = 'u-nova';
   T.consents = [];
   const fam = T.families.splice(0), mem = T.family_members.splice(0), kids = T.babies.splice(0);
@@ -434,4 +455,10 @@ if (CEN === 'app-versao') {
         getInfo: async () => ({ version: P.get('instalada') || '1.0.3', build: '9' }) }
       : new Proxy({}, { get: () => async () => ({}) }) };
   if (P.get('semtabela') !== '1') T.app_versions = [{ platform: 'android', latest: '1.0.5' }, { platform: 'ios', latest: '1.0.5' }];
+}
+
+// "onb-sem-familia": a conta que já tem nome e aceite dos Termos, mas nenhuma família (depois do bloco da conta nova).
+if (CEN === 'onb-sem-familia') {
+  T.profiles.push({ id: ME, display_name: 'Nova' });
+  T.consents.push({ kind: 'terms', version: '1.3', family_id: null, created_at: '2026-10-13T12:00:00Z' });
 }

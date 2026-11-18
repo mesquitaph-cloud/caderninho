@@ -1302,3 +1302,40 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .nchips{display:flex;flex-wrap:wrap;gap:8px}
 .nchips .opt{min-width:56px;text-align:center;padding-inline:12px;font-variant-numeric:tabular-nums}
 .nchips .opt.on{border-color:var(--ink);background:var(--surface2)}
+
+/* Onboarding v02 (18/11): Boas-vindas, "Quem fez o Soneca", gancho do sono, janela de sono, "está dormindo" e o
+   login no fim. Títulos centralizados; a capivara ocupa o espaço em branco quando a tela não tem outra. */
+.screen.mid,#scrOnb{min-height:calc(100dvh - 72px)}
+.midin{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px}
+.midin .capi{width:120px;height:auto;stroke-width:2px;overflow:visible}
+.midin .capi.big{width:150px}
+.midin h1{max-width:18ch}
+.midin p{max-width:30ch}
+#scrOnb h1,#scrWelcome h1,.lgflow h1{text-align:center}
+.screen p.sub,.screen p.cn{text-align:center}
+.lgflow{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.lgflow .capi{width:84px;height:auto;stroke-width:2.25px}
+.onbcapi{display:flex;justify-content:center;margin-top:auto;padding:24px 0 8px}
+.onbcapi .capi{width:110px;height:auto;stroke-width:1.9px}
+.whoblk{display:flex;flex-direction:column;gap:8px}
+.screen p.whol{text-align:center;color:var(--ink);font-weight:500}
+.whoc{display:flex;align-items:center;gap:14px;padding:12px 14px}
+.whoc img{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none}
+.whoc div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.whoc span,.whohow span{font-size:14px;color:var(--muted)}
+.whoc b,.whohow b,.onbslp b{font-weight:500}
+.whohow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.whohow .card{display:flex;flex-direction:column;gap:4px;padding:12px}
+.hw.onbwin{padding:12px 14px 6px;gap:4px}
+.onbwin .hwt{font-size:17px}
+.screen .onbwarn{background:var(--diaper);color:var(--diaper-ink);border-radius:14px;padding:10px 12px;font-size:14px}
+.onbz .capi{width:130px;height:auto;stroke-width:2px;overflow:visible}
+.onbz .z{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion:no-preference){.onbz .z1{animation:z1 3.2s ease-in-out infinite}.onbz .z2{animation:z2 3.2s ease-in-out infinite}}
+.onbslp{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--sleep);color:var(--sleep-ink);border:none;padding:12px 18px}
+.onbslp span{font-size:14px}
+.legalp{font-size:14px;text-align:center;padding-top:6px}
+.legalp a{color:var(--link);font-weight:500;text-underline-offset:2px}
+.kinblk{display:flex;flex-direction:column;gap:8px}
+.kinblk .kins{margin-top:0}
+.midin b,.onbwin b{font-weight:500}

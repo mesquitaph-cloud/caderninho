@@ -85,3 +85,12 @@ Arquivos: `termos/1.0.html` e `privacidade/1.0.html` (texto guardado sem mudanç
 5. Se a mudança tirar direitos, avisar 30 dias antes (Termos, seção 9) e pedir o aceite. Se só
    acrescentar direitos, pode valer já.
 6. Mandar ao advogado e anotar a data da revisão aqui.
+
+## Onde o aceite é registrado (onboarding v02, 18/11)
+
+- **Termos (`terms`):** a frase do login, "Ao continuar, você aceita a Política de Privacidade e os Termos de
+  Uso.", vale como o aceite. O toque em qualquer botão de entrar grava a marca `cad-login-aceite` no aparelho
+  e, depois do login, o app grava `consents` (`terms`, versão `TERMS_VERSION`). Quem já tem conta e abre o app
+  numa versão nova dos Termos continua vendo a tela de aceite ("A Política e os Termos mudaram").
+- **Dados do bebê (`baby`):** a caixa de "Quase pronto" (ou do convite), como antes.
+- As Boas-vindas não pedem mais o aceite. **Ao mudar a versão**, a frase do login não muda; só sobe `TERMS_VERSION`.
