@@ -18,9 +18,21 @@
 <!-- Carregando -->
 <section class="screen" id="scrLoading"><p>Abrindo o Soneca…</p></section>
 
+<!-- Boas-vindas (onboarding v02, 18/11): a primeira tela de quem não tem conta nem respostas guardadas. Sem login e sem nome. -->
+<section class="screen mid" id="scrWelcome" hidden>
+  <div class="midin"><svg class="capi big" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>
+    <h1>Bem-vindo ao Soneca</h1>
+    <p>Anote o dia do seu bebê e veja a rotina num só lugar.</p></div>
+  <button class="save" type="button" id="wStart">Começar</button>
+  <button type="button" class="link" id="wLogin">Já tenho conta</button>
+</section>
+
 <!-- Login -->
 <section class="screen" id="scrLogin" hidden>
-  <h1 class="brand"><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>Soneca</h1>
+  <!-- No fim do onboarding (v02): seta de voltar, passos e o título com o nome do bebê. Fora do onboarding ("Já tenho conta", convite), o logo de sempre. -->
+  <div class="onbtop" id="loginTop" hidden><button type="button" class="back" id="loginBack" aria-label="Voltar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button><div class="onbsteps" id="loginDots"></div></div>
+  <div class="lgflow" id="loginFlow" hidden><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg><h1 id="loginH"></h1><p>Entre para salvar o que você respondeu e usar o Soneca em mais de um celular.</p></div>
+  <h1 class="brand" id="loginBrand"><svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>Soneca</h1>
   <div class="sso" id="sso" hidden>
     <button type="button" class="apple" id="appleBtn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-4.28 2.797-6.55 5.552-6.55 1.448 0 2.675.95 3.6.95.865 0 2.222-1.01 3.902-1.01.613 0 2.886.06 4.374 2.19-.13.09-2.383 1.37-2.383 4.19 0 3.26 2.854 4.42 2.955 4.45z"/></svg>Continuar com a Apple</button>
     <button type="button" class="google" id="googleBtn"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Continuar com o Google</button>
@@ -47,33 +59,19 @@
     <button class="save" type="submit">Entrar</button>
     <button type="button" class="link" id="backPass">Usar outro e-mail</button>
   </form>
-  <p class="legal"><a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a><a href="/termos" target="_blank" rel="noopener">Termos de Uso</a></p>
+  <p class="legalp">Ao continuar, você aceita a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a> e os <a href="/termos" target="_blank" rel="noopener">Termos de Uso</a>.</p>
 </section>
 
-<!-- Boas-vindas: nome de exibição e "Você é" (itens 47 e 57; textos aprovados em 13/11) -->
+<!-- Nome e "Você é" de quem entra por convite e ainda não tem perfil (itens 47 e 57; textos aprovados em 13/11) -->
 <section class="screen" id="scrName" hidden>
   <h1>Boas-vindas ao Soneca</h1>
   <form id="fName">
     <div><div class="lbl">Seu nome</div><input class="field" id="nameIn" maxlength="40" placeholder="Patrick" required aria-label="Seu nome"></div>
-    <!-- "Você é" (itens 47 e 75; prévia aprovada em 17/11): Pai · Mãe · Avó · Outros; "Outros" abre o resto; o lado só para parentes. Os botões vêm de app.js (kinOnb). -->
-    <div><div class="lbl" id="roleLbl">Você é</div>
-      <div class="pick4" id="rolePick" role="group" aria-labelledby="roleLbl"></div>
-      <div class="kins" id="roleMore" role="group" aria-label="Outros" hidden></div>
-      <div id="sideBox" hidden><div class="lbl" id="sideLbl">De que lado da família?</div><div class="pick2" id="sidePick" role="group" aria-labelledby="sideLbl"></div></div>
-      <p class="dim" id="roleNote">Pode pular. Muda depois.</p></div>
-    <label class="chk"><input type="checkbox" id="okName"><span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><span>Li a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a> e os <a href="/termos" target="_blank" rel="noopener">Termos de Uso</a> do Soneca. Se tenho menos de 18 anos, uso com autorização do meu responsável.</span></label>
+    <!-- "Você é" (itens 47 e 75; prévia aprovada em 17/11): o bloco vem de app.js (kinHtml). Só para quem entra por convite sem ter perfil; quem cria família responde em "Quase pronto". O aceite da Política e dos Termos é o do login. -->
+    <div id="kinSlot"></div>
     <p class="err" id="errName" hidden></p>
     <button class="save" type="submit">Continuar</button>
   </form>
-</section>
-
-<!-- Criar ou entrar (prévia 3, aprovada em 13/11) -->
-<section class="screen" id="scrStart" hidden>
-  <h1>Como você vai começar?</h1>
-  <div class="big">
-    <button type="button" id="startCreate"><span class="bt"><b>Criar uma família</b><small>Para anotar a rotina do seu bebê</small></span></button>
-    <button type="button" id="startJoin"><span class="bt"><b>Entrar numa família</b><small>Recebi um convite de quem já usa</small></span></button>
-  </div>
 </section>
 
 <!-- Link do convite colado: para quem abriu o link no navegador ou numa versão antiga do app (Ca, 17/10) -->

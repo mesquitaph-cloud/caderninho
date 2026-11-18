@@ -618,6 +618,49 @@ mesmos, porque o texto cita os itens pelo número.
   `testes/novidades.mjs`. **Conferir no celular (iPhone e Android, compilação nova):** atualizar da 1.0.3 e ver
   o cartão uma vez, fechar e reabrir sem ele; instalação nova com onboarding sem ele; com o aviso de versão
   nova do item 72 pendente, só o cartão de novidades aparece primeiro; claro e escuro.
+- **78 · Login no fim do onboarding** (Patrick, aprovado em 18/11; nota do vault "Onboarding v02 - resumo
+  para programar"; PR `claude/onboarding-v02-0e1cd1`; **sem SQL**). A ordem agora é Boas-vindas (capivara,
+  "Começar" · "Já tenho conta", sem nome nem aceite) → perguntas do bebê e do sono → **Login** →
+  "Quase pronto" (seu nome, "Você é" com o lado da família, nome da família e o quadro "Dados do bebê e de
+  saúde") → tela inicial. **Nada vai ao Supabase antes do login e não se cria conta anônima**; até
+  "Criar família" as respostas ficam só no aparelho, na chave `cad-onb` (`onboarding.js`: `onbSave`,
+  `onbLoad`; a cada passo, sobrevivem a fechar o app). O Google na web sai da página: ao voltar, o `boot`
+  lê as respostas e retoma em "Quase pronto"; o código por e-mail e o Google/Apple pelos plugins do celular
+  fazem o mesmo. **Rota de entrada** (função `entryRoute`, com testes): sem conta e sem respostas =
+  Boas-vindas; sem conta e com respostas = volta à etapa; com conta e família = tela inicial (descarta as
+  respostas); com conta e sem família = perguntas sem a tela de login, depois "Quase pronto"; convite pelo
+  link = login primeiro e "Entrar na família", sem a tela 4 nem as perguntas do bebê (quem não tem perfil
+  vê antes só nome e "Você é", sem o aceite). **Aceite:** a frase do login ("Ao continuar, você aceita a
+  Política de Privacidade e os Termos de Uso.") vale como o aceite dos Termos: o toque num botão de entrar
+  grava a marca `cad-login-aceite` e, depois do login, o app grava `consents` (`terms`, versão vigente,
+  `VERSOES-TERMOS.md`); "Quase pronto" mantém o aceite dos dados do bebê (`baby`). O lembrete da janela
+  (tela 7) e a permissão ficam no aparelho (`cad-janela`); a preferência `sleep_alert` só é gravada depois
+  do login. Telas "Como você vai começar?" (`scrStart`) e o nome/aceite das Boas-vindas saíram; quem já
+  tem conta e ainda não tem família entra num convite por "Entrar numa família", embaixo da 1ª pergunta.
+  Testes: `testes/onboarding.mjs` (lógica, no Node) e `testes/onboarding-rotas.mjs` (Chrome de verdade,
+  cenários `onb-novo`, `onb-app` e `onb-sem-familia` de `cenarios.js`; `window.escritas` lista tudo o que
+  seria gravado).
+- **79 · Tela "Quem fez o Soneca"** (aprovada em 18/11). Só para quem começa por "Começar" (não aparece para
+  convite nem para "Já tenho conta"), antes do gancho do sono: título, subtítulo, "Feito por um médico que
+  também é pai" com o cartão do Dr. Patrick Harris (foto `icons/dr-patrick.jpg`, 200 px, 7 KB, gerada de
+  `Dr Patrick Harris.png` do vault; Médico de família, CRM-SP 192.379 · RQE 92.300) e "Como a janela de
+  sono é calculada" (1 · A idade, 2 · O próprio bebê; dele/dela concorda com o gênero, sem gênero "do bebê").
+  **Pendente fora do código:** conferir a norma de publicidade médica do CFM sobre mostrar especialidade,
+  CRM e RQE.
+- **80 · Acordada ou dormindo no onboarding** (aprovado em 18/11). Tela 6 "A Marina está acordada ou
+  dormindo agora?" com dois ramos. **Acordada:** "Quando ela acordou da última soneca?", duração da última
+  soneca (guardada só no aparelho, `cad-ultsoneca-<bebê>`; ainda não muda a conta), começo da noite (18h a
+  22h, **marcado 20h** como na prévia; antes era 18h, constante `ONB_NIGHT_DEFAULT`), e a tela 7 com a
+  frase curta "A próxima janela de sono começa em X e termina às Y" + régua, sem texto de referência, o
+  aviso amarelo da soneca tardia (**regra provisória**: hora da noite menos 3 h, constante `NAP_WARN_HOURS`
+  em `onboarding.js`; o Patrick ainda vai definir) e o lembrete. **Dormindo:** "Dormiu às" (vazio = 30
+  minutos atrás), a tela "A Marina está dormindo" e, na tela inicial, a faixa "Dormindo há" com o botão
+  Acordou (o sono vira o primeiro registro). **Pular** (6, 6A, 6B) não registra nada e vai ao login; a tela
+  inicial abre sem faixa de janela. Títulos centralizados e capivara no espaço em branco. **Conferir no
+  celular (TestFlight e Android):** o fluxo inteiro com Apple e Google pela janela do celular; fechar e
+  reabrir o app no meio e na tela de login; o Google na web (redirecionamento); permissão de notificação
+  no "Sim" do lembrete (negar e seguir); "Já tenho conta" com conta sem família; convite pelo link com o
+  app instalado; claro e escuro.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,

@@ -36,12 +36,24 @@ parentesco ("Avó, lado da mãe") e só cada um muda o próprio. Ao trocar para 
 manda o lado vazio junto (o banco recusa a combinação errada).
 _Evite_: papel, tipo de usuário, relação
 
-**Onboarding** (13/11):
-As telas de quem acabou de entrar, uma pergunta por tela: boas-vindas (nome e "Você é"), "Como você vai
-começar?" (criar uma família ou entrar numa), e, para quem cria, sobre o bebê, como mama, o que vai na
-mamadeira, outros alimentos, sono e criar a família. Nada é gravado antes de "Criar família". A idade só
-decide quais perguntas aparecem, nunca o que a família deve fazer.
+**Onboarding** (13/11; v02 em 18/11, itens 78 a 80):
+As telas de quem acabou de entrar, uma pergunta por tela: Boas-vindas ("Começar" ou "Já tenho conta"), sobre o
+bebê, como mama, o que vai na mamadeira, outros alimentos, **Quem fez o Soneca**, o gancho do sono, "acordada
+ou dormindo agora?", a janela de sono (ou "está dormindo"), o **login** e **Quase pronto** (nome, "Você é",
+nome da família e o aceite dos dados do bebê). O login vem no fim: até "Criar família" nada é gravado no
+banco e não existe conta anônima. A idade só decide quais perguntas aparecem, nunca o que a família deve fazer.
 _Evite_: cadastro, tutorial, configuração inicial
+
+**Respostas guardadas** (18/11):
+As respostas do onboarding antes de "Criar família": ficam só no aparelho (chave `cad-onb`), por etapa, e
+sobrevivem a fechar o app e ao login do Google/Apple, que sai da página. Quem já tem família as descarta.
+_Evite_: rascunho, cadastro parcial
+
+**Quem fez o Soneca** (18/11):
+Tela do onboarding, só para quem começa por "Começar": o Dr. Patrick Harris (médico de família, CRM-SP 192.379 ·
+RQE 92.300) e como a janela de sono é calculada (a idade; depois, o próprio bebê). Não aparece para convite
+nem para "Já tenho conta".
+_Evite_: sobre nós, apresentação
 
 **Convite**:
 Link que o criador gera para uma única pessoa entrar na família; vale 7 dias ou até ser usado.
@@ -195,8 +207,8 @@ fixa, e o aviso da janela de sono continua só entre 6h e 18h.
 _Evite_: hora ideal de dormir, horário certo, rotina recomendada
 
 **Acompanhar o sono** (13/11, item 65):
-O interruptor da família toda (aba Família, Nossa família › Sono; no onboarding, "Quer que o Soneca acompanhe o sono
-da Marina com você?"). Liga e desliga só a **janela de sono**: a faixa no cartão do bebê e o aviso no
+O interruptor da família toda (aba Família, Nossa família › Sono; no onboarding v02 não há mais pergunta
+própria: fica ligado). Liga e desliga só a **janela de sono**: a faixa no cartão do bebê e o aviso no
 celular (que também depende do Sim de cada pessoa). Desligado, a noite do bebê continua à vista, editável
 e usada em Tendências e nos resumos. Ligado por padrão.
 _Evite_: ajuda com o sono, otimizar o sono, treinar o sono

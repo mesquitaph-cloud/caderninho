@@ -13,11 +13,13 @@ import { NOV_KEY, novFor, novHtml as novCardHtml } from './novidades.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
+import { ONB_KEY, LOGIN_FLAG, NAP_LENGTHS, blank, onbSave, onbLoad, onbClear, hasAnswers, entryRoute, onbSteps, resumeStep, nextStep, prevStep, skipSleep,
+         clk, sleepStart, wakeStart, windowInfo, minutosText, napWarnText } from './onboarding.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
-const SCREENS = ['scrLoading','scrLogin','scrName','scrStart','scrPaste','scrTerms','scrBabyOk','scrInvite','scrOnb','scrMain'];
+const SCREENS = ['scrLoading','scrWelcome','scrLogin','scrName','scrPaste','scrTerms','scrBabyOk','scrInvite','scrOnb','scrMain'];
 const KEEP_DAYS = 60;
 // Política de Privacidade e Termos de Uso (/privacidade e /termos). Ao mudar o texto, sobe a versão:
 // todos veem a tela de aceite de novo na próxima abertura.
@@ -82,33 +84,53 @@ async function boot() {
   // Voltou do Google sem entrar (cancelou ou deu erro): o endereço traz "#error=...".
   const googleFailed = /[#&]error/.test(location.hash);
   const { data: { session } } = await sb.auth.getSession();
+  // Onboarding v02 (18/11): o login vem no fim das perguntas, e as respostas ficam só neste aparelho.
+  // A decisão de para onde ir está em onboarding.js (entryRoute), com testes.
+  const saved = onbLoad(), inv = lsGet('cad-invite');
   if (!session) {
-    if (googleFailed) { history.replaceState(null, '', location.pathname + location.search); err('errSso', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.'); }
-    show('scrLogin'); if (gone) toast('Conta apagada'); return;
+    st.user = null;
+    if (googleFailed) history.replaceState(null, '', location.pathname + location.search);
+    const r = entryRoute({ session: false, invite: !!inv, saved });
+    if (r === 'resume') {
+      onbRestore(saved);
+      if (googleFailed && O.k === 'login') err('errSso', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.');
+    } else if (r === 'welcome' && !googleFailed && !gone) show('scrWelcome');
+    else {
+      showLogin(false);
+      if (googleFailed) err('errSso', 'Não foi possível entrar com o Google. Tente de novo ou use o código por e-mail.');
+      if (gone) toast('Conta apagada');
+    }
+    return;
   }
   st.user = session.user;
 
+  // A frase do login ("Ao continuar, você aceita a Política e os Termos") vale como aceite: gravado agora,
+  // com a versão vigente (VERSOES-TERMOS.md). A marca só some quando o aceite está gravado.
+  await loadConsents();
+  if (lsGet(LOGIN_FLAG)) {
+    if (hasConsent('terms') || await addConsent('terms')) lsSet(LOGIN_FLAG, null);
+  }
   // select('*'): o "Você é" e o aviso da janela de sono (024) vêm junto quando existem.
   const { data: prof } = await sb.from('profiles').select('*').eq('id', st.user.id).maybeSingle();
-  if (!prof) {
+  if (prof) { st.profile = prof; st.names[prof.id] = prof.display_name; st.kin[prof.id] = [prof.caregiver || null, prof.family_side || null]; }
+  await loadFamilies();
+
+  const r = entryRoute({ session: true, profile: !!prof, terms: hasConsent('terms'), invite: !!inv, families: st.families.length, saved });
+  if (r === 'terms') return showTerms();
+  if (r === 'name') {
     // Quem entrou pelo Google ou pela Apple já vem com o nome; dá para trocar antes de continuar.
     const meta = st.user.user_metadata || {};
     if (!$('nameIn').value) $('nameIn').value = String(meta.full_name || meta.name || '').trim().slice(0, 40);
-    show('scrName'); $('nameIn').focus(); return;
+    kinDraw($('kinSlot')); show('scrName'); $('nameIn').focus(); return;
   }
-  st.profile = prof; st.names[prof.id] = prof.display_name; st.kin[prof.id] = [prof.caregiver || null, prof.family_side || null];
-
-  await loadConsents();
-  if (!hasConsent('terms')) return showTerms();
-
-  const inv = lsGet('cad-invite');
-  if (inv) return showInvite(inv);
-
-  await loadFamilies();
-  // Sem família: "Como você vai começar?" (criar uma ou entrar por convite).
-  if (!st.families.length) return show('scrStart');
-  const saved = lsGet('cad-family');
-  await openFamily((st.families.find(f => f.id === saved) || st.families[0]).id);
+  if (r === 'invite') return showInvite(inv);
+  if (r === 'home') {
+    onbClear();   // quem já tem família não precisa das respostas guardadas
+    const savedFam = lsGet('cad-family');
+    return openFamily((st.families.find(f => f.id === savedFam) || st.families[0]).id);
+  }
+  // Com conta e sem família: as perguntas, sem a tela de login, e depois "Quase pronto".
+  if (hasAnswers(saved)) onbRestore(saved); else onbStart('start', 'conta');
 }
 
 async function loadFamilies() {
@@ -119,8 +141,26 @@ async function loadFamilies() {
 
 /* ---------- login ---------- */
 let loginEmail = '';
+// A tela de login. No fim do onboarding (flow), com a seta de voltar, os passos e o título com o nome do
+// bebê; fora dele ("Já tenho conta", convite, conta apagada), o logo de sempre. fromWelcome: dá para voltar às Boas-vindas.
+function showLogin(flow, fromWelcome) {
+  const inFlow = !!(flow && O);
+  $('loginFlow').hidden = !inFlow; $('loginBrand').hidden = inFlow;
+  $('loginTop').hidden = !(inFlow || fromWelcome);
+  $('loginBack').onclick = inFlow ? () => onbGo(-1) : () => show('scrWelcome');
+  if (inFlow) {
+    $('loginH').textContent = 'Guarde a rotina ' + deName({ name: O.name, sex: O.sex });
+    $('loginDots').innerHTML = dotsHtml(onbSteps(O, { session: false, months: monthsOld(O.birth, Date.now()) }), 'login');
+  } else $('loginDots').innerHTML = '';
+  $('fEmail').hidden = false; $('fCode').hidden = true; $('fPass').hidden = true;
+  err('errEmail'); err('errSso');
+  show('scrLogin');
+}
+// Tocou num botão de entrar: a frase "Ao continuar, você aceita..." vale como aceite, gravado depois do
+// login (a marca sobrevive ao redirecionamento do Google). Nada vai ao banco antes de existir conta.
+const loginMark = () => lsSet(LOGIN_FLAG, '1');
 $('fEmail').addEventListener('submit', async e => {
-  e.preventDefault(); err('errEmail');
+  e.preventDefault(); err('errEmail'); loginMark();
   const btn = e.submitter; busy(btn, true);
   loginEmail = $('emailIn').value.trim().toLowerCase();
   if (await isDemoEmail(loginEmail)) {
@@ -219,7 +259,7 @@ async function nonces() {
 }
 
 async function nativeLogin(provider, btn) {
-  err('errSso'); busy(btn, true);
+  err('errSso'); busy(btn, true); loginMark();
   try {
     // No Android, o Google pede o ID do cliente Web (o cliente Android só existe no Google Cloud, ligado
     // à assinatura do app); no iPhone, o do cliente iOS.
@@ -256,19 +296,19 @@ async function nativeLogin(provider, btn) {
 $('appleBtn').onclick = () => nativeLogin('apple', $('appleBtn'));
 $('googleBtn').onclick = async () => {
   if (NATIVE) return nativeLogin('google', $('googleBtn'));
-  err('errSso'); busy($('googleBtn'), true);
+  err('errSso'); busy($('googleBtn'), true); loginMark();
   const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/' } });
   if (error) { busy($('googleBtn'), false); err('errSso', 'Não foi possível abrir o Google. Confira a conexão e tente de novo.'); }
 };
 
-/* ---------- nome de exibição ---------- */
+/* ---------- nome de exibição (só para quem entra por convite sem ter perfil) ---------- */
+// Quem cria uma família responde nome e "Você é" em "Quase pronto". Aqui, o convite: o aceite da Política e
+// dos Termos já foi o da frase do login.
 $('fName').addEventListener('submit', async e => {
   e.preventDefault(); err('errName');
   const name = $('nameIn').value.trim();
   if (!name) return err('errName', 'Escreva como você quer aparecer.');
-  if (!$('okName').checked) return err('errName', 'Para continuar, marque que leu a Política e os Termos.');
   const btn = e.submitter; busy(btn, true);
-  if (!await addConsent('terms')) { busy(btn, false); return err('errName', 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.'); }
   const { error } = await sb.from('profiles').insert({ id: st.user.id, display_name: name });
   if (error) { busy(btn, false); return err('errName', errMsg(error)); }
   // "Você é" vai à parte: sem o 027, o nome salva do mesmo jeito.
@@ -291,30 +331,37 @@ function kinText(c, side) {
   return kinName(c) + (sd ? ', ' + sd[1].toLowerCase() : '');
 }
 const kinBtns = (list, cur, act) => list.map(([v, t]) => `<button type="button" class="opt${cur === v ? ' on' : ''}" data-${act}="${v}" aria-pressed="${cur === v}">${t}</button>`).join('');
-// Onboarding: Pai · Mãe · Avó · Outros à vista; "Outros" abre o resto; o lado só para parentes.
+// Onboarding: Pai · Mãe · Avó · Outros à vista; "Outros" abre o resto; o lado só para parentes. O mesmo
+// bloco serve ao "Quase pronto" e à tela do convite (kinSlot); o estado é um só (role, roleSide, roleMore).
 let role = null, roleSide = null, roleMore = false;
 const ONB_MAIN = ['pai', 'mae', 'avoa'];
-function kinOnb() {
+function kinHtml() {
   const inMore = role && !ONB_MAIN.includes(role), open = roleMore || inMore;
-  $('rolePick').innerHTML = kinBtns(KINS.filter(k => ONB_MAIN.includes(k[0])).sort((a, b) => ONB_MAIN.indexOf(a[0]) - ONB_MAIN.indexOf(b[0])), role, 'role')
-    + `<button type="button" class="opt${inMore ? ' on' : ''}" data-more="1" aria-pressed="${open}" aria-expanded="${open}">Outros</button>`;
-  $('roleMore').hidden = !open;
-  $('roleMore').innerHTML = kinBtns(KINS.filter(k => !ONB_MAIN.includes(k[0])), role, 'role');
-  $('sideBox').hidden = !KIN_SIDED.has(role);
-  $('sidePick').innerHTML = kinBtns(SIDES, roleSide, 'side');
+  return '<div class="kinblk"><div class="lbl">Você é</div>'
+    + '<div class="pick4" role="group" aria-label="Você é">'
+    + kinBtns(KINS.filter(k => ONB_MAIN.includes(k[0])).sort((a, b) => ONB_MAIN.indexOf(a[0]) - ONB_MAIN.indexOf(b[0])), role, 'role')
+    + `<button type="button" class="opt${inMore ? ' on' : ''}" data-more="1" aria-pressed="${open}" aria-expanded="${open}">Outros</button></div>`
+    + (open ? `<div class="kins" role="group" aria-label="Outros">${kinBtns(KINS.filter(k => !ONB_MAIN.includes(k[0])), role, 'role')}</div>` : '')
+    + (KIN_SIDED.has(role) ? `<div><div class="lbl">De que lado da família?</div><div class="pick2" role="group" aria-label="Lado da família">${kinBtns(SIDES, roleSide, 'side')}</div></div>` : '')
+    + '<p class="dim">Pode pular. Muda depois.</p></div>';
 }
-$('scrName').addEventListener('click', e => {
-  const b = e.target.closest('[data-role],[data-side],[data-more]'); if (!b) return;
+const kinDraw = el => { el.innerHTML = kinHtml(); };
+// Um toque no bloco "Você é". Devolve falso se o toque não era dele.
+function kinTap(b) {
   if (b.dataset.more) roleMore = !(roleMore || (role && !ONB_MAIN.includes(role)));
   else if (b.dataset.role) { role = role === b.dataset.role ? null : b.dataset.role; if (!KIN_SIDED.has(role)) roleSide = null; }
-  else roleSide = roleSide === b.dataset.side ? null : b.dataset.side;
-  kinOnb();
+  else if (b.dataset.side) roleSide = roleSide === b.dataset.side ? null : b.dataset.side;
+  else return false;
+  return true;
+}
+$('scrName').addEventListener('click', e => {
+  const b = e.target.closest('[data-role],[data-side],[data-more]');
+  if (b && kinTap(b)) kinDraw($('kinSlot'));
 });
-kinOnb();
-// "Como você vai começar?" e o link do convite.
-$('startCreate').onclick = () => onbStart('start');
-$('startJoin').onclick = () => { err('errPaste'); show('scrPaste'); $('pasteIn').focus(); };
-$('backPaste').onclick = () => show('scrStart');
+// Boas-vindas: "Começar" abre as perguntas do bebê; "Já tenho conta" vai ao login.
+$('wStart').onclick = () => onbStart('start', 'novo');
+$('wLogin').onclick = () => showLogin(false, true);
+$('backPaste').onclick = () => { show('scrLoading'); boot(); };
 
 /* ---------- aceites (015) ---------- */
 // A prova de cada aceite fica no banco (conta, tipo, versão, data e hora); ninguém edita nem apaga.
@@ -405,80 +452,154 @@ $('fPaste').addEventListener('submit', e => {
 });
 
 /* ---------- criar família: uma pergunta por tela ---------- */
-// Itens 40, 46, 57 e 60 (prévia aprovada em 13/11: https://claude.ai/artifact/RYPyjm5Z4ARWtnvXJrmffU;
-// textos aprovados palavra por palavra). Sobre o bebê → como mama → o que vai na mamadeira (só com
-// mamadeira) → outros alimentos (só com 6 meses ou mais) → sono → criar a família. As respostas ficam
-// só na memória até "Criar família": antes disso, nada é gravado.
-let O = null;
-function onbStart(from) {
+// Onboarding v02 (aprovado em 18/11; nota "Onboarding v02 - resumo para programar" do vault; textos
+// aprovados palavra por palavra). Sobre o bebê → como mama → mamadeira (só mamadeira) → outros alimentos (6
+// meses ou mais) → "Quem fez o Soneca" (só para quem começou por "Começar") → gancho do sono → acordada ou
+// dormindo → (janela de sono, ou "está dormindo") → LOGIN → "Quase pronto" (nome, Você é, família, aceite).
+// O login vem no fim: até "Criar família", NADA vai ao Supabase e não se cria conta anônima. As respostas
+// ficam só neste aparelho (onboarding.js: onbSave), por etapa, e sobrevivem a fechar o app e ao login do
+// Google/Apple (que sai da página): ao voltar, o boot lê tudo de novo e retoma em "Quase pronto".
+let O = null, onbFrom = 'start';
+const onbMonths = () => monthsOld(O.birth, Date.now());
+const onbStepsNow = () => onbSteps(O, { session: !!st.user, months: onbMonths() });
+const onbPut = () => { O.role = role; O.side = roleSide; if (onbFrom !== 'profile') onbSave(O); };
+// from: 'start' (primeira família) ou 'profile' (mais uma família, pela aba Perfil: não guarda respostas).
+function onbStart(from, via) {
   novSeen();   // instalação nova: não é novidade (item 77)
-  O = { from, i: 0, name: '', birth: '', sex: null, feed: null, milk: null, food: null, sleep: null, at: '', track: null, alert: null, night: NIGHT_START, fam: '', ok: false };
-  show('scrOnb'); onbDraw(); window.scrollTo(0, 0);
+  onbFrom = from; O = blank(via || (st.user ? 'conta' : 'novo'));
+  role = roleSide = null; roleMore = false;
+  onbDraw(); window.scrollTo(0, 0);
 }
-const onbSteps = () => ['bebe', 'mama', ...(O.feed === 'bottle' || O.feed === 'both' ? ['mamadeira'] : []),
-  ...(monthsOld(O.birth, Date.now()) >= 6 ? ['comida'] : []), 'sono', 'familia'];
+// Voltou ao app (ou ao site) com respostas guardadas.
+function onbRestore(saved) {
+  O = saved; onbFrom = 'start'; role = O.role; roleSide = O.side; roleMore = false;
+  O.k = resumeStep(O, onbStepsNow());
+  onbDraw(); window.scrollTo(0, 0);
+}
 // "Como a Marina mama hoje?"; sem menina ou menino anotado, só o nome.
 const onbArt = (a, o) => O.sex === 'F' ? a : O.sex === 'M' ? o : '';
 const onbNome = () => esc(O.name.trim());
+const onbDe = () => esc(deName({ name: O.name, sex: O.sex }));
+const onbPron = () => O.sex === 'F' ? 'ela' : O.sex === 'M' ? 'ele' : 'o bebê';
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const CHK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 const pressed = (on, attrs, txt) => `<button type="button" class="opt${on ? ' on' : ''}" ${attrs} aria-pressed="${on}">${txt}</button>`;
+const dotsHtml = (steps, k) => { const i = steps.indexOf(k); return `<div class="onbsteps" role="progressbar" aria-label="Passo ${i + 1} de ${steps.length}" aria-valuemin="1" aria-valuemax="${steps.length}" aria-valuenow="${i + 1}">${steps.map((_, j) => `<i class="${j <= i ? 'on' : ''}"></i>`).join('')}</div>`; };
+const BACK_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>';
+const nightChips = () => `<div><div class="lbl" id="oNightLbl">A partir de que horas você quer que ${onbArt('a ', 'o ')}${onbNome()} durma à noite?</div><div class="nchips" role="group" aria-labelledby="oNightLbl">${ONB_STARTS.map(x => pressed(O.night === x, `data-night="${x}"`, x + 'h')).join('')}</div></div>`;
 function onbDraw() {
-  const steps = onbSteps(), k = steps[O.i] || 'familia', n = steps.length;
-  let h = `<div class="onbtop"><button type="button" class="back" data-onb="back" aria-label="Voltar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>`
-    + `<div class="onbsteps" role="progressbar" aria-label="Passo ${O.i + 1} de ${n}" aria-valuemin="1" aria-valuemax="${n}" aria-valuenow="${O.i + 1}">${steps.map((_, j) => `<i class="${j <= O.i ? 'on' : ''}"></i>`).join('')}</div></div>`;
+  const steps = onbStepsNow();
+  if (!steps.includes(O.k)) O.k = steps[0];
+  const k = O.k, i = steps.indexOf(k);
+  onbPut();
+  if (k === 'login') return showLogin(true);
+  const f = forms(O.sex), now = Date.now();
+  // Voltar: não há na primeira tela de quem já tem conta (não tem para onde).
+  const canBack = i > 0 || onbFrom === 'profile' || !st.user;
+  let h = `<div class="onbtop">${canBack ? `<button type="button" class="back" data-onb="back" aria-label="Voltar">${BACK_SVG}</button>` : '<span class="back"></span>'}${dotsHtml(steps, k)}</div>`;
   const big = (key, opts) => `<div class="big">${opts.map(([v, txt, ic]) => `<button type="button" data-pick="${key}" data-v="${v}" aria-pressed="${O[key] === v}">${ic || ''}<span>${txt}</span></button>`).join('')}</div>`;
+  const capi = `<div class="onbcapi">${CAPI}</div>`;
   if (k === 'bebe') h += `<h1>Sobre o bebê</h1><form id="fOnb">`
     + `<div><div class="lbl">Nome</div><input class="field" id="oName" maxlength="40" placeholder="Marina" required value="${esc(O.name)}" aria-label="Nome do bebê"></div>`
     + `<div><div class="lbl">Nascimento</div><input class="field" id="oBirth" type="date" value="${esc(O.birth)}" aria-label="Nascimento"></div>`
     + `<div class="pick2" role="group" aria-label="Menina ou menino">${pressed(O.sex === 'F', 'data-sex="F"', 'Menina')}${pressed(O.sex === 'M', 'data-sex="M"', 'Menino')}</div>`
-    + '<button class="save" type="submit">Continuar</button></form>';
+    + '<p class="dim cn">A idade é o que calcula a janela de sono.</p>'
+    + '<button class="save" type="submit">Continuar</button>'
+    // Quem já tem conta e ainda não tem família pode entrar por convite (colar o link): era o "Como você vai começar?".
+    + (st.user && onbFrom === 'start' ? '<button type="button" class="link" data-onb="paste">Entrar numa família</button>' : '') + '</form>';
   if (k === 'mama') h += `<h1>Como ${onbArt('a ', 'o ')}${onbNome()} mama hoje?</h1>`
-    + big('feed', [['breast', 'No peito', ICON.nursing], ['bottle', 'Na mamadeira', ICON.feed], ['both', 'Nos dois', '<span class="two">' + ICON.nursing + ICON.feed + '</span>']]);
-  if (k === 'mamadeira') h += '<h1>O que vai na mamadeira?</h1>' + big('milk', [['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Os dois']]);
-  if (k === 'comida') h += `<h1>${onbArt('A ', 'O ')}${onbNome()} já come outros alimentos?</h1>` + big('food', [['1', 'Já come'], ['0', 'Ainda não']]);
-  if (k === 'sono') {
-    const f = forms(O.sex), Ac = f.ac.charAt(0).toUpperCase() + f.ac.slice(1);
-    // O aviso só vale no app e com a faixa da idade (nascimento anotado e menos de 12 meses).
-    const canAlert = !!medNotif && !!wakeRef(O.birth || null, Date.now());
-    // Item 65 (prévia 4 e textos aprovados em 13/11): a pergunta de acompanhar o sono; só com Sim
-    // aparecem o aviso da janela e o começo da noite (18h a 22h; sem resposta, 18h; o fim fica 6h).
-    const de = esc(deName({ name: O.name, sex: O.sex }));
-    h += `<h1>${onbArt('A ', 'O ')}${onbNome()} está ${f.ac} ou dormindo?</h1><form id="fOnb">`
-      + `<div class="pick2">${pressed(O.sleep === 'wake', 'data-sleep="wake"', Ac)}${pressed(O.sleep === 'sleep', 'data-sleep="sleep"', 'Dormindo')}</div>`
-      + (O.sleep ? `<div><div class="lbl">${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}</div><input class="field" id="oAt" type="time" value="${esc(O.at)}" aria-label="${O.sleep === 'wake' ? 'Acordou às' : 'Dormiu às'}"></div>` : '')
-      + '<div class="onbdiv"></div>'
-      + `<div><div class="lbl strong" id="oTrackLbl">Quer que o Soneca acompanhe o sono ${de} com você?</div><div class="pick2" role="group" aria-labelledby="oTrackLbl">${pressed(O.track === true, 'data-track="1"', 'Sim')}${pressed(O.track === false, 'data-track="0"', 'Agora não')}</div>`
-      + (O.track === true ? `<p class="hint onbhint">Mostra a janela de sono no cartão ${de} e conta a noite no horário da sua casa.</p>`
-        : O.track === false ? '<p class="hint onbhint">Dá para ligar depois na aba Família.</p>' : '') + '</div>'
-      + (O.track !== true ? '' : '<div class="onbmore">'
-        + (canAlert ? `<div><div class="lbl" id="oAlertLbl">Avisar quando a janela de sono estiver chegando?</div><div class="pick2" role="group" aria-labelledby="oAlertLbl">${pressed(O.alert === true, 'data-alert="1"', 'Sim')}${pressed(O.alert === false, 'data-alert="0"', 'Agora não')}</div></div>` : '')
-        + `<div><div class="lbl" id="oNightLbl">A partir de que horas você quer que ${onbArt('a ', 'o ')}${onbNome()} durma à noite?</div><div class="nchips" role="group" aria-labelledby="oNightLbl">${ONB_STARTS.map(x => pressed(O.night === x, `data-night="${x}"`, x + 'h')).join('')}</div></div>`
-        + '</div>')
-      + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Continuar</button><button type="button" class="link" data-onb="skip">Pular</button></form>';
+    + big('feed', [['breast', 'No peito', ICON.nursing], ['bottle', 'Na mamadeira', ICON.feed], ['both', 'Nos dois', '<span class="two">' + ICON.nursing + ICON.feed + '</span>']]) + capi;
+  if (k === 'mamadeira') h += '<h1>O que vai na mamadeira?</h1>' + big('milk', [['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Os dois']]) + capi;
+  if (k === 'comida') h += `<h1>${onbArt('A ', 'O ')}${onbNome()} já come outros alimentos?</h1>` + big('food', [['1', 'Já come'], ['0', 'Ainda não']]) + capi;
+  if (k === 'quem') {
+    // Tela 4 (v02): "Quem fez o Soneca". Dele/dela concorda com menina ou menino; sem resposta, "do bebê".
+    const dele = O.sex === 'F' ? 'dela' : O.sex === 'M' ? 'dele' : 'do bebê';
+    h += '<h1>Soneca: seu companheiro para a rotina do bebê</h1>'
+      + '<p class="sub">Registre tarefas com outros cuidadores, veja a janela de sono e receba avisos de tarefas e remédios.</p>'
+      + '<div class="whoblk"><p class="whol">Feito por um médico que também é pai</p>'
+      + '<div class="card whoc"><img src="/icons/dr-patrick.jpg" alt="Dr. Patrick Harris" width="64" height="64"><div><b>Dr. Patrick Harris</b><span>Médico de família</span><span>CRM-SP 192.379 · RQE 92.300</span></div></div></div>'
+      + '<div class="whoblk"><p class="whol">Como a janela de sono é calculada</p><div class="whohow">'
+      + '<div class="card"><b>1 · A idade</b><span>Mostra a janela típica para a idade, de referências internacionais.</span></div>'
+      + `<div class="card"><b>2 · O próprio bebê</b><span>Ajusta com os registros ${dele}, por metodologia própria.</span></div></div></div>`
+      + '<button class="save" type="button" data-onb="next">Continuar</button>';
   }
-  if (k === 'familia') h += '<h1>Criar a família</h1><form id="fOnb">'
-    + `<div><div class="lbl">Nome da família</div><input class="field" id="oFam" maxlength="60" placeholder="Família Mesquita" required value="${esc(O.fam)}" aria-label="Nome da família"></div>`
-    + '<div class="consent"><b>Dados do bebê e de saúde</b><p class="txt">O Soneca guarda o que você anotar sobre o bebê: rotina, incluindo amamentação e ordenha, e, se quiser, sintomas, temperatura, remédios e peso. Esses dados são de uma criança e de saúde, e só os membros da sua família os veem. Não vendemos, não usamos para publicidade e você apaga tudo quando quiser.</p>'
-    + `<label class="chk"><input type="checkbox" id="oOk"${O.ok ? ' checked' : ''}>${CHK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar esses dados, inclusive de amamentação, para o uso da minha família.</span></label></div>`
-    + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Criar família</button></form>';
+  if (k === 'gancho') h += `<div class="midin">${CAPI}<h1>Quer ajuda para acertar a hora das sonecas e da noite ${onbDe()}?</h1>`
+    + `<p>O Soneca mostra quando ${onbPron()} pode estar com sono e avisa antes. Em um minuto você vê a primeira janela.</p></div>`
+    + '<button class="save" type="button" data-onb="next">Sim, quero ajuda</button><button type="button" class="link" data-onb="next">Agora não</button>';
+  if (k === 'agora') h += `<h1>${onbArt('A ', 'O ')}${onbNome()} está ${f.ac} ou dormindo agora?</h1>`
+    + `<div class="pick2">${pressed(O.sleep === 'wake', 'data-sleep="wake"', cap(f.ac))}${pressed(O.sleep === 'sleep', 'data-sleep="sleep"', 'Dormindo')}</div>`
+    + '<p class="dim cn">É a partir daqui que o Soneca mostra a próxima janela de sono.</p>' + capi
+    + '<button type="button" class="link" data-onb="skip">Pular</button>';
+  if (k === 'acordada') {
+    if (!O.at) O.at = hm(now);   // o campo já abre com a hora de agora (item 70)
+    h += `<h1>Vamos achar a janela de sono ${onbDe()}</h1><form id="fOnb">`
+      + `<div><div class="lbl">Quando ${onbPron()} acordou da última soneca?</div><input class="field" id="oAt" type="time" value="${esc(O.at)}" aria-label="Hora em que acordou"></div>`
+      + `<div><div class="lbl" id="oNapLbl">Quanto tempo durou a última soneca?</div><div class="pick2" role="group" aria-labelledby="oNapLbl">${NAP_LENGTHS.map(([v, t]) => pressed(O.nap === v, `data-nap="${v}"`, t)).join('')}</div></div>`
+      + nightChips()
+      + `<button class="save" type="submit">Ver a janela ${onbDe()}</button><button type="button" class="link" data-onb="skip">Pular</button></form>`;
+  }
+  if (k === 'dormindo') h += `<h1>Desde que horas ${onbArt('a ', 'o ')}${onbNome()} está dormindo?</h1><form id="fOnb">`
+    + `<div><div class="lbl">Dormiu às</div><input class="field" id="oSat" type="time" value="${esc(O.sat)}" aria-label="Dormiu às"></div>`
+    + '<p class="dim">Sem resposta, o Soneca usa 30 minutos atrás.</p>'
+    + nightChips()
+    + '<button class="save" type="submit">Continuar</button><button type="button" class="link" data-onb="skip">Pular</button></form>';
+  if (k === 'janela') {
+    const ref = wakeRef(O.birth || null, now), w = windowInfo(wakeStart(O.at, now), ref, now);
+    // Antes da janela: a frase nova da prévia. Dentro dela ou depois (e sem faixa da idade), as frases que o app já tinha.
+    const txt = w.kind === 'antes' ? `A próxima janela de sono começa em <b>${minutosText(w.start - now)}</b> e termina às <b>${clk(w.end)}</b>.`
+      : winText(w.awake, w.ref, O.sex, null);
+    const canAlert = !!medNotif && !!ref;
+    h += `<h1>A janela de sono ${onbDe()}</h1>`
+      + `<div class="hw onbwin"><span class="hwt">${txt}</span>${ref ? rulerHtml(w.awake, ref) : ''}</div>`
+      + (ref ? `<p class="onbwarn">${esc(napWarnText(O.night))}</p>` : '')
+      + (canAlert ? `<div><div class="lbl strong" id="oAlertLbl">Quer ajuda para lembrar da janela de sono?</div><div class="pick2" role="group" aria-labelledby="oAlertLbl">${pressed(O.alert === true, 'data-alert="1"', 'Sim')}${pressed(O.alert === false, 'data-alert="0"', 'Agora não')}</div><p class="hint onbhint">Com "Sim", o celular avisa 15 minutos antes de cada janela.</p></div>` : '')
+      + '<button class="save" type="button" data-onb="next">Continuar</button>';
+  }
+  if (k === 'dormindo2') {
+    const t = sleepStart(O.sat, now);
+    h += `<div class="midin onbz">${CAPI_Z}<h1>${onbArt('A ', 'O ')}${onbNome()} está dormindo</h1>`
+      + `<p>Quando ${onbPron()} acordar, abra o Soneca e toque em <b>Acordou</b>. Aí o Soneca mostra a próxima janela de sono.</p>`
+      + `<div class="card onbslp"><b>Dormindo há ${dur(now - t)}</b><span>Anotado: dormiu às ${clk(t)}</span></div></div>`
+      + '<button class="save" type="button" data-onb="next">Continuar</button>';
+  }
+  if (k === 'quase') {
+    // O nome vem do perfil (quem já tem conta), do Google/Apple ou do que a pessoa digitou antes de sair.
+    if (!O.pname) { const m = st.user?.user_metadata || {}; O.pname = (st.profile?.display_name || String(m.full_name || m.name || '')).trim().slice(0, 40); }
+    if (!role && st.profile?.caregiver) { role = st.profile.caregiver; roleSide = st.profile.family_side || null; }
+    h += '<h1>Quase pronto</h1><form id="fOnb">'
+      + `<div><div class="lbl">Seu nome</div><input class="field" id="oPname" maxlength="40" placeholder="Patrick" required value="${esc(O.pname)}" aria-label="Seu nome"></div>`
+      + '<div id="oKin">' + kinHtml() + '</div>'
+      + `<div><div class="lbl">Nome da família</div><input class="field" id="oFam" maxlength="60" placeholder="Família Mesquita" required value="${esc(O.fam)}" aria-label="Nome da família"></div>`
+      + '<div class="consent"><b>Dados do bebê e de saúde</b><p class="txt">O Soneca guarda o que você anotar sobre o bebê: rotina, incluindo amamentação e ordenha, e, se quiser, sintomas, temperatura, remédios e peso. Esses dados são de uma criança e de saúde, e só os membros da sua família os veem. Não vendemos, não usamos para publicidade e você apaga tudo quando quiser.</p>'
+      + `<label class="chk"><input type="checkbox" id="oOk">${CHK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar esses dados, inclusive de amamentação, para o uso da minha família.</span></label></div>`
+      + '<p class="err" id="errOnb" hidden></p><button class="save" type="submit">Criar família</button></form>';
+  }
   $('scrOnb').innerHTML = h;
   $('scrOnb').dataset.step = k;
+  show('scrOnb');
 }
+// Pôr a tela certa: as respostas são guardadas a cada passo (onbDraw → onbPut).
 function onbGo(d) {
-  O.i += d;
-  if (O.i < 0) { const from = O.from; O = null; return show(from === 'profile' ? 'scrMain' : 'scrStart'); }
+  const steps = onbStepsNow(), i = steps.indexOf(O.k);
+  if (d < 0 && i <= 0) {
+    if (onbFrom === 'profile') { O = null; return show('scrMain'); }
+    return show('scrWelcome');
+  }
+  O.k = d < 0 ? prevStep(steps, O.k) : nextStep(steps, O.k);
   onbDraw(); window.scrollTo(0, 0);
 }
 const nowHm = () => hm(Date.now());
 $('scrOnb').addEventListener('input', e => {
-  const t = e.target, map = { oName: 'name', oBirth: 'birth', oFam: 'fam', oAt: 'at' };
-  if (map[t.id]) O[map[t.id]] = t.value;
-  if (t.id === 'oOk') O.ok = t.checked;
+  const t = e.target, map = { oName: 'name', oBirth: 'birth', oFam: 'fam', oAt: 'at', oSat: 'sat', oPname: 'pname' };
+  if (map[t.id]) { O[map[t.id]] = t.value; onbPut(); }
 });
 $('scrOnb').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b || !O) return;
+  if (kinTap(b)) { onbPut(); $('oKin').innerHTML = kinHtml(); return; }
   if (b.dataset.onb === 'back') return onbGo(-1);
-  if (b.dataset.onb === 'skip') { O.sleep = null; return onbGo(1); }
+  if (b.dataset.onb === 'next') return onbGo(1);
+  if (b.dataset.onb === 'paste') { err('errPaste'); show('scrPaste'); return $('pasteIn').focus(); }
+  if (b.dataset.onb === 'skip') { O.k = skipSleep(O, onbStepsNow()); return onbDraw(); }
   if (b.dataset.sex) { O.sex = O.sex === b.dataset.sex ? null : b.dataset.sex; return onbDraw(); }
   // Como mama, mamadeira e outros alimentos: um toque escolhe e passa para a próxima.
   if (b.dataset.pick) {
@@ -486,33 +607,56 @@ $('scrOnb').addEventListener('click', async e => {
     if (b.dataset.pick === 'feed' && O.feed === 'breast') O.milk = null;
     return onbGo(1);
   }
-  if (b.dataset.sleep) { O.sleep = b.dataset.sleep; if (!O.at) O.at = nowHm(); onbDraw(); return $('oAt')?.focus(); }
-  if (b.dataset.track) { O.track = b.dataset.track === '1'; return onbDraw(); }
+  // Acordada ou dormindo: um toque escolhe e abre a pergunta do ramo.
+  if (b.dataset.sleep) { O.sleep = b.dataset.sleep; return onbGo(1); }
+  if (b.dataset.nap) { O.nap = O.nap === b.dataset.nap ? null : b.dataset.nap; return onbDraw(); }
   if (b.dataset.night) { O.night = +b.dataset.night; return onbDraw(); }
-  // "Sim" pede a permissão do celular na hora (decisão de 13/11). Negada, fica "Agora não".
+  // "Sim" pede a permissão do celular na hora (decisão de 13/11). Negada, fica "Agora não". A escolha fica
+  // no aparelho (cad-janela); a preferência da pessoa só vai ao banco depois do login (onbCreate).
   if (b.dataset.alert) {
     O.alert = b.dataset.alert === '1'; onbDraw();
     if (O.alert && !(await notifPerm()).ok) { O.alert = false; onbDraw(); toast(NOTIF_DENIED); }
+    lsSet('cad-janela', O.alert ? '1' : '0');
   }
 });
 $('scrOnb').addEventListener('submit', async e => {
   e.preventDefault(); if (!O) return;
-  const k = $('scrOnb').dataset.step;
+  const k = O.k;
   if (k === 'bebe') { if (!O.name.trim()) return; return onbGo(1); }
-  if (k === 'sono') {
-    // Horário apagado: vale o de agora (o campo já abre com ele).
-    if (O.sleep && !/^\d\d:\d\d$/.test(O.at)) O.at = nowHm();
-    return onbGo(1);
-  }
-  if (!O.ok) return err('errOnb', 'Para criar a família, marque a autorização dos dados do bebê.');
+  // Horário apagado: "Acordou às" vale o de agora; "Dormiu às", 30 minutos atrás (fica anotado na tela seguinte).
+  if (k === 'acordada') { if (!/^\d\d:\d\d$/.test(O.at)) O.at = nowHm(); return onbGo(1); }
+  if (k === 'dormindo') { O.sat = hm(sleepStart(O.sat, Date.now())); return onbGo(1); }
+  if (!O.pname.trim()) return err('errOnb', 'Escreva como você quer aparecer.');
+  if (!O.fam.trim()) return err('errOnb', 'Escreva o nome da família.');
+  if (!$('oOk').checked) return err('errOnb', 'Para criar a família, marque a autorização dos dados do bebê.');
   const btn = e.submitter; busy(btn, true);
   const ok = await onbCreate();
   busy(btn, false);
   if (ok !== true) err('errOnb', ok);
 });
-// "Criar família": só aqui se grava. A família e o bebê pela função do banco; menina ou menino, o jeito de
-// alimentar, o primeiro registro de sono e o aviso vão à parte (sem o 024, só não salvam as respostas).
+// "Criar família": só aqui se grava (e só depois do login). Primeiro o aceite da Política e dos Termos (se o
+// login ainda não gravou) e o perfil da pessoa (nome e "Você é"); depois a família e o bebê pela função do
+// banco; menina ou menino, o jeito de alimentar, o primeiro registro de sono e o aviso vão à parte (sem o
+// 024, só não salvam as respostas).
 async function onbCreate() {
+  const now = Date.now();
+  if (!hasConsent('terms') && !await addConsent('terms')) return 'Não foi possível registrar o aceite. Confira a conexão e tente de novo.';
+  const name = O.pname.trim(), cg = role, sd = KIN_SIDED.has(role) ? roleSide : null;
+  if (!st.profile) {
+    const { error } = await sb.from('profiles').insert({ id: st.user.id, display_name: name });
+    if (error) return errMsg(error);
+    st.profile = { id: st.user.id, display_name: name };
+  } else if (st.profile.display_name !== name) {
+    const { error } = await sb.from('profiles').update({ display_name: name }).eq('id', st.user.id);
+    if (error) return errMsg(error);
+    st.profile.display_name = name;
+  }
+  // "Você é" vai à parte: sem o 027, o nome salva do mesmo jeito.
+  if (cg !== (st.profile.caregiver || null) || sd !== (st.profile.family_side || null)) {
+    await sb.from('profiles').update({ caregiver: cg, family_side: sd }).eq('id', st.user.id);
+    st.profile.caregiver = cg; st.profile.family_side = sd;
+  }
+  st.names[st.user.id] = name; st.kin[st.user.id] = [cg, sd];
   const { data: fid, error } = await sb.rpc('create_family', {
     family_name: O.fam.trim(), baby_name: O.name.trim(), baby_birth: O.birth || null,
   });
@@ -523,17 +667,18 @@ async function onbCreate() {
   if (bid && O.feed) await sb.from('babies').update({ feeding: O.feed, bottle_milk: O.feed === 'breast' ? null : O.milk,
     eats_food: O.food === null ? null : O.food === '1' }).eq('id', bid);
   await addConsent('baby', { family_id: fid });
-  // A resposta do sono vira o primeiro registro: hoje, ou ontem se o horário ainda não chegou.
+  // A resposta do sono vira o primeiro registro: "acordou às" (Acordada) ou "dormiu às" (Dormindo; sem horário,
+  // 30 minutos atrás). Pular não registra nada.
   if (bid && O.sleep) {
-    const now = Date.now(); let t = atTime(startOfDay(now), O.at); if (t > now) t = atTime(addDays(startOfDay(now), -1), O.at);
+    const t = O.sleep === 'wake' ? wakeStart(O.at, now) : sleepStart(O.sat, now);
     await sb.from('entries').insert({ family_id: fid, baby_id: bid, ...fields({ kind: O.sleep, t }) });
   }
-  // Item 65: "Acompanhar o sono" da família (só se respondeu) e o começo da noite do bebê (com Sim). Sem
-  // o 025, só não salvam: fica ligado e a noite fica 18h às 6h.
-  if (O.track !== null) await sb.from('family_settings').upsert({ family_id: fid, sleep_track: O.track });
-  if (bid && O.track && O.night !== NIGHT_START) await sb.from('babies').update({ night: nightSave(null, O.night, NIGHT_END, Date.now()) }).eq('id', bid);
-  if (O.track && O.alert !== null) await setWinAlert(O.alert, true);
-  O = null;
+  // A duração da última soneca fica só neste aparelho (ainda não entra na conta da janela).
+  if (bid && O.sleep === 'wake' && O.nap) lsSet('cad-ultsoneca-' + bid, O.nap);
+  // O começo da noite do bebê (sem resposta de sono, fica 18h às 6h) e o aviso da janela da pessoa (024).
+  if (bid && O.sleep && O.night !== NIGHT_START) await sb.from('babies').update({ night: nightSave(null, O.night, NIGHT_END, now) }).eq('id', bid);
+  if (O.sleep === 'wake' && O.alert !== null) await setWinAlert(O.alert, true);
+  onbClear(); O = null;
   await loadFamilies(); openFamily(fid);
   return true;
 }
@@ -3734,7 +3879,7 @@ async function afterLeavingFamily() {
   S = null; $('scrim').hidden = true; $('sheet').hidden = true;
   await loadFamilies();
   if (st.families.length) openFamily(st.families[0].id);
-  else show('scrStart');
+  else { show('scrLoading'); boot(); }
 }
 // Os toques nas abas Família e Perfil.
 async function paneAction(a, v, btn) {

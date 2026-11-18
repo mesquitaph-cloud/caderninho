@@ -16,6 +16,7 @@
 //   janela        a Helena com 2 meses, acordada há 45 min: a janela de sono (?acordada=MIN, ?bebe=menino|sem|4m|7m|13m|semdata|dormindo);
 //                 app-janela: o mesmo no "app do Android", com o aviso da janela em window.avisos
 //   app-versao    o app do Android com a 1.0.3 e a 1.0.5 na loja: cartão de versão nova (?instalada=1.0.5, ?ios=1, ?semtabela=1)
+//   onb-novo / onb-app / onb-sem-familia   onboarding v02, o login no fim (veja o bloco "onb-" em cenarios.js)
 //   noite         a noite da Helena das 20h às 6h há 10 dias e "Acompanhar o sono" desligado (item 65)
 import http from 'node:http';
 import fs from 'node:fs';
