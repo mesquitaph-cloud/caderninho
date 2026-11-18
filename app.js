@@ -2987,7 +2987,7 @@ function growthHtml() {
   if (curves) h += `<div class="gpre">${G_PRESETS.filter(([, m]) => w || m <= MAX_MONTHS).map(([n, m]) => `<button class="${a === 0 && z === m ? 'on' : ''}" data-act="gWin" data-val="${m}">${n}</button>`).join('')}</div>`;
   const svg = growthSvg();
   if (svg) h += `<div class="svgbox${curves ? ' gzoom' : ''}" id="gBox">${svg}</div>`;
-  if (curves) h += `<p class="dim">Curvas da OMS adotadas pela SBP · ${b.sex === 'F' ? 'meninas' : 'meninos'} · percentis 3, 15, 50, 85 e 97. Pinça ou rodinha para zoom; arraste para os lados.</p>`;
+  if (curves) h += `<p class="dim">${w ? 'Curva peso OMS' : 'Curva crescimento OMS'}</p>`;
   else h += `<p class="dim">${!gRows().length ? (w ? 'Nenhum peso anotado. ' : 'Nenhum comprimento anotado. ') : ''}Para ver as curvas da OMS, anote ${!b.birth_date && !b.sex ? 'o nascimento e se é menina ou menino' : !b.birth_date ? 'o nascimento' : 'se é menina ou menino'} em <button class="lnk inl" data-act="editBaby" data-val="${esc(b.id)}">Dados do bebê</button>.</p>`;
   return h;
 }
