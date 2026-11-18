@@ -1119,6 +1119,7 @@ function renderBv() {
   // Item 30 (prévia aprovada em 07/11): o primeiro registro já sai do cartão, com a última mamada. Desde o
   // onboarding novo (13/11), no jeito que a família escolheu: peito com o lado, mamadeira com os ml, e nos
   // dois "Como foi". Sem resposta (antes do 024), como antes: o peito.
+  if (!bvTimeV) bvTimeV = hm(Date.now()); // item 70: no iPhone o campo vazio não mostra nada; começa na hora de agora
   const fd = b?.feeding, src = fd === 'bottle' ? 'bottle' : fd === 'both' ? bvSrc : 'breast';
   const top = k === 'ola' ? card(x + `<div class="bvtop">${CAPI}<h3>Tudo pronto para ${artigo(b, 'a ', 'o ', '')}${nome}</h3></div>`
       + '<p>Quando foi a última mamada?</p>'

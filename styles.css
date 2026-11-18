@@ -686,6 +686,9 @@ svg.rp-days{display:block;width:100%;min-width:520px;height:auto}
 /* Cartão "Tudo pronto": a última mamada (item 30) */
 .bv .bvside{background:none}.bv .bvside .opt{flex:1}
 .bv .err{margin:0}
+/* iOS: o input de hora tem largura própria e ignora width:100%; sem isso passa da borda e fica vazio (item 70) */
+.bv input.bvtime{display:block;-webkit-appearance:none;appearance:none;min-width:0;max-width:100%;min-height:48px;text-align:left}
+.bv input.bvtime::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
 .go-del{background:var(--danger);color:var(--on-danger);border-radius:14px;padding:12px;font-weight:500}
 .go-del:disabled{opacity:.6}
 /* Últimos 3 dias de um botão */
