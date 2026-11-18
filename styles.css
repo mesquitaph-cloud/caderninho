@@ -521,7 +521,7 @@ textarea.field{resize:vertical;min-height:110px;line-height:1.4}
 button.ptitle{text-align:left;border-radius:14px;padding:4px 6px;margin:-4px -6px 0}
 button.ptitle:active{background:var(--surface2)}
 /* Família (item 75): a fileira de atalhos fica presa no alto enquanto a tela rola */
-.fnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 65px);z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
+.fnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--fch,65px));z-index:3;margin:0 -24px;padding:8px 24px;background:var(--bg)}
 .fnav button.on{background:var(--feed);color:var(--feed-ink);border-color:currentColor}
 .fsec{scroll-margin-top:64px}
 .li.tg .go{flex:none}
@@ -949,6 +949,8 @@ a.li{color:inherit;text-decoration:none}
 .hcard{position:sticky;top:env(safe-area-inset-top,0px);z-index:3;margin:-20px -24px 0;padding:2px 24px 12px;background:var(--surface);border-radius:0 0 22px 22px;transition:box-shadow .25s}
 [data-app="android"] .hcard{margin-top:calc(-20px - env(safe-area-inset-top,0px))}
 body:has(#paneHome:not([hidden]))::before,body:has(#paneFamily:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:3}
+/* Tendências: o mesmo tampo opaco sobre a área do relógio, na cor do fundo das guias (.trs), para o conteúdo não aparecer por trás ao rolar */
+body:has(#paneTrends:not([hidden]))::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:3}
 /* A data com as setas e o "Hoje" à esquerda e Dia | Semana | Mês, pequeno, à direita, sempre numa
    linha (08/11, prévia https://claude.ai/artifact/FKQYZ3g4C2pngnPWMV9Nug). As datas curtas são de util.js. */
 #paneHome{gap:10px}
