@@ -3513,6 +3513,8 @@ function drawFamilyPane() {
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
   $('paneFamily').innerHTML = h;
+  // As guias "Ir para" grudam logo abaixo do cartão do bebê, qualquer que seja a altura dele (nome comprido, fonte maior)
+  const fh = $('paneFamily').querySelector('.hcard'); if (fh && fh.offsetHeight) $('paneFamily').style.setProperty('--fch', fh.offsetHeight - 1 + 'px');
 }
 // Mudar o nome da família: só quem criou (é a regra do banco).
 function famNameSheet() {

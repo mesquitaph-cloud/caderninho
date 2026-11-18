@@ -229,14 +229,14 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   if (t.tab !== 'sono')
     return h + '</div>' + `<section class="card trb">${CAPI_HAT}<h3>Em construção</h3><p>Os gráficos de ${SUBJ[t.tab]} chegam numa próxima versão. Por enquanto, Tendências mostra o sono.</p></section>`;
   const week = t.mode === 'w';
-  h += `<div class="seg2" role="group" aria-label="Visão"><button data-tmode="d" class="${week ? '' : 'on'}" aria-pressed="${!week}">Dia a dia</button><button data-tmode="w" class="${week ? 'on' : ''}" aria-pressed="${week}">Semana a semana</button></div></div>`;
+  h += `<div class="seg2" role="group" aria-label="Visão"><button data-tmode="d" class="${week ? '' : 'on'}" aria-pressed="${!week}">Dia a dia</button><button data-tmode="w" class="${week ? 'on' : ''}" aria-pressed="${week}">Semana a semana</button></div>`;
   // Ainda sem dias anotados que bastem para ver alguma mudança.
   const today = startOfDay(now), done = new Set(evs.filter(e => e.t < today).map(e => startOfDay(e.t)));
   if (done.size < EMPTY_DAYS || addDays(today, -1) < first)
-    return h + `<section class="card tre">${CAPI_ZZ}<h3>Os gráficos aparecem aqui</h3><p>Depois de alguns dias com sono, mamadas e fraldas anotados, dá para ver como a rotina vai mudando, dia a dia e semana a semana.</p></section>`;
+    return h + `</div><section class="card tre">${CAPI_ZZ}<h3>Os gráficos aparecem aqui</h3><p>Depois de alguns dias com sono, mamadas e fraldas anotados, dá para ver como a rotina vai mudando, dia a dia e semana a semana.</p></section>`;
   const win = trendWindow(t.mode, t.off, now, first);
   h += `<div class="trr"><button class="arr" data-tnav="-1" aria-label="${week ? 'Semanas anteriores' : 'Dias anteriores'}"${win.canBack ? '' : ' disabled'}>‹</button>`
-    + `<span>${rangeTitle(win.a, win.z)}</span><button class="arr" data-tnav="1" aria-label="${week ? 'Semanas seguintes' : 'Dias seguintes'}"${win.canFwd ? '' : ' disabled'}>›</button></div>`;
+    + `<span>${rangeTitle(win.a, win.z)}</span><button class="arr" data-tnav="1" aria-label="${week ? 'Semanas seguintes' : 'Dias seguintes'}"${win.canFwd ? '' : ' disabled'}>›</button></div></div></div>`;
   if (loading) return h + `<div class="empty">${loading}</div>`;
   const its = items(win, evs, now, rule);
   if (!its.length) return h + '<div class="empty">Nada anotado nestes dias.</div>';
