@@ -24,11 +24,11 @@ const FN = {
   resumoJanela: `${ONB}((m) => {
     const min = 6e4, baby = { sex: 'F', name: 'Helena' }, idade = m.wakeRef('2026-07-02', Date.now());
     return '<div class="onbtop"><span class="back"></span></div><h1>Como a janela de sono é calculada</h1>'
-      + '<div class="card whohow" style="display:flex;flex-direction:column;gap:4px;padding:14px"><b>1 · A idade</b><span>Mostra a janela típica para a idade, de referências internacionais.</span>' + m.rulerHtml(45 * min, idade) + '</div>'
+      + '<div class="card whohow" style="display:flex;flex-direction:column;gap:4px;padding:14px"><b>A idade</b><span>Mostra a janela típica para a idade, de referências internacionais.</span>' + m.rulerHtml(45 * min, idade) + '</div>'
       + '${SETA}'
-      + '<div class="card whohow" style="display:flex;flex-direction:column;gap:4px;padding:14px"><b>2 · O próprio bebê</b><span>Ajusta com os registros dela, por metodologia própria.</span>' + m.counterHtml(2, baby) + '</div>'
+      + '<div class="card whohow" style="display:flex;flex-direction:column;gap:4px;padding:14px"><b>O próprio bebê</b><span>Ajusta com os registros dela, por metodologia própria.</span>' + m.counterHtml(2, baby) + '</div>'
       + '${SETA}'
-      + '<div class="hw onbwin" style="padding:14px 14px 8px"><b style="font-weight:500">3 · A janela da Helena</b><span class="hwt">Acordada há 45 min · Janela de sono em <b>15 min</b></span>' + m.rulerHtml(45 * min, [60 * min, 105 * min]) + '</div>'
+      + '<div class="hw onbwin" style="padding:14px 14px 8px"><b style="font-weight:500">A janela da Helena</b><span class="hwt">Acordada há 45 min · Janela de sono em <b>15 min</b></span>' + m.rulerHtml(45 * min, [60 * min, 105 * min]) + '</div>'
       + '<div class="onbcapi">' + ${JSON.stringify(CAPI)} + '</div>';
   })`,
   quem: `${ONB}((m) => '<div class="onbtop"><span class="back"></span></div><h1>Soneca: seu companheiro para a rotina do bebê</h1>'
@@ -58,6 +58,7 @@ const run = async (s) => {
     if (st.fn) await page.evaluate(FN[st.fn]);
     if (st.wait) await page.waitForTimeout(st.wait);
     if (st.el) { await page.addStyleTag({ content: 'html,body{background:transparent!important}' }); await page.waitForTimeout(250); await page.locator(st.el).screenshot({ path: path.join(OUT, `aso-${st.shotEl}-dia.png`), omitBackground: true }); }
+    if (st.shotClip) { await page.waitForTimeout(250); await page.screenshot({ path: path.join(OUT, `aso-${st.shotClip}-dia.png`), clip: st.clip }); }
     if (st.shot) { await page.waitForTimeout(250); await page.screenshot({ path: path.join(OUT, `aso-${st.shot}-${s.scheme === 'dark' ? 'noite' : 'dia'}.png`) }); }
   }
   await ctx.close();

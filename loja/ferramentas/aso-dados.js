@@ -23,13 +23,18 @@ const ASO = new URLSearchParams(location.search).get('aso') || 'base';
       }
       put(s, 'sleep'); if (w) put(w, 'wake');
     });
-    // A noite que começa na noite deste dia e termina de manhã: k = 0 (a de 7 dias atrás) a 6 (a de ontem).
+    // A noite que começa na noite deste dia e termina de manhã. Nas últimas 14 (d = 14 a 1) o sono da noite sobe de ~6h para ~9h
+    // e os despertares caem de 4 para 1; antes disso fica parado em ~6h com 4 despertares.
     if (today) continue;
-    const k = d <= 7 ? 7 - d : 0, flat = d > 7, nz = flat ? 10 : 4;
-    const S = hm(base, 21, 30) - k * 12.5 * MIN + j(nz), E = hm(base + DAY, 5, 35) + k * 4 * MIN + j(flat ? 6 : 1);
-    const w = (45 - k * 5) * MIN, c1 = hm(base + DAY, 0, 55) + j(3), c2 = hm(base + DAY, 3, 30) + j(5);
-    put(S, 'sleep'); put(c1, 'wake'); put(c1 + w, 'sleep'); put(c2, 'wake'); put(c2 + w, 'sleep'); put(E, 'wake');
+    const k = d <= 14 ? 14 - d : 0, flat = d > 14, nz = flat ? 8 : 10;
+    const L = (6 * 60 + k * 14) * MIN, S = hm(base, 22, 30) - k * 6 * MIN + j(nz), E = S + L + j(flat ? 6 : 8);
+    const n = k < 4 ? 4 : k < 8 ? 3 : k < 11 ? 2 : 1, w = (42 - k * 2.5) * MIN;
+    put(S, 'sleep');
+    for (let i = 1; i <= n; i++) { const c = S + L * i / (n + 1) + j(8); put(c, 'wake'); put(c + w, 'sleep'); }
+    put(E, 'wake');
   }
+  // A noite da Helena vale 20h às 7h desde o começo (as noites aparecem inteiras nos gráficos, com todos os despertares).
+  T.babies[0].night = [{ from: '2026-07-01', start: 20, end: 7 }];
   // Dúvidas para a consulta (aparecem no relatório): sem "normal".
   T.questions[1].body = 'Sonecas curtas à tarde';
 }

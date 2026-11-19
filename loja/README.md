@@ -28,11 +28,11 @@ deve passar à direita de "Última fralda" e descer entre "Dormindo há" e "Acor
 
 Os textos e a ordem ficam em `loja/ferramentas/quadros.html`; os dados de exemplo, em `fake-sb.js`.
 
-## Capturas v2 (ASO, 19/11/2026)
+## Capturas v2 (ASO, 19/11/2026; refeitas como v02 no mesmo dia)
 
 Dez capturas novas, com a janela de sono em destaque e o relatório de volta, mais as artes do iOS 27. As
 anteriores (acima) ficam como estão. Quadro aprovado: https://claude.ai/artifact/D35J4iR342fwrHGGxoSSkG. Folha de
-contato (privada): https://claude.ai/artifact/SpKRZquS3fWgtt1PiN6zgi. As frases são rascunho, a aprovar palavra por palavra.
+contato v01 (privada): https://claude.ai/artifact/SpKRZquS3fWgtt1PiN6zgi; v02 (notas de revisão aplicadas: composição variada, círculo de fundo por tema, noites e despertares com dados novos): https://claude.ai/artifact/4y6CxnyMwqHhEanPtgoGcT. As frases são rascunho, a aprovar palavra por palavra.
 
 - `app-store-v2/` (1290 × 2796), `app-store-6.3-v2/` (1206 × 2622) e `google-play-v2/` (1080 × 1920): as mesmas dez.
   `01` e `02` se emendam na divisa e ficam sempre juntas, nessa ordem.
