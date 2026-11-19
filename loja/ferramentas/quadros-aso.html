@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Soneca nas lojas, v2 (ASO)</title>
+<!-- DM Sans do próprio Soneca (fonts/), sem Google Fonts -->
+<style>@font-face{font-family:"DM Sans";font-weight:100 1000;src:url(../../fonts/dm-sans-latin-ext-opsz-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+1E00-1EFF}@font-face{font-family:"DM Sans";font-weight:100 1000;src:url(../../fonts/dm-sans-latin-opsz-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+2000-206F}</style>
+<style>
+/* Capturas v2: fundo sempre de dia, tudo centralizado, título e frase no alto, celular com a tela real saindo pela
+   borda de baixo. Só valores do styles.css do Soneca (cores de dia); só pesos 400 e 500. */
+:root{--bg:#FFF8EE;--surface:#FFFFFF;--surface2:#F8EEE0;--ink:#4A3522;--muted:#826449;--line:#EFE2D2;
+  --feed:#9ED9B8;--sleep:#9CC8F0;--diaper:#FFD98A;--care:#F5CDB0;--accent:#E8A87C;--mascot:#7A5A3C;
+  --bezel:#4A3522;--glow:rgba(74,53,34,.18);--body:"DM Sans",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#888;font-family:var(--body);font-weight:400;display:flex;flex-wrap:wrap;gap:40px;padding:40px}
+.f{width:var(--w);height:var(--h);container-type:size;position:relative;overflow:hidden;background:var(--bg);color:var(--ink)}
+.f .blob{position:absolute;width:122cqw;aspect-ratio:1;border-radius:50%;background:var(--c,var(--surface2));left:-11cqw;top:calc(var(--top) + 16cqw)}
+.f .txt{position:absolute;left:8cqw;right:8cqw;top:0;height:var(--th);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:2.6cqw}
+.f h1{margin:0;font-weight:500;font-size:var(--hs);line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.f p{margin:0;font-size:var(--ps);line-height:1.35;color:var(--muted);text-wrap:balance;max-width:80cqw}
+.phone{position:absolute;left:50%;transform:translateX(-50%);top:var(--top);width:var(--pw);aspect-ratio:430/932;border-radius:calc(var(--pw) * .13);
+  background:var(--bezel);padding:calc(var(--pw) * .022);box-shadow:0 3cqw 8cqw var(--glow)}
+.phone img{display:block;width:100%;height:100%;border-radius:calc(var(--pw) * .105);object-fit:cover;object-position:top}
+.ios{--w:1290px;--h:2796px;--th:25.6cqh;--top:26cqh;--pw:76cqw;--hs:8.6cqw;--ps:4.2cqw;--qs:4.1cqw;--ns:4.3cqw}
+.and{--w:1080px;--h:1920px;--th:28.5cqh;--top:29cqh;--pw:63cqw;--hs:8cqw;--ps:3.9cqw;--qs:3.75cqw;--ns:3.9cqw}
+.ios63{--w:1206px;--h:2622px}
+/* duas telas lado a lado (10) */
+.duo .phone{--pw:50cqw;transform:none}
+.duo .a{left:3.5cqw;transform:rotate(-4deg)}
+.duo .b{left:auto;right:3.5cqw;top:calc(var(--top) + 6cqh);transform:rotate(4deg)}
+/* depoimentos (8) e quem fez (9): cartões brancos no lugar do celular */
+.cards{position:absolute;left:8cqw;right:8cqw;top:var(--top);display:flex;flex-direction:column;gap:3cqw;align-items:center}
+.card{background:var(--surface);border-radius:4.2cqw;padding:4.2cqw 4.6cqw;box-shadow:0 1cqw 3cqw var(--glow);display:flex;flex-direction:column;align-items:center;gap:2.6cqw;text-align:center;width:100%}
+.card .q{font-size:var(--qs);line-height:1.38;text-wrap:balance}
+.card .who{display:flex;align-items:center;gap:2.2cqw;font-weight:500;font-size:var(--ns)}
+.av{width:calc(var(--ns) * 2.2);height:calc(var(--ns) * 2.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:var(--ns)}
+.foto{width:38cqw;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:50% 25%}
+.ph9{border:.5cqw dashed var(--muted);border-radius:3cqw;padding:3cqw 4cqw;color:var(--muted);font-size:4.2cqw;text-align:center;width:100%;line-height:1.35}
+.nome9{font-weight:500;font-size:7.2cqw}
+/* quadro duplo da abertura (1 e 2); 1em = uma unidade do iPhone 6,9" */
+.pano{position:relative;overflow:hidden;background:var(--bg);color:var(--ink)}
+.pano .blob{position:absolute;aspect-ratio:1;border-radius:50%;background:var(--sleep)}
+.pano .pt{position:absolute;top:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:34em}
+.pano h1{margin:0;font-weight:500;font-size:111em;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.pano p{margin:0;font-size:54em;line-height:1.35;color:var(--muted);text-wrap:balance;max-width:19em}
+.pano .ph{position:absolute;aspect-ratio:430/932;background:var(--bezel);box-shadow:0 60em 140em var(--glow)}
+.pano .ph img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+/* iOS 27: cabeçalho da página e cartão da busca. Céu de dia (do azul do sono ao fundo), nuvens, capivara dormindo e a faixa real da janela. */
+.i27{position:relative;overflow:hidden;color:var(--ink);background:linear-gradient(180deg,color-mix(in srgb,var(--sleep) 72%,var(--bg)) 0%,var(--bg) 100%)}
+.i27 .cl{position:absolute;border-radius:999px;background:var(--surface);opacity:.85}
+.i27 .grp{position:absolute;left:50%;top:var(--cy);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:var(--gap)}
+.i27 .fx{display:block;width:var(--fw);border-radius:calc(var(--fw) * .03665);overflow:hidden;box-shadow:0 20px 60px var(--glow)}
+.i27 .fx img{display:block;width:100%}
+.i27 .capi{width:var(--cw);height:auto;display:block;fill:none;stroke:var(--mascot);stroke-width:var(--sw);stroke-linecap:round;stroke-linejoin:round;overflow:visible;margin-top:calc(var(--cw) * .16)}
+.i27 h1{margin:0;font-weight:500;font-size:var(--ths);line-height:1.1;letter-spacing:-.02em;text-align:center;text-wrap:balance;max-width:var(--tw)}
+</style></head><body>
+<script>
+const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/><path vector-effect="non-scaling-stroke" d="M93 4H99L93 10H99"/><path vector-effect="non-scaling-stroke" d="M103 -14H112L103 -5H112"/></svg>';
+const kind = new URLSearchParams(location.search).get('k') || 'ios';
+const IMG = n => `telas/aso-${n}.png`;
+const DEP = [
+  ['J', 'var(--feed)', 'Ju, mãe do Antônio', 'Estou amando esse aplicativo! Ele facilita muito nossa rotina, ajudando a organizar os horários de sono, mamadas e atividades do bebê. Assim, consigo acompanhar melhor cada necessidade do meu pequeno, ter mais organização e viver a maternidade com mais tranquilidade. Super recomendo!'],
+  ['M', 'var(--sleep)', 'Monique, mãe do Bento', 'Sempre achei difícil encontrar um aplicativo que realmente funcionasse para a nossa rotina. Não tinha me adaptado a nenhum até conhecer o Soneca. É intuitivo, claro, prático e pensado para facilitar a vida das mães. Amo e recomendo de olhos fechados!'],
+];
+// [id, imagem, cor, título, frase, tipo]. 01 e 02 saem do quadro duplo (#pano) abaixo.
+const F = [
+  ['03-janela-como-e-montada', 'janela-resumo-dia', '--sleep', 'Da idade ao jeito do seu bebê', 'Começa pela idade e passa a usar as janelas do próprio bebê'],
+  ['04-rotina-num-so-lugar', 'diario-outros-dia', '--feed', 'Tudo da rotina num só lugar', 'Mamada, sono, fralda, remédio e mais'],
+  ['05-noites-dia-a-dia', 'tend-sono-dia', '--sleep', 'Acompanhe as noites, dia a dia', 'O sono de dia e de noite, lado a lado'],
+  ['06-a-noite-inteira', 'tend-noite-noite', '--sleep', 'A noite inteira, com cada despertar', 'Hora de dormir, despertares e maior sono seguido'],
+  ['07-relatorio-consulta', 'relatorio-dia', '--care', 'Leve tudo anotado para a consulta', 'Um PDF com a semana do bebê'],
+  ['08-depoimentos', '', '', 'O que dizem as famílias', 'Depoimentos de quem usa', 'dep'],
+  ['09-feito-por-um-medico', '', '', 'Feito por um médico', 'Pensado para a rotina real das famílias', 'med'],
+  ['10-familia-anota-junto', 'dia-quem-dia', '--feed', 'A família inteira anota junto', 'Cada um no seu celular, todo mundo vê na hora', 'duo'],
+];
+let h = '';
+if (kind === 'i27h' || kind === 'i27s') {
+  // Cabeçalho 3840 x 1646 (área segura 1646 x 661 em 1097,493; só arte, sem texto) e busca 3840 x 2560 (área segura 2168 x 1030 em 836,765).
+  const s = kind === 'i27s', W = 3840, H = s ? 2560 : 1646;
+  const cl = (l, t, w, hh) => `<i class="cl" style="left:${l}px;top:${t}px;width:${w}px;height:${hh}px"></i>`;
+  const clouds = s ? [cl(120, 140, 620, 230), cl(3080, 190, 700, 250), cl(260, 2120, 760, 260), cl(2980, 2160, 640, 230), cl(1500, 70, 520, 190), cl(3320, 1180, 420, 150)]
+    : [cl(110, 90, 560, 210), cl(3120, 140, 640, 230), cl(420, 1240, 720, 250), cl(2860, 1300, 700, 240), cl(1600, 60, 440, 160), cl(3380, 700, 380, 140)];
+  const cy = s ? 765 + 515 : 493 + 330.5;
+  h = `<div class="i27" id="${s ? 'search-results-3840x2560' : 'header-3840x1646'}" style="width:${W}px;height:${H}px;--cy:${cy}px;--gap:${s ? 50 : 26}px;--cw:${s ? 500 : 440}px;--sw:${s ? 7.5 : 7}px;--fw:${s ? 1480 : 1360}px;--ths:${s ? 128 : 0}px;--tw:2000px">${clouds.join('')}
+    <div class="grp">${CAPI}${s ? '<h1>A janela de sono do bebê, sempre à vista</h1>' : ''}<div class="fx"><img src="${IMG('faixa-dia')}" alt=""></div></div></div>`;
+} else {
+  const P = { ios: { u: 1, H: 2796, T: 760, pw: 980 }, ios63: { u: 1206 / 1290, H: 2622, T: 760, pw: 980 }, and: { u: 1080 / 1290, H: 1920, T: 600, pw: 860 } }[kind];
+  const { u, H, T, pw } = P, px = n => n * u + 'px';
+  const ph = (w, l, t, r, img) => `<div class="ph" style="width:${px(w)};left:${px(l)};top:${px(t)};transform:rotate(${r}deg);border-radius:${px(130 * w / 1000)};padding:${px(22 * w / 1000)}"><img src="${IMG(img)}" alt="" style="border-radius:${px(108 * w / 1000)}"></div>`;
+  h += `<div class="pano" id="pano" style="width:${2 * 1290 * u}px;height:${H}px;font-size:${u}px">
+    <div class="blob" style="width:${px(2500)};left:${px(40)};top:${px(T + 380)}"></div>
+    <div class="pt" style="left:${px(110)};width:${px(1070)};height:${px(T - 40)}"><h1>Sono anotado num toque</h1><p>Começou, acordou: a família inteira vê</p></div>
+    <div class="pt" style="left:${px(1400)};width:${px(1070)};height:${px(T - 40)}"><h1>A janela de sono do bebê, sempre à vista</h1><p>Pela idade e pelo que vocês anotam</p></div>
+    ${ph(pw, 1290 - 0.31 * 1290 - pw / 2, T, -8, 'home-dormindo-dia')}${ph(pw, 1290 + 0.31 * 1290 - pw / 2, T - 24, 7, 'home-acordada-dia')}</div>`;
+  for (const [id, img, c, t, s, tipo] of F) {
+    const cls = `f ${kind === 'ios63' ? 'ios ios63' : kind}${tipo === 'duo' ? ' duo' : ''}`;
+    let body = '';
+    if (tipo === 'dep') body = `<div class="cards">${DEP.map(([i, cor, nome, q]) => `<div class="card"><div class="q">“${q}”</div><div class="who"><span class="av" style="background:${cor}">${i}</span>${nome}</div></div>`).join('')}</div>`;
+    else if (tipo === 'med') body = `<div class="cards"><div class="card"><img class="foto" src="../landing/patrick.jpg" alt=""><div class="nome9">Dr. Patrick Harris</div><div class="ph9">[espaço marcado: texto curto e CRM, a decidir]</div></div></div>`;
+    else if (tipo === 'duo') body = `<div class="phone a"><img src="${IMG('dia-quem-dia')}" alt=""></div><div class="phone b"><img src="${IMG('familia-dia')}" alt=""></div>`;
+    else body = `<div class="phone"><img src="${IMG(img)}" alt=""></div>`;
+    const top = tipo === 'dep' || tipo === 'med' ? ';--top:' + (kind === 'and' ? '30cqh' : '27cqh') : '';
+    h += `<div class="${cls}" id="${id}" style="--c:${c ? `var(${c})` : 'var(--surface2)'}${top}"><div class="blob"></div>
+      <div class="txt"><h1>${t}</h1><p>${s}</p></div>${body}</div>`;
+  }
+}
+document.body.innerHTML = h;
+</script>
+</body></html>
