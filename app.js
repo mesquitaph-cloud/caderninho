@@ -10,6 +10,7 @@ import { periodStats, reportText, monthHtml, shareHtml, division, divisionHtml }
 import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
 import { NOV_KEY, novFor, novHtml as novCardHtml } from './novidades.js';
+import { avisoMarco, avisoEscolher, avisoHtml, avisoKey } from './aviso83.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
@@ -704,7 +705,7 @@ async function openFamily(fid) {
   subscribe(fid);
   await Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]);
   st.tab = 'home'; FP.invite = null;
-  show('scrMain'); render(); ftSync(); openAlertDose(); openRemTap();
+  show('scrMain'); render(); ftSync(); openAlertDose(); openRemTap(); avisoLoad();
 }
 
 async function loadNames(ids) {
@@ -1278,7 +1279,7 @@ function renderBv() {
       + '<div class="btns"><button class="save" data-bvfeed="1">Anotar mamada</button><button class="link" data-bv="ola">Pular</button></div>')
     : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(famName(st.family.name))}</h3></div>`
       + '<p>O que alguém anota aparece para todos.</p>' + go('Entendi'))
-    : '';
+    : k ? '' : avisoCard();
   if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
   bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não'))
     : k === 'convite2' ? card(x + '<h3>Alguém mais cuida junto?</h3><p>Quem você convidar vê e anota na mesma linha do tempo. Se preferir depois, o convite fica na aba Família.</p>' + go('Convidar alguém', 'Agora não'))
@@ -1323,6 +1324,59 @@ $('paneHome').addEventListener('click', e => {
   else bvSkip(k === 'convite2' ? 'convite' : k);
   if (!b.dataset.bvgo || k === 'entrou') return render();
   if (k === 'convite' || k === 'convite2') return goTab('family', 'famMembers');
+});
+
+/* ---------- Aviso: programe um remédio ou uma tarefa (item 83, prévia aprovada em 19/11) ---------- */
+// Cartão na tela Hoje, abaixo de boas-vindas, versão nova e novidades; um por abertura do app, sem capivara.
+// A regra (marco zero = bebê mais antigo, 3 h de espera, dias 0/3/5 e 1/4/6, nada depois do dia 6) está em
+// aviso83.js. Remédio e tarefa valem para a família toda; st.meds e st.routines só têm o bebê aberto, por isso
+// a família é conferida uma vez ao abrir (avisoLoad). "Agora não" e o que já foi mostrado ficam neste celular
+// (cad-aviso83-<família>-<tipo>: os dias do calendário já usados). Sem SQL.
+const avFam = { fid: null, ok: false, remedio: false, tarefa: false };   // o que a família já tem
+let avSess = null, avDesde = 0, avFim = false;                            // o cartão desta abertura; fim = já foi dispensado
+async function avisoLoad() {
+  const fid = st.family?.id, ids = st.babies.map(b => b.id);
+  Object.assign(avFam, { fid, ok: false, remedio: false, tarefa: false });
+  avSess = null; avFim = false; avDesde = Date.now();
+  if (!fid || !ids.length) return;
+  try {
+    const [m, r] = await Promise.all([
+      sb.from('medicines').select('start_date,days').in('baby_id', ids).is('stopped_at', null).limit(200),
+      sb.from('routines').select('id').in('baby_id', ids).is('stopped_at', null).limit(1)]);
+    if (m.error || r.error || st.family?.id !== fid) return;
+    const t0 = startOfDay(Date.now());
+    avFam.remedio = m.data.some(x => medEnd(x) > t0); avFam.tarefa = r.data.length > 0; avFam.ok = true;
+    render();
+  } catch {}
+}
+const avVistos = (fid, tipo) => { try { return JSON.parse(lsGet(avisoKey(fid, tipo))) || []; } catch { return []; } };
+const avFalta = () => ({
+  remedio: !avFam.remedio && !st.meds.some(m => medEnd(m) > startOfDay(Date.now())),
+  tarefa: !avFam.tarefa && !st.routines.length });
+function avisoCard() {
+  const fid = st.family?.id;
+  if (!fid || avFam.fid !== fid || !avFam.ok || avFim) return '';
+  const falta = avFalta();
+  if (avSess && !falta[avSess]) avSess = null;
+  if (!avSess) {
+    // Só na abertura, na tela Hoje, sem outra janela aberta; no app espera um pouco a versão nova e as novidades.
+    if (st.tab !== 'home' || S || !$('ask').hidden || !$('sheet').hidden || !$('rpView').hidden || $('scrMain').hidden) return '';
+    const espera = (NATIVE ? 4000 : 0) - (Date.now() - avDesde);
+    if (espera > 0) { setTimeout(render, espera + 50); return ''; }
+    const me = st.members.find(m => m.user_id === st.user.id);
+    const vistos = { tarefa: avVistos(fid, 'tarefa'), remedio: avVistos(fid, 'remedio') };
+    const e = avisoEscolher({ marco: avisoMarco(st.babies), entrada: me ? Date.parse(me.joined_at) : NaN, agora: Date.now(), falta, vistos });
+    if (!e) { avFim = true; return ''; }
+    for (const t in e.consumir) lsSet(avisoKey(fid, t), JSON.stringify([...new Set([...vistos[t], ...e.consumir[t]])]));
+    avSess = e.tipo;
+  }
+  return avisoHtml(avSess);
+}
+$('paneHome').addEventListener('click', e => {
+  const b = e.target.closest('[data-av]'); if (!b) return;
+  const tipo = avSess; avSess = null; avFim = true;
+  render();
+  if (b.dataset.av === 'go') { if (tipo === 'remedio') medForm(null); else pickSheet(); }
 });
 
 /* ---------- botões da tela inicial ---------- */
@@ -2686,6 +2740,7 @@ async function saveMed(btn) {
   busy(btn, false);
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  avFam.remedio = true;
   leaveMedForm(back); toast('Salvo');
   // Quem programa o primeiro remédio de horário fica com o aviso ligado neste celular.
   if (medNotif && isNew && row.schedule !== 'prn' && lsGet(alertKey(st.baby.id)) == null) setMedAlert(true);
@@ -2928,7 +2983,7 @@ const taskAlertKey = id => 'cad-tarefaalert-' + id;
 const taskAlertOn = () => !!st.baby && lsGet(taskAlertKey(st.baby.id)) === '1';
 function drawTasks() {
   let h = `<div class="grab"></div><div class="shead"><h3>Tarefas<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
-  if (!st.routines.length) h += `<div class="lake">${CAPI.replace(' class="capi"', '')}</div><button class="save" data-act="tNew">Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>`;
+  if (!st.routines.length) h += `<p class="dim tvazio">Nada por aqui ainda, programe uma tarefa primeiro!</p><div class="lake">${CAPI.replace(' class="capi"', '')}</div><button class="save" data-act="tNew">Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>`;
   else {
     h += `<div class="tlist">${st.routines.map(taskRow).join('')}</div>`;
     if (medNotif) h += `<button class="li tg" role="switch" aria-checked="${taskAlertOn()}" data-act="tAlert"><span>Ativar notificações de tarefas</span><span class="sw${taskAlertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
@@ -3008,6 +3063,7 @@ async function saveTask(btn) {
   busy(btn, false);
   if (error) { S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTask(); }
   st.routines = [...st.routines.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
+  avFam.tarefa = true;
   // Veio da Fralda: volta para a mesma troca, com as pomadas novas já marcadas.
   if (ret) { S = ret; for (const n of added) S.oint.add(n); drawEntry(); toast('Salvo'); return taskAlertsLater(); }
   tasksSheet();
