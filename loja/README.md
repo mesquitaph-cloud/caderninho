@@ -27,3 +27,24 @@ deve passar à direita de "Última fralda" e descer entre "Dormindo há" e "Acor
 `quadros.html`).
 
 Os textos e a ordem ficam em `loja/ferramentas/quadros.html`; os dados de exemplo, em `fake-sb.js`.
+
+## Capturas v2 (ASO, 19/11/2026; refeitas como v02 no mesmo dia)
+
+Dez capturas novas, com a janela de sono em destaque e o relatório de volta, mais as artes do iOS 27. As
+anteriores (acima) ficam como estão. Quadro aprovado: https://claude.ai/artifact/D35J4iR342fwrHGGxoSSkG. Folha de
+contato v01 (privada): https://claude.ai/artifact/SpKRZquS3fWgtt1PiN6zgi; v02 (notas de revisão aplicadas: composição variada, círculo de fundo por tema, noites e despertares com dados novos): https://claude.ai/artifact/4y6CxnyMwqHhEanPtgoGcT. As frases são rascunho, a aprovar palavra por palavra.
+
+- `app-store-v2/` (1290 × 2796), `app-store-6.3-v2/` (1206 × 2622) e `google-play-v2/` (1080 × 1920): as mesmas dez.
+  `01` e `02` se emendam na divisa e ficam sempre juntas, nessa ordem.
+- `apple-ios27/`: `header.png` (3840 × 1646, sem texto, arte na área segura 1646 × 661 em 1097,493) e
+  `search-results.png` (3840 × 2560, área segura 2168 × 1030 em 836,765), sem transparência.
+
+Para refazer (Playwright e Chrome, como acima; o app 1.0.4 do `main`):
+
+    node loja/ferramentas/telas-aso.mjs     # fotos em loja/ferramentas/telas/aso-*.png (cenários em aso-telas.json)
+    node loja/ferramentas/quadros-aso.mjs   # monta as imagens (quadros-aso.html)
+
+Os dados de exemplo ficam em `aso-dados.js` (as sete últimas noites crescem de ~6h20 para ~9h; hoje às 14h32 a
+Helena dorme desde 13h17, ou, com `?aso=acordada`, acordou há 45 min). A captura 3 (como a janela é montada) e a 9
+(quem fez o Soneca, com texto e CRM ainda marcados "a decidir") são telas montadas dentro do app, no padrão do
+onboarding, em `telas-aso.mjs`; o app não tem essas telas hoje.

@@ -1,0 +1,214 @@
+[
+ {
+  "name": "home-dormindo",
+  "steps": [
+   {
+    "shot": "home-dormindo"
+   }
+  ]
+ },
+ {
+  "name": "home-acordada",
+  "cen": "acordada",
+  "steps": [
+   {
+    "shot": "home-acordada"
+   }
+  ]
+ },
+ {
+  "name": "diario-outros",
+  "steps": [
+   {
+    "click": "#grid [data-k='more']",
+    "wait": 400,
+    "eval": "document.getElementById('popScrim').style.display='none'"
+   },
+   {
+    "wait": 200,
+    "shot": "diario-outros"
+   }
+  ]
+ },
+ {
+  "name": "tend-sono",
+  "steps": [
+   {
+    "click": "#tabbar [data-tab='trends']",
+    "wait": 700,
+    "shot": "tend-sono"
+   }
+  ]
+ },
+ {
+  "name": "tend-noite",
+  "scheme": "dark",
+  "steps": [
+   {
+    "click": "#tabbar [data-tab='trends']",
+    "wait": 700
+   },
+   {
+    "eval": "(()=>{const h=[...document.querySelectorAll('#paneTrends *')].find(x=>[...x.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()==='A noite')); window.scrollTo(0, window.scrollY + h.getBoundingClientRect().top - 150)})()",
+    "wait": 300,
+    "shot": "tend-noite"
+   }
+  ]
+ },
+ {
+  "name": "relatorio",
+  "steps": [
+   {
+    "click": "#tabbar [data-tab='family']",
+    "wait": 500
+   },
+   {
+    "click": "[data-act='openConsult']",
+    "wait": 300
+   },
+   {
+    "click": "[data-act='report']",
+    "wait": 300
+   },
+   {
+    "click": "[data-act='rpView']",
+    "wait": 500,
+    "shot": "relatorio"
+   }
+  ]
+ },
+ {
+  "name": "dia-quem",
+  "steps": [
+   {
+    "eval": "document.getElementById('timeline').scrollIntoView({block:'start'});window.scrollBy(0,-130)",
+    "wait": 300,
+    "shot": "dia-quem"
+   }
+  ]
+ },
+ {
+  "name": "janela-resumo",
+  "steps": [
+   {
+    "fn": "resumoJanela",
+    "wait": 300
+   },
+   {
+    "el": "#scrOnb .whohow >> nth=0",
+    "shotEl": "c3-idade"
+   },
+   {
+    "el": "#scrOnb .whohow >> nth=1",
+    "shotEl": "c3-registros"
+   },
+   {
+    "el": "#scrOnb .onbwin",
+    "shotEl": "c3-janela"
+   },
+   {
+    "shot": "janela-resumo"
+   }
+  ],
+  "dsf": 4
+ },
+ {
+  "name": "quem",
+  "steps": [
+   {
+    "fn": "quem",
+    "wait": 300,
+    "shot": "quem"
+   }
+  ]
+ },
+ {
+  "name": "familia",
+  "steps": [
+   {
+    "click": "#tabbar [data-tab='family']",
+    "wait": 500
+   },
+   {
+    "eval": "document.getElementById('famNossa').scrollIntoView({block:'start'});window.scrollBy(0,-90)",
+    "wait": 300,
+    "shot": "familia"
+   }
+  ]
+ },
+ {
+  "name": "faixa",
+  "cen": "acordada",
+  "dsf": 6,
+  "steps": [
+   {
+    "el": "#sleepWin",
+    "shotEl": "faixa"
+   }
+  ]
+ },
+ {
+  "name": "diario-grid",
+  "dsf": 4,
+  "steps": [
+   {
+    "click": "#grid [data-k='more']",
+    "wait": 400,
+    "eval": "document.getElementById('popScrim').style.display='none'"
+   },
+   {
+    "wait": 200,
+    "clip": {
+     "x": 0,
+     "y": 690,
+     "width": 430,
+     "height": 242
+    },
+    "shotClip": "diario-grid"
+   }
+  ]
+ },
+ {
+  "name": "dock-sleep",
+  "dsf": 5,
+  "steps": [
+   {
+    "eval": "document.head.insertAdjacentHTML('beforeend','<style>.dock,.din,.strip{background:transparent!important;box-shadow:none!important}</style>')"
+   },
+   {
+    "el": ".ext.k-sleep",
+    "shotEl": "dock-sleep"
+   }
+  ]
+ },
+ {
+  "name": "folha-relatorio",
+  "dsf": 4,
+  "steps": [
+   {
+    "click": "#tabbar [data-tab='family']",
+    "wait": 500
+   },
+   {
+    "click": "[data-act='openConsult']",
+    "wait": 300
+   },
+   {
+    "click": "[data-act='report']",
+    "wait": 300
+   },
+   {
+    "click": "[data-act='rpView']",
+    "wait": 500
+   },
+   {
+    "eval": "document.querySelector('.rp-bar').style.display='none';document.getElementById('rpView').style.background='transparent'",
+    "wait": 200
+   },
+   {
+    "el": ".rp-paper",
+    "shotEl": "folha-relatorio"
+   }
+  ]
+ }
+]
