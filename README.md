@@ -671,7 +671,7 @@ mesmos, porque o texto cita os itens pelo número.
   (não mais só 0h a 24h). A coluna de hoje aparece em todas as guias do dia a dia, tracejada, com um traço no
   chão quando ainda não há número. `bounds` e `napsOf` (`noite.js`) não mudaram; relatório e "Como foram as
   noites" não mudaram. Sonecas segue como antes. **Textos provisórios, a aprovar palavra por palavra:** botão
-  i do Sono, legenda "sono do dia, das 0h às 24h", linha "das 0h às 24h" / "das 0h até agora" e, no botão i de
+  i do Sono (a parte da noite e a das sonecas seguem separadas no gráfico, "à noite" e "de dia", dentro do dia de calendário) e, no botão i de
   Maior sono seguido, "Conta no dia em que a noite começa." Testes em `testes/noite.mjs`. Sem SQL.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já

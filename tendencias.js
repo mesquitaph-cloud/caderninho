@@ -68,10 +68,9 @@ export function trendWindow(mode, off, now, first) {
 // Quanto sono cai dentro do dia de calendário d (das 0h às 24h): cada sono entra pelo pedaço que cabe no
 // dia, então um sono que passa da meia-noite se divide entre os dois dias. `open`: o começo do sono em
 // andamento, que conta até agora (item 81, decidido com o Patrick em 19/11).
-export function calendarSleep(ivs, open, now, d) {
-  const d1 = addDays(d, 1), all = open !== null && open !== undefined && now - open <= MAX_SLEEP ? [...ivs, [open, now]] : ivs;
-  return sum(all, ([x, y]) => Math.max(0, Math.min(y, d1) - Math.max(x, d)));
-}
+const clip = (all, d) => { const d1 = addDays(d, 1); return sum(all, ([x, y]) => Math.max(0, Math.min(y, d1) - Math.max(x, d))); };
+const withOpen = (ivs, open, now) => open !== null && open !== undefined && now - open <= MAX_SLEEP ? [...ivs, [open, now]] : ivs;
+export function calendarSleep(ivs, open, now, d) { return clip(withOpen(ivs, open, now), d); }
 
 // Números de cada dia d. `day`: o sono do dia de calendário (0h às 24h). Os outros, da manhã de d até a
 // manhã seguinte (a noite que começa em d, contada em d).
@@ -83,6 +82,7 @@ export function dayRows(days, evs, now, rule) {
   return days.map(d => {
     const d1 = addDays(d, 1), { day0, w0, w1 } = bounds(rule, d);
     const naps = napsOf(ivs, rule, d);
+    const all = withOpen(ivs, open, now), day = clip(all, d), dayNap = clip(napsOf(all, rule, d), d);   // do dia de calendário, o que é soneca e o que é noite
     const n = nmap.get(d) || null, ns = n ? n.ns : [];
     const started = ivs.filter(([x]) => x >= day0 && x < bounds(rule, d1).day0);   // o dia e a noite que começa nele
     // A noite foi anotada do começo ao fim?
@@ -98,7 +98,7 @@ export function dayRows(days, evs, now, rule) {
     return {
       d, any: evs.some(e => e.t >= d && e.t < d1),
       few: marks.filter(e => e.t >= d && e.t < d1).length < FEW_DAY,
-      day: calendarSleep(ivs, open, now, d),
+      day, dayNap, dayNight: day - dayNap,
       nap: sum(naps, ([x, y]) => y - x), naps: naps.length,
       night: sum(ns, ([x, y]) => y - x), hasNight: ns.length > 0, whole,
       desp: n ? n.wakes.length : 0,
@@ -122,7 +122,7 @@ function items(win, evs, now, rule) {
     const ok = ds.filter(r => !r.few).length, okN = ds.filter(r => r.whole).length, naps = sum(rec, r => r.naps);
     return {
       d: w.a, e: w.e, n: ds.length, ok, okN,
-      night: mean(rec, r => r.night) || 0, nap: mean(rec, r => r.nap) || 0, total: mean(rec, r => r.day) || 0,
+      night: mean(rec, r => r.night) || 0, nap: mean(rec, r => r.nap) || 0, dayNap: mean(rec, r => r.dayNap) || 0, dayNight: mean(rec, r => r.dayNight) || 0, total: mean(rec, r => r.day) || 0,
       naps: mean(rec, r => r.naps) || 0, napEach: naps ? sum(rec, r => r.nap) / naps : 0,
       desp: mean(nl, r => r.desp) || 0, hasNight: nl.length > 0,
       bed: mean(beds, r => r.bed), wake: mean(wakes, r => r.wake),
@@ -204,7 +204,7 @@ function defs(k, de, c) {
   const s = c.start + 'h', e = c.end + 'h';
   de = esc(de);
   return {
-    sono: 'Todo o sono de cada dia, das 0h às 24h, sonecas e noite juntas. Um sono que passa da meia-noite é dividido entre os dois dias. O dia de hoje conta até agora.',
+    sono: 'Todo o sono de cada dia, das 0h às 24h, com a parte da noite e a das sonecas separadas. Um sono que passa da meia-noite é dividido entre os dois dias. O dia de hoje conta até agora.',
     desp: `Despertar é acordar e voltar a dormir durante a noite ${de} (${s} às ${e}), depois do primeiro sono. Acordar de uma soneca não conta.`,
     faixa: `A família escolhe o começo e o fim da noite de cada bebê. A ${de} vai das ${s} às ${e}. Para mudar, toque em Noite do bebê, na aba Família.`,
     long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que a noite começa.',
@@ -264,9 +264,9 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   const hrs = k => its.map(x => ({ ...x, [k]: x[k] / HOUR }));
 
   // Provisório (item 81): textos a aprovar palavra por palavra pelo Patrick.
-  h += card('sono', 'Sono', 'tb-night', read(lab + per, dur(cur.total), week ? '' : cur.today ? 'das 0h até agora' : 'das 0h às 24h', fewDay(cur, week))
-    + bars({ its: hrs('total'), series: [['total', 'tb-night']], max: maxT, step: 6, fmt: v => v + 'h', sel, week, h: 120, name: 'Horas de sono por dia', few: sF })
-    + '<div class="trl"><span><i class="tb-night"></i>sono do dia, das 0h às 24h</span></div>', CAPI_ZZ);
+  h += card('sono', 'Sono', 'tb-night', read(lab + per, dur(cur.total), dur(cur.dayNight) + ' à noite · ' + dur(cur.dayNap) + ' de dia', fewDay(cur, week))
+    + bars({ its: its.map(x => ({ ...x, dayNight: x.dayNight / HOUR, dayNap: x.dayNap / HOUR })), series: [['dayNight', 'tb-night'], ['dayNap', 'tb-nap']], max: maxT, step: 6, fmt: v => v + 'h', sel, week, h: 120, name: 'Horas de sono por dia, à noite e de dia', few: sF })
+    + '<div class="trl"><span><i class="tb-night"></i>à noite</span><span><i class="tb-nap"></i>de dia</span><span>a altura é o total, das 0h às 24h</span></div>', CAPI_ZZ);
   h += card('desp', 'Despertares à noite', 'tb-wake', read(nlab, week ? dec(cur.desp) : String(cur.desp), '', fewNight(cur, week))
     + bars({ its, series: [['desp', 'tb-wake']], max: maxD, step: maxD > 4 ? 2 : 1, fmt: String, sel, week, name: 'Despertares à noite', few: nF }));
   h += card('faixa', 'A noite', 'tb-night', read(nlab.replace('média por noite', 'em média'),

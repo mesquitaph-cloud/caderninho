@@ -76,3 +76,10 @@ ok(ps.napDay === HOUR && ps.napSpan === 'das 6h às 20h', 'resumo: sono de dia '
   const html = trendsHtml({ t: { tab: 'sono', mode: 'd', off: 0, sel: null, info: null }, evs: evsOf([...ss, [H(addDays(d17, -1), 21), H(d17, 6)], [H(addDays(d17, -2), 21), H(addDays(d17, -1), 6)]]), now: now2, first: addDays(d17, -3), who: '' });
   ok((html.match(/class="today"/g) || []).length >= 5 && html.includes('>hoje<'), 'hoje aparece (tracejada) em todos os gráficos, mesmo vazia');
 }
+{
+  const { dayRows } = await import('../tendencias.js');
+  const d17 = new Date(2026, 10, 17).getTime(), d18 = addDays(d17, 1);
+  const e = [[H(d17, 13), H(d17, 14, 30)], [H(d17, 21), H(d18, 6)]].flatMap(([x, y]) => [{ kind: 'sleep', t: x }, { kind: 'wake', t: y }]);
+  const r = dayRows([d17, d18], e, H(d18, 8), rule);
+  ok(r[0].dayNap === 1.5 * HOUR && r[0].dayNight === 3 * HOUR && r[1].dayNight === 6 * HOUR && r[1].dayNap === 0, 'Sono: parte de dia e parte da noite dentro do dia de calendário');
+}
