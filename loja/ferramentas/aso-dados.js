@@ -27,7 +27,7 @@ const ASO = new URLSearchParams(location.search).get('aso') || 'base';
     // e os despertares caem de 4 para 1; antes disso fica parado em ~6h com 4 despertares.
     if (today) continue;
     const k = d <= 14 ? 14 - d : 0, flat = d > 14, nz = flat ? 8 : 10;
-    const L = (6 * 60 + k * 14) * MIN, S = hm(base, 22, 30) - k * 6 * MIN + j(nz), E = S + L + j(flat ? 6 : 8);
+    const L = (6 * 60 + k * 14) * MIN + j(flat ? 10 : 20), S = hm(base, 22, 45) - k * 8.8 * MIN + j(flat ? 10 : 20), E = S + L;
     const n = k < 4 ? 4 : k < 8 ? 3 : k < 11 ? 2 : 1, w = (42 - k * 2.5) * MIN;
     put(S, 'sleep');
     for (let i = 1; i <= n; i++) { const c = S + L * i / (n + 1) + j(8); put(c, 'wake'); put(c + w, 'sleep'); }
