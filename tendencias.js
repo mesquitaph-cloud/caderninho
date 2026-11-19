@@ -3,6 +3,8 @@
 // outro, dia a dia (14 dias, provisório) ou semana a semana (12 semanas, cada uma com os 7 dias que
 // terminam ontem, como no painel da semana). Só junta o que foi anotado: sem "normal", meta, faixa de
 // referência, seta de melhora ou piora, nem comparação com outros bebês (CONTEXT.md).
+//   Item 81 (19/11): a guia Sono passou a ser o dia de calendário (0h às 24h, sono dividido na meia-noite,
+//   sono em andamento até agora); as guias da noite seguem pelo dia em que a noite começa.
 //   Hoje não entra na conta (a regra da média por dia), mas a frase não aparece na tela (Patrick, 13/11).
 //   Cada dia d junta o sono de dia de d (os sonos que começam entre 6h e 18h, inteiros, como o napDay de
 //   report.js) e a noite que começa em d (os sonos que começam entre 18h e 6h, inteiros). A noite, a hora
@@ -63,17 +65,26 @@ export function trendWindow(mode, off, now, first) {
   return { a, z: weeks.length ? weeks.at(-1).e : Y, days, weeks, canBack: a0 > first, canFwd: off > 0 };
 }
 
-// Números de cada dia d, da manhã de d até a manhã seguinte.
+// Quanto sono cai dentro do dia de calendário d (das 0h às 24h): cada sono entra pelo pedaço que cabe no
+// dia, então um sono que passa da meia-noite se divide entre os dois dias. `open`: o começo do sono em
+// andamento, que conta até agora (item 81, decidido com o Patrick em 19/11).
+export function calendarSleep(ivs, open, now, d) {
+  const d1 = addDays(d, 1), all = open !== null && open !== undefined && now - open <= MAX_SLEEP ? [...ivs, [open, now]] : ivs;
+  return sum(all, ([x, y]) => Math.max(0, Math.min(y, d1) - Math.max(x, d)));
+}
+
+// Números de cada dia d. `day`: o sono do dia de calendário (0h às 24h). Os outros, da manhã de d até a
+// manhã seguinte (a noite que começa em d, contada em d).
 export function dayRows(days, evs, now, rule) {
   if (!days.length) return [];
   const { out, open } = sleepIntervals(evs), ivs = out.filter(([x, y]) => y - x <= MAX_SLEEP);
   const nmap = new Map(nights(days[0], addDays(days.at(-1), 1), evs, out, now, rule).map(n => [n.d, n]));
   const marks = evs.filter(e => e.kind === 'sleep' || e.kind === 'wake');
   return days.map(d => {
-    const d1 = addDays(d, 1), { w0, w1 } = bounds(rule, d);
+    const d1 = addDays(d, 1), { day0, w0, w1 } = bounds(rule, d);
     const naps = napsOf(ivs, rule, d);
     const n = nmap.get(d) || null, ns = n ? n.ns : [];
-    const started = ivs.filter(([x]) => x >= d && x < d1);
+    const started = ivs.filter(([x]) => x >= day0 && x < bounds(rule, d1).day0);   // o dia e a noite que começa nele
     // A noite foi anotada do começo ao fim?
     let whole = !!(n && n.hasBed);
     if (whole && open !== null && open >= w0 && open < w1) whole = false;        // falta o acordou
@@ -87,6 +98,7 @@ export function dayRows(days, evs, now, rule) {
     return {
       d, any: evs.some(e => e.t >= d && e.t < d1),
       few: marks.filter(e => e.t >= d && e.t < d1).length < FEW_DAY,
+      day: calendarSleep(ivs, open, now, d),
       nap: sum(naps, ([x, y]) => y - x), naps: naps.length,
       night: sum(ns, ([x, y]) => y - x), hasNight: ns.length > 0, whole,
       desp: n ? n.wakes.length : 0,
@@ -101,7 +113,7 @@ export function dayRows(days, evs, now, rule) {
 // Cada barra: um dia ou a média de uma semana.
 function items(win, evs, now, rule) {
   const rows = dayRows(win.days, evs, now, rule);
-  const item = (r, few, nfew) => ({ ...r, total: r.night + r.nap, napEach: r.naps ? r.nap / r.naps : 0, sFew: few, nFew: nfew });
+  const item = (r, few, nfew) => ({ ...r, total: r.day, napEach: r.naps ? r.nap / r.naps : 0, sFew: few, nFew: nfew });
   const t0 = startOfDay(now);
   if (!win.weeks) return rows.map(r => r.d === t0 ? { ...item(r, true, true), today: true } : item(r, r.few, !r.whole));
   return win.weeks.map(w => {
@@ -110,7 +122,7 @@ function items(win, evs, now, rule) {
     const ok = ds.filter(r => !r.few).length, okN = ds.filter(r => r.whole).length, naps = sum(rec, r => r.naps);
     return {
       d: w.a, e: w.e, n: ds.length, ok, okN,
-      night: mean(rec, r => r.night) || 0, nap: mean(rec, r => r.nap) || 0, total: mean(rec, r => r.night + r.nap) || 0,
+      night: mean(rec, r => r.night) || 0, nap: mean(rec, r => r.nap) || 0, total: mean(rec, r => r.day) || 0,
       naps: mean(rec, r => r.naps) || 0, napEach: naps ? sum(rec, r => r.nap) / naps : 0,
       desp: mean(nl, r => r.desp) || 0, hasNight: nl.length > 0,
       bed: mean(beds, r => r.bed), wake: mean(wakes, r => r.wake),
@@ -152,6 +164,7 @@ function bars({ its, series, max, step, fmt, sel, week, h = 96, name, few }) {
       const v = it[k] || 0, y = T + ch - ch * (acc + v) / max; acc += v;
       if (v > 0) s += `<rect class="${cls}" x="${f1(x)}" y="${f1(y)}" width="${f1(bw)}" height="${f1(ch * v / max)}" rx="${f1(Math.min(3, bw / 3))}"/>`;
     }
+    if (it.today && series.every(([k]) => !(it[k] > 0))) s += `<rect class="${series[0][1]}" x="${f1(x)}" y="${T + ch - 3}" width="${f1(bw)}" height="3" rx="1.5"/>`;   // hoje sem número: o traço no chão marca a coluna
     s += '</g>';
     if (i === sel) s += selBox(x, bw, ch);
     s += label(x + bw / 2, H, its, i, week, i === sel);
@@ -175,7 +188,7 @@ function band({ its, sel, week }) {
       s += `<g${it.today ? ' class="today"' : it.nFew ? ' class="few"' : ''}><rect class="tb-night" x="${f1(x)}" y="${f1(a)}" width="${f1(bw)}" height="${f1(Math.max(1, b - a))}" rx="${f1(bw / 2)}"/>`;
       if (bw >= 6) for (const t of wk) s += `<circle class="tb-dot" cx="${f1(x + bw / 2)}" cy="${f1(Y(t / HOUR))}" r="1.8"/>`;
       s += '</g>';
-    }
+    } else if (it.today) s += `<g class="today"><rect class="tb-night" x="${f1(x)}" y="${f1(T + ch - 3)}" width="${f1(bw)}" height="3" rx="1.5"/></g>`;
     if (i === sel) s += selBox(x, bw, ch);
     s += label(x + bw / 2, H, its, i, week, i === sel);
     s += hit(i, L + slot * i, slot, H);
@@ -191,10 +204,10 @@ function defs(k, de, c) {
   const s = c.start + 'h', e = c.end + 'h';
   de = esc(de);
   return {
-    sono: `A noite ${de} vai das ${s} às ${e}, como a família escolheu. Todo sono que começa nesse horário conta como noite, e um sono que começa antes das ${s} e passa delas também conta inteiro. Os outros são sonecas.`,
+    sono: 'Todo o sono de cada dia, das 0h às 24h, sonecas e noite juntas. Um sono que passa da meia-noite é dividido entre os dois dias. O dia de hoje conta até agora.',
     desp: `Despertar é acordar e voltar a dormir durante a noite ${de} (${s} às ${e}), depois do primeiro sono. Acordar de uma soneca não conta.`,
     faixa: `A família escolhe o começo e o fim da noite de cada bebê. A ${de} vai das ${s} às ${e}. Para mudar, toque em Noite do bebê, na aba Família.`,
-    long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que o sono começou.',
+    long: '<b>Vale qualquer sono</b>, da noite ou soneca. Quase sempre é o da noite. Conta no dia em que a noite começa.',
     naps: `Soneca é cada sono fora da noite ${de}, entre ${e} e ${s}.`,
   }[k];
 }
@@ -250,9 +263,10 @@ export function trendsHtml({ t, evs, now, first, pump, who, chips = '', loading 
   const maxL = niceMax(Math.max(...its.map(x => x.longest / HOUR)), 2), maxN = niceMax(Math.max(...its.map(x => x.naps)), 2);
   const hrs = k => its.map(x => ({ ...x, [k]: x[k] / HOUR }));
 
-  h += card('sono', 'Sono', 'tb-night', read(lab + per, dur(cur.total), dur(cur.night) + ' à noite · ' + dur(cur.nap) + ' de dia', fewDay(cur, week))
-    + bars({ its: hrs('night').map((x, i) => ({ ...x, nap: its[i].nap / HOUR })), series: [['night', 'tb-night'], ['nap', 'tb-nap']], max: maxT, step: 6, fmt: v => v + 'h', sel, week, h: 120, name: 'Horas de sono, à noite e de dia', few: sF })
-    + '<div class="trl"><span><i class="tb-night"></i>à noite</span><span><i class="tb-nap"></i>de dia</span><span>a altura é o total</span></div>', CAPI_ZZ);
+  // Provisório (item 81): textos a aprovar palavra por palavra pelo Patrick.
+  h += card('sono', 'Sono', 'tb-night', read(lab + per, dur(cur.total), week ? '' : cur.today ? 'das 0h até agora' : 'das 0h às 24h', fewDay(cur, week))
+    + bars({ its: hrs('total'), series: [['total', 'tb-night']], max: maxT, step: 6, fmt: v => v + 'h', sel, week, h: 120, name: 'Horas de sono por dia', few: sF })
+    + '<div class="trl"><span><i class="tb-night"></i>sono do dia, das 0h às 24h</span></div>', CAPI_ZZ);
   h += card('desp', 'Despertares à noite', 'tb-wake', read(nlab, week ? dec(cur.desp) : String(cur.desp), '', fewNight(cur, week))
     + bars({ its, series: [['desp', 'tb-wake']], max: maxD, step: maxD > 4 ? 2 : 1, fmt: String, sel, week, name: 'Despertares à noite', few: nF }));
   h += card('faixa', 'A noite', 'tb-night', read(nlab.replace('média por noite', 'em média'),

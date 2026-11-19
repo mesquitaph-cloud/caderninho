@@ -661,6 +661,18 @@ mesmos, porque o texto cita os itens pelo número.
   reabrir o app no meio e na tela de login; o Google na web (redirecionamento); permissão de notificação
   no "Sim" do lembrete (negar e seguir); "Já tenho conta" com conta sem família; convite pelo link com o
   app instalado; claro e escuro.
+- **81 · Tendências: a guia Sono passa a ser o dia de calendário** (Patrick, 18/11; decidido em 19/11; no código,
+  PR `claude/tendencias-sono-dia-calendario`). Antes cada coluna era "o dia + a noite que começa nele", e de
+  manhã a coluna de hoje aparecia vazia. Agora a guia **Sono** soma o sono dormido de 0h às 24h (horário do
+  aparelho), sonecas e noite juntas; um sono que passa da meia-noite se divide entre os dois dias (21h às 6h =
+  3 h num dia, 6 h no outro) e o sono em andamento conta até agora (`calendarSleep`, `tendencias.js`). A guia
+  **A noite**, **Despertares** e **Maior sono seguido** seguem no dia em que a noite começa (a noite de 17 para
+  18 fica em 17); o maior sono agora olha os sonos que começam entre o fim da noite de antes e o fim do dia
+  (não mais só 0h a 24h). A coluna de hoje aparece em todas as guias do dia a dia, tracejada, com um traço no
+  chão quando ainda não há número. `bounds` e `napsOf` (`noite.js`) não mudaram; relatório e "Como foram as
+  noites" não mudaram. Sonecas segue como antes. **Textos provisórios, a aprovar palavra por palavra:** botão
+  i do Sono, legenda "sono do dia, das 0h às 24h", linha "das 0h às 24h" / "das 0h até agora" e, no botão i de
+  Maior sono seguido, "Conta no dia em que a noite começa." Testes em `testes/noite.mjs`. Sem SQL.
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
