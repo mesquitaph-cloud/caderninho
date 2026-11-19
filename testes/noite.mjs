@@ -53,3 +53,33 @@ ok(ps.napDay === HOUR && ps.napSpan === 'das 6h às 20h', 'resumo: sono de dia '
   ok(r.wk[0] / HOUR === 26.5, 'Tendências: despertar às 2h30 fica em 26,5 h');
   ok(r.desp === nights(D, D1, [], s5, now, rule)[0].wakes.length, 'Tendências conta os mesmos despertares de "Como foram as noites"');
 }
+// Tendências, guia Sono (item 81): dia de calendário, 0h às 24h.
+{
+  const { dayRows, calendarSleep, trendWindow, trendsHtml } = await import('../tendencias.js');
+  const evsOf = ss => ss.flatMap(([x, y]) => y === null ? [{ kind: 'sleep', t: x }] : [{ kind: 'sleep', t: x }, { kind: 'wake', t: y }]);
+  const d17 = new Date(2026, 10, 17).getTime(), d18 = addDays(d17, 1), d19 = addDays(d17, 2);
+  const ss = [[H(d17, 13), H(d17, 14, 30)], [H(d17, 21), H(d18, 6)]];
+  const rows = dayRows([d17, d18, d19], evsOf(ss), H(d18, 8), rule);
+  ok(rows[0].day === 1.5 * HOUR + 3 * HOUR && rows[1].day === 6 * HOUR, 'Sono: 21h às 6h se divide, 3 h no dia 17 e 6 h no dia 18');
+  ok(rows[2].day === 0, 'Sono: dia sem registro soma zero');
+  ok(rows[0].night === 9 * HOUR && rows[0].desp === 0, 'A noite segue no dia em que começa (17), inteira');
+  // sono em andamento conta até agora (dia 18, 8h: dormiu 7h30 e ainda dorme)
+  const open = [[H(d17, 21), H(d18, 6)], [H(d18, 7, 30), null]];
+  ok(dayRows([d18], evsOf(open), H(d18, 8), rule)[0].day === 6.5 * HOUR, 'Sono em andamento conta até agora');
+  ok(calendarSleep([[H(d17, 23), H(d19, 1)]], null, H(d19, 2), d18) === 24 * HOUR, 'Sono de mais de um dia: o dia do meio tem 24 h');
+  ok(calendarSleep([], H(d18, 0), H(d18, 8), d18) === 8 * HOUR, 'Em andamento desde a meia-noite');
+  // maior sono seguido: dia em que a noite começa (a de 17 para 18 fica em 17)
+  ok(rows[0].longest === 9 * HOUR && rows[1].longest === 0, 'Maior sono seguido fica no dia em que a noite começa');
+  // a coluna de hoje aparece sempre, mesmo vazia (dados incompletos)
+  const now2 = H(d19, 9), win = trendWindow('d', 0, now2, d17);
+  ok(win.days.at(-1) === d19, 'a janela do dia a dia termina em hoje');
+  const html = trendsHtml({ t: { tab: 'sono', mode: 'd', off: 0, sel: null, info: null }, evs: evsOf([...ss, [H(addDays(d17, -1), 21), H(d17, 6)], [H(addDays(d17, -2), 21), H(addDays(d17, -1), 6)]]), now: now2, first: addDays(d17, -3), who: '' });
+  ok((html.match(/class="today"/g) || []).length >= 5 && html.includes('>hoje<'), 'hoje aparece (tracejada) em todos os gráficos, mesmo vazia');
+}
+{
+  const { dayRows } = await import('../tendencias.js');
+  const d17 = new Date(2026, 10, 17).getTime(), d18 = addDays(d17, 1);
+  const e = [[H(d17, 13), H(d17, 14, 30)], [H(d17, 21), H(d18, 6)]].flatMap(([x, y]) => [{ kind: 'sleep', t: x }, { kind: 'wake', t: y }]);
+  const r = dayRows([d17, d18], e, H(d18, 8), rule);
+  ok(r[0].dayNap === 1.5 * HOUR && r[0].dayNight === 3 * HOUR && r[1].dayNight === 6 * HOUR && r[1].dayNap === 0, 'Sono: parte de dia e parte da noite dentro do dia de calendário');
+}
