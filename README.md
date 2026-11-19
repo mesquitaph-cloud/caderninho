@@ -17,6 +17,18 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
+- **Aviso para famílias sem remédio ou tarefa (item 83, 19/11, no código):** cartão na tela Hoje, no estilo do de
+  boas-vindas (borda em caramelo, sem capivara), com "Programe uma tarefa da rotina" ou "Programe um remédio" e os
+  botões "Programar tarefa"/"Programar remédio" e "Agora não". Prévia aprovada: https://claude.ai/artifact/EmDVtcQaK5p9EpsWGDRSnf.
+  Aparece só o tipo que a família ainda não tem (de qualquer bebê; parados não contam), 3 horas depois do bebê mais
+  antigo ser criado (quem entra por convite espera 3 horas desde a própria entrada). Dias contados desse marco: tarefa
+  nos dias 0, 3 e 5; remédio nos dias 1, 4 e 6; se falta só um dos dois, ele usa 0, 3 e 5; nunca depois do dia 6, nunca
+  dois no mesmo dia, um por abertura do app. Quem não abriu no dia marcado vê na próxima abertura. "Agora não" e o que
+  já foi mostrado ficam só no celular (`cad-aviso83-<família>-<tipo>`). Regra em `aviso83.js`, testes em
+  `testes/aviso83.mjs`, cenário `?cenario=aviso83&horas=N` (`&tem=remedio|tarefa`, `&entrou=H`). A tela Tarefas vazia
+  ganhou a frase "Nada por aqui ainda, programe uma tarefa primeiro!". Sem mudança no banco. O teste A/B dos textos é
+  o item 84 (os textos ficam em `AVISO_TEXTO`).
+
 - **Noite de cada bebê (item 65, no `main` pelo #97 em 13/11; SQL 025 rodado em 13/11):** cada família
   escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Falta publicar: no site, com o
   próximo deploy; no iPhone e no Android, só com a próxima compilação. Detalhes no item 65.

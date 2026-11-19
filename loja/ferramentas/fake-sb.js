@@ -58,6 +58,7 @@ const T = {
 class Q {
   constructor(t) { this.t = t; this.f = []; this.op = 'select'; this.one = 0; this.ord = null; this.rg = null; this.row = null; }
   select() { return this; }
+  limit() { return this; }
   eq(k, v) { this.f.push(r => r[k] === v); return this; }
   in(k, v) { this.f.push(r => v.includes(r[k])); return this; }
   is(k, v) { this.f.push(r => (r[k] ?? null) === v); return this; }

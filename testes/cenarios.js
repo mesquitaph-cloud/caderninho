@@ -462,3 +462,19 @@ if (CEN === 'onb-sem-familia') {
   T.profiles.push({ id: ME, display_name: 'Nova' });
   T.consents.push({ kind: 'terms', version: '1.3', family_id: null, created_at: '2026-10-13T12:00:00Z' });
 }
+
+// "aviso83" (item 83, 19/11): família sem remédio nem tarefa, com o bebê criado há ?horas= horas (padrão 4) —
+// ?horas=26 é o dia 1, ?horas=80 o dia 3. ?tem=remedio ou ?tem=tarefa deixa a família com um dos dois;
+// ?entrou=H põe a entrada desta pessoa na família há H horas.
+if (CEN === 'aviso83') {
+  const P = new URLSearchParams(location.search), h = +(P.get('horas') || 4), tem = P.get('tem');
+  const quando = hh => new Date(NOW - hh * 36e5).toISOString();
+  T.babies[0].created_at = quando(h);
+  T.family_members.forEach(m => { m.joined_at = quando(h); });
+  if (P.get('entrou')) T.family_members.find(m => m.user_id === ME).joined_at = quando(+P.get('entrou'));
+  window.testeBvDesde = NOW + 1e9;   // sem cartões de boas-vindas
+  T.medicines.length = 0; T.routines = T.routines || []; T.routines.length = 0;
+  const fam = T.babies[0].family_id, baby = T.babies[0].id;
+  if (tem === 'remedio') T.medicines.push({ id: 'm-9', family_id: fam, baby_id: baby, name: 'Vitamina D', amount: '2 gotas', schedule: 'fixed', times: ['08:00:00'], every_hours: null, start_date: ymd(NOW - DAY), days: null, stopped_at: null, created_by: U.me, created_at: quando(2) });
+  if (tem === 'tarefa') T.routines.push({ id: 'r-9', family_id: fam, baby_id: baby, kind: 'sunbath', name: null, schedule: 'fixed', times: ['09:00:00'], per_day: null, items: null, stopped_at: null, created_by: U.me, created_at: quando(2) });
+}

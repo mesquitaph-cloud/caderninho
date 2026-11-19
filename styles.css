@@ -1136,6 +1136,7 @@ body.pull-back .ptr svg{transition:opacity .2s}
 .lake{display:grid;place-items:center;padding:28px 8px 18px}
 .lake svg{width:200px;height:auto;fill:var(--surface2);stroke:var(--line);stroke-width:2.6px;stroke-linecap:round;stroke-linejoin:round}
 .lake svg path+path{fill:none}
+.tvazio{text-align:center;margin:2px 0 -10px}
 /* A tela de uma tarefa só: ocupa a tela inteira, com o nome grande no alto */
 .sheet.full{top:0;max-height:none;border-radius:0;padding-top:calc(6px + env(safe-area-inset-top,0px))}
 .sheet.full .in{min-height:100%}.sheet.full .sfoot{margin-top:auto}
