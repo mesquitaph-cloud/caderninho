@@ -1,4 +1,4 @@
--- Soneca — dias em que cada pessoa abriu o app (item 84, medir retenção de verdade). Escrito em 22/11/2026.
+-- Soneca — dias em que cada pessoa abriu o app (item 93, medir retenção de verdade). Escrito em 22/11/2026.
 -- Rodar uma vez no SQL Editor, ANTES de publicar o app que grava a abertura. Sem a tabela, o app só
 -- não grava: nada quebra.
 --

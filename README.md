@@ -27,7 +27,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   já foi mostrado ficam só no celular (`cad-aviso83-<família>-<tipo>`). Regra em `aviso83.js`, testes em
   `testes/aviso83.mjs`, cenário `?cenario=aviso83&horas=N` (`&tem=remedio|tarefa`, `&entrou=H`). A tela Tarefas vazia
   ganhou a frase "Nada por aqui ainda, programe uma tarefa primeiro!". Sem mudança no banco. O teste A/B dos textos é
-  o item 84 (os textos ficam em `AVISO_TEXTO`).
+  o item 93 (os textos ficam em `AVISO_TEXTO`).
 
 - **Noite de cada bebê (item 65, no `main` pelo #97 em 13/11; SQL 025 rodado em 13/11):** cada família
   escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Falta publicar: no site, com o
@@ -1757,7 +1757,7 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 - **Painel de quem desistiu** (Patrick, 08/11): no funil de novos usuários, olhar quem não ficou até
   1 semana e quais ações usou e quais nunca usou (botões de registro, convite, aba Semana, relatório
   etc.), para achar onde a pessoa trava. Só números agregados, sem nome nem e-mail. Limite de hoje: só
-  sabemos o que a pessoa anotou, não o que ela abriu ou olhou. **Resolvido em parte pelo item 84** (22/11, `supabase/028_dias_de_abertura.sql`): o app grava uma linha por pessoa e por dia em que abriu (tabela `app_opens`, função `log_open`, no máximo uma vez por dia por celular, sem hora nem aparelho; apagar a conta apaga as linhas). As consultas agregadas (ativos por dia, retorno no dia 7, quem abre sem anotar) estão no fim do SQL. Falta ligar ao Funil; rodar o 028 antes de publicar o app.
+  sabemos o que a pessoa anotou, não o que ela abriu ou olhou. **Resolvido em parte pelo item 93** (22/11, `supabase/028_dias_de_abertura.sql`): o app grava uma linha por pessoa e por dia em que abriu (tabela `app_opens`, função `log_open`, no máximo uma vez por dia por celular, sem hora nem aparelho; apagar a conta apaga as linhas). As consultas agregadas (ativos por dia, retorno no dia 7, quem abre sem anotar) estão no fim do SQL. Falta ligar ao Funil; rodar o 028 antes de publicar o app.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 

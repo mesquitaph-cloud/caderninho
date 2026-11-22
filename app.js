@@ -1660,7 +1660,7 @@ async function novCardLater() {
 }
 $('ask').addEventListener('click', e => { if (e.target.closest('[data-nov]')) closeAsk(); });
 
-/* ---------- Dia em que abriu o app (item 84, supabase/028) ---------- */
+/* ---------- Dia em que abriu o app (item 93, supabase/028) ---------- */
 // Dado técnico de uso para medir retenção: uma linha por pessoa e por dia, sem hora nem aparelho. O celular
 // pede no máximo uma vez por dia (a marca fica neste aparelho); o dia certo é o do banco. Sem a tabela, sem
 // rede ou com erro: não grava e não avisa, e tenta de novo na próxima abertura.
