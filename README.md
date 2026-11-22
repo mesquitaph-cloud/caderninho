@@ -27,7 +27,7 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
   já foi mostrado ficam só no celular (`cad-aviso83-<família>-<tipo>`). Regra em `aviso83.js`, testes em
   `testes/aviso83.mjs`, cenário `?cenario=aviso83&horas=N` (`&tem=remedio|tarefa`, `&entrou=H`). A tela Tarefas vazia
   ganhou a frase "Nada por aqui ainda, programe uma tarefa primeiro!". Sem mudança no banco. O teste A/B dos textos é
-  o item 93 (os textos ficam em `AVISO_TEXTO`).
+  o item 84 (os textos ficam em `AVISO_TEXTO`).
 
 - **Noite de cada bebê (item 65, no `main` pelo #97 em 13/11; SQL 025 rodado em 13/11):** cada família
   escolhe a noite de cada bebê e liga ou desliga "Acompanhar o sono". Falta publicar: no site, com o
