@@ -104,6 +104,7 @@ async function boot() {
     return;
   }
   st.user = session.user;
+  logOpen();
 
   // A frase do login ("Ao continuar, você aceita a Política e os Termos") vale como aceite: gravado agora,
   // com a versão vigente (VERSOES-TERMOS.md). A marca só some quando o aceite está gravado.
@@ -1658,6 +1659,17 @@ async function novCardLater() {
   } finally { novBusy = false; }
 }
 $('ask').addEventListener('click', e => { if (e.target.closest('[data-nov]')) closeAsk(); });
+
+/* ---------- Dia em que abriu o app (item 93, supabase/028) ---------- */
+// Dado técnico de uso para medir retenção: uma linha por pessoa e por dia, sem hora nem aparelho. O celular
+// pede no máximo uma vez por dia (a marca fica neste aparelho); o dia certo é o do banco. Sem a tabela, sem
+// rede ou com erro: não grava e não avisa, e tenta de novo na próxima abertura.
+function logOpen() {
+  if (!st.user) return;
+  const hoje = localDate(Date.now());
+  if (lsGet('cad-aberto') === hoje) return;
+  sb.rpc('log_open').then(({ error }) => { if (!error) lsSet('cad-aberto', hoje); }, () => {});
+}
 
 /* ---------- Aviso de versão nova (item 72, prévia aprovada em 17/11: o cartão) ---------- */
 // No app, na tela Hoje: se a loja já liberou uma versão maior que a instalada (tabela app_versions, 026),
@@ -4309,6 +4321,7 @@ const RELOAD_AFTER = MIN;
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { hiddenAt = Date.now(); return; }
+  logOpen();
   ftSync();
   if (Date.now() - hiddenAt < RELOAD_AFTER) return render();
   if (st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
