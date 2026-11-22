@@ -692,6 +692,17 @@ mesmos, porque o texto cita os itens pelo número.
   noites" não mudaram. Sonecas segue como antes. **Textos provisórios, a aprovar palavra por palavra:** botão
   i do Sono (a parte da noite e a das sonecas seguem separadas no gráfico, "à noite" e "de dia", dentro do dia de calendário) e, no botão i de
   Maior sono seguido, "Conta no dia em que a noite começa." Testes em `testes/noite.mjs`. Sem SQL.
+- **82 · Cartão da rotina da noite** (Patrick, 18/11; decidido e prévia aprovada em 22/11; no código, PR
+  `claude/cartao-rotina-noite-40a270`). Cartão na tela Hoje, cor de sono, com a capivara ao lado do título, que
+  aparece 1 h antes do começo da noite do bebê (`nightNow`, `noite.js`; padrão 18h, então 17h) e some quando a
+  noite começa. Quatro ações em dois grupos (Com o bebê: Banho, Levar o bebê para um ambiente com menos
+  estímulos; Para a casa: Diminuir as luzes, Fazer menos barulho). Cada toque grava uma tarefa normal do item
+  29 (`doTask`): Banho é o registro `bath` (quem já tem a tarefa Banho na rotina a vê marcada, sem criar
+  outra); as outras são `care` com o nome, como a tarefa avulsa; todas aparecem no Diário. O × dispensa só
+  por hoje (`cad-noite82-dia`); a chave "Cartão da rotina da noite" no Perfil desliga de vez
+  (`cad-noite82-off`, só neste celular, vem ligada). Não aparece com "Acompanhar o sono" desligado nem sem
+  bebê. Sem notificação (item à parte). Sem SQL. Cenário de teste: `?cenario=noite82` (`&hora=17:10`,
+  `&inicio=H`, `&semnome=1`, `&banho=1`). **Textos aprovados na prévia, palavra por palavra.**
 - **48 · Expandir o SEO do Soneca** (Patrick, 07/11): fazer o Soneca aparecer mais nas buscas. Primeiro
   entender como funciona, depois ver como automatizar a otimização. A decidir: onde vale o esforço, já
   que o Soneca agora é só app. As opções são a busca dentro da App Store e da Play Store (ASO: nome,
