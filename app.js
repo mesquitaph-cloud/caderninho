@@ -132,7 +132,9 @@ async function boot() {
     return openFamily((st.families.find(f => f.id === savedFam) || st.families[0]).id);
   }
   // Com conta e sem família: as perguntas, sem a tela de login, e depois "Quase pronto".
-  if (hasAnswers(saved)) onbRestore(saved); else onbStart('start', 'conta');
+  // Conta sem perfil: criada agora (Google, Apple ou código por "Já tenho conta") e nunca terminou o onboarding;
+  // para o Soneca é gente nova e vê "Quem fez o Soneca". Com perfil, é conta antiga que ficou sem família (item 86).
+  if (hasAnswers(saved)) onbRestore(saved); else onbStart('start', prof ? 'conta' : 'novo');
 }
 
 async function loadFamilies() {

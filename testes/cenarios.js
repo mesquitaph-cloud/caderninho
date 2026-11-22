@@ -463,6 +463,11 @@ if (CEN === 'onb-sem-familia') {
   T.consents.push({ kind: 'terms', version: '1.3', family_id: null, created_at: '2026-10-13T12:00:00Z' });
 }
 
+// "onb-conta-nova" (item 86): conta que acabou de nascer (login por "Já tenho conta"): aceite dos Termos, sem perfil e sem família.
+if (CEN === 'onb-conta-nova') {
+  T.consents.push({ kind: 'terms', version: '1.3', family_id: null, created_at: '2026-10-13T12:00:00Z' });
+}
+
 // "aviso83" (item 83, 19/11): família sem remédio nem tarefa, com o bebê criado há ?horas= horas (padrão 4) —
 // ?horas=26 é o dia 1, ?horas=80 o dia 3. ?tem=remedio ou ?tem=tarefa deixa a família com um dos dois;
 // ?entrou=H põe a entrada desta pessoa na família há H horas.
