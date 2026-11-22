@@ -640,7 +640,8 @@ mesmos, porque o texto cita os itens pelo número.
   lê as respostas e retoma em "Quase pronto"; o código por e-mail e o Google/Apple pelos plugins do celular
   fazem o mesmo. **Rota de entrada** (função `entryRoute`, com testes): sem conta e sem respostas =
   Boas-vindas; sem conta e com respostas = volta à etapa; com conta e família = tela inicial (descarta as
-  respostas); com conta e sem família = perguntas sem a tela de login, depois "Quase pronto"; convite pelo
+  respostas); com conta e sem família = perguntas sem a tela de login, depois "Quase pronto" (a tela 4 só some
+  se a conta já tem perfil; conta recém-criada, sem perfil, a vê: item 86); convite pelo
   link = login primeiro e "Entrar na família", sem a tela 4 nem as perguntas do bebê (quem não tem perfil
   vê antes só nome e "Você é", sem o aceite). **Aceite:** a frase do login ("Ao continuar, você aceita a
   Política de Privacidade e os Termos de Uso.") vale como o aceite dos Termos: o toque num botão de entrar

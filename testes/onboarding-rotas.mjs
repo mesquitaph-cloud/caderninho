@@ -212,6 +212,12 @@ await caso('conta-sem-familia', async page => {
   ok((await page.locator('#strip').innerText()).includes('Acordou'), 'com o botão Acordou');
 });
 
+// 5b. Conta nova (sem perfil e sem família, entrou por "Já tenho conta"): vê a tela 4 (item 86).
+await caso('conta-nova-sem-perfil', async page => {
+  await abrir(page, 'onb-conta-nova');
+  await perguntas(page, { ramo: 'dormindo', conta: false });
+});
+
 // 6. Pular não registra nada e leva ao login (sem janela de sono).
 await caso('pular', async page => {
   await abrir(page, 'onb-novo');
