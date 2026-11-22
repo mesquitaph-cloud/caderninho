@@ -17,6 +17,12 @@ da Play Store estava no dia 9 de 14 em 27/10 (os 14 dias fecham por volta de 01/
 
 **Onde paramos (30/10)**
 
+- **Convite à família (item 35, 22/11, no código):** cartão no fim da tela inicial para família com 1 membro e
+  registros em 3 dias diferentes. "Convidar" abre Família › Membros (o convite que já existe). "Agora não" e × somem
+  por 14 dias; com ainda 1 membro volta uma vez, e o 2º fechamento encerra de vez; entrou o 2º membro, também.
+  Um cartão por vez: com boas-vindas ou o convite do 56 na tela, este espera. Fechamentos só no celular
+  (`cad-convite35-<família>`). Regra e texto aprovado em `convite35.js`, testes em `testes/convite35.mjs`, cenário
+  `?cenario=convite35` (`&membros=2`). Sem mudança no banco.
 - **Aviso para famílias sem remédio ou tarefa (item 83, 19/11, no código):** cartão na tela Hoje, no estilo do de
   boas-vindas (borda em caramelo, sem capivara), com "Programe uma tarefa da rotina" ou "Programe um remédio" e os
   botões "Programar tarefa"/"Programar remédio" e "Agora não". Prévia aprovada: https://claude.ai/artifact/EmDVtcQaK5p9EpsWGDRSnf.

@@ -11,6 +11,7 @@ import { nightsHtml } from './noites.js';
 import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
 import { NOV_KEY, novFor, novHtml as novCardHtml } from './novidades.js';
 import { avisoMarco, avisoEscolher, avisoHtml, avisoKey } from './aviso83.js';
+import { convite35Key, convite35Ler, convite35Mostrar, convite35Fechar, convite35Encerrado, convite35Html } from './convite35.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
@@ -1286,8 +1287,25 @@ function renderBv() {
   if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
   bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não'))
     : k === 'convite2' ? card(x + '<h3>Alguém mais cuida junto?</h3><p>Quem você convidar vê e anota na mesma linha do tempo. Se preferir depois, o convite fica na aba Família.</p>' + go('Convidar alguém', 'Agora não'))
-    : '');
+    : conviteMostrar(k) ? convite35Html(b.name) : '');
 }
+// Item 35 (prévia aprovada em 22/11: https://claude.ai/artifact/X9yccQXyZncFKHYaFPUf4z): convite à família para
+// quem tem 1 membro e registros em 3 dias. Regra, textos e o que fica guardado: convite35.js. Um cartão por vez:
+// com algum cartão de boas-vindas ou o convite do 56 na tela (k), este espera. Sem SQL.
+const conviteGuardado = () => convite35Ler(lsGet(convite35Key(st.family.id)));
+function conviteMostrar(k) {
+  if (!st.baby || !st.family) return false;
+  // Entrou o 2º membro: some de vez, mesmo que ele saia depois.
+  if (st.members.length >= 2) { if (conviteGuardado().n < 2) lsSet(convite35Key(st.family.id), JSON.stringify(convite35Encerrado())); return false; }
+  return convite35Mostrar({ membros: st.members.length, tempos: [...st.entries.values()].map(e => e.t), guardado: conviteGuardado(), agora: Date.now(), outroCartao: !!k });
+}
+$('paneHome').addEventListener('click', e => {
+  const b = e.target.closest('[data-cv]'); if (!b) return;
+  // "Convidar" abre o convite que já existe, em Família › Membros; "Agora não" e × contam um fechamento.
+  if (b.dataset.cv === 'go') return goTab('family', 'famMembers');
+  lsSet(convite35Key(st.family.id), JSON.stringify(convite35Fechar(conviteGuardado(), Date.now())));
+  render();
+});
 // A última mamada do cartão "Tudo pronto": horário de hoje (ou de ontem, se ainda não chegou) e o peito, se marcado.
 let bvSide = null, bvSrc = 'breast', bvTimeV = '', bvMlV = '';
 $('paneHome').addEventListener('click', async e => {

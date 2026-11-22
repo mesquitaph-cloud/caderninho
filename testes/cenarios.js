@@ -271,6 +271,13 @@ if (CEN === 'bv-dias') {
   T.family_settings = [{ family_id: F, hidden_kinds: ['pump', 'care'] }];
 }
 
+// "convite35" (item 35, 22/11): só a própria pessoa na família, com a rotina de 40 dias (3+ dias de registro) e sem
+// cartões de boas-vindas. ?membros=2 põe o 2º membro.
+if (CEN === 'convite35') {
+  window.testeBvDesde = NOW + 1e9;
+  if (new URLSearchParams(location.search).get('membros') !== '2') T.family_members = [{ family_id: F, user_id: U.me, joined_at: '2026-07-01T00:00:00Z' }];
+}
+
 // "app-politica": finge o app do iPhone; o que o app manda abrir no navegador do celular fica em
 // window.abertos (para conferir que a Política e os Termos não abrem o próprio app).
 if (CEN === 'app-politica') {
