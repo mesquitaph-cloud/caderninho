@@ -1757,7 +1757,7 @@ testado no navegador com 45 dias de registros de exemplo, claro e escuro, em tel
 - **Painel de quem desistiu** (Patrick, 08/11): no funil de novos usuários, olhar quem não ficou até
   1 semana e quais ações usou e quais nunca usou (botões de registro, convite, aba Semana, relatório
   etc.), para achar onde a pessoa trava. Só números agregados, sem nome nem e-mail. Limite de hoje: só
-  sabemos o que a pessoa anotou, não o que ela abriu ou olhou (ver "Guardar última vez que abriu o app").
+  sabemos o que a pessoa anotou, não o que ela abriu ou olhou. **Resolvido em parte pelo item 84** (22/11, `supabase/028_dias_de_abertura.sql`): o app grava uma linha por pessoa e por dia em que abriu (tabela `app_opens`, função `log_open`, no máximo uma vez por dia por celular, sem hora nem aparelho; apagar a conta apaga as linhas). As consultas agregadas (ativos por dia, retorno no dia 7, quem abre sem anotar) estão no fim do SQL. Falta ligar ao Funil; rodar o 028 antes de publicar o app.
 - Saber quem indicou quem: um código no link de indicação. Exige mudar o banco; só vale se for
   importante acompanhar de onde vêm as famílias novas.
 
