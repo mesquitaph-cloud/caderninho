@@ -1282,7 +1282,7 @@ function renderBv() {
       + '<div class="btns"><button class="save" data-bvfeed="1">Anotar mamada</button><button class="link" data-bv="ola">Pular</button></div>')
     : k === 'entrou' ? card(`<div class="bvtop">${CAPI}<h3>Você entrou na ${esc(famName(st.family.name))}</h3></div>`
       + '<p>O que alguém anota aparece para todos.</p>' + go('Entendi'))
-    : k ? '' : avisoCard();
+    : k ? '' : (noite82Card() || avisoCard());
   if (bvPaint('bvTop', top) && k === 'ola') bvSide = null;
   bvPaint('bvEnd', k === 'convite' ? card(x + '<h3>Primeiro registro anotado</h3><p>O Soneca fica melhor com quem cuida junto: quem você convidar vê e anota na mesma linha do tempo.</p>' + go('Convidar alguém', 'Agora não'))
     : k === 'convite2' ? card(x + '<h3>Alguém mais cuida junto?</h3><p>Quem você convidar vê e anota na mesma linha do tempo. Se preferir depois, o convite fica na aba Família.</p>' + go('Convidar alguém', 'Agora não'))
@@ -1380,6 +1380,41 @@ $('paneHome').addEventListener('click', e => {
   const tipo = avSess; avSess = null; avFim = true;
   render();
   if (b.dataset.av === 'go') { if (tipo === 'remedio') medForm(null); else pickSheet(); }
+});
+
+/* ---------- Cartão da rotina da noite (item 82, prévia aprovada em 22/11) ---------- */
+// Na tela Hoje, a partir de 1 h antes de a noite do bebê começar (noite.js; padrão 18h, então 17h) até o começo
+// dela. O × dispensa só por hoje; "Cartão da rotina da noite" no Perfil desliga de vez. As 4 ações são tarefas
+// normais (item 29): marcar grava o mesmo registro da tarefa avulsa (Banho = 'bath'; as outras, 'care' com o
+// nome) e aparece no Diário. Quem já tem a tarefa Banho na rotina a vê marcada, porque é o mesmo registro. Os dois
+// ajustes ficam só neste celular (cad-noite82-off, cad-noite82-dia). Sem SQL.
+const N82_OFF = 'cad-noite82-off', N82_DIA = 'cad-noite82-dia';
+const noite82On = () => lsGet(N82_OFF) !== '1';
+const N82 = [['Com o bebê', [['bath', 'Banho'], ['care', 'Levar o bebê para um ambiente com menos estímulos']]],
+             ['Para a casa', [['care', 'Diminuir as luzes'], ['care', 'Fazer menos barulho']]]];
+const n82Done = (k, nome) => { const d0 = startOfDay(Date.now());
+  return sortedEntries().some(e => e.t >= d0 && e.kind === k && (k !== 'care' || (e.note || '').trim().toLowerCase() === nome.toLowerCase())); };
+let n82Busy = false;
+function noite82Card() {
+  const b = st.baby, now = Date.now();
+  if (!b || st.track === false || !noite82On() || lsGet(N82_DIA) === localDate(now)) return '';
+  const ini = startOfDay(now) + nightNow(b).start * HOUR;
+  if (now < ini - HOUR || now >= ini) return '';
+  const nome = (b.name || '').trim() ? deName(b) : 'do bebê';
+  return `<section class="card bv n82" aria-labelledby="n82T"><button class="x" data-n82="x" aria-label="Fechar">×</button>`
+    + `<div class="bvtop">${CAPI}<h3 id="n82T">A noite ${esc(nome)} começa em cerca de 1&nbsp;h</h3></div>`
+    + '<p>Estas ações, repetidas todas as noites, podem ajudar o bebê a entender a rotina de sono:</p>'
+    + N82.map(([g, l]) => `<div class="n82g"><div class="n82l">${g}</div>` + l.map(([k, n]) => { const on = n82Done(k, n);
+        return `<button class="n82t${on ? ' on' : ''}" role="checkbox" aria-checked="${on}" data-n82="${esc(k + '|' + n)}"><span class="n82b">${on ? CHECK : ''}</span><span>${esc(n)}</span></button>`; }).join('') + '</div>').join('')
+    + '</section>';
+}
+$('paneHome').addEventListener('click', async e => {
+  const b = e.target.closest('[data-n82]'); if (!b) return;
+  if (b.dataset.n82 === 'x') { lsSet(N82_DIA, localDate(Date.now())); return render(); }
+  const [k, ...n] = b.dataset.n82.split('|'), nome = n.join('|');
+  if (n82Busy || n82Done(k, nome)) return;
+  n82Busy = true;
+  try { await doTask(k === 'care' ? { kind: 'care', name: nome } : { kind: k }); } finally { n82Busy = false; }
 });
 
 /* ---------- botões da tela inicial ---------- */
@@ -3813,6 +3848,7 @@ function drawProfilePane() {
   let h = `<div class="ptitle"><h2>${esc(st.profile.display_name)}</h2><small>Seu nome e os ajustes que valem só para você</small></div>`;
   h += `<div class="sec"><h4>Sobre você</h4><div class="li"><span>Seu nome<small class="tsub">Como você aparece para a família</small><small class="tsub">${esc(st.profile.display_name)}</small></span><button data-act="rename">Mudar</button></div>${kinEditor()}</div>`;
   if (medNotif) h += notifBlock();
+  h += `<div class="sec"><h4>Avisos e cartões</h4><button class="li tg" role="switch" aria-checked="${noite82On()}" data-act="n82"><span>Cartão da rotina da noite<small class="tsub">Aparece cerca de 1 h antes da noite do bebê</small></span><span class="sw${noite82On() ? ' on' : ''}" aria-hidden="true"><i></i></span></button></div>`;
   h += `<div class="sec"><h4>Aparência</h4><div class="seg3" role="group" aria-label="Aparência">${THEMES.map(([v, t]) => `<button data-act="theme" data-val="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div>`
     + '<p class="dim">"Do celular" segue o modo noturno do celular. Vale só neste aparelho.</p></div>';
   h += '<div class="sec"><h4>Minhas famílias</h4>' + st.families.map(x => x.id === st.family.id
@@ -4012,6 +4048,7 @@ async function paneAction(a, v, btn) {
   if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
+  if (a === 'n82') { lsSet(N82_OFF, noite82On() ? '1' : null); return drawProfilePane(); }
   if (a === 'nAll') return setAllNotif(!allOn());
   if (['nWin', 'nMed', 'nTask', 'nRem'].includes(a)) return notifSwitch(a);
   if (a === 'reminder') return setReminder(!remOn());

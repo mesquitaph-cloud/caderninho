@@ -483,3 +483,20 @@ if (CEN === 'aviso83') {
   if (tem === 'remedio') T.medicines.push({ id: 'm-9', family_id: fam, baby_id: baby, name: 'Vitamina D', amount: '2 gotas', schedule: 'fixed', times: ['08:00:00'], every_hours: null, start_date: ymd(NOW - DAY), days: null, stopped_at: null, created_by: U.me, created_at: quando(2) });
   if (tem === 'tarefa') T.routines.push({ id: 'r-9', family_id: fam, baby_id: baby, kind: 'sunbath', name: null, schedule: 'fixed', times: ['09:00:00'], per_day: null, items: null, stopped_at: null, created_by: U.me, created_at: quando(2) });
 }
+
+// "noite82" (item 82, 22/11): o cartão da rotina da noite. O relógio vai para ?hora=HH:MM (padrão 17:10, uma
+// hora antes da noite das 18h); ?inicio=H muda o começo da noite do bebê (16 a 23); ?semnome=1 tira o nome do
+// bebê; ?banho=1 deixa a tarefa Banho às 17:00 na rotina da família. Sem cartões de boas-vindas.
+if (CEN === 'noite82') {
+  const P = new URLSearchParams(location.search);
+  for (const k of ['hora', 'inicio', 'semnome', 'banho']) if (P.get(k) != null) sessionStorage.setItem('teste-n82-' + k, P.get(k));
+  const g = k => sessionStorage.getItem('teste-n82-' + k);
+  const [H, M] = (g('hora') || '17:10').split(':').map(Number), off = sod(NOW) + H * 36e5 + M * MIN - NOW, RD = Date;
+  window.Date = class extends RD { constructor(...a) { a.length ? super(...a) : super(RD.now() + off); } static now() { return RD.now() + off; } };
+  window.testeBvDesde = NOW + 1e9;
+  const kid = T.babies[0];
+  if (g('inicio')) kid.night = [{ from: ymd(NOW - 30 * DAY), start: +g('inicio'), end: 6 }];
+  if (g('semnome')) { kid.name = ''; kid.sex = null; }
+  T.routines = T.routines || [];
+  if (g('banho')) T.routines.push({ id: 'r-b', family_id: kid.family_id, baby_id: kid.id, kind: 'bath', name: null, schedule: 'fixed', times: ['17:00:00'], per_day: null, items: null, stopped_at: null, created_by: U.me, created_at: '2026-09-01T00:00:00Z' });
+}
