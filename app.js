@@ -514,7 +514,7 @@ function onbDraw() {
     + (st.user && onbFrom === 'start' ? '<button type="button" class="link" data-onb="paste">Entrar numa família</button>' : '') + '</form>';
   if (k === 'mama') h += `<h1>Como ${onbArt('a ', 'o ')}${onbNome()} mama hoje?</h1>`
     + big('feed', [['breast', 'No peito', ICON.nursing], ['bottle', 'Na mamadeira', ICON.feed], ['both', 'Nos dois', '<span class="two">' + ICON.nursing + ICON.feed + '</span>']]) + capi;
-  if (k === 'mamadeira') h += '<h1>O que vai na mamadeira?</h1>' + big('milk', [['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Os dois']]) + capi;
+  if (k === 'mamadeira') h += '<h1>O que vai na mamadeira?</h1>' + big('milk', [['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Leite + Fórmula']]) + capi;
   if (k === 'comida') h += `<h1>${onbArt('A ', 'O ')}${onbNome()} já come outros alimentos?</h1>` + big('food', [['1', 'Já come'], ['0', 'Ainda não']]) + capi;
   if (k === 'quem') {
     // Tela 4 (v02): "Quem fez o Soneca". Dele/dela concorda com menina ou menino; sem resposta, "do bebê".
@@ -2146,7 +2146,7 @@ function openEntry(k, edit, avulsa) {
   const open = liveOpen(sleepIntervals(sortedEntries()).open, Date.now());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
   S = { mode: 'entry', k: k === 'wake' ? 'sleep' : CARE[k] ? 'care' : k, edit, ck: CARE[k] && k !== 'care' || edit?.kind === 'care' ? k : null, base: startOfDay(t), time: hm(t),
-        src: edit ? (edit.src || '') : st.baby.feeding === 'bottle' ? 'bottle' : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
+        milk: edit ? (edit.milk || '') : ({ formula: 'formula', breast_milk: 'breast_milk', both: 'breast_milk' }[st.baby.bottle_milk] || ''), src: edit ? (edit.src || '') : st.baby.feeding === 'bottle' ? 'bottle' : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
@@ -2156,7 +2156,7 @@ function openEntry(k, edit, avulsa) {
         oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   // Sono (com o bebê acordado), Mamada, Fralda e Ordenha novos abrem a tela curta.
-  S.compact = (!edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && edit.src === 'breast'); S.openO = false; S.openT = false; S.t0 = S.time;
+  S.compact = (!edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -2263,6 +2263,23 @@ function timeCells() {
     ${dialHtml(INK.feed || 'feed')}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
+// Edição da Mamadeira (item 88): mesma grade do peito. Linha 2: quantidade (− 140 ml +) | horário; os atalhos de 30 a 180 ml
+// saem da edição (o campo aceita digitar). "Quem fez" só com duas pessoas ou mais, dois botões por linha, com o rótulo em cima.
+// Item 96: Leite materno | Fórmula, uma em cada coluna. Nasce no padrão do bebê (Fórmula já vem marcada; "Leite + Fórmula" começa em Leite materno; sem padrão: nenhuma);
+// mamadeira antiga não tem tipo; tocar de novo desmarca.
+const milkRow = () => `<div class="g2 k-feed" style="background:none">${opt('Leite materno', S.milk === 'breast_milk', 'milk', 'breast_milk', 1)}${opt('Fórmula', S.milk === 'formula', 'milk', 'formula', 1)}</div>`;
+function mlEditRows(timeCell) {
+  const ms = [...st.members].sort((a, b) => (b.user_id === st.user.id) - (a.user_id === st.user.id));
+  const who = canBy() ? `<div class="g2 k-feed${ms.length <= 3 ? ' g3 who' : ''}" style="background:none"><div class="lbl span2">Quem fez</div>${ms.map(m => opt(m.user_id === st.user.id ? 'Você' : esc(firstName(m.user_id)), S.by === m.user_id, 'by', esc(m.user_id), 1)).join('')}</div>` : '';
+  return `<div class="g2"><div class="cell mlcell"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>${timeCell}</div>${who}`;
+}
+// "Quem fez" numa linha só: nome comprido não vira reticências, a fonte da linha toda diminui (de 18 até 13 px, o mínimo legível) até caber no botão.
+function fitWho() {
+  const bs = [...document.querySelectorAll('#sheet .g3.who .opt.big')]; if (!bs.length) return;
+  let px = 18; const over = () => bs.some(b => b.scrollWidth > b.clientWidth);
+  bs.forEach(b => { b.style.fontSize = px + 'px'; });
+  while (px > 13 && over()) { px--; bs.forEach(b => { b.style.fontSize = px + 'px'; }); }
+}
 function drawFeedEditCompact() {
   const small = !S.full;   // RASCUNHO v08: abre a versão pequena; "Editar mais" (texto provisório) abre a tela toda
   let h = `<div class="grab"></div><div class="shead"><h3>Editar</h3><div class="rt"><button class="tr" data-act="del" aria-label="Apagar registro">${TRASH}</button><button class="x" data-act="close" aria-label="Fechar">×</button></div></div>`;
@@ -2271,9 +2288,9 @@ function drawFeedEditCompact() {
   if (small) {
     const tc = timeCells();
     h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
-      <div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>
-      <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div></div>` + sfoot('feed', 'Salvar') + tc.rest;
-    return openPanel(h);
+      ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `<div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>
+      <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div>`}</div>` + sfoot('feed', 'Salvar') + tc.rest;
+    openPanel(h); fitWho(); return;
   }
   h += `<div class="sbody"><div class="seg k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>`;
   h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>`;
@@ -2294,6 +2311,7 @@ function drawFeedCompact() {
     return openPanel(h);
   }
   // Mamadeira: os atalhos e, ao lado de 150 e 180, o campo de ml com − e + (dá para digitar qualquer valor).
+  h += milkRow();
   h += `<div class="mlg" role="group" aria-label="Quantidade">${[30, 60, 90, 120, 150, 180].map(v => opt(v + ' ml', +S.ml === v, 'ml', v)).join('')}
     <div class="mls"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><label><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em></label><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>`;
   if (canBy()) { h += orow('openO', 'Outras opções', S.openO); if (S.openO) h += `<div class="ofold">${byHtml('feed', 'Quem fez')}</div>`; }
@@ -2511,6 +2529,8 @@ async function saveEntry(btn) {
   if (k === 'feed') {
     ev.src = S.src;
     if (S.src === 'bottle' && +S.ml > 0) ev.ml = +S.ml;
+    // Sem o 029, o resto continua salvando: só manda o tipo quando há o que mandar (ou limpar).
+    if (S.src === 'bottle' ? (S.milk || S.edit?.milk) : S.edit?.milk) ev.milk = S.src === 'bottle' && S.milk ? S.milk : null;
     if (S.src === 'breast') { ev.side = side; if (S.l && +S.lmin) ev.left_min = +S.lmin; if (S.r && +S.rmin) ev.right_min = +S.rmin; }
   }
   if (k === 'pump') { ev.side = side; ev.ml = +S.ml; }
@@ -3704,7 +3724,7 @@ function growthAction(a, v, btn) {
 /* ---------- bebê e nome ---------- */
 const CHECK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 function babySheet(b) {
-  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '' };
+  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', bm: b?.bottle_milk || '' };
   drawBaby();
 }
 // Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
@@ -3716,6 +3736,8 @@ function drawBaby() {
      <div><div class="lbl" id="bSexLbl">Menina ou menino (opcional)</div>
        <div class="sexpick" role="radiogroup" aria-labelledby="bSexLbl">${[['F', 'Menina'], ['M', 'Menino']].map(([v, n]) => `<label><input type="radio" name="bSex" value="${v}"${S.sex === v ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div>
        <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.${b ? ' Mudar aqui muda a curva.' : ''}</p></div>
+     <div><div class="lbl" id="bMilkLbl">O que vai na mamadeira?</div>
+       <div class="g2 g3 bmilk k-feed" style="background:none" role="radiogroup" aria-labelledby="bMilkLbl">${[['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Leite + Fórmula']].map(([v, n]) => `<label><input type="radio" name="bMilk" value="${v}"${S.bm === v ? ' checked' : ''}><span class="opt big">${n}</span></label>`).join('')}</div></div>
      ${b ? '' : `<label class="chk"><input type="checkbox" id="bOk">${CHECK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar os dados dele, inclusive de saúde e amamentação, para o uso da minha família.</span></label>`}
      <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
   if (del) h += '<button class="danger-btn" data-act="askDelBaby">Apagar bebê</button>';
@@ -3743,7 +3765,8 @@ async function saveBaby(btn) {
   if (!S.b && !$('bOk').checked) return err('bErr', 'Para adicionar, marque a autorização dos dados do bebê.');
   busy(btn, true);
   // Menina ou menino só vai quando há o que salvar: sem o 011, o resto continua salvando.
-  const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}) };
+  const bm = document.querySelector('input[name="bMilk"]:checked')?.value || null;
+  const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}), ...(bm !== (S.b?.bottle_milk || null) ? { bottle_milk: bm } : {}) };
   const q = S.b ? sb.from('babies').update(row).eq('id', S.b.id)
                 : sb.from('babies').insert({ family_id: st.family.id, ...row });
   const { data, error } = await q.select('*').single();
@@ -3838,6 +3861,7 @@ function famBaby(b) {
     + famRow('editBaby', b.id, 'Nome', b.name, 'Editar')
     + famRow('editBaby', b.id, 'Nascimento', b.birth_date ? fullDate(b.birth_date) : NONE, 'Editar')
     + famRow('editBaby', b.id, 'Menina ou menino', { F: 'Menina', M: 'Menino' }[b.sex] || NONE, 'Editar')
+    + famRow('editBaby', b.id, 'O que vai na mamadeira', { breast_milk: 'Leite materno', formula: 'Fórmula', both: 'Leite + Fórmula' }[b.bottle_milk] || NONE, 'Editar')
     + famRow('editNight', b.id, 'Noite do bebê', ['Define quando o dia começa', nightText(c) + (isDefault(c) ? ' · padrão' : '')], 'Mudar') + '</div>';
   return h;
 }
@@ -4227,6 +4251,7 @@ $('sheetIn').addEventListener('click', async e => {
   // O aviso abre a tela da Pomada; a Fralda espera, com o que já foi marcado, e volta depois.
   else if (a === 'ointCfg') return taskScreen(null, 'diaper', 'ointment', S);
   else if (a === 'by') S.by = S.by === v ? null : v;
+  else if (a === 'milk') S.milk = S.milk === v ? '' : v;
   else if (a === 'alone') { S.alone = !S.alone; if (S.alone) { S.dmin = ''; S.by = null; } }
   else if (a === 'pee' || a === 'poo') { S[a] = !S[a]; if (!S.poo) { S.psize = null; S.palert = false; } }
   else if (a === 'psize') S.psize = S.psize === v ? null : v;

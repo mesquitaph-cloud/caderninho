@@ -161,6 +161,12 @@ if (CEN === 'mamadeira-dia') {
     entries[entries.length - 1].author_id = quem[q];
   }
   entries.sort((a, b) => at(a) - at(b));
+  // Item 96: ?leite=formula|materno|dois põe o padrão no bebê; a mamadeira das 22:10 já leva o tipo (as antigas ficam sem).
+  // ?nome=Maximiliano troca o nome da Vó, para testar nome comprido no "Quem fez".
+  const nm = new URLSearchParams(location.search).get('nome'); if (nm) T.profiles.find(p => p.id === U.v).display_name = nm;
+  const lt = new URLSearchParams(location.search).get('leite');
+  if (lt) { const k0 = T.babies[0]; k0.feeding = lt === 'dois' ? 'both' : 'bottle'; k0.bottle_milk = { formula: 'formula', materno: 'breast_milk', dois: 'both' }[lt];
+    const e22 = entries.find(e => at(e) === dia(0, 22, 10)); if (e22) e22.milk = lt === 'materno' ? 'breast_milk' : 'formula'; }
 }
 
 // "app-convite": finge o app do iPhone aberto por um link de convite (Universal Link), sem passar

@@ -1418,3 +1418,18 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .tdate .cell{grid-column:1/-1}
 .tbtns button{box-sizing:border-box;height:48px;border-radius:16px;background:var(--surface2);color:var(--ink);font-family:var(--display);font-size:16px;font-weight:500}
 .tbtns .ok{background:var(--feed)}
+
+/* Edição da Mamadeira: o cartão da quantidade usa o mesmo cartão e a mesma altura do horário */
+.g2 .cell.mlcell{padding:var(--sp-2)}
+.g2 .mlcell .step{opacity:1}
+.g2 .mlcell .step button{background:var(--surface);color:var(--feed-ink)}
+/* Edição da Mamadeira: "Quem fez" com até 3 pessoas numa linha só, larguras iguais e vão 8, exceção à grade de 2 colunas; nome comprido: a fonte diminui (fitWho em app.js), reticências só se nem 13 px couber */
+.g2.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2.g3 .opt.big{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g2.g3.who .opt.big{padding-left:8px;padding-right:8px}
+/* Perfil do bebê: as 3 opções do padrão numa linha só, botões iguais, como o "Quem fez" da v02; "Leite materno" pode cair para 2 linhas */
+.bmilk label{position:relative;display:grid}
+.bmilk input{position:absolute;opacity:0;width:1px;height:1px}
+.g2.g3.bmilk .opt.big{display:grid;place-items:center;white-space:normal;overflow:visible;padding:8px 4px;min-height:56px;font-size:15px;line-height:20px;text-align:center;cursor:pointer}
+.bmilk input:checked+span{box-shadow:inset 0 0 0 1.5px currentColor;background:var(--kbg)}
+.bmilk input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
