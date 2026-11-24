@@ -1881,6 +1881,7 @@ function openPanel(html) {
   $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
   // A tela de uma tarefa ocupa a tela inteira (prévia de 08/11).
   $('sheet').classList.toggle('full', S?.mode === 'task');
+  $('sheet').classList.toggle('sfix', !!S?.sfix); $('sheet').classList.toggle('sfsmall', S?.sfix === 'small'); $('sheet').classList.toggle('strip', !!S?.sfix && location.search.includes('folha=faixa'));   // RASCUNHO v06: cabeçalho e Salvar fixos, só o meio rola
   if (was) return;
   sheetK = from ? from.home : null; stripAtOpen = stripK;
   if (from && !reduceMotion()) growSheet(from);
@@ -2155,7 +2156,7 @@ function openEntry(k, edit, avulsa) {
         oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
   // Sono (com o bebê acordado), Mamada, Fralda e Ordenha novos abrem a tela curta.
-  S.compact = !edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump'); S.openO = false; S.openT = false; S.t0 = S.time;
+  S.compact = (!edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && edit.src === 'breast'); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -2164,16 +2165,71 @@ const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
 // comum num toque, e o resto em "Outras opções" e no horário, recolhidos. O botão grande fica no pé,
 // perto do polegar. Sem Observação no Sono, na Mamada e na Ordenha (07/11); a Fralda tem, em Outras opções (08/11).
 const orow = (act, txt, open) => `<button class="orow${open ? ' open' : ''}" data-act="${act}" aria-expanded="${open}"><span>${txt}</span><i class="cv" aria-hidden="true">›</i></button>`;
+// RASCUNHO da prévia v03b (item 55/88): relógio de ponteiro do próprio Soneca. Toca ou arrasta nas horas
+// (anel de fora 1 a 12, de dentro 13 a 00) e, ao soltar, passa para os minutos. Não vai para o app sem aprovação.
+const DIAL_R = 104, DIAL_C = 130;
+const dialPt = (i, r) => [DIAL_C + r * Math.sin(i * Math.PI / 6), DIAL_C - r * Math.cos(i * Math.PI / 6)];
+function dialInner(ink) {
+  const [H, M] = S.time.split(':').map(Number), mode = S.dm || 'h', R = DIAL_R;
+  let nums = '', hx, hy, knob = 20;
+  if (mode === 'h') {
+    for (let k = 0; k < 12; k++) {
+      const [x, y] = dialPt(k, R * .8); nums += `<text x="${x}" y="${y + 5}" text-anchor="middle" font-size="16">${k || 12}</text>`;
+      const [x2, y2] = dialPt(k, R * .5); nums += `<text x="${x2}" y="${y2 + 4}" text-anchor="middle" font-size="13" opacity=".75">${k ? k + 12 : '00'}</text>`;
+    }
+    const inner = H === 0 || H > 12; [hx, hy] = dialPt(H % 12, inner ? R * .5 : R * .8); if (inner) knob = 16;
+  } else {
+    for (let k = 0; k < 12; k++) { const [x, y] = dialPt(k, R * .8); nums += `<text x="${x}" y="${y + 5}" text-anchor="middle" font-size="16">${String(k * 5).padStart(2, '0')}</text>`; }
+    [hx, hy] = [DIAL_C + R * .8 * Math.sin(M * Math.PI / 30), DIAL_C - R * .8 * Math.cos(M * Math.PI / 30)];
+  }
+  const shown = mode === 'h' ? String(H).padStart(2, '0') : String(M).padStart(2, '0');
+  const seg = (m, v) => `<button class="dh${mode === m ? ' on' : ''}" data-act="dm" data-val="${m}" aria-pressed="${mode === m}" aria-label="${m === 'h' ? 'Escolher a hora' : 'Escolher os minutos'}">${v}</button>`;
+  return `<div class="dtop">${seg('h', String(H).padStart(2, '0'))}<span class="dcolon">:</span>${seg('m', String(M).padStart(2, '0'))}</div>
+    <svg class="dface" viewBox="0 0 260 260" role="img" aria-label="Relógio: toque ou arraste para escolher ${mode === 'h' ? 'a hora' : 'os minutos'}" >
+    <circle cx="130" cy="130" r="124" class="dbg"/><line x1="130" y1="130" x2="${hx}" y2="${hy}" class="dhand"/><circle cx="130" cy="130" r="4" class="dpin"/>
+    <circle cx="${hx}" cy="${hy}" r="${knob}" class="dknob"/><g class="dnum">${nums}</g><text x="${hx}" y="${hy + 5}" text-anchor="middle" font-size="15" class="dsel">${shown}</text></svg>`;
+}
+const dialHtml = ink => `<div class="dial" id="dialBox" data-ink="${ink}" style="--di:var(--${ink});--dc:var(--c-${ink})">${dialInner(ink)}</div>`;
+function dialPoint(e) {
+  const box = $('dialBox'), sv = box.querySelector('svg'), r = sv.getBoundingClientRect(), sc = r.width / 260;
+  const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const ang = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360, dist = Math.hypot(dx, dy) / sc;
+  let [H, M] = S.time.split(':').map(Number);
+  if ((S.dm || 'h') === 'h') { const k = Math.round(ang / 30) % 12, inner = dist < DIAL_R * .65; H = inner ? (k === 0 ? 0 : k + 12) : (k === 0 ? 12 : k); }
+  else M = Math.round(ang / 6) % 60;
+  S.time = String(H).padStart(2, '0') + ':' + String(M).padStart(2, '0');
+  // Na edição, a hora escolhida vale para o dia mais próximo do horário original (00:10 e escolheu 23:50: ontem às 23:50),
+  // a menos que a pessoa tenha escolhido a data no seletor.
+  if (S.edit && !S.dateSet) {
+    const o = S.edit.t, b0 = startOfDay(o); let best = null;
+    for (const off of [-1, 0, 1]) { const t = addDays(b0, off) + H * HOUR + M * MIN; if (t > Date.now() + 5 * MIN) continue; if (best === null || Math.abs(t - o) < Math.abs(best - o)) best = t; }
+    if (best !== null) S.base = startOfDay(best);
+  }
+  box.innerHTML = dialInner(box.dataset.ink);
+  $('daySeg')?.insertAdjacentHTML('afterend', daySeg()); $('daySeg')?.remove();
+}
+let dialDown = false;
+document.addEventListener('pointerdown', e => { const b = e.target.closest('#dialBox svg'); if (!b) return; dialDown = true; dialPoint(e); e.preventDefault(); });
+document.addEventListener('pointermove', e => { if (dialDown && $('dialBox')) dialPoint(e); });
+document.addEventListener('pointerup', () => { if (!dialDown) return; dialDown = false; if ($('dialBox') && (S.dm || 'h') === 'h') { S.dm = 'm'; $('dialBox').innerHTML = dialInner($('dialBox').dataset.ink); } });
+// RASCUNHO: na edição o "Agora" sai (Patrick, 23/11; 1% das edições usam); no registro novo continua.
+const QUICK_EDIT = QUICK_TIME.replace('<div class="time quick">', '<div class="time quick q3">').replace('<button class="small" data-act="now">Agora</button>', '');
+// RASCUNHO v04 (item 88): duas linhas, cada uma com o seu lápis. A data (Hoje/Ontem/dia da semana + dd/mm) abre o seletor de
+// data do celular; o horário abre o relógio redondo e a linha some enquanto ele está aberto. Sai o Hoje/Ontem/Outro dia.
+const WEEKDAY = ['Dom.', 'Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.'];   // texto provisório
+function dateText() {
+  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
+  return (d0 === t0 ? 'Hoje' : d0 === addDays(t0, -1) ? 'Ontem' : WEEKDAY[new Date(d0).getDay()]) + ', ' + ymdDdmm(localDate(d0));
+}
+// RASCUNHO v05 (item 88): a visão inicial tem só a linha do horário com o lápis ("17:33", ou "Ontem, 23:34" / "21/11, 08:10" se o
+// registro não for de hoje, como já era). Ao tocar no lápis a linha some e abre o bloco: a data (com o seu lápis, que abre o
+// seletor de data) e o relógio redondo com os atalhos.
 function timeRow(k) {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
-  const day = S.other || d0 < addDays(t0, -1) ? ymdDdmm(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  let h = `<button class="orow tm${S.openT ? ' open' : ''}" data-act="openT" aria-expanded="${S.openT}" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
-  if (S.openT) {
-    h += `<div class="ofold">${daySeg()}`;
-    if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
-    h += `<div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div></div>`;
-  }
-  return h;
+  const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
+  if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  const dt = d0 >= addDays(t0, -1) ? dayTitle(d0) : shortDate(localDate(d0)), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
+  return `<div class="ofold"><div class="orow tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div>${dialHtml(INK[k] || k)}${S.edit ? QUICK_EDIT : QUICK_TIME}</div>`;
 }
 const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button></div>`;
 function drawSleepCompact() {
@@ -2192,6 +2248,38 @@ function drawSleepCompact() {
   h += sfoot('sleep', changed ? 'Salvar' : 'Dormiu agora');
   openPanel(h);
 }
+// RASCUNHO da prévia (item 88): edição da Mamada no peito no desenho da tela curta. Não vai para o app sem aprovação.
+const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
+// v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
+// (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
+function timeCells() {
+  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
+  const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
+  const cell = `<button class="cell tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  if (!S.openT) return { cell, rest: '' };
+  const dt = d0 === t0 ? 'Hoje' : d0 === addDays(t0, -1) ? 'Ontem' : shortDate(localDate(d0)), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
+  return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
+    <div class="g2 tdate"><div class="cell tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
+    ${dialHtml(INK.feed || 'feed')}
+    <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
+}
+function drawFeedEditCompact() {
+  const small = !S.full;   // RASCUNHO v08: abre a versão pequena; "Editar mais" (texto provisório) abre a tela toda
+  let h = `<div class="grab"></div><div class="shead"><h3>Editar</h3><div class="rt"><button class="tr" data-act="del" aria-label="Apagar registro">${TRASH}</button><button class="x" data-act="close" aria-label="Fechar">×</button></div></div>`;
+  S.sfix = small ? 'small' : true;
+  // v10: grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; "Qual peito" com Esquerdo | Direito (minutos dentro do cartão); Total | horário.
+  if (small) {
+    const tc = timeCells();
+    h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
+      <div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>
+      <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div></div>` + sfoot('feed', 'Salvar') + tc.rest;
+    return openPanel(h);
+  }
+  h += `<div class="sbody"><div class="seg k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>`;
+  h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>`;
+  h += timeRow('feed') + '</div>' + sfoot('feed', 'Salvar');
+  openPanel(h);
+}
 function drawFeedCompact() {
   let h = head('Mamada') + `<div class="seg k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>`;
   if (S.src === 'breast') {
@@ -2200,7 +2288,7 @@ function drawFeedCompact() {
     h += `<div><div class="lbl">Qual peito</div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="tsides">${ftSidesHtml(null, Date.now())}</div></div>`;
     h += orow('openO', 'Outras opções', S.openO);
     if (S.openO) {
-      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div></div>`;
+      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${S.edit ? totalText() : ''}</div></div></div>`;
       h += timeRow('feed') + sfoot('feed', 'Salvar');
     }
     return openPanel(h);
@@ -2267,6 +2355,7 @@ const diaperOint = id => { for (const e of st.entries.values()) if (e.kind === '
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
   if (S.compact && k === 'sleep' && S.sk === 'sleep') return drawSleepCompact();
+  if (S.compact && S.edit && k === 'feed') return drawFeedEditCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
   if (S.compact && k === 'diaper') return drawDiaperCompact();
   if (S.compact && k === 'pump') return drawPumpCompact();
@@ -2283,7 +2372,7 @@ function drawEntry() {
     }
     if (S.src === 'breast') {
       const lb = !S.edit && lastBreast(sortedEntries());
-      h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>`;
+      h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${S.edit ? totalText() : ''}</div></div>`;
     }
     if (S.src === 'bottle') h += mlBlock(k);
   }
@@ -2437,7 +2526,8 @@ async function saveEntry(btn) {
   busy(btn, true);
   if (S.edit) {
     const id = S.edit.id;
-    if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); closeSheet(); toast(savedText(ev)); } else busy(btn, false);
+    const conf0 = S.compact && k === 'feed' ? confirmSave(btn, CHECK) : null;
+    if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); await conf0?.done; closeSheet(); toast(savedText(ev)); } else { conf0?.cancel(); busy(btn, false); }
     return;
   }
   const fromTimer = S.fromTimer && ev.kind === 'feed' && ev.src === 'breast';
@@ -4098,7 +4188,7 @@ $('sheetIn').addEventListener('input', e => {
   if (id === 'min-l' || id === 'min-r') {
     const key = id.slice(4); S[key + 'min'] = e.target.value.replace(/\D/g, '').slice(0, 3);
     if (S[key + 'min']) { S[key] = true; markSide(key); }
-    $('total').textContent = totalText();
+    $('total').textContent = S.edit ? (totalText() || (S.sfix === 'small' ? 'Total: –' : '')) : '';
   }
 });
 $('sheetIn').addEventListener('click', async e => {
@@ -4156,7 +4246,11 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') S.openT = !S.openT;
+  else if (a === 'openT') { if (S.sfix === 'small') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'tok') S.openT = false;
+  else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
+  else if (a === 'editMore') S.more = true;
+  else if (a === 'dm') S.dm = v;
   else if (a === 'ftTap' && S.compact && !ftGet()) { ftTap(v); return closeSheet(); }
   else if (a === 'ftTap') ftTap(v);
   else if (a === 'ftEnd') return ftFinish();
@@ -4435,3 +4529,5 @@ boot().catch(() => { show('scrLogin'); err('errEmail', 'Não foi possível abrir
 
 // iPhone ou iPad (o iPad se apresenta como Mac): vai junto das sugestões.
 const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+document.addEventListener('change', e => { if (e.target.id !== 'dayNative' || !e.target.value) return; const [y, m, d] = e.target.value.split('-').map(Number); S.base = new Date(y, m - 1, d).getTime(); S.dateSet = true; drawEntry(); });
