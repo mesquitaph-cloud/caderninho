@@ -457,8 +457,14 @@ mesmos, porque o texto cita os itens pelo número.
   - **Perto da noite** (A = acordou; N = começo da noite; S = mediana das sonecas que começam a partir das
     15h, se houver 5 ou mais, senão de todas, no máximo 1 h): se N − A ≤ fim da janela (de 3 meses em
     diante, ≤ o maior entre o fim da janela e 1,5 × o centro: a mediana do bebê, ou o meio da faixa da
-    idade; 16/11), só "Acordada há …", sem faixa, frase nem aviso; se N − (A + início + S) < início, no lugar da faixa "Uma soneca agora
-    pode atrapalhar o sono da noite.", sem aviso; fora isso, o normal. Saiu o "Noite às HHh".
+    idade; 16/11), ou se N − (o mais tarde entre agora e A + início, + S) < início (item 95: a hora de agora
+    entra na conta, e a frase aparece com o passar da hora), no lugar da faixa "Uma soneca agora pode
+    atrapalhar o sono da noite.", sem aviso; fora isso, o normal. **A frase só aparece antes de N**: da noite
+    em diante (inclusive quem acorda já de noite), só "Acordada há …". Saiu o "Noite às HHh".
+  - **Dormindo perto da noite (item 95, 25/11):** soneca em andamento começada de dia, com 0 < N − agora <
+    início da janela: no pé da faixa "Dormindo há", "Uma soneca longa agora pode atrapalhar a noite.". Cenário
+    de teste `?cenario=janela-noite` (o relógio é fixado por quem captura). Prévia:
+    https://claude.ai/artifact/HBS2L8nNLWrFv4zhna7P1v
   - **Contador de dias (item 73)** e **mensagens que aparecem uma vez** (novidade e troca de faixa): ver o
     item 73.
   - **Fora:** sugestão de horário de soneca para encaixar a noite (descartada).
@@ -518,8 +524,8 @@ mesmos, porque o texto cita os itens pelo número.
 - **74 · Botão i na faixa da janela de sono** (Patrick, 16/11; texto B aprovado palavra por palavra em
   16/11; prévia https://claude.ai/artifact/CwMbW5wBXU16qahyEjvv8G; programado em 17/11). No cartão do
   bebê, no fim da primeira linha da faixa acordada, um "i" na tinta do sono (alvo de 44 px). Aparece sempre
-  que há janela (antes, dentro, perto do fim, depois, com a frase da soneca perto da noite e no "direto até
-  a noite"); não aparece com o bebê dormindo, de 12 meses em diante, sem nascimento nem com a janela
+  que há janela (antes, dentro, perto do fim, depois, com a frase da soneca perto da noite e depois que a
+  noite começa); não aparece com o bebê dormindo, de 12 meses em diante, sem nascimento nem com a janela
   desligada. Só no cartão (Tendências fica para depois). O toque abre a folha "Como funciona a janela de
   sono", que fecha com "Entendi", com toque fora ou com o voltar do Android: o quadro **Hoje** com a faixa
   e de onde ela vem (n janelas nos últimos 7 ou 14 dias; ou a referência da idade e quantos dias faltam),
@@ -695,7 +701,7 @@ mesmos, porque o texto cita os itens pelo número.
 - **82 · Cartão da rotina da noite** (Patrick, 18/11; decidido e prévia aprovada em 22/11; no código, PR
   `claude/cartao-rotina-noite-40a270`). Cartão na tela Hoje, cor de sono, com a capivara ao lado do título, que
   aparece 1 h antes do começo da noite do bebê (`nightNow`, `noite.js`; padrão 18h, então 17h) e some quando a
-  noite começa. Quatro ações em dois grupos (Com o bebê: Banho, Levar o bebê para um ambiente com menos
+  noite começa; com o bebê dormindo, espera ele acordar (item 95). Quatro ações em dois grupos (Com o bebê: Banho, Levar o bebê para um ambiente com menos
   estímulos; Para a casa: Diminuir as luzes, Fazer menos barulho). Cada toque grava uma tarefa normal do item
   29 (`doTask`): Banho é o registro `bath` (quem já tem a tarefa Banho na rotina a vê marcada, sem criar
   outra); as outras são `care` com o nome, como a tarefa avulsa; todas aparecem no Diário. O × dispensa só

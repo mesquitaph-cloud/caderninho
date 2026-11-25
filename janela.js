@@ -52,12 +52,13 @@ export function winPhase(awake, ref) {
 }
 
 // A frase da faixa (9.1 a 9.4 e 9.6). Devolve HTML: a segunda parte vai em negrito leve.
-// near (perto da noite, nearNight): 'direto' mostra só o "Acordada há"; 'soneca' troca a faixa pela frase.
+// near (perto da noite, nearNight): 'direto' e 'soneca' trocam a faixa pela mesma frase; 'noite' (a noite já
+// começou) mostra só o "Acordada há" (item 95, 25/11).
 export const NAP_LATE_TEXT = 'Uma soneca agora pode atrapalhar o sono da noite.';
 export function winText(awake, ref, sex, near) {
   const f = forms(sex), head = cap(f.ac) + ' há ' + fmtDur(awake);
-  if (!ref || near === 'direto') return head;
-  if (near === 'soneca') return head + '<span class="hwn">' + NAP_LATE_TEXT + '</span>';
+  if (!ref || near === 'noite') return head;
+  if (near) return head + '<span class="hwn">' + NAP_LATE_TEXT + '</span>';
   const ph = winPhase(awake, ref);
   const tail = ph === 'antes' ? 'Janela de sono em <b>' + fmtDur(ref[0] - awake) + '</b>'
     : ph === 'dentro' ? '<b>Pode estar com sono</b>'
@@ -168,15 +169,25 @@ export function babyWin(sleeps, rule, birth, now) {
   return { ref, own: !!days, days, n: ws.length, valid, nap, mid };
 }
 // Perto da noite (A = hora do "Acordou", N = começo da noite daquele dia, nap = soneca típica, mid = o
-// centro do babyWin): 'direto' se dá para ir até a noite dentro da janela (N − A ≤ até; de 3 meses em
-// diante, até o maior entre o fim da janela e 1,5 × o centro, decisão de 16/11): só o "Acordada há", sem
-// faixa, frase nem aviso; 'soneca' se uma soneca no começo da janela acabaria a menos de `de` da noite
-// (N − (A + de + nap) < de): a frase no lugar da faixa, sem aviso; null no resto do dia.
-export function nearNight(A, ref, N, nap, mid = null) {
+// centro do babyWin, now = a hora de agora; sem ela, vale a do "Acordou"). Duas entradas: 'direto' se dá para
+// ir até a noite dentro da janela (N − A ≤ até; de 3 meses em diante, até o maior entre o fim da janela e
+// 1,5 × o centro, decisão de 16/11); 'soneca' se uma soneca agora, nunca antes do começo da janela, acabaria a
+// menos de `de` da noite (N − (max(now, A + de) + nap) < de), então a frase aparece com o passar da hora
+// (item 95, 25/11). Nos dois casos a frase toma o lugar da faixa, sem aviso no celular, e só antes de a noite
+// começar: de N em diante vira 'noite' (só o "Acordada há"). null no resto do dia.
+export function nearNight(A, ref, N, nap, mid = null, now = A) {
   if (!ref) return null;
-  if (N - A <= (mid == null ? ref[1] : Math.max(ref[1], 1.5 * mid))) return 'direto';
-  if (nap != null && N - (A + ref[0] + nap) < ref[0]) return 'soneca';
-  return null;
+  const near = N - A <= (mid == null ? ref[1] : Math.max(ref[1], 1.5 * mid)) ? 'direto'
+    : nap != null && N - (Math.max(now, A + ref[0]) + nap) < ref[0] ? 'soneca' : null;
+  return near && now >= N ? 'noite' : near;
+}
+// Soneca em andamento perto do começo da noite (item 95, texto e gatilho aprovados em 25/11), no pé da faixa
+// "Dormindo há": começou de dia, e falta menos que `de` para a noite, que ainda não chegou (0 < N − now < de).
+export const NAP_ASLEEP_TEXT = 'Uma soneca longa agora pode atrapalhar a noite.';
+export function asleepNearNight(start, ref, rule, now) {
+  if (!ref) return false;
+  const { day0, night } = dayBounds(rule, startOfDay(start));
+  return start >= day0 && start < night && now < night && night - now < ref[0];
 }
 // O começo da noite do dia em que o bebê acordou.
 export const nightOf = (rule, wake) => dayBounds(rule, startOfDay(wake)).night;
@@ -187,8 +198,9 @@ export const nightOf = (rule, wake) => dayBounds(rule, startOfDay(wake)).night;
 export const NOTICE_BEFORE = 5 * MIN, NOTICE_FLOOR = 30 * MIN;
 export function winNotice(wake, w, baby, rule) {
   const ref = w?.ref; if (!ref) return null;
-  if (nearNight(wake, ref, nightOf(rule, wake), w.nap, w.mid)) return null;
   const at0 = wake + ref[0] - NOTICE_BEFORE, floor = at0 < wake + NOTICE_FLOOR, at = floor ? wake + NOTICE_FLOOR : at0;
+  // Item 95: a conta vale para a hora em que o aviso tocaria.
+  if (nearNight(wake, ref, nightOf(rule, wake), w.nap, w.mid, at)) return null;
   const { day0, night } = dayBounds(rule, startOfDay(at));
   if (at < day0 || at >= night) return null;
   const f = forms(baby.sex);

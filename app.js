@@ -12,7 +12,7 @@ import { trendsHtml, trendWindow, CAPI_HAT } from './tendencias.js';
 import { NOV_KEY, novFor, novHtml as novCardHtml } from './novidades.js';
 import { avisoMarco, avisoEscolher, avisoHtml, avisoKey } from './aviso83.js';
 import { convite35Key, convite35Ler, convite35Mostrar, convite35Fechar, convite35Encerrado, convite35Html } from './convite35.js';
-import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml,
+import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml, asleepNearNight, NAP_ASLEEP_TEXT,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
 import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
 import { ONB_KEY, LOGIN_FLAG, NAP_LENGTHS, blank, onbSave, onbLoad, onbClear, hasAnswers, entryRoute, onbSteps, resumeStep, nextStep, prevStep, skipSleep,
@@ -929,7 +929,7 @@ function renderHome() {
   $('sleepBanner').hidden = !old;
   if (old) { const d = new Date(open0); $('sleepOldTxt').textContent = `O último "Dormiu" foi ${DIAS_LONGOS[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth() + 1)}, às ${pad(d.getHours())}h${pad(d.getMinutes())}. Faltou anotar quando acordou?`; }
   renderWin(last, open, now, intervals);
-  renderDock(last, open, now);
+  renderDock(last, open, now, intervals);
   renderLast(last, open, now);
   renderMeds(); renderTasks(); novCardLater(); verCardLater();
 
@@ -1056,11 +1056,16 @@ const lastWake = (last, open, now) => {
   return w && now - w.t >= 0 && now - w.t <= WAKE_MAX ? w : null;
 };
 const winOf = (b, sleeps, now) => babyWin(sleeps, ruleOf(b), b.birth_date, now);
+// Item 95: soneca em andamento perto da noite, a frase no pé da faixa "Dormindo há" (janela.js).
+const napWarn = (open, now, sleeps) => {
+  const b = st.baby;
+  return !!b && open !== null && st.track !== false && asleepNearNight(open, winOf(b, sleeps, now).ref, ruleOf(b), now);
+};
 function renderWin(last, open, now, sleeps) {
   const el = $('sleepWin'), b = st.baby, w = b && st.track !== false && lastWake(last, open, now);
   if (!w) { if (!el.hidden) { el.hidden = true; el.innerHTML = ''; } return; }
   const awake = now - w.t, bw = winOf(b, sleeps, now), ref = bw.ref;
-  const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap, bw.mid), full = ref && !near;
+  const near = nearNight(w.t, ref, nightOf(ruleOf(b), w.t), bw.nap, bw.mid, now), full = ref && !near;
   // O botão i (item 74): sempre que há janela (ref), com a faixa, a frase da soneca ou o "direto até a noite".
   const h = `<span class="hwr"><span class="hwt">${winText(awake, ref, b.sex, near)}</span>`
     + (ref ? `<button class="hwi" data-act="winInfo" aria-label="${INFO_TITLE}">i</button>` : '') + '</span>'
@@ -1402,7 +1407,7 @@ $('paneHome').addEventListener('click', e => {
 
 /* ---------- Cartão da rotina da noite (item 82, prévia aprovada em 22/11) ---------- */
 // Na tela Hoje, a partir de 1 h antes de a noite do bebê começar (noite.js; padrão 18h, então 17h) até o começo
-// dela. O × dispensa só por hoje; "Cartão da rotina da noite" no Perfil desliga de vez. As 4 ações são tarefas
+// dela, e só com o bebê acordado (item 95). O × dispensa só por hoje; "Cartão da rotina da noite" no Perfil desliga de vez. As 4 ações são tarefas
 // normais (item 29): marcar grava o mesmo registro da tarefa avulsa (Banho = 'bath'; as outras, 'care' com o
 // nome) e aparece no Diário. Quem já tem a tarefa Banho na rotina a vê marcada, porque é o mesmo registro. Os dois
 // ajustes ficam só neste celular (cad-noite82-off, cad-noite82-dia). Sem SQL.
@@ -1418,6 +1423,8 @@ function noite82Card() {
   if (!b || st.track === false || !noite82On() || lsGet(N82_DIA) === localDate(now)) return '';
   const ini = startOfDay(now) + nightNow(b).start * HOUR;
   if (now < ini - HOUR || now >= ini) return '';
+  // Item 95 (25/11): com o bebê dormindo, o cartão espera ele acordar, para a tela não ficar poluída.
+  if (liveOpen(sleepIntervals(sortedEntries()).open, now) !== null) return '';
   const nome = (b.name || '').trim() ? deName(b) : 'do bebê';
   return `<section class="card bv n82" aria-labelledby="n82T"><button class="x" data-n82="x" aria-label="Fechar">×</button>`
     + `<div class="bvtop">${CAPI}<h3 id="n82T">A noite ${esc(nome)} começa em cerca de 1&nbsp;h</h3></div>`
@@ -1508,12 +1515,13 @@ function closePop() {
 // com o tempo correndo (prévia de 06/11). A faixa vaza do botão em círculo ao começar e, ao acordar ou
 // terminar, estreita e desce de volta para dentro dele. Com as duas ao mesmo tempo, fica a da mamada.
 let stripK = null, stripBusy = false, stripReady = false;
-function stripHtml(k, open, now) {
-  if (k === 'sleep') return `<div class="ext k-sleep">${CAPI_Z}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button></div>`;
+function stripHtml(k, open, now, warn) {
+  if (k === 'sleep') return `<div class="ext k-sleep${warn ? ' nn' : ''}">${CAPI_Z}<span class="tx"><small>Dormindo há</small><span class="t" id="stripT">${dur(now - open)}</span></span><button class="spill" data-strip="wake">Acordou</button>${warn ? '<p class="nnl">' + NAP_ASLEEP_TEXT + '</p>' : ''}</div>`;
   const t = ftGet();
   return `<div class="ext k-feed" data-strip="open" role="button" tabindex="0" aria-label="Abrir o cronômetro da mamada"><span class="fi">${ICON.feed}</span><span class="tx"><small>${t.run ? 'Mamando há' : 'Mamada pausada'}</small><span class="t" id="stripT">${dur(ftTotal(t, now))}</span><small class="sd">${t.run ? 'no ' + FT_SIDE[t.run] : 'começou às ' + hhmm(t.start)}</small></span><button class="spill" data-strip="end">Terminar</button></div>`;
 }
-function renderDock(last, open, now) {
+function renderDock(last, open, now, sleeps) {
+  const warn = napWarn(open, now, sleeps);
   const want = ftGet() ? 'feed' : open !== null ? 'sleep' : null;
   if (stripBusy) return;
   if (want !== stripK && stripK && stripReady && !reduceMotion() && !$('dock').hidden) { closeStrip(); return; }
@@ -1521,9 +1529,9 @@ function renderDock(last, open, now) {
   stripK = want; stripReady = true;
   renderGrid(last, open, now, want);
   // A faixa do sono que já está na tela só troca o tempo: recriá-la reiniciava os zz no meio do ciclo.
-  const keep = want === 'sleep' && $('strip').querySelector('.ext.k-sleep');
+  const keep = want === 'sleep' && $('strip').querySelector(warn ? '.ext.k-sleep.nn' : '.ext.k-sleep:not(.nn)');
   if (keep) $('stripT').textContent = dur(now - open);
-  else $('strip').innerHTML = want ? stripHtml(want, open, now) : '';
+  else $('strip').innerHTML = want ? stripHtml(want, open, now, warn) : '';
   $('din').classList.toggle('on', !!want);
   // Com a tela de registro aberta (ou fechando), a faixa espera escondida: a tela encolhe até ela.
   if (opening) { if (closing || (S && !$('sheet').hidden)) $('din').classList.add('pre'); else openStrip(); }

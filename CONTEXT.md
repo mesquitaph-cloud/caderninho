@@ -191,7 +191,9 @@ _Evite_: papinha (como nome do botão), refeição, introdução alimentar
 Com o bebê acordado, no cartão do bebê: há quanto tempo está acordado e, até 12 meses, a faixa de tempo
 acordado da idade (Cleveland Clinic), em duração e nunca em hora no relógio. As frases dizem que o bebê
 "pode estar" com sono; não mandam pôr para dormir. De 12 meses em diante e sem nascimento, só o contador.
-Some com o bebê dormindo. **Aviso da janela**: um por soneca no celular de quem pediu, 15 min antes do
+Some com o bebê dormindo. Perto da noite, no lugar da faixa vai a frase de que uma soneca agora pode
+atrapalhar o sono da noite (só antes de a noite começar); dormindo perto da noite, a frase vai na faixa
+"Dormindo há". **Aviso da janela**: um por soneca no celular de quem pediu, 15 min antes do
 começo da faixa, só entre 6h e 18h. Só aparece com **Acompanhar o sono** ligado na família.
 _Evite_: hora de dormir, hora ideal, previsão, sono atrasado, passou do ponto
 

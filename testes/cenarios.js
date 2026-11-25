@@ -513,3 +513,28 @@ if (CEN === 'noite82') {
   T.routines = T.routines || [];
   if (g('banho')) T.routines.push({ id: 'r-b', family_id: kid.family_id, baby_id: kid.id, kind: 'bath', name: null, schedule: 'fixed', times: ['17:00:00'], per_day: null, items: null, stopped_at: null, created_by: U.me, created_at: '2026-09-01T00:00:00Z' });
 }
+
+// "janela-noite" (item 95): a Helena com 4 meses, noite das 19h às 7h e 7 dias em que a janela dela dá
+// 1h15 a 2h45, com sonecas de 40 min. ?acordou=HHMM: o último "Acordou" de hoje (1540 ou 1300). ?dormiu=HHMM: a
+// soneca de hoje em andamento; &fim=HHMM encerra essa soneca; &meses=13 muda a idade. A hora de "agora" vem do relógio fixado pelo script das capturas.
+if (CEN === 'janela-noite') {
+  const q = new URLSearchParams(location.search), kid = T.babies[0];
+  for (const k of ['acordou', 'dormiu', 'fim']) { if (q.get(k)) sessionStorage.setItem('teste-' + k, q.get(k)); else if (q.get('cenario')) sessionStorage.removeItem('teste-' + k); }
+  const hm = (d, v) => dia(d, Math.floor(v / 100), v % 100);
+  const sono = (a, z) => { add(a, 'sleep'); add(z, 'wake'); };
+  const d = new Date(NOW); d.setMonth(d.getMonth() - (+q.get('meses') || 4)); d.setDate(d.getDate() - 3);
+  kid.birth_date = ymd(d.getTime());
+  kid.night = [{ from: ymd(NOW - 30 * DAY), start: 19, end: 7 }];
+  rmWhere(e => e.kind === 'sleep' || e.kind === 'wake');
+  for (let k = 13; k >= 1; k--) { sono(hm(k + 1, 1930), hm(k, 700)); sono(hm(k, 810), hm(k, 850)); sono(hm(k, 1050), hm(k, 1130)); sono(hm(k, 1425), hm(k, 1505)); }
+  sono(hm(1, 1930), hm(0, 700)); sono(hm(0, 810), hm(0, 850)); sono(hm(0, 1050), hm(0, 1130));
+  const acordou = +(sessionStorage.getItem('teste-acordou') || 1540), dormiu = +(sessionStorage.getItem('teste-dormiu') || 0);
+  sono(hm(0, acordou) - 40 * MIN, hm(0, acordou));
+  const fim = +(sessionStorage.getItem('teste-fim') || 0);
+  if (dormiu) add(hm(0, dormiu), 'sleep');
+  if (dormiu && fim) add(hm(0, fim), 'wake');
+  entries.sort((a, b) => at(a) - at(b));
+  T.medicines.length = 0;
+  window.testeBvDesde = NOW + 1e9;   // sem cartões de boas-vindas
+  window.testeNovDesde = 1;          // sem o aviso "Novidade" da janela
+}

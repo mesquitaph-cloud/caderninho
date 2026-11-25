@@ -17,6 +17,7 @@
 //                 app-janela: o mesmo no "app do Android", com o aviso da janela em window.avisos
 //   app-versao    o app do Android com a 1.0.3 e a 1.0.5 na loja: cartão de versão nova (?instalada=1.0.5, ?ios=1, ?semtabela=1)
 //   onb-novo / onb-app / onb-sem-familia   onboarding v02, o login no fim (veja o bloco "onb-" em cenarios.js)
+//   janela-noite  item 95: noite às 19h, acordada desde 15h40 (?acordou=1300, ?dormiu=1755); relógio fixado pelo script
 //   noite         a noite da Helena das 20h às 6h há 10 dias e "Acompanhar o sono" desligado (item 65)
 import http from 'node:http';
 import fs from 'node:fs';
