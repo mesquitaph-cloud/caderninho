@@ -1008,6 +1008,9 @@ body:has(#paneTrends:not([hidden]))::before{content:"";position:fixed;inset:0 0 
 .ext .tx{flex:none;display:flex;flex-direction:column;gap:1px;min-width:0;white-space:nowrap}
 .ext small{font-size:13px}.ext small.sd{opacity:.85}
 .ext .t{font-family:var(--display);font-weight:500;font-size:26px;line-height:1.05;font-variant-numeric:tabular-nums}
+/* Soneca perto da noite (item 95): a frase numa linha própria no pé da faixa "Dormindo há" */
+.ext.nn{flex-wrap:wrap;row-gap:8px;padding-right:12px}
+.ext .nnl{flex-basis:100%;margin:0;padding:0 8px 0 6px;font-size:14px;line-height:1.35;font-weight:500}
 .spill{background:var(--surface);color:inherit;border-radius:999px;padding:9px 16px;font-weight:500;font-size:15px;flex:none}
 .ext.k-feed{cursor:pointer}
 .rb.joined{border-top-left-radius:0;border-top-right-radius:0}

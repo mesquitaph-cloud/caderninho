@@ -1,7 +1,7 @@
 // Testes da janela de sono do próprio bebê (item 60, 2ª etapa, e contador do item 73; regra aprovada pelo
 // Patrick em 16/11, prévia 13: https://claude.ai/artifact/3q6Hzf8QKppDALfn8DBthA). Sem navegador nem banco:
 // `node --no-warnings testes/janela.mjs`. Sai com erro (código 1) se algum caso falhar.
-import { ownWindow, babyWin, dayWindows, mergeShort, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur, infoHtml, INFO_TITLE } from '../janela.js';
+import { ownWindow, babyWin, dayWindows, mergeShort, nearNight, winNotice, winText, counterHtml, novTitle, novText, swapTitle, swapText, fmtDur, infoHtml, INFO_TITLE, asleepNearNight, NAP_LATE_TEXT, NAP_ASLEEP_TEXT } from '../janela.js';
 import { nightRule } from '../noite.js';
 import { addDays, localDate, HOUR, MIN } from '../util.js';
 const ok = (c, m) => { if (!c) { console.log('FALHOU:', m); process.exitCode = 1; } else console.log('ok:', m); };
@@ -50,7 +50,8 @@ const ref = [60 * MIN, 105 * MIN], N = T + 18 * HOUR, nap = 40 * MIN;
 ok(nearNight(N - 100 * MIN, ref, N, nap) === 'direto', 'N − A ≤ fim da janela: direto até a noite');
 ok(nearNight(N - 150 * MIN, ref, N, nap) === 'soneca', 'N − (A + início + S) < início: a frase da soneca');
 ok(nearNight(N - 160 * MIN, ref, N, nap) === null, 'N − (A + início + S) = início: normal');
-ok(winText(30 * MIN, ref, 'F', 'direto') === 'Acordada há 30 min', 'direto: só o "Acordada há"');
+ok(winText(30 * MIN, ref, 'F', 'direto') === winText(30 * MIN, ref, 'F', 'soneca') && winText(30 * MIN, ref, 'F', 'direto').startsWith('Acordada há 30 min<span'), 'direto: a mesma frase da soneca (item 95)');
+ok(winText(30 * MIN, null, 'F', null) === 'Acordada há 30 min', 'sem faixa: só o "Acordada há"');
 ok(winText(30 * MIN, ref, 'M', 'soneca').includes('Uma soneca agora pode atrapalhar o sono da noite.'), 'soneca: a frase no lugar da faixa');
 
 // 6. Aviso no celular.
@@ -115,3 +116,29 @@ ok(iAge.includes('<b>1h a 2h acordado/a</b>') && iAge.includes('Referência para
 ok(iAge.includes('registros do/a próprio/a Leo.') && iAge.includes('Cleveland Clinic') && !iAge.includes('Como a conta'), 'pela idade: sem a lista, com a fonte');
 ok(infoHtml({ ...wAge, valid: 4 }, { name: 'Leo', sex: 'M' }, 2).includes('Referência para 2 meses. Falta 1 dia de sonecas anotadas para a janela vir dos registros do Leo.'), 'pela idade: Falta 1 dia, no singular');
 ok(infoHtml(w7, { name: '<b>', sex: 'M' }, 2).includes('o &lt;b&gt; costuma ficar acordado'), 'nome escapado');
+
+// 10. Item 95 (25/11): o "perto da noite" usa a hora de agora. Noite às 19h, acordou 15h40, janela 1h15 a 2h45, soneca 40 min.
+const r95 = [75 * MIN, 165 * MIN], N19 = T + 19 * HOUR, A95 = T + 15 * HOUR + 40 * MIN, em = (hh, mm) => T + hh * HOUR + mm * MIN;
+const nn = now => nearNight(A95, r95, N19, 40 * MIN, 120 * MIN, now);
+ok(nn(em(16, 30)) === null && nn(em(17, 5)) === null && nn(em(17, 6)) === 'soneca' && nn(em(18, 0)) === 'soneca', 'item 95: a frase entra às 17h06');
+ok(nn(em(18, 59)) === 'soneca' && nn(em(19, 0)) === 'noite' && nn(em(23, 0)) === 'noite', 'virada da noite: a frase vale até 18h59; das 19h em diante, não');
+ok(nearNight(em(13, 0), r95, N19, 40 * MIN, 120 * MIN, em(14, 0)) === null, 'item 95: quem acordou cedo vê a janela normal');
+const acordou = (A, now) => nearNight(A, r95, N19, 40 * MIN, 120 * MIN, now);
+ok(acordou(em(16, 0), em(18, 59)) === 'direto' && acordou(em(16, 0), em(19, 0)) === 'noite', 'virada da noite: o direto também acaba quando a noite começa');
+ok(acordou(em(18, 59), em(18, 59)) === 'direto' && acordou(em(19, 0), em(19, 0)) === 'noite' && acordou(em(22, 5), em(22, 10)) === 'noite' && nearNight(em(22, 5), r95, N19, null) === 'noite', 'virada da noite: acordou já de noite, sem frase');
+ok(acordou(em(18, 50), em(24, 30)) === 'noite', 'virada da noite: depois da meia-noite, o "Acordou" de antes da noite segue sem frase');
+ok(acordou(em(2, 0), em(2, 10)) === null, 'de madrugada: a janela normal, como antes');
+for (const [near, tem] of [['direto', true], ['soneca', true], ['noite', false]]) ok(winText(5 * MIN, r95, 'F', near).includes(NAP_LATE_TEXT) === tem, `frase da faixa no caso ${near}: ${tem ? 'aparece' : 'não aparece'}`);
+ok(winText(5 * MIN, r95, 'F', 'noite') === 'Acordada há 5 min', 'noite: só o "Acordada há"');
+ok(!winNotice(em(22, 5), { ref: r95, nap: 40 * MIN, mid: 120 * MIN }, { name: 'Ana', sex: 'F' }, nightRule({ night: [{ from: localDate(addDays(T, -30)), start: 19, end: 7 }] })), 'acordou de noite: sem aviso no celular');
+// O aviso toca sempre até o começo da janela (a janela começa aos 30 min ou depois): a conta na hora do aviso não muda nada.
+let igual = true;
+for (let de = 30; de <= 240; de += 5) for (let a = 6 * 60; a < 19 * 60; a += 5) {
+  const A = T + a * MIN, r = [de * MIN, (de + 45) * MIN], at = Math.max(A + r[0] - 5 * MIN, A + 30 * MIN);
+  if (!!nearNight(A, r, N19, 40 * MIN, null, at) !== !!nearNight(A, r, N19, 40 * MIN, null)) igual = false;
+}
+ok(igual, 'item 95: contar na hora do aviso não muda quem fica sem aviso');
+const dorme = (ini, now) => asleepNearNight(ini, r95, nightRule({ night: [{ from: localDate(addDays(T, -30)), start: 19, end: 7 }] }), now);
+ok(!dorme(em(17, 15), em(17, 45)) && dorme(em(17, 15), em(17, 46)) && dorme(em(17, 55), em(18, 59)), 'item 95, dormindo: a frase entra quando falta menos que o começo da janela');
+ok(NAP_ASLEEP_TEXT === 'Uma soneca longa agora pode atrapalhar a noite.' && NAP_LATE_TEXT === 'Uma soneca agora pode atrapalhar o sono da noite.', 'textos aprovados do item 95');
+ok(!dorme(em(17, 55), em(19, 0)) && !dorme(em(19, 5), em(19, 10)) && !dorme(em(22, 0), em(22, 30)) && !dorme(em(18, 50), em(24, 30)), 'item 95, dormindo: some no começo da noite e não volta');
