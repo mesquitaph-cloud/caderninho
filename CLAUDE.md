@@ -9,6 +9,12 @@ Antes de escrever o código de qualquer tela nova ou mudança visual, mostrar a 
 (com dados de exemplo e os estilos do Soneca, de dia e de noite) e esperar a aprovação. Só depois
 programar.
 
+## Layout das telas
+
+Toda fileira com rolagem lateral deixa um pedaço do próximo item aparecendo na borda (o último visível
+cortado), em 390 e em 360 px, como pista de que há mais para rolar. Motivo: em 24/11 uma usuária não
+achou o Peso em Tendências porque não percebeu a rolagem (item 97).
+
 ## Identidade visual: obrigatória em toda atualização
 
 Toda tela nova, mudança ou atualização segue a identidade do Soneca. Não existe exceção para tela
