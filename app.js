@@ -2198,6 +2198,11 @@ function dialInner(ink) {
     <circle cx="${hx}" cy="${hy}" r="${knob}" class="dknob"/><g class="dnum">${nums}</g><text x="${hx}" y="${hy + 5}" text-anchor="middle" font-size="15" class="dsel">${shown}</text></svg>`;
 }
 const dialHtml = ink => `<div class="dial" id="dialBox" data-ink="${ink}" style="--di:var(--${ink});--dc:var(--c-${ink})">${dialInner(ink)}</div>`;
+// A data da janela do relógio: Hoje, Ontem ou "21 nov".
+function tdlgDate() {
+  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
+  return d0 === t0 ? 'Hoje' : d0 === addDays(t0, -1) ? 'Ontem' : shortDate(localDate(d0));
+}
 function dialPoint(e) {
   const box = $('dialBox'), sv = box.querySelector('svg'), r = sv.getBoundingClientRect(), sc = r.width / 260;
   const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
@@ -2214,6 +2219,7 @@ function dialPoint(e) {
     if (best !== null) S.base = startOfDay(best);
   }
   box.innerHTML = dialInner(box.dataset.ink);
+  if ($('tdate')) $('tdate').textContent = tdlgDate();
   $('daySeg')?.insertAdjacentHTML('afterend', daySeg()); $('daySeg')?.remove();
 }
 let dialDown = false;
@@ -2233,6 +2239,8 @@ function dateText() {
 // registro não for de hoje, como já era). Ao tocar no lápis a linha some e abre o bloco: a data (com o seu lápis, que abre o
 // seletor de data) e o relógio redondo com os atalhos.
 function timeRow(k) {
+  // Item 99: na Mamada nova o relógio abre na mesma janela da edição, com a linha do horário no lugar.
+  if (k === 'feed') { const tc = timeCells('orow'); return tc.cell + tc.rest; }
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
@@ -2260,14 +2268,14 @@ function drawSleepCompact() {
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
-function timeCells() {
+function timeCells(cls = 'cell') {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  const cell = `<button class="cell tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  const cell = `<button class="${cls} tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (!S.openT) return { cell, rest: '' };
-  const dt = d0 === t0 ? 'Hoje' : d0 === addDays(t0, -1) ? 'Ontem' : shortDate(localDate(d0)), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
+  const dt = tdlgDate(), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
   return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
-    <div class="g2 tdate"><div class="cell tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
+    <div class="g2 tdate"><div class="cell tm datrow"><span class="v" id="tdate">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
     ${dialHtml(INK.feed || 'feed')}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
@@ -2428,6 +2436,11 @@ function drawEntry() {
     // Arroto: como xixi e cocô, um ou os dois; cada registro é só o momento, sem tempo.
     if (S.ck === 'burp') h += `<div><div class="lbl">Marque o que aconteceu</div><div class="seg ${c}" style="background:none">${opt('Pôs para arrotar', S.bput, 'bput', 1, 1)}${opt('Arrotou', S.bdone, 'bdone', 1, 1)}</div></div>`;
   }
+  // Mamada nova (minutos depois do cronômetro, ou mamadeira com ele correndo): o mesmo horário em janela (item 99) e o mesmo Salvar (item 94).
+  if (k === 'feed' && !S.edit) {
+    if (canBy()) h += byHtml(k, 'Quem fez');
+    return openPanel(h + timeRow('feed') + sfoot('feed', 'Salvar'));
+  }
   h += daySeg();
   if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
@@ -2559,8 +2572,8 @@ async function saveEntry(btn) {
     return;
   }
   const fromTimer = S.fromTimer && ev.kind === 'feed' && ev.src === 'breast';
-  // Na tela curta do Sono, da Fralda e da Ordenha, o botão confirma enquanto o registro salva.
-  const conf = S.compact && (k === 'sleep' || k === 'diaper' || k === 'pump') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
+  // Na tela curta do Sono, da Mamada, da Fralda e da Ordenha, o botão confirma enquanto o registro salva.
+  const conf = S.compact && (k === 'sleep' || k === 'feed' || k === 'diaper' || k === 'pump') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
   const row = await addEntry(ev);
   if (!row) { conf?.cancel(); return busy(btn, false); }
   if (oint?.length) await setDiaperOint(row.id, { ...ev, t: Date.parse(row.at) }, oint);
@@ -4279,7 +4292,7 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') { if (S.sfix === 'small') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'openT') { if (S.sfix === 'small' || S.k === 'feed') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
   else if (a === 'tok') S.openT = false;
   else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
   else if (a === 'editMore') S.more = true;
