@@ -1,6 +1,6 @@
 // Soneca no computador, com o Supabase de mentira (loja/ferramentas/fake-sb.js) e cenários de teste.
 // Nada sai daqui: o banco de verdade não é chamado. Rodar com `node testes/servidor.mjs` e abrir
-// http://localhost:5174/?cenario=NOME (o cenário fica guardado na aba até trocar).
+// http://localhost:5174/?cenario=NOME (o cenário fica guardado na aba até trocar). &data=2026-12-24 liga o gorro.
 //   normal        rotina de 40 dias da Helena, como nas fotos da loja
 //   sono-aberto   um "Dormiu" de 6 dias atrás sem "Acordou" (o caso do Bruno, 17/10)
 //   sem-familia   conta nova sem família, com um convite válido para a Família Andrade (o caso da Ca)

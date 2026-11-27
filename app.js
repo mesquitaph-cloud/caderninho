@@ -2,7 +2,7 @@ import { createClient } from './vendor/supabase-js-2.117.1.js';
 import { SUPABASE_URL, SUPABASE_KEY, GOOGLE_LOGIN, APPLE_LOGIN, GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, DEMO_EMAIL_SHA256 } from './config.js';
 import { ICON, MIN, HOUR, DAY, pad, startOfDay, addDays, hm, dur, ago, esc, dayTitle, shortDay, rangeTitle, navDayTitle, navRangeTitle, navMonthTitle, ageText, fullDate, shortDate,
          sleepIntervals, label, detail, SIDE_SHORT, MESES_L, lsGet, lsSet, SYMPTOM, CARE, CARE_MIN, BURP, POO_SIZE, aloneText,
-         LONG_SLEEP, localDate, reduceMotion, CAPI } from './util.js';
+         LONG_SLEEP, localDate, reduceMotion, CAPI, isNatal } from './util.js';
 import { weekHtml, dayLine, zoomHead, ZOOM_H } from './week.js';
 import { clockHtml } from './clock.js';
 import { MILESTONES, motorRange, motorChart, refHtml, kg, parseKg, parseCm, cmText, ageOn, sortWeights, sortMilestones, weightChart, growthChart, growthWindow, MAX_MONTHS } from './growth.js';
@@ -1237,8 +1237,8 @@ $('sheetIn').addEventListener('change', e => {
 const BV_DESDE = window.testeBvDesde || Date.parse('2026-10-30T00:00:00-03:00');
 // Na faixa do sono, a mesma capivara com dois z acima da cabeça: o pequeno aparece, depois o grande
 // (em cima), e os dois somem juntos (prévia de 08/11). Parados para quem pede menos movimento.
-const CAPI_Z = CAPI.replace('</svg>', '<path class="z z1" vector-effect="non-scaling-stroke" d="M93 4H99L93 10H99"/>'
-  + '<path class="z z2" vector-effect="non-scaling-stroke" d="M103 -14H112L103 -5H112"/></svg>');
+const CAPI_Z = CAPI.replace('</svg>', '<g class="zz"><path class="z z1" vector-effect="non-scaling-stroke" d="M93 4H99L93 10H99"/>'
+  + '<path class="z z2" vector-effect="non-scaling-stroke" d="M103 -14H112L103 -5H112"/></g></svg>');
 const bvKey = () => 'cad-bv-' + st.family.id;
 const bvDone = () => { try { return JSON.parse(lsGet(bvKey())) || []; } catch { return []; } };
 const bvSkip = k => lsSet(bvKey(), JSON.stringify([...new Set([...bvDone(), k])]));
@@ -4533,6 +4533,13 @@ document.addEventListener('visibilitychange', () => {
   if (Date.now() - hiddenAt < RELOAD_AFTER) return render();
   if (st.baby && !$('scrMain').hidden && !S && $('rpView').hidden) Promise.all([loadEntries(), loadMeds(), loadGrowth(), loadQuestions()]).then(render);
 });
+// Gorro de dezembro (item 107): confere a data ao abrir, ao voltar para o app e a cada 30 segundos.
+// Os testes (testes/cenarios.js, ?data=) mudam a data por window.testeHoje.
+const natal = () => document.documentElement.classList.toggle('natal', isNatal(window.testeHoje ?? Date.now()));
+// As capivaras escritas no index.html ganham o mesmo desenho (com o gorro guardado).
+for (const el of document.querySelectorAll('.screen svg.capi')) el.innerHTML = CAPI.replace(/^<svg[^>]*>|<\/svg>$/g, '');
+natal(); setInterval(natal, 30000); document.addEventListener('visibilitychange', natal);
+
 // A cada 30 segundos, a tela Hoje atualiza o "há quanto tempo" e as doses. As outras abas não: redesenhar
 // outra aba no meio de um arrasto no gráfico de peso cortava o gesto.
 setInterval(() => { if (st.tab === 'home') refresh(); }, 30000);
@@ -4541,7 +4548,8 @@ setInterval(() => { if (st.tab === 'home') refresh(); }, 30000);
 // A tela desce com o dedo e, enquanto busca, fica 76 px abaixo; no vão, a capivara (só as bordas) se
 // desenha conforme puxa e, ao soltar, um traço corre pela borda dela até terminar.
 const PULL = 80, HOLD = 76;
-$('ptr').innerHTML = '<svg viewBox="0 0 120 70">' + ['bg', 'fg'].map(c => `<g class="${c}">${[...CAPI.matchAll(/ d="([^"]+)"/g)].map(m => `<path pathLength="100" d="${m[1]}"/>`).join('')}</g>`).join('') + '</svg>';
+const CAPI_DESENHO = CAPI.replace(/^<svg[^>]*>|<\/svg>$/g, '');
+$('ptr').innerHTML = '<svg viewBox="0 0 120 70">' + ['bg', 'fg'].map(c => `<g class="${c}">${CAPI_DESENHO.replace(/<path /g, '<path pathLength="100" ')}</g>`).join('') + '</svg>';
 let pull = null, pulling = false;
 const canPull = () => st.tab === 'home' && st.baby && !$('scrMain').hidden && !S && $('rpView').hidden && $('pop').hidden && window.scrollY <= 0;
 function pullShow(d) {

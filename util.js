@@ -216,4 +216,15 @@ export function lsSet(k, v) { try { v == null ? localStorage.removeItem(k) : loc
 
 // A capivara do Soneca, um traço só (a cor e a espessura vêm do CSS, em .capi). Vai na entrada, no cartão
 // do sono e no alto do relatório para o pediatra.
-export const CAPI = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+export const CAPI_PLAIN = '<svg class="capi" viewBox="0 0 120 70" aria-hidden="true"><path vector-effect="non-scaling-stroke" d="M73 54H12C7 54 5.5 51 5.5 45.5C5.5 30 16 19 35 18.4C45 18.1 53 18.2 58 18.6C62 18.9 64 20 66.5 20C70 20 73.5 15.5 81 15.5H100C108.5 15.5 113 21 113 31V42C113 46.5 111 49 106.5 49H83C78.5 49 77.5 54 73 54Z"/><path vector-effect="non-scaling-stroke" d="M80 15.8C80 9.5 86.5 8.5 87.5 14.6"/><path vector-effect="non-scaling-stroke" d="M85.5 26.5Q90 30.5 94.5 27"/><path vector-effect="non-scaling-stroke" d="M107.6 24.6L108.3 28"/><path vector-effect="non-scaling-stroke" d="M57 54C58 48.5 65.5 47.5 68.5 53"/></svg>';
+// Gorro de Papai Noel em dezembro (item 107). O desenho vai sempre junto da capivara e só aparece com a
+// classe "natal" no <html> (app.js): assim liga e some sozinho, mesmo com o app aberto na virada do mês.
+// No gorro a orelha some, como no capacete. O relatório para o pediatra usa CAPI_PLAIN.
+const GORRO = '<g class="gorro">'
+  + '<path class="gc" vector-effect="non-scaling-stroke" d="M104.5 13C103.5 4 98 -2 90.5 -2C83.5 -2 78 2 75 8.5L79 9.5C81 6.5 84.5 5.5 87 6.5C89 8 90 10 90 13Z"/>'
+  + '<path class="gb" vector-effect="non-scaling-stroke" d="M89 12H105C106.7 12 108 13.2 108 14.8S106.7 17.6 105 17.6H89C87.3 17.6 86 16.4 86 14.8S87.3 12 89 12Z"/>'
+  + '<path class="gb" vector-effect="non-scaling-stroke" d="M72.9 11a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0-7.2 0Z"/></g>';
+export const CAPI = CAPI_PLAIN.replace('<path vector-effect="non-scaling-stroke" d="M80 15.8', '<path class="ear" vector-effect="non-scaling-stroke" d="M80 15.8')
+  .replace('</svg>', GORRO + '</svg>');
+// De 1º a 31 de dezembro, pela data do celular.
+export const isNatal = t => new Date(t).getMonth() === 11;

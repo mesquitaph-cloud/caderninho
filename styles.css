@@ -7,7 +7,7 @@
   --feed:#9ED9B8;--feed-ink:#1F5A3B;--sleep:#9CC8F0;--sleep-ink:#1F4E80;--sleep-soft:#E4F0FB;
   --diaper:#FFD98A;--diaper-ink:#664700;--vomit:#F6A5A0;--vomit-ink:#7E2722;
   --other:#EDE3D6;--other-ink:#5A4636;--pump:#CFEEDC;--pump-ink:#1F5A3B;--med:#F6A5A0;--med-ink:#7E2722;--care:#F5CDB0;--care-ink:#76401E;--accent:#E8A87C;--focus:#7A5A3C;--on-accent:#4A3522;--link:#8F4C24;--danger:#B3261E;--on-danger:#FFFFFF;
-  --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;
+  --hi:#FFD98A;--hi-ink:#664700;--mascot:#7A5A3C;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;--gorro:#D2493F;--gorro-ink:#8E2B25;--gorro-pelo:#FFFFFF;--gorro-pelo-ink:#7A5A3C;
   /* Selo da App Store na página das lojas: preto de dia, branco de noite */
   --badge-day:inline;--badge-night:none;
   /* Botões de entrar: cores exigidas pela Apple (preto de dia, branco de noite) e pelo Google (sempre claro) */
@@ -27,7 +27,7 @@
   color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--sleep-soft:#252640;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
-  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;--badge-day:none;--badge-night:inline;
+  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;--gorro:#C25450;--gorro-ink:#EBA39B;--gorro-pelo:#EFE6DB;--gorro-pelo-ink:#BFB1A1;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;--food:#7D4F23;--food-ink:#F5D3BA;--c-food:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
@@ -36,7 +36,7 @@
   color-scheme:dark;--bg:#111B21;--surface:#1F2C34;--surface2:#2A3942;--ink:#E9EDEF;--muted:#9AA8B1;--line:#2F3E47;
   --feed:#245C41;--feed-ink:#A6DDC4;--sleep:#4E477C;--sleep-ink:#D2CBF7;--sleep-soft:#252640;--diaper:#68521E;--diaper-ink:#F2D49A;
   --vomit:#703540;--vomit-ink:#F4BEBA;--other:#3B4A53;--other-ink:#D5DCE0;--pump:#244B3E;--pump-ink:#A6DDC4;--med:#703540;--med-ink:#F4BEBA;--care:#7D4F23;--care-ink:#F5D3BA;
-  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;--badge-day:none;--badge-night:inline;
+  --hi:#68521E;--hi-ink:#F2D49A;--mascot:#E6CDB5;--hat:#FFC400;--hat-hi:#FFD54A;--hat-ink:#9A6B00;--gorro:#C25450;--gorro-ink:#EBA39B;--gorro-pelo:#EFE6DB;--gorro-pelo-ink:#BFB1A1;--badge-day:none;--badge-night:inline;
   --apple-bg:#FFFFFF;--apple-ink:#000000;--google-bg:#FFFFFF;--google-ink:#1F1F1F;--google-line:#DADCE0;
   --c-sleep:#A79BE0;--c-nap:#D2CBF7;--c-wakes:#A79BE0;--c-feed:#6FB596;--c-diaper:#E6B96A;--c-pump:#6FB596;--c-poo:#7A4E2C;--poo-ink:#D9A47C;--poo-bg:#3A2E3A;--on-poo:#111B21;--c-med:#D98C88;--c-weight:#C98B62;--c-vomit:#D98C88;--c-care:#C98B62;--food:#7D4F23;--food-ink:#F5D3BA;--c-food:#C98B62;
   --curve:#4A5A64;--curve-mid:#7D8E98;--band:#18252C;
@@ -1434,3 +1434,16 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 /* Edição e relógio do Sono (item 88) */
 .tbox.t-sleep .tbtns .ok{background:var(--sleep);color:var(--sleep-ink)}
 .g2.k-sleep .mlcell .step button{color:var(--sleep-ink)}
+
+/* Gorro de Papai Noel em dezembro (item 107, util.js). Sem a classe "natal" no <html>, não existe. */
+.gorro{display:none}
+.natal .gorro{display:inline}
+.natal .ear{display:none}
+.natal .capi{overflow:visible}
+.capi .gorro path,.lake .gorro path{stroke-width:1.4px}
+.gorro .gc{fill:var(--gorro);stroke:var(--gorro-ink)}
+.gorro .gb{fill:var(--gorro-pelo);stroke:var(--gorro-pelo-ink)}
+/* Os "z" saem de cima do gorro */
+.natal .zz{transform:translate(13px,-5px)}
+/* Puxar para atualizar: o gorro também é só traço, nas cores do desenho */
+.ptr .gorro path{fill:none}
