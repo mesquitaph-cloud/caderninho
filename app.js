@@ -2244,8 +2244,9 @@ function dateText() {
 // registro não for de hoje, como já era). Ao tocar no lápis a linha some e abre o bloco: a data (com o seu lápis, que abre o
 // seletor de data) e o relógio redondo com os atalhos.
 function timeRow(k) {
-  // Item 99: na Mamada nova o relógio abre na mesma janela da edição, com a linha do horário no lugar.
-  if (k === 'feed') { const tc = timeCells('orow'); return tc.cell + tc.rest; }
+  // Item 99: na Mamada nova o relógio abre na mesma janela da edição. Na folha, ao lado do horário, só o −5 min:
+  // cada toque tira mais 5 (Patrick, 26/11). Na edição não há atalho.
+  if (k === 'feed') { const tc = timeCells(); return `<div class="g2"><button class="cell back5" data-act="back" data-val="5">−5 min</button>${tc.cell}</div>` + tc.rest; }
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
@@ -2273,16 +2274,15 @@ function drawSleepCompact() {
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
-// No registro novo a janela tem ainda os atalhos de −5, −10 e −30 min (Patrick, 26/11); na edição, não.
-function timeCells(cls = 'cell') {
+function timeCells() {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  const cell = `<button class="${cls} tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  const cell = `<button class="cell tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (!S.openT) return { cell, rest: '' };
   const dt = tdlgDate(), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
   return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
     <div class="g2 tdate"><div class="cell tm datrow"><span class="v" id="tdate">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
-    ${dialHtml(INK.feed || 'feed')}${S.edit ? '' : QUICK_EDIT}
+    ${dialHtml(INK.feed || 'feed')}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
 // Edição da Mamadeira (item 88): mesma grade do peito. Linha 2: quantidade (− 140 ml +) | horário; os atalhos de 30 a 180 ml

@@ -1410,6 +1410,7 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .g2 .step em{flex:none;margin-right:0}
 .g2 .cell{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-1);border-radius:16px;background:var(--surface2);color:var(--ink);font-size:16px;font-weight:500;text-align:left}
 .g2 .cell.tcell{color:var(--muted);justify-content:flex-start}
+.g2 .cell.back5{justify-content:center}
 .g2 .cell .v{font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums;min-width:0}
 .g2 .cell .pen{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:var(--surface);color:var(--muted)}
 .g2 .cell .pen svg{width:16px;height:16px}
