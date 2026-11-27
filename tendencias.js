@@ -19,7 +19,7 @@
 //   guardado seguem a regra antiga (acima); os outros, a noite e as sonecas da regra nova.
 // Nesta versão só Sono e Peso têm conteúdo; Mamadas, Fraldas e Ordenha mostram "Em construção". O Peso (item 75, etapa 3)
 // vem pronto do app, em `peso`, porque a lista e a folha de anotar moram lá.
-import { HOUR, addDays, startOfDay, dur, esc, MESES, DIAS, CAPI, rangeTitle, sleepIntervals } from './util.js';
+import { HOUR, addDays, startOfDay, dur, esc, MESES, DIAS, CAPI, CAPI_PLAIN, rangeTitle, sleepIntervals } from './util.js';
 import { nights, nightName } from './noites.js';
 import { OLD_RULE, bounds, napsOf } from './noite.js';
 
@@ -35,8 +35,8 @@ const P = d => `<path vector-effect="non-scaling-stroke" d="${d}"/>`;
 const HAT = (c, d) => `<path class="${c}" vector-effect="non-scaling-stroke" d="${d}"/>`;
 const EAR = /<path[^>]*d="M80 15\.8C80 9\.5 86\.5 8\.5 87\.5 14\.6"\/>/;
 const CAPI_ZZ = CAPI.replace('viewBox="0 0 120 70"', 'viewBox="0 -16 120 86"')
-  .replace('</svg>', P('M93 4H99L93 10H99') + P('M103 -14H112L103 -5H112') + '</svg>');
-export const CAPI_HAT = CAPI.replace(EAR, '').replace('viewBox="0 0 120 70"', 'viewBox="0 -8 120 78"')
+  .replace('</svg>', '<g class="zz">' + P('M93 4H99L93 10H99') + P('M103 -14H112L103 -5H112') + '</g></svg>');
+export const CAPI_HAT = CAPI_PLAIN.replace(EAR, '').replace('viewBox="0 0 120 70"', 'viewBox="0 -8 120 78"')
   .replace('</svg>', HAT('hat', 'M80.5 14.5C80.5 4.5 86.5 -0.5 94 -0.5S107.5 4.5 107.5 14.5Z')
     + HAT('hat hr', 'M90.8 14.5V1.2C90.8 -0.6 92.2 -1.8 94 -1.8S97.2 -0.6 97.2 1.2V14.5Z')
     + HAT('hat', 'M77 13.2H113.5C115.2 13.2 116 14 116 15S115.2 16.8 113.5 16.8H77C75.8 16.8 75.2 16 75.2 15S75.8 13.2 77 13.2Z')
