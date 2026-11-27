@@ -2053,6 +2053,8 @@ const sideRow = (key, name) => `<div class="side${S[key] ? ' on' : ''}" id="row-
   <div class="step"><button data-act="minstep" data-val="${key}:-1" aria-label="Menos 1 minuto no peito ${name.toLowerCase()}">−</button>
   <input id="min-${key}" inputmode="numeric" value="${esc(S[key + 'min'])}" placeholder="–" aria-label="Minutos no peito ${name.toLowerCase()} (opcional)"><em>min</em>
   <button data-act="minstep" data-val="${key}:1" aria-label="Mais 1 minuto no peito ${name.toLowerCase()}">+</button></div></div>`;
+// Cada peito no seu lado, uma coluna para cada (v10d): o mesmo bloco na edição e na Mamada nova.
+const sideCols = () => `<div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>`;
 const totalText = () => { const t = (+S.lmin || 0) + (+S.rmin || 0); return t ? 'Total: ' + dur(t * MIN) : ''; };
 function markSide(key) { const r = $('row-' + key); if (!r) return; r.classList.toggle('on', S[key]); r.querySelector('.pick').setAttribute('aria-pressed', S[key]); }
 
@@ -2304,7 +2306,7 @@ function drawFeedEditCompact() {
   if (small) {
     const tc = timeCells();
     h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
-      ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `<div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>
+      ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `${sideCols()}
       <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div>`}</div>` + sfoot('feed', 'Salvar') + tc.rest;
     openPanel(h); fitWho(); return;
   }
@@ -2321,7 +2323,7 @@ function drawFeedCompact() {
     h += `<div><div class="lbl">Qual peito</div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="tsides">${ftSidesHtml(null, Date.now())}</div></div>`;
     h += orow('openO', 'Outras opções', S.openO);
     if (S.openO) {
-      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${S.edit ? totalText() : ''}</div></div></div>`;
+      h += `<div class="ofold"><div><div class="lbl">Digitar os minutos</div>${sideCols()}<div class="total" id="total">${S.edit ? totalText() : ''}</div></div></div>`;
       h += timeRow('feed') + sfoot('feed', 'Salvar');
     }
     return openPanel(h);
@@ -2406,7 +2408,7 @@ function drawEntry() {
     }
     if (S.src === 'breast') {
       const lb = !S.edit && lastBreast(sortedEntries());
-      h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}<div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${S.edit ? totalText() : ''}</div></div>`;
+      h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div>${lb ? `<div class="hint">Última no peito: ${esc(SIDE_SHORT[lb.side])}, ${esc(ago(lb.t))}</div>` : ''}${sideCols()}<div class="total" id="total">${S.edit ? totalText() : ''}</div></div>`;
     }
     if (S.src === 'bottle') h += mlBlock(k);
   }
