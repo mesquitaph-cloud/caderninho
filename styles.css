@@ -1421,6 +1421,11 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .g2 .cell.mlcell{padding:var(--sp-2)}
 .g2 .mlcell .step{opacity:1}
 .g2 .mlcell .step button{background:var(--surface);color:var(--feed-ink)}
+/* Na linha toda (o horário grande ficou com a linha de baixo): − e + nas linhas internas, número e unidade juntos no centro */
+.g2 .mlcell.span2 .step{justify-content:center}
+.g2 .mlcell.span2 .step input{flex:0 0 4ch}
+.g2 .mlcell.span2 .step button:first-child{margin-right:auto}
+.g2 .mlcell.span2 .step button:last-child{margin-left:auto}
 /* Edição da Mamadeira: "Quem fez" com até 3 pessoas numa linha só, larguras iguais e vão 8, exceção à grade de 2 colunas; nome comprido: a fonte diminui (fitWho em app.js), reticências só se nem 13 px couber */
 .g2.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g2.g3 .opt.big{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
