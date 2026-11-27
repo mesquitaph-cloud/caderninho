@@ -2882,7 +2882,7 @@ function drawMed() {
     body = `<div class="rg2"><div class="lbl">Hoje</div>${todays.length ? `<div class="hist2">${todays.reverse().map(e => `<div><span>${hm(e.t)}</span><span>por ${esc(whoGave(e))}</span></div>`).join('')}</div>` : '<p class="dim rnone">Nenhuma dose hoje.</p>'}`
       + (next ? `<p class="dim rnone">Pode dar de novo a partir das ${hm(next)}.</p>` : '') + '</div>';
     if (S.prnAsk) body += `<p class="soft">A última foi há ${dur(Date.now() - last.t)}.</p>`;
-    foot = rSave('med', S.prnAsk ? 'Marcar mesmo assim' : 'Dei agora', 'prnNow');
+    foot = rSave('med', S.prnAsk ? 'Marcar mesmo assim' : 'Marcar agora', 'prnNow');
   } else body = `<div class="rg2"><div class="lbl">Hoje</div><div class="doses">${todayDoses().filter(d => d.m.id === m.id).map(d => doseRow(d, { all: true, inItem: true })).join('') || '<p class="dim rnone">Nenhuma dose hoje.</p>'}</div></div>`;
   body += pastRows(mine.filter(e => e.t < t0 && e.t >= addDays(t0, -7)).slice(-5).reverse().map(e => [cap1(whenText(e.t)), (e.skipped ? 'pulada por ' : 'por ') + whoGave(e)]));
   rPanel(rHead(m.name, [m.amount, prn ? 'quando precisar' : 'todo dia', medUntil(m)].filter(Boolean).join(' · '), { back: fromList(S.from) ? 'toMeds' : '', edit: 'editMed' }), body, foot);
@@ -2898,7 +2898,7 @@ const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && 
 const prnNext = (m, last = lastGiven(m)) => last && m.every_hours && last.t + m.every_hours * HOUR > Date.now() ? last.t + m.every_hours * HOUR : null;
 const medWhen = m => (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
   + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
-// "Dei agora" no remédio de horário: se a dose mais recente que já passou da hora ficou sem marcar,
+// "Marcar agora" no remédio de horário: se a dose mais recente que já passou da hora ficou sem marcar,
 // é ela; senão, adianta a próxima sem marcar. Nulo se não há dose nas próximas 24 horas.
 function nowDose(m) {
   const now = Date.now(), ds = dosesFrom(now - DAY, now + DAY).filter(d => d.m.id === m.id);
@@ -3276,7 +3276,7 @@ function drawTask() {
   if (r.schedule === 'need') {
     const todays = mine.filter(e => e.t >= t0).reverse();
     body += `<div class="rg2"><div class="lbl">Hoje</div>${todays.length ? `<div class="hist2">${todays.map(e => `<div><span>${hm(e.t)}</span><span>${esc(byText(e))}</span></div>`).join('')}</div>` : '<p class="dim rnone">Nada hoje.</p>'}</div>`;
-    foot = rSave('care', 'Fiz agora', 'tTick');
+    foot = rSave('care', 'Marcar agora', 'tTick');
   }
   body += pastRows(mine.filter(e => e.t < t0 && e.t >= addDays(t0, -7)).slice(-5).reverse().map(e => [cap1(whenText(e.t)) + (e.kind === 'ointment' ? ' · ' + e.ointments.join(', ') : ''), byText(e)]));
   rPanel(rHead(taskName(r), taskWhen(r), { back: fromList(S.from) ? 'toTasks' : '', edit: 'tEdit' }), body, foot);
