@@ -159,8 +159,8 @@ que foi feito é escrito à mão e é obrigatório.
 _Evite_: cuidado (nome antigo), atividade, procedimento, atalho
 
 **Rotina** (09/11):
-As tarefas que a família programa para o bebê, cada uma com o seu "quando": horários fixos, vezes por dia
-ou, só na pomada, na troca de fralda. A de horário fixo aparece em "Hora da tarefa", no alto do Diário,
+As tarefas que a família programa para o bebê, cada uma com o seu "quando": todo dia (com horário, ou tantas
+vezes por dia), quando precisar ou, só na pomada, na troca de fralda. A de horário fixo aparece em "Hora da tarefa", no alto do Diário,
 na hora marcada. "Tirar da rotina" não apaga o que já foi anotado.
 _Evite_: agenda, lembrete (o lembrete é outra coisa: o aviso para anotar)
 
@@ -243,7 +243,7 @@ _Evite_: medicamento, medicação, receita, prescrição
 **Dose**:
 Cada horário em que um remédio programado deve ser dado. Uma hora antes, a dose aparece na tela
 inicial com a caixinha e o botão Pular, e fica em destaque até alguém marcar que deu ou pular;
-marcada ou pulada, sai da tela inicial. "Dei agora", na lista, marca a dose atrasada ou adianta a
+marcada ou pulada, sai da tela inicial. "Marcar agora", na lista, marca a dose atrasada ou adianta a
 próxima. Cada dose só pode ser marcada uma vez: quem marca depois vê quem marcou antes.
 _Evite_: tomada, aplicação
 

@@ -9,6 +9,16 @@ linha do tempo compartilhada. App do iPhone (App Store) e do Android (teste fech
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
+## Remédios e tarefas: telas novas (27/11, item 113, no código, falta publicar)
+
+- Remédio e tarefa com a mesma estrutura (lista, tela do item, formulário), linha fina no Diário e contador das
+  doses e tarefas de hoje que passaram da hora. Prévia v01 aprovada pelo Patrick:
+  https://claude.ai/artifact/453mJZ8RsnMHVT5Gsb4A42
+- Tarefa ganhou "Quando precisar": **rodar `supabase/031_tarefa_quando_precisar.sql` antes de publicar.** No app
+  antigo, essa tarefa aparece como "na troca de fralda" até o celular atualizar.
+- Nos remédios e nas tarefas, o botão de registrar na hora é "Marcar agora".
+- Falta (prévia 2): avisos ligados e o número no ícone do app.
+
 ## Aba Família: um assunto, um lugar (27/11, itens 102 e 31, no código, falta publicar)
 
 - Blocos: Sobre o bebê, Rotina de sono, Remédios e cuidados, Consulta com o pediatra e Nosso time (árvore da
@@ -1411,7 +1421,7 @@ duração e um vômito por Sintomas; anotar uma massagem; ver os losangos em "Co
   `symptom`, `massage`, `bath` e `nasal`, com `symptom`, `temp_c` (só na febre) e `duration_min` (só na
   cólica e no choro). "Outro" exige a observação.
 
-### Remédios: só perto da hora, Pular e Dei agora
+### Remédios: só perto da hora, Pular e Marcar agora
 
 Não muda o banco; basta publicar o app.
 
@@ -1421,11 +1431,11 @@ Não muda o banco; basta publicar o app.
   Remédio continua dizendo "próxima às 16:00". A caixinha aparece uma hora antes (era meia hora).
 - **Pular:** botão embaixo da dose perto da hora ou atrasada, para quando não deu. Grava a dose como
   pulada, com "Desfazer". Continua também dentro da dose ("Pular esta dose").
-- **Dei agora nos remédios de horário:** na lista de remédios. Se a dose mais recente ficou sem
+- **Marcar agora nos remédios de horário:** na lista de remédios. Se a dose mais recente ficou sem
   marcar, marca ela; senão, adianta a próxima (dose das 20:00 dada às 19:00). Se a próxima está a mais
   de uma hora, o primeiro toque avisa qual dose vai marcar e o segundo marca.
 - **Conferir no celular:** programar um remédio de teste com horário daqui a 50 minutos, ver aparecer no
-  alto, pular, desfazer, marcar e ver sumir; na lista, "Dei agora" num remédio de horário.
+  alto, pular, desfazer, marcar e ver sumir; na lista, "Marcar agora" num remédio de horário.
 - De passagem: em telas de 360 px, a coluna da direita dos botões de registro passava da margem;
   agora as duas colunas têm a mesma largura. Em 320 px (iPhone SE antigo) ainda aperta.
 
@@ -1606,7 +1616,7 @@ Prévia interativa usada para decidir (privada): https://claude.ai/artifact/3oP2
   programado não vira dose.
 - **Duas pessoas marcando juntas:** o banco aceita uma marcação por dose; quem marca depois vê "Alguém
   já marcou esta dose" e o app recarrega mostrando quem deu.
-- **Só quando precisar:** botão "Dei agora" e a última vez que foi dado. Com intervalo, mostra a
+- **Só quando precisar:** botão "Marcar agora" e a última vez que foi dado. Com intervalo, mostra a
   partir de que horas pode dar de novo; antes disso, pede um segundo toque ("Marcar mesmo assim").
 - **Linha do tempo:** o registro de remédio aparece com o nome, a quantidade e a dose ("dose das 09:00",
   "dose das 09:00 pulada" ou "quando precisou"). Dá para mudar o horário, a observação ou apagar.
