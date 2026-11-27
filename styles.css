@@ -368,7 +368,6 @@ svg .rd-diaper{fill:var(--c-diaper);stroke:var(--surface2);stroke-width:2}
 /* Temperatura da febre: caixa vazia, sem número de exemplo que pareça já anotado */
 .ml input.tbox{width:110px;height:52px;border:1.5px solid var(--line);border-radius:14px;background:var(--surface)}
 /* Peito na mamada: marcar o peito e, se quiser, os minutos */
-.sides{display:flex;flex-direction:column;gap:8px}
 .side{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px 4px 4px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface)}
 .side.on{background:var(--feed);border-color:var(--feed-ink)}
 .pick{flex:1;display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;text-align:left}
@@ -1357,9 +1356,9 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .kinblk .kins{margin-top:0}
 .midin b,.onbwin b{font-weight:500}
 
-/* RASCUNHO da prévia 88: lixeira no cabeçalho da edição */
+/* Edição da Mamada: lixeira no cabeçalho */
 .shead .rt{display:flex;gap:8px;align-items:center}.tr{width:40px;height:40px;border-radius:50%;background:var(--surface2);color:var(--muted);display:grid;place-items:center}.tr svg{width:19px;height:19px}
-/* RASCUNHO v03b: relógio de ponteiro */
+/* Relógio redondo, de ponteiro */
 .dial{border:1.5px solid var(--line);border-radius:16px;padding:10px 6px 8px;margin-bottom:8px;touch-action:none;user-select:none}
 .dtop{display:flex;justify-content:center;align-items:center;gap:4px;margin-bottom:6px}
 .dh{font-family:var(--display);font-weight:500;font-size:34px;line-height:1;padding:8px 12px;border-radius:12px;background:var(--surface2);color:var(--muted);font-variant-numeric:tabular-nums}
@@ -1368,32 +1367,22 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .dface{display:block;margin:0 auto;width:min(100%,214px);height:auto}
 .dbg{fill:var(--surface2)}.dhand{stroke:var(--dc);stroke-width:2}.dpin{fill:var(--dc)}.dknob{fill:var(--dc)}
 .dnum{fill:var(--ink);font-family:var(--display);pointer-events:none}.dsel{fill:var(--bg);font-family:var(--display);font-weight:500;pointer-events:none}
-.sysrow{position:relative}.sysrow input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
-.time.quick.q3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .datrow{position:relative}.datrow input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .datrow:focus-within{outline:2px solid var(--link);outline-offset:-2px;border-radius:16px}
-/* RASCUNHO v06: a folha mantém a moldura (grab, título, cantos); o meio rola e o Salvar fica no pé */
-.sheet.sfix{display:flex;flex-direction:column;overflow:hidden}.sheet.sfix .in{flex:1 1 auto;min-height:0;width:100%}.sheet.sfix .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:12px}.sheet.sfix .sfoot{position:static;flex:none}
-/* RASCUNHO v06: a linha do horário e a da data têm a mesma fonte e altura em hoje, ontem e datas antigas, com o lápis sempre no mesmo lugar (à direita) */
+/* Edição da Mamada: a folha mantém a moldura (alcinha, título, cantos); o meio rola e o Salvar fica no pé */
+.sheet.sfix{display:flex;flex-direction:column;overflow:hidden}
+.sheet.sfix .in{flex:1 1 auto;min-height:0;width:100%}
+.sheet.sfix .grab{margin-bottom:8px}
+.sheet.sfix .shead{border-bottom:1px solid var(--line);margin:0 -16px;padding:2px calc(var(--sp-2)*2) 10px;flex:none}
+.sheet.sfix .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--sp-3);padding-top:var(--sp-3);padding-bottom:var(--sp-3)}
+.sheet.sfix .sfoot{position:static;flex:none}
+/* A linha do horário e a da data têm a mesma fonte e altura em hoje, ontem e datas antigas, com o lápis sempre à direita */
 .orow.tm{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 14px;text-align:left}
 .orow.tm .v{white-space:nowrap;min-width:0}
 .orow.tm .pen{margin-left:0;flex:none}
-/* RASCUNHO v07: a edição ocupa a tela toda; cabeçalho "Editar" fixo com divisória, só o meio rola (?folha=faixa deixa uma faixa do Diário em cima) */
-.sheet.sfix{top:0;max-height:none;border-radius:0;padding-top:calc(6px + env(safe-area-inset-top,0px))}
-.sheet.sfix .grab{display:none}
-.sheet.sfix .shead{border-bottom:1px solid var(--line);margin:0 -16px;padding:2px 16px 10px;flex:none}
-.sheet.sfix .sbody{padding-top:14px}
-.sheet.sfix.strip{top:36px;border-radius:24px 24px 0 0;padding-top:10px}
-.sheet.sfix.strip .grab{display:block;margin-bottom:8px}
-/* RASCUNHO v08: versão pequena da edição (folha de baixo, cantos e alcinha) */
-.sheet.sfix.sfsmall{top:auto;max-height:88%;border-radius:24px 24px 0 0;padding-top:10px}
-.sheet.sfix.sfsmall .grab{display:block;margin-bottom:8px}
-.lnk.emais{align-self:flex-start;font-size:16px;padding:10px 14px}
 
-/* RASCUNHO v10b: grade de 2 colunas com 4 linhas internas. Margem 16 (--sp-2), vão entre colunas 8 (--sp-1), recuo interno P = 16 (--sp-2) a partir da borda de
+/* Grade de 2 colunas com 4 linhas internas. Margem 16 (--sp-2), vão entre colunas 8 (--sp-1), recuo interno P = 16 (--sp-2) a partir da borda de
    TODO cartão (o contorno de 1,5 px é um inset box-shadow, não ocupa espaço). Vertical: 8 entre linhas do mesmo grupo, 24 (--sp-3) entre grupos, e o recuo vertical interno também é P. */
-.sheet.sfsmall .sbody{gap:var(--sp-3);padding-top:var(--sp-3);padding-bottom:var(--sp-3)}
-.sheet.sfsmall .shead{padding-left:calc(var(--sp-2)*2);padding-right:calc(var(--sp-2)*2)}
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-1)}
 .g2 .span2{grid-column:1/-1}
 .g2 .lbl{margin:0;padding-left:var(--sp-2)}
@@ -1410,6 +1399,12 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .g2 .step em{flex:none;margin-right:0}
 .g2 .cell{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-1);border-radius:16px;background:var(--surface2);color:var(--ink);font-size:16px;font-weight:500;text-align:left}
 .g2 .cell.tcell{color:var(--muted);justify-content:flex-start}
+/* Mamada nova: horário na linha toda, texto no centro exato do botão (o lápis fica solto, na linha interna da direita) e três atalhos iguais embaixo */
+.sheet .in>.tblock{margin:10px 0} /* com o vão de 14 da folha, 24 entre grupos */
+.g2 .cell.tbig{position:relative;justify-content:center;min-height:68px;padding:var(--sp-2)}
+.g2 .cell.tbig .v{font-size:30px;line-height:36px;white-space:nowrap}
+.g2 .cell.tbig .pen{position:absolute;right:var(--sp-2);top:50%;transform:translateY(-50%)}
+.g2 .cell.qk{justify-content:center;min-height:48px;padding:0;background:none;box-shadow:inset 0 0 0 1.5px var(--line);white-space:nowrap}
 .g2 .cell .v{font-family:var(--display);font-weight:500;font-size:16px;font-variant-numeric:tabular-nums;min-width:0}
 .g2 .cell .pen{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:var(--surface);color:var(--muted)}
 .g2 .cell .pen svg{width:16px;height:16px}
