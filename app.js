@@ -2145,6 +2145,9 @@ setInterval(() => {
   if (stripK === 'feed' && !stripBusy && $('stripT')) $('stripT').textContent = dur(ftTotal(t, now));
 }, 1000);
 
+// A Mamada nova abre em Mamadeira para quem só mama na mamadeira ou marcou só Fórmula no que vai nela (Leite + Fórmula não conta).
+// Com o cronômetro do peito rodando, abre no Peito, onde ele está.
+const newFeedSrc = () => !ftGet() && (st.baby.feeding === 'bottle' || st.baby.bottle_milk === 'formula') ? 'bottle' : 'breast';
 function openEntry(k, edit, avulsa) {
   if (!st.baby) return babySheet(null);
   if (k === 'med' && !edit) return medsSheet();
@@ -2156,7 +2159,7 @@ function openEntry(k, edit, avulsa) {
   const open = liveOpen(sleepIntervals(sortedEntries()).open, Date.now());
   const t = edit ? edit.t : Date.now(), side = edit?.side;
   S = { mode: 'entry', k: k === 'wake' ? 'sleep' : CARE[k] ? 'care' : k, edit, ck: CARE[k] && k !== 'care' || edit?.kind === 'care' ? k : null, base: startOfDay(t), time: hm(t),
-        milk: edit ? (edit.milk || '') : ({ formula: 'formula', breast_milk: 'breast_milk', both: 'breast_milk' }[st.baby.bottle_milk] || ''), src: edit ? (edit.src || '') : st.baby.feeding === 'bottle' ? 'bottle' : 'breast', ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
+        milk: edit ? (edit.milk || '') : ({ formula: 'formula', breast_milk: 'breast_milk', both: 'breast_milk' }[st.baby.bottle_milk] || ''), src: edit ? (edit.src || '') : newFeedSrc(), ml: edit ? (edit.ml || '') : k === 'pump' ? '' : 90,
         l: side === 'left' || side === 'both', r: side === 'right' || side === 'both',
         lmin: edit?.left_min || '', rmin: edit?.right_min || '',
         pee: edit ? !!edit.pee : false, poo: edit ? !!edit.poo : false, bput: edit?.burp === 'put' || edit?.burp === 'both', bdone: edit?.burp === 'done' || edit?.burp === 'both', psize: edit?.poo_size || null, palert: !!edit?.poo_alert,
