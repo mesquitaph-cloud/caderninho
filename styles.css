@@ -1500,3 +1500,68 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .fans{line-height:1.4}
 .sheet .sbody>*{flex:none}
 .sheet .sbody>.fb+.fb{margin-top:8px}
+
+/* Remédios e tarefas (item 113, prévia v01) */
+/* Linha fina, igual para dose e tarefa: check · nome · hora, "Pular" pequeno à direita */
+.dose.slim,.dose.slim.soon,.dose.slim.late{display:flex;align-items:center;min-height:48px;border:0;border-radius:14px;background:var(--surface2);color:var(--ink)}
+.dose.slim .ck,.dose.slim.soon .ck,.dose.slim.late .ck{flex:none;width:26px;height:26px;margin:0 12px 0 16px;background:none;border:2px solid var(--muted)}
+.dose.slim.later:not(.can) .ck{border:2px dashed var(--line)}
+.dose.slim.done .ck,.dose.slim.ticking.done .ck{background:var(--med-ink);border-color:var(--med-ink);color:var(--med)}
+.dose.slim.skip .ck,.dose.slim.ticking.skip .ck{background:var(--surface);border-color:var(--line);color:var(--muted)}
+.dose.slim .di{flex:1;display:flex;align-items:center;gap:8px;min-width:0;min-height:48px;padding:0 16px 0 0;text-align:left}
+.dose.slim .di>span.nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+.dose.slim .q,.dose.slim.soon .q,.dose.slim.late .q{color:var(--muted)}
+.dose.slim .tm{font-size:16px;white-space:nowrap}
+.dose.slim .tm small{font-size:13px;color:var(--muted)}
+.dose.slim.late .tm{color:var(--med-ink)}
+#tasks .dose.slim.soon .tm{color:var(--care-ink)}
+.dose.slim.done b,.dose.slim.done .tm,.dose.slim.skip b,.dose.slim.skip .tm{color:var(--muted)}
+.dose.slim.ritem .di .tm{min-width:52px}
+.dose.slim.ritem .di>span.nm{font-size:13px;color:var(--muted);font-weight:500}
+.dose.slim .skipbtn{flex:none;align-self:stretch;margin:0;padding:0 14px;border:0;border-left:1px solid var(--line);border-radius:0;background:none;color:var(--muted);font-size:13px}
+.dose.slim:has(.skipbtn) .di{padding-right:12px}
+/* Cabeçalho na grade: título na linha interna esquerda, × na direita; voltar à esquerda quando veio da lista */
+.sheet.sfix .shead.rhead{gap:8px;padding-left:32px;padding-right:32px;min-height:50px}
+.sheet.sfix .shead.rhead h3{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sheet.sfix .shead.rhead .rbk{flex:none;width:32px;height:40px;margin:0 -2px 0 -9px;color:var(--link);display:grid;place-items:center}
+.rbk svg{width:22px;height:22px}
+.tr.ib{font-family:var(--display);font-weight:500;font-size:18px}
+.sheet .sbody .rg2{display:flex;flex-direction:column;gap:8px}
+.sbody .rnone{margin:0;padding-left:16px}
+.sbody .hist2 div{padding-inline:16px}
+.sbody>*{flex:none}
+/* Listas: conteúdo nas linhas internas (16 da borda) */
+.sbody .tlist{gap:8px}
+.sbody .trow{padding:12px 16px;min-height:68px}
+.trow.kmed .ti{background:var(--med);color:var(--med-ink)}
+.trow .tp.lt{border-radius:999px;padding:3px 10px;background:var(--care);color:var(--care-ink)}
+.trow .tp.lt.med{background:var(--med);color:var(--med-ink)}
+.rlink{color:var(--link);font-weight:500;font-size:15px;padding:8px}
+/* Formulário */
+.g2 .field.rf{box-sizing:border-box;min-height:56px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:16px;padding:10px 16px}
+.rtime{position:relative;display:grid}
+.rtime .rmx{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:var(--surface);color:var(--muted);font-size:20px;line-height:1}
+.g2 .cell.qk.k-med.on{background:var(--med);color:var(--med-ink);box-shadow:inset 0 0 0 1.5px currentColor}
+.g2 .mlcell .step output{min-width:3ch;text-align:center;font-family:var(--display);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
+.g2 .mlcell .step em{font-style:normal;color:var(--muted);font-size:15px}
+.g2.k-med .mlcell .step button{color:var(--med-ink)}
+.g2.k-care .mlcell .step button,.g2 .mlcell .step button[data-act="tPer"]{color:var(--care-ink)}
+.g2.k-med .mlcell,.g2.k-care .mlcell{background:var(--surface2);color:var(--ink)}
+.g2 .mlcell.span2 .step output{margin-right:4px}
+.g2 .mlcell.span2 .step output+button{margin-right:0}
+.g2 .cell.rsw{width:100%;min-height:56px}
+.tbox.t-med .tbtns .ok{background:var(--med);color:var(--med-ink)}
+.tbox.t-care .tbtns .ok{background:var(--care);color:var(--care-ink)}
+.finfo .fisw{margin-top:12px}
+.g2.rq .opt.big{font-size:16px;padding-inline:4px;white-space:nowrap}
+.dose.slim .di>span.nm:has(b){display:flex;gap:4px;white-space:nowrap}
+.dose.slim .nm b{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.dose.slim .nm .q{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:374px){
+  .dose.slim .ck,.dose.slim.soon .ck,.dose.slim.late .ck{margin:0 8px 0 10px}
+  .dose.slim .di{gap:6px}
+  .dose.slim .di>span.nm,.dose.slim b,.dose.slim .q{font-size:14px}
+  .dose.slim .tm{font-size:14px}
+  .dose.slim .skipbtn{padding:0 8px;font-size:12px}
+  .dose.slim:has(.skipbtn) .di{padding-right:8px}
+}

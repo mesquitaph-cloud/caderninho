@@ -1892,7 +1892,7 @@ function openPanel(html) {
   const from = sheetFrom, was = !$('sheet').hidden; sheetFrom = null;
   $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
   // A tela de uma tarefa ocupa a tela inteira (prévia de 08/11).
-  $('sheet').classList.toggle('full', ['task', 'duv', 'orient'].includes(S?.mode));
+  $('sheet').classList.toggle('full', ['duv', 'orient'].includes(S?.mode));
   $('sheet').classList.toggle('sfix', !!S?.sfix);
   if (was) return;
   sheetK = from ? from.home : null; stripAtOpen = stripK;
@@ -1903,7 +1903,6 @@ function closeSheet() {
   const sh = $('sheet'), k = sheetK, anim = !sh.hidden && k && !reduceMotion() && !$('dock').hidden;
   const r = anim ? sh.getBoundingClientRect() : null, surf = anim ? getComputedStyle(sh).backgroundColor : '';
   sheetK = null; closing = !!anim;
-  medOnly = null;
   S = null; $('scrim').hidden = true; sh.hidden = true; sh.classList.remove('full'); render(); closing = false;
   // A faixa do sono ou da mamada que começou com a tela aberta esperou escondida: a tela encolhe até
   // ela (quando é o mesmo registro) ou ela sai do botão como antes.
@@ -2688,7 +2687,6 @@ function calAction(a, v) {
 const SOON = HOUR;   // uma hora antes, a dose aparece na tela inicial com a caixinha
 const DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>`;
 const EVERY = [4, 6, 8, 12];
-const MED_RULE = '<p class="dim">Só a família programa. O Soneca lembra os horários; não sugere remédio nem dose.</p>';
 const dayOf = ymd => startOfDay(new Date(ymd + 'T00:00').getTime());
 const atTime = (d0, hhmm) => { const d = new Date(d0), [H, M] = hhmm.split(':').map(Number); return new Date(d.getFullYear(), d.getMonth(), d.getDate(), H, M).getTime(); };
 const medTimes = m => (m.times || []).map(x => x.slice(0, 5)).sort();
@@ -2748,18 +2746,21 @@ function doseStatus(d) {
     : d.state === 'late' ? 'passou ' + dur(Date.now() - d.due) + ' · ainda não marcada'
     : d.state === 'soon' ? 'daqui a ' + dur(d.due - Date.now()) : '';
 }
-// Uma dose. Na lista completa (all), toda dose tem caixinha; na tela inicial, só perto da hora.
-// Perto da hora ou atrasada, ganha também o "Pular", para quando não deu.
-function doseRow(d, { all = false, tag = '' } = {}) {
-  const m = d.m, name = esc(m.name), st2 = [tag, doseStatus(d)].filter(Boolean).join(' · ');
+// A linha fina, igual para dose e tarefa (item 113): check · nome · hora, com "Pular" pequeno à direita, só
+// perto da hora ou atrasada. Na tela do remédio (inItem), o nome já está no alto: check · hora · quem deu.
+function doseRow(d, { all = false, tag = '', inItem = false } = {}) {
+  const m = d.m, name = esc(m.name), status = [tag, doseStatus(d)].filter(Boolean).join(' · ');
   const hot = d.state === 'soon' || d.state === 'late', can = hot || (all && d.state === 'later');
   const ck = can
       ? `<button class="ck" role="checkbox" aria-checked="false" data-act="check" data-val="${d.id}" aria-label="Marcar ${name} das ${d.hhmm} como dada">${CHECK}</button>`
     : d.e
-      ? `<button class="ck" role="checkbox" aria-checked="true" data-act="dose" data-val="${d.id}" aria-label="${name} das ${d.hhmm}, ${esc(st2)}. Ver ou desmarcar">${d.state === 'skip' ? DASH : CHECK}</button>`
+      ? `<button class="ck" role="checkbox" aria-checked="true" data-act="dose" data-val="${d.id}" aria-label="${name} das ${d.hhmm}, ${esc(status)}. Ver ou desmarcar">${d.state === 'skip' ? DASH : CHECK}</button>`
     : '<span class="ck" aria-hidden="true"></span>';
   const skip = hot ? `<button class="skipbtn" data-act="skipDose" data-val="${d.id}" aria-label="Pular ${name} das ${d.hhmm}: não foi dada">Pular</button>` : '';
-  return `<div class="dose ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}"><span><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}<span class="st">${esc(st2)}</span></span><span class="tm">${d.hhmm}</span></button>${skip}</div>`;
+  const body = inItem
+    ? `<span class="tm">${d.hhmm}</span><span class="nm st">${d.e ? esc(doseStatus(d)) : ''}</span>`
+    : `<span class="nm"><b>${name}</b>${m.amount ? ` <span class="q">· ${esc(m.amount)}</span>` : ''}</span><span class="tm">${tag ? `<small>${tag}</small> ` : ''}${d.hhmm}</span>`;
+  return `<div class="dose slim${inItem ? ' ritem' : ''} ${d.state}${can ? ' can' : ''}">${ck}<button class="di" data-act="dose" data-val="${d.id}" aria-label="${name}, ${d.hhmm}${status ? ', ' + esc(status) : ''}">${body}</button>${skip}</div>`;
 }
 
 // Tela inicial: só o que precisa de alguém. De cada remédio, a dose mais recente que já está a uma
@@ -2800,7 +2801,7 @@ function renderMeds() {
   const n = todayDoses().length, more = shown.length ? 'Mais ' : '';
   box.innerHTML = `<div class="mh"><h3>${ICON.med}<span>${shown.length ? 'Hora do remédio' : 'Remédios'}</span></h3><button class="lnk" data-act="allMeds">Ver todas${n ? ' (' + n + ')' : ''}</button></div>
     ${shown.length ? `<div class="doses">${shown.map(d => doseRow(d, { tag: dayWord(d.due) })).join('')}</div>` : ''}
-    ${missed ? `<button class="more" data-act="allMeds">${missed === 1 ? more + '1 dose de hoje sem marcar' : more + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
+    ${missed ? `<button class="more" data-act="missed">${missed === 1 ? more + '1 dose de hoje sem marcar' : more + missed + ' doses de hoje sem marcar'}</button>` : ''}`;
 }
 function medSub() {
   const now = Date.now(), { shown, missed } = homeDoses(), next = dosesFrom(now, now + DAY).find(d => !d.e);
@@ -2811,53 +2812,84 @@ function medSub() {
   return st.meds.length ? 'remédios e horários' : 'programar horários';
 }
 
-// Remédios e horários: as doses de hoje, cada uma com caixinha, e os remédios programados.
-// Aberto por uma linha da Família, mostra só aquele remédio, com as doses de hoje (item 102). Fechar a folha volta ao normal.
-let medOnly = null;
-function medsSheet() { S = { mode: 'meds' }; drawMeds(); $('sheet').scrollTop = 0; }
+/* ---------- Remédio e tarefa: a mesma estrutura (item 113): lista → tela do item → formulário ---------- */
+const fromList = from => from === 'meds' || from === 'tasks';
+function rHead(title, sub, { back, info, edit, trash } = {}) {
+  return `<div class="grab"></div><div class="shead rhead">${back ? `<button class="rbk" data-act="${back}" aria-label="Voltar">${BACK}</button>` : ''}<h3>${esc(title)}${sub ? `<span class="ps">${esc(sub)}</span>` : ''}</h3><div class="rt">`
+    + (info ? '<button class="tr ib" data-act="rInfo" aria-label="Como funciona">i</button>' : '')
+    + (edit ? `<button class="tr" data-act="${edit}" aria-label="Editar">${ICON.edit}</button>` : '')
+    + (trash ? `<button class="tr" data-act="${trash}" aria-label="Tirar da rotina">${TRASH}</button>` : '')
+    + '<button class="x" data-act="close" aria-label="Fechar">×</button></div></div>';
+}
+function rPanel(head, body, foot = '', rest = '') {
+  S.sfix = true;
+  const top = $('sheetIn').querySelector('.sbody')?.scrollTop || 0;
+  openPanel(head + `<div class="sbody">${body}</div>` + (foot ? `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}${foot}</div>` : '') + rest);
+  $('sheetIn').querySelector('.sbody').scrollTop = top;
+}
+const rSave = (k, txt, act) => `<button class="save sgo k-${k}" data-act="${act}"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button>`;
+const rRow = (act, id, k, name, sub, right) => `<button class="trow k${k}" data-act="${act}" data-val="${esc(id)}"><span class="ti">${ICON[k]}</span><span><b>${esc(name)}</b><small>${esc(sub)}</small></span>${right || '<span></span>'}<span class="cv" aria-hidden="true">›</span></button>`;
+// À direita da linha: o próximo horário de hoje sem marcar (colorido se já passou) ou o check de tudo feito.
+const rNext = (slots, k) => {
+  if (!slots.length) return '';
+  const n = slots.find(x => !x.e);
+  return n ? `<span class="tp${n.due <= Date.now() ? ' lt ' + k : ''}">${n.hh || n.hhmm}</span>` : `<span class="tp" aria-label="feito hoje">${CHECK}</span>`;
+};
+// O (i): o que era cartão colorido, aviso longo e interruptor no alto da lista.
+function routineInfo(k) {
+  const med = k === 'med', on = med ? alertOn() : taskAlertOn();
+  const item = (t, p) => `<h4>${t}</h4><p>${p}</p>`;
+  askYes = () => med ? setMedAlert(!alertOn()) : setTaskAlert(!taskAlertOn());
+  $('ask').innerHTML = `<div class="cbox finfo" role="dialog" aria-modal="true" aria-labelledby="fiT"><h3 id="fiT">${med ? 'Remédios' : 'Tarefas'}</h3>`
+    + (med ? item('No Diário', 'A dose aparece uma hora antes. Quem der marca, e a família toda vê.') + item('Receita', 'O Soneca só lembra o que vocês programarem. Não sugere remédio, dose nem horário.')
+           : item('No Diário', 'A tarefa aparece na hora marcada. Quem fizer marca, e a família toda vê.') + item('Sem cobrança', 'O Soneca não cobra o que ficou para depois.'))
+    + (medNotif ? `<button class="li tg fisw" role="switch" aria-checked="${on}" data-ask="yes"><span>Avisar no celular na hora</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>` : '')
+    + '<button class="save" data-ask="no">Entendi</button></div>';
+  $('ask').hidden = false;
+}
+const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
+const pastRows = list => list.length ? `<div class="rg2"><div class="lbl">Últimos dias</div><div class="hist2">${list.map(([a, b]) => `<div><span>${esc(a)}</span><span>${esc(b)}</span></div>`).join('')}</div></div>` : '';
+
+// A lista de remédios.
+const activeMeds = () => st.meds.filter(m => medEnd(m) > startOfDay(Date.now()));
+// Até dois horários, eles; com mais, quantas vezes (a linha não quebra em 360 px).
+const medSched = m => m.schedule === 'prn' ? 'quando precisar' : medTimes(m).length > 2 ? medTimes(m).length + ' vezes por dia' : medTimes(m).join(', ');
+const medUntil = m => m.days ? 'até ' + shortDate(localDate(medEnd(m) - DAY / 2)) : '';
+function medsSheet() { S = { mode: 'meds' }; drawMeds(); }
 function drawMeds() {
-  const t0 = startOfDay(Date.now());
-  if (medOnly && !st.meds.some(m => m.id === medOnly && medEnd(m) > t0)) medOnly = null;
-  const ds = todayDoses().filter(d => !medOnly || d.m.id === medOnly), meds = st.meds.filter(m => medEnd(m) > t0 && (!medOnly || m.id === medOnly));
-  let h = `<div class="grab"></div><div class="shead"><h3>Remédios e horários<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
-  if (medNotif && !medOnly) h += `<button class="li tg" role="switch" aria-checked="${alertOn()}" data-act="medAlert"><span>Ativar notificações de remédios</span><span class="sw${alertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
-  if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
-  h += meds.length
-    ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div>${medOnly ? '' : '<button class="ghost" data-act="newMed">+ Programar outro remédio</button>'}`
-    : '<ol class="steps"><li><span class="n">1</span><span>Anote o remédio, quanto dar e quando: em horários fixos, de tantas em tantas horas ou só quando precisar.</span></li>'
-      + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto do Diário. Quem der marca, e todos da família veem.</span></li>'
-      // O aviso na hora só existe no app do celular, não no site.
-      + (medNotif ? '<li><span class="n">3</span><span>Se quiser, o celular avisa na hora de cada dose.</span></li>' : '') + '</ol>'
-      + '<p class="dim">O Soneca só lembra o que vocês programarem. Não sugere remédio, dose nem horário.</p><button class="save" data-act="newMed">Programar um remédio</button>';
-  const top = $('sheet').scrollTop; openPanel(h + (meds.length ? MED_RULE : '')); $('sheet').scrollTop = top;
+  const meds = activeMeds(), today = todayDoses();
+  const body = meds.length ? `<div class="tlist">${meds.map(m => rRow('mOpen', m.id, 'med', m.name, [m.amount, medSched(m)].filter(Boolean).join(' · '), rNext(today.filter(d => d.m.id === m.id), 'med'))).join('')}</div>`
+    : '<p class="dim tvazio">Nenhum remédio programado.</p>';
+  rPanel(rHead('Remédios', 'de ' + st.baby.name, { info: 1 }), body, '<button class="save" data-act="newMed">Programar remédio</button>');
+}
+// A tela de um remédio: Hoje, últimos dias e o lápis para editar.
+function medItem(id, from) { S = { mode: 'med', id, from }; drawMed(); }
+function drawMed() {
+  const m = activeMeds().find(x => x.id === S.id); if (!m) return medsSheet();
+  const prn = m.schedule === 'prn', t0 = startOfDay(Date.now());
+  const mine = sortedEntries().filter(e => e.kind === 'med' && e.medicine_id === m.id);
+  let body = '', foot = '';
+  if (prn) {
+    const last = lastGiven(m), next = prnNext(m, last), todays = mine.filter(e => e.t >= t0 && !e.skipped);
+    body = `<div class="rg2"><div class="lbl">Hoje</div>${todays.length ? `<div class="hist2">${todays.reverse().map(e => `<div><span>${hm(e.t)}</span><span>por ${esc(whoGave(e))}</span></div>`).join('')}</div>` : '<p class="dim rnone">Nenhuma dose hoje.</p>'}`
+      + (next ? `<p class="dim rnone">Pode dar de novo a partir das ${hm(next)}.</p>` : '') + '</div>';
+    if (S.prnAsk) body += `<p class="soft">A última foi há ${dur(Date.now() - last.t)}.</p>`;
+    foot = rSave('med', S.prnAsk ? 'Marcar mesmo assim' : 'Dei agora', 'prnNow');
+  } else body = `<div class="rg2"><div class="lbl">Hoje</div><div class="doses">${todayDoses().filter(d => d.m.id === m.id).map(d => doseRow(d, { all: true, inItem: true })).join('') || '<p class="dim rnone">Nenhuma dose hoje.</p>'}</div></div>`;
+  body += pastRows(mine.filter(e => e.t < t0 && e.t >= addDays(t0, -7)).slice(-5).reverse().map(e => [cap1(whenText(e.t)), (e.skipped ? 'pulada por ' : 'por ') + whoGave(e)]));
+  rPanel(rHead(m.name, [m.amount, prn ? 'quando precisar' : 'todo dia', medUntil(m)].filter(Boolean).join(' · '), { back: fromList(S.from) ? 'toMeds' : '', edit: 'editMed' }), body, foot);
+}
+const redrawMeds = () => { if (S?.mode === 'meds') drawMeds(); else if (S?.mode === 'med') drawMed(); };
+// "N doses sem marcar" no Diário: se são de um remédio só, abre a tela dele.
+function openMissed() {
+  const ids = [...new Set(todayDoses().filter(d => d.state === 'late').map(d => d.m.id))];
+  return ids.length === 1 ? medItem(ids[0], 'home') : medsSheet();
 }
 const lastGiven = m => [...st.entries.values()].filter(e => e.kind === 'med' && e.medicine_id === m.id && !e.skipped).reduce((b, e) => !b || e.t > b.t ? e : b, null);
 // "Só quando precisar" com intervalo: quando pode dar de novo (nulo se já pode).
 const prnNext = (m, last = lastGiven(m)) => last && m.every_hours && last.t + m.every_hours * HOUR > Date.now() ? last.t + m.every_hours * HOUR : null;
 const medWhen = m => (m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia')
   + (m.days ? ' · até ' + dayTitle(medEnd(m) - DAY / 2).toLowerCase() : ' · sem data para acabar');
-function medCard(m) {
-  let times, sub, sub2 = '';
-  if (m.schedule === 'prn') {
-    const last = lastGiven(m), next = prnNext(m, last), ask = S.prnAsk === m.id;
-    times = `<span class="tpill plain">quando precisar${m.every_hours ? ` · de ${m.every_hours} em ${m.every_hours}h` : ''}</span>`
-      + `<button class="pillbtn" data-act="prnNow" data-val="${esc(m.id)}">${ask ? 'Marcar mesmo assim' : 'Dei agora'}</button>`;
-    sub = last ? 'última vez ' + whenText(last.t) + ', por ' + whoGave(last) : 'ainda não foi dado';
-    // Intervalo programado pela família: mostra a partir de quando pode dar de novo e confirma antes.
-    if (ask) sub2 = `A última foi há ${dur(Date.now() - last.t)}; vocês programaram de ${m.every_hours} em ${m.every_hours} horas.`;
-    else if (next) sub2 = 'Pode dar de novo a partir das ' + hm(next) + (dayWord(next) ? ' de ' + dayWord(next) : '') + '.';
-  } else {
-    const nd = nowDose(m), ask = nd && S.nowAsk === m.id;
-    times = medTimes(m).map(t => `<span class="tpill">${t}</span>`).join('')
-      + (nd ? `<button class="pillbtn" data-act="giveNow" data-val="${esc(m.id)}">${ask ? 'Marcar a das ' + nd.hhmm : 'Dei agora'}</button>` : '');
-    sub = medWhen(m);
-    if (ask) sub2 = `A próxima dose é às ${nd.hhmm}${dayWord(nd.due) ? ' de ' + dayWord(nd.due) : ''}. Toque de novo para marcar como dada agora.`;
-  }
-  return `<div class="mcard"><div class="mtop"><div><b>${esc(m.name)}</b>${m.amount ? `<span class="mq">${esc(m.amount)}</span>` : ''}</div>
-    <button data-act="editMed" data-val="${esc(m.id)}" aria-label="Editar ${esc(m.name)}">${ICON.pencil}Editar</button></div>
-    <div class="mtimes">${times}</div><div class="msub">${esc(sub)}</div>${sub2 ? `<div class="msub wait">${esc(sub2)}</div>` : ''}</div>`;
-}
-
 // "Dei agora" no remédio de horário: se a dose mais recente que já passou da hora ficou sem marcar,
 // é ela; senão, adianta a próxima sem marcar. Nulo se não há dose nas próximas 24 horas.
 function nowDose(m) {
@@ -2877,10 +2909,10 @@ async function giveDose(id, t, note, skipped, by) {
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null, ...(by ? { done_by: by } : {}) });
   if (!row) return;
   if (!skipped) buzz();
-  if (S?.mode === 'meds') { drawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
+  if (S?.mode === 'meds' || S?.mode === 'med') { redrawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
   const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
     : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
-  toast(msg, async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+  toast(msg, async () => { if (await deleteEntry(row.id)) redrawMeds(); });
   return row;
 }
 async function prnNow(mid) {
@@ -2888,81 +2920,78 @@ async function prnNow(mid) {
   const row = await addEntry({ kind: 'med', t: Date.now(), medicine_id: m.id, med_name: m.name, med_amount: m.amount });
   if (!row) return;
   buzz();
-  if (S?.mode === 'meds') drawMeds();
-  toast('Dose de ' + m.name + ' marcada às ' + hm(Date.parse(row.at)), async () => { if (await deleteEntry(row.id) && S?.mode === 'meds') drawMeds(); });
+  redrawMeds();
+  toast('Dose de ' + m.name + ' marcada às ' + hm(Date.parse(row.at)), async () => { if (await deleteEntry(row.id)) redrawMeds(); });
 }
 
-// Uma dose: marcar com outro horário, pular ou desmarcar. "back" volta para a lista, se veio dela.
-function doseSheet(id, back) { S = { mode: 'dose', id, back, base: startOfDay(Date.now()), time: hm(Date.now()), note: '', err: '' }; drawDose(); }
+// Uma dose: marcar com outro horário, pular ou desmarcar. "back" volta para a lista ou a tela do remédio.
+function doseSheet(id, back, from) { S = { mode: 'dose', k: 'med', id, back, from, base: startOfDay(Date.now()), time: hm(Date.now()), note: '', openT: false, err: '' }; drawDose(); }
 function drawDose() {
   const d = doseById(S.id); if (!d) return closeSheet();
   const m = d.m, when = dayWord(d.due);
-  let h = head(m.name) + `<p class="dsub">${esc([m.amount, 'dose das ' + d.hhmm + (when ? ' de ' + when : '')].filter(Boolean).join(' · '))}</p>`;
+  const head = rHead(m.name, [m.amount, 'dose das ' + d.hhmm + (when ? ' de ' + when : '')].filter(Boolean).join(' · '));
   if (d.e) {
-    h += `<div class="given${d.e.skipped ? ' skip' : ''}"><span class="ck">${d.e.skipped ? DASH : CHECK}</span><span>${d.e.skipped ? 'Pulada por ' + esc(whoGave(d.e)) : 'Dada por ' + esc(whoGave(d.e)) + ' às ' + hm(d.e.t)}</span></div>`;
-    h += `<button class="ghost" data-act="unmark">${d.e.skipped ? 'Desfazer' : 'Desmarcar'}</button>`;
-    if (!d.e.skipped) h += '<p class="dim">Desmarcar apaga o registro da linha do tempo. Use só se marcou por engano.</p>';
-  } else {
-    if (d.state === 'later') h += `<div class="soft">Ainda não é a hora: a dose é às ${d.hhmm}${when ? ' de ' + when : ''}. Se já deu, dá para marcar.</div>`;
-    h += `<div><div class="lbl">Horário que deu</div>${clockHtml('timeIn', S.time, 'med', 'Horário que deu')}${QUICK_TIME}</div>`;
-    if (st.members.length > 1) h += byHtml('med', 'Quem deu');
-    h += `<input class="field" id="noteIn" maxlength="300" placeholder="Observação (opcional)" value="${esc(S.note)}">`;
-    h += '<button class="save" data-act="give">Marcar como dada</button><button class="del" data-act="skip">Pular esta dose</button>';
+    return rPanel(head, `<div class="given${d.e.skipped ? ' skip' : ''}"><span class="ck">${d.e.skipped ? DASH : CHECK}</span><span>${d.e.skipped ? 'Pulada por ' + esc(whoGave(d.e)) : 'Dada por ' + esc(whoGave(d.e)) + ' às ' + hm(d.e.t)}</span></div>`,
+      `<button class="ghost" data-act="unmark">${d.e.skipped ? 'Desfazer' : 'Desmarcar'}</button>`);
   }
-  openPanel(h);
+  const tc = timeCells(' tbig span2', 'med');
+  const body = `<div class="g2">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(v => `<button class="cell qk" data-act="back" data-val="${v}">−${v} min</button>`).join('')}</div></div>`
+    + (st.members.length > 1 ? whoRows('med').replace('Quem fez', 'Quem deu') : '') + `<div class="g2"><div class="span2 dnote">${noteField('Observação')}</div></div>`;
+  rPanel(head, body, rSave('med', 'Marcar como dada', 'give') + '<button class="del" data-act="skip">Pular</button>', tc.rest);
+  fitWho();
 }
-const leaveDose = () => S.back === 'meds' ? medsSheet() : closeSheet();
+const leaveDose = () => S.back === 'meds' ? medsSheet() : S.back === 'med' ? medItem(S.mid, S.from) : closeSheet();
+
+/* Formulário (remédio e tarefa): grade de 2 colunas, horário grande que abre o relógio em janela, Salvar fixo. */
+function formTimes() {
+  const cells = S.times.map((t, i) => `<div class="span2 rtime"><button class="cell tm tbig" data-act="openTime" data-val="${i}" aria-haspopup="dialog" aria-label="Horário ${i + 1}: ${t}. Mudar"><span class="v">${t}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>${S.times.length > 1 ? `<button class="rmx" data-act="rmTime" data-val="${i}" aria-label="Tirar o horário ${t}">×</button>` : ''}</div>`).join('');
+  return cells + (S.times.length < 8 ? '<button class="cell qk span2" data-act="addTime">+ Horário</button>' : '');
+}
+const clockWin = kind => !S.openT ? '' : `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox t-${kind}" role="dialog" aria-modal="true" aria-label="Horário">
+    ${dialHtml(kind)}<div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>`;
+const openClock = i => { S.ti = i; S.time = S.times[i]; S.openT = true; S.dm = 'h'; };
+// Os toques do horário, iguais nos dois formulários. Devolve true se o toque era dele.
+function timeAction(a, v) {
+  if (a === 'openTime') openClock(+v);
+  else if (a === 'addTime') { const [H, M] = (S.times.at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 6) % 24) + ':' + pad(M)); openClock(S.times.length - 1); S.added = true; }
+  else if (a === 'rmTime') S.times.splice(+v, 1);
+  else if (a === 'tok') { S.times[S.ti] = S.time; S.times = [...new Set(S.times)].sort(); S.openT = false; S.added = false; }
+  else if (a === 'tcancel') { if (S.added) S.times.splice(S.ti, 1); S.openT = false; S.added = false; }
+  else if (a === 'dm') S.dm = v;
+  else return false;
+  return true;
+}
+const stepCell = (act, out, unit, less, more) => `<div class="cell mlcell span2"><div class="step"><button data-act="${act}" data-val="-1" aria-label="${less}">−</button><output>${out}</output>${unit ? `<em>${unit}</em>` : ''}<button data-act="${act}" data-val="1" aria-label="${more}">+</button></div></div>`;
 
 // Programar ou editar um remédio. "back" é 'pane' quando veio da aba Família: ao salvar, volta para ela.
 function medForm(m, back) {
-  const sched = m?.schedule || 'fixed', times = m && sched !== 'prn' ? medTimes(m) : ['09:00'];
-  S = { mode: 'medform', edit: m || null, name: m?.name || '', amount: m?.amount || '', sched, times,
-        every: m?.every_hours || (sched === 'prn' ? 6 : 8), first: sched === 'every' ? times[0] : '08:00',
-        gap: sched === 'prn' && m?.every_hours ? 'every' : 'none',
+  const prn = m?.schedule === 'prn';
+  S = { mode: 'medform', edit: m || null, name: m?.name || '', amount: m?.amount || '', sched: prn ? 'prn' : 'day',
+        times: m && !prn ? medTimes(m) : ['09:00'], every: prn ? m.every_hours || 0 : 0,
         dur: m?.days ? 'days' : 'none', days: m?.days || 7, start: m ? dayOf(m.start_date) : startOfDay(Date.now()),
-        err: '', confirmStop: false, back };
-  drawMedForm(); $('sheet').scrollTop = 0;
+        dateSet: true, base: startOfDay(Date.now()), time: '09:00', openT: false, err: '', back };
+  drawMedForm();
 }
-const everyHint = () => 'Horários: ' + everyTimes(S.every, S.first).join(', ');
 function drawMedForm() {
-  const today = startOfDay(Date.now());
-  let h = head(S.edit ? 'Editar remédio' : 'Programar remédio');
-  h += `<div><label class="lbl" for="mName">Nome</label><input class="field" id="mName" maxlength="40" placeholder="Ex.: Vitamina D" value="${esc(S.name)}"></div>`;
-  h += `<div><label class="lbl" for="mAmount">Quanto <small>(opcional)</small></label><input class="field" id="mAmount" maxlength="30" placeholder="Ex.: 2 gotas, 2,5 ml" value="${esc(S.amount)}"></div>`;
-  h += `<div><div class="lbl">Quando dar</div><div class="seg k-med" style="background:none">${opt('Horários fixos', S.sched === 'fixed', 'sched', 'fixed')}${opt('De X em X horas', S.sched === 'every', 'sched', 'every')}${opt('Só quando precisar', S.sched === 'prn', 'sched', 'prn')}</div></div>`;
-  if (S.sched === 'fixed')
-    h += `<div><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip${S.openTime === i ? ' on' : ''}"><button class="t" data-act="openTime" data-val="${i}" aria-expanded="${S.openTime === i}"><b id="mtl-${i}">${t}</b></button>${S.times.length > 1 ? `<button data-act="rmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="addTime">+ horário</button>' : ''}</div>${S.openTime != null && S.times[S.openTime] != null ? clockHtml('mt-' + S.openTime, S.times[S.openTime], 'med', 'Horário ' + (S.openTime + 1)) : ''}</div>`;
-  const stepper = `<div class="ml"><button data-act="every" data-val="-1" aria-label="Menos horas">−</button><output>${S.every}</output><em>horas</em><button data-act="every" data-val="1" aria-label="Mais horas">+</button></div>`;
-  if (S.sched === 'every')
-    h += `<div><div class="lbl">De quantas em quantas horas</div>${stepper}</div>
-      <div><div class="lbl">Primeira dose do dia</div>${clockHtml('mFirst', S.first, 'med', 'Primeira dose do dia')}<div class="hint" id="everyHint">${esc(everyHint())}</div></div>`;
-  if (S.sched === 'prn') {
-    h += `<div><div class="lbl">Intervalo entre as doses <small>(opcional)</small></div><div class="seg k-med" style="background:none">${opt('Sem intervalo', S.gap === 'none', 'gap', 'none')}${opt('De X em X horas', S.gap === 'every', 'gap', 'every')}</div>`;
-    if (S.gap === 'every') h += `<div style="margin-top:10px">${stepper}</div>`;
-    h += '</div>';
-  }
-  if (S.sched !== 'prn') {
-    h += `<div><div class="lbl">Até quando</div><div class="seg k-med" style="background:none">${opt('Sem data para acabar', S.dur === 'none', 'dur', 'none')}${opt('Por alguns dias', S.dur === 'days', 'dur', 'days')}</div>`;
-    if (S.dur === 'days') h += `<div class="ml" style="margin-top:10px"><button data-act="days" data-val="-1" aria-label="Menos um dia">−</button><output>${S.days}</output><em>${S.days === 1 ? 'dia' : 'dias'}</em><button data-act="days" data-val="1" aria-label="Mais um dia">+</button></div>
-      <div class="hint" style="margin-top:8px">${S.start === today ? 'Começa hoje' : 'Começou ' + dayTitle(S.start).toLowerCase()}. Último dia: ${dayTitle(addDays(S.start, S.days - 1)).toLowerCase()}.</div>`;
-    h += '</div>';
-  }
-  h += `<div class="note">${ICON.med}<span>${S.sched === 'prn' ? 'Fica na lista de remédios com o botão “Dei agora” e a última vez que foi dado.' + (S.gap === 'every' ? ' Com intervalo, mostra também a partir de que horas pode dar de novo.' : '') : 'Uma hora antes de cada horário, a dose aparece em destaque no alto da tela, com a caixinha para marcar e o “Pular”. Fica assim até alguém marcar ou pular.'}</span></div>`;
-  h += '<p class="dim">O Soneca só lembra o que vocês programarem. Nome, quanto e horários vêm da receita.</p>';
-  if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
-  h += '<button class="save" data-act="saveMed">Salvar</button>';
-  if (S.edit) h += `<button class="del" data-act="stopMed">${S.confirmStop ? 'Toque de novo para parar este remédio' : 'Parar este remédio'}</button>`;
-  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+  let h = `<div class="g2"><input class="field rf span2" id="mName" maxlength="40" placeholder="Nome do remédio" aria-label="Nome do remédio" value="${esc(S.name)}">
+    <input class="field rf span2" id="mAmount" maxlength="30" placeholder="Quanto, ex.: 2 gotas" aria-label="Quanto (opcional)" value="${esc(S.amount)}"></div>`;
+  h += `<div class="g2 k-med rq" style="background:none">${opt('Todo dia', S.sched === 'day', 'sched', 'day', 1)}${opt('Quando precisar', S.sched === 'prn', 'sched', 'prn', 1)}</div>`;
+  if (S.sched === 'day') {
+    // "De X em X horas" é um atalho: preenche os horários a partir do primeiro.
+    const now = S.times.join();
+    h += `<div class="g2">${formTimes()}${EVERY.map(n => `<button class="cell qk k-med${everyTimes(n, S.times[0]).sort().join() === now ? ' on' : ''}" data-act="fill" data-val="${n}">De ${n} em ${n} h</button>`).join('')}</div>`;
+    h += `<div class="g2 k-med" style="background:none">${opt('Sem data final', S.dur === 'none', 'dur', 'none', 1)}${opt('Alguns dias', S.dur === 'days', 'dur', 'days', 1)}`
+      + (S.dur === 'days' ? stepCell('days', S.days, (S.days === 1 ? 'dia' : 'dias') + ', até ' + shortDate(localDate(addDays(S.start, S.days - 1))), 'Menos um dia', 'Mais um dia') : '') + '</div>';
+  } else h += `<div class="g2 k-med" style="background:none"><div class="lbl span2">Intervalo mínimo</div>${stepCell('gapstep', S.every ? S.every + ' h' : 'Nenhum', '', 'Menos horas', 'Mais horas')}</div>`;
+  rPanel(rHead(S.edit ? 'Editar remédio' : 'Programar remédio', '', { info: 1, trash: S.edit ? 'stopMed' : '' }), h, rSave('med', 'Salvar', 'saveMed'), clockWin('med'));
 }
 async function saveMed(btn) {
   const name = S.name.trim(), amount = S.amount.trim();
-  const times = S.sched === 'fixed' ? [...new Set(S.times.filter(Boolean))].sort() : S.sched === 'every' ? everyTimes(S.every, S.first) : null;
+  const prn = S.sched === 'prn', times = prn ? null : [...new Set(S.times.filter(Boolean))].sort();
   if (!name) { S.err = 'Escreva o nome do remédio.'; return drawMedForm(); }
-  if (S.sched === 'fixed' && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawMedForm(); }
-  if (S.sched === 'every' && !S.first) { S.err = 'Escolha o horário da primeira dose.'; return drawMedForm(); }
-  const row = { name, amount: amount || null, schedule: S.sched, times,
-                every_hours: S.sched === 'every' || (S.sched === 'prn' && S.gap === 'every') ? S.every : null,
-                days: S.sched !== 'prn' && S.dur === 'days' ? S.days : null };
+  if (!prn && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawMedForm(); }
+  const row = { name, amount: amount || null, schedule: prn ? 'prn' : 'fixed', times, every_hours: prn && S.every ? S.every : null,
+                days: !prn && S.dur === 'days' ? S.days : null };
   const back = S.back, isNew = !S.edit;
   busy(btn, true);
   const q = S.edit ? sb.from('medicines').update(row).eq('id', S.edit.id)
@@ -2972,7 +3001,7 @@ async function saveMed(btn) {
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
   avFam.remedio = true;
-  leaveMedForm(back); toast('Salvo');
+  leaveMedForm(back, isNew ? null : data.id); toast('Salvo');
   // Quem programa o primeiro remédio de horário fica com o aviso ligado neste celular.
   if (medNotif && isNew && row.schedule !== 'prn' && lsGet(alertKey(st.baby.id)) == null) setMedAlert(true);
 }
@@ -2986,7 +3015,7 @@ async function stopMed(btn) {
   st.meds = st.meds.filter(x => x.id !== S.edit.id);
   leaveMedForm(back); toast('Remédio parado');
 }
-const leaveMedForm = back => { if (back === 'pane') closeSheet(); else { render(); medsSheet(); } };
+const leaveMedForm = (back, id) => { if (back === 'pane') return closeSheet(); render(); if (id) medItem(id, back); else medsSheet(); };
 
 // Aviso na hora do remédio (só no app): o próprio celular agenda as doses dos próximos dias do bebê
 // aberto que ninguém marcou. Sem servidor: se outra pessoa marcar com este app fechado, o aviso toca
@@ -3033,7 +3062,7 @@ async function setMedAlert(on) {
     if (!(await notifPerm()).ok) { lsSet(k, '0'); toast(NOTIF_DENIED); return S?.mode === 'meds' && drawMeds(); }
   }
   lsSet(k, on ? '1' : '0');
-  if (S?.mode === 'meds') drawMeds();
+  redrawMeds();
   medAlertsSync();
 }
 // Tocar no aviso abre a dose. Com o app ainda abrindo, espera a família carregar.
@@ -3061,50 +3090,53 @@ function medInput(el) {
   if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
 }
 async function medAction(a, v, btn) {
+  if (a === 'rInfo') return routineInfo('med');
+  if (a === 'toMeds') return medsSheet();
   if (S.mode === 'meds') {
-    if (a === 'medAlert') return setMedAlert(!alertOn());
     if (a === 'newMed') return medForm(null);
-    if (a === 'editMed') return medForm(st.meds.find(m => m.id === v));
+    if (a === 'mOpen') return medItem(v, 'meds');
+    return;
+  }
+  if (S.mode === 'med') {
+    const m = st.meds.find(x => x.id === S.id);
+    if (a === 'editMed') return medForm(m, S.from);
     if (a === 'prnNow') {
-      const m = st.meds.find(x => x.id === v);
-      if (m && prnNext(m) && S.prnAsk !== v) { S.prnAsk = v; return drawMeds(); }
-      S.prnAsk = null; return prnNow(v);
-    }
-    if (a === 'giveNow') {
-      const m = st.meds.find(x => x.id === v), d = m && nowDose(m); if (!d) return;
-      if (d.due - Date.now() > SOON && S.nowAsk !== v) { S.nowAsk = v; return drawMeds(); }
-      S.nowAsk = null; return giveDose(d.id, Date.now());
+      if (m && prnNext(m) && !S.prnAsk) { S.prnAsk = true; return drawMed(); }
+      S.prnAsk = false; return prnNow(S.id);
     }
     if (a === 'check') return giveDose(v, Date.now());
     if (a === 'skipDose') return giveDose(v, Date.now(), null, true);
-    if (a === 'dose') return doseSheet(v, 'meds');
+    if (a === 'dose') { const { id, from } = S; doseSheet(v, 'med', from); S.mid = id; return; }
     return;
   }
   if (S.mode === 'dose') {
     if (a === 'now') { S.base = startOfDay(Date.now()); S.time = hm(Date.now()); }
     else if (a === 'back') { const t = computeT() - (+v) * MIN; S.base = startOfDay(t); S.time = hm(t); }
     else if (a === 'by') S.by = S.by === v ? null : v;
+    else if (a === 'openT') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; S.dm = 'h'; }
+    else if (a === 'tok') S.openT = false;
+    else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
+    else if (a === 'dm') S.dm = v;
     else if (a === 'give' || a === 'skip') {
       const { id, note, by } = S, t = a === 'give' ? computeT() : Date.now();
       leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), a === 'skip', a === 'give' ? by : null);
     }
     else if (a === 'unmark') {
       const d = doseById(S.id); leaveDose();
-      if (d?.e && await deleteEntry(d.e.id)) { if (S?.mode === 'meds') drawMeds(); toast(d.e.skipped ? 'Dose de volta' : 'Dose desmarcada'); }
+      if (d?.e && await deleteEntry(d.e.id)) { redrawMeds(); toast(d.e.skipped ? 'Dose de volta' : 'Dose desmarcada'); }
       return;
     }
     return drawDose();
   }
-  if (a === 'sched') S.sched = v;
-  else if (a === 'dur') S.dur = v;
-  else if (a === 'gap') S.gap = v;
-  else if (a === 'addTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 12) % 24) + ':' + pad(M)); S.openTime = S.times.length - 1; }
-  else if (a === 'rmTime') { S.times.splice(+v, 1); if (S.openTime === +v) S.openTime = null; else if (S.openTime > +v) S.openTime--; }
-  else if (a === 'openTime') S.openTime = S.openTime === +v ? null : +v;
-  else if (a === 'every') S.every = EVERY[Math.max(0, Math.min(EVERY.length - 1, EVERY.indexOf(S.every) + (+v)))];
-  else if (a === 'days') S.days = Math.max(1, Math.min(60, S.days + (+v)));
-  else if (a === 'saveMed') return saveMed(btn);
-  else if (a === 'stopMed') { if (S.confirmStop) return stopMed(btn); S.confirmStop = true; }
+  if (a === 'saveMed') return saveMed(btn);
+  if (a === 'stopMed') return askConfirm('Parar este remédio?', 'Os registros continuam no Diário.', 'Parar', stopMed);
+  if (!timeAction(a, v)) {
+    if (a === 'sched') S.sched = v;
+    else if (a === 'dur') S.dur = v;
+    else if (a === 'fill') S.times = everyTimes(+v, S.times[0] || '08:00').sort();
+    else if (a === 'gapstep') { const L = [0, ...EVERY]; S.every = L[Math.max(0, Math.min(L.length - 1, L.indexOf(S.every) + (+v)))]; }
+    else if (a === 'days') S.days = Math.max(1, Math.min(60, S.days + (+v)));
+  }
   S.err = ''; drawMedForm();
 }
 
@@ -3157,7 +3189,7 @@ function renderTasks() {
   const box = $('tasks'), list = homeTasks();
   box.hidden = !list.length; if (box.hidden) return;
   box.innerHTML = `<div class="mh"><h3>${ICON.care}<span>Hora da tarefa</span></h3><button class="lnk" data-act="allTasks">Ver todas (${st.routines.length})</button></div>
-    <div class="doses">${list.map(x => `<div class="dose soon can"><button class="ck" role="checkbox" aria-checked="false" data-act="tcheck" data-val="${esc(x.id)}" aria-label="Marcar ${esc(taskName(x.r))} das ${x.hh} como feito">${CHECK}</button><button class="di" data-act="topen" data-val="${esc(x.r.id)}"><span><b>${esc(taskName(x.r))}</b><span class="st"></span></span><span class="tm">${x.hh}</span></button><button class="skipbtn" data-act="tskip" data-val="${esc(x.id)}">Hoje não</button></div>`).join('')}</div>`;
+    <div class="doses">${list.map(x => `<div class="dose slim soon can"><button class="ck" role="checkbox" aria-checked="false" data-act="tcheck" data-val="${esc(x.id)}" aria-label="Marcar ${esc(taskName(x.r))} das ${x.hh} como feito">${CHECK}</button><button class="di" data-act="topen" data-val="${esc(x.r.id)}"><span class="nm"><b>${esc(taskName(x.r))}</b></span><span class="tm">${x.hh}</span></button><button class="skipbtn" data-act="tskip" data-val="${esc(x.id)}">Hoje não</button></div>`).join('')}</div>`;
 }
 // Marcar na tela inicial: como a dose, o check na hora, um instante, e a linha encolhe.
 async function markTaskHome(b, off) {
@@ -3191,155 +3223,152 @@ async function doTask(r, ointments) {
 }
 const redrawTasks = () => { if (S?.mode === 'tasks') drawTasks(); else if (S?.mode === 'task') drawTask(); };
 
-// A folha Tarefas: a lista logo abaixo do título; sem nada programado, a capivara dormindo.
-function tasksSheet() { S = { mode: 'tasks' }; drawTasks(); $('sheet').scrollTop = 0; }
+// A lista de tarefas: a mesma da de remédios.
+function tasksSheet() { S = { mode: 'tasks' }; drawTasks(); }
+const taskWhen = r => r.schedule === 'fixed' ? 'todo dia' : r.schedule === 'count' ? (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') : r.schedule === 'need' ? 'quando precisar' : 'na troca de fralda';
 function taskRow(r) {
   const slots = taskSlots(r), done = slots.filter(x => x.e).length;
-  let sub, right = '';
-  if (r.schedule === 'fixed') {
-    sub = 'todo dia às ' + taskTimes(r).join(', ').replace(/, ([^,]*)$/, ' e $1');
-    const next = slots.find(x => !x.e);
-    right = !slots.length ? '' : next ? `<span class="tp">${next.hh}</span>` : `<span class="tp" aria-label="feito hoje">${CHECK}</span>`;
-  } else if (r.schedule === 'count') {
-    sub = (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') + ' · ' + done + ' de ' + r.per_day + ' hoje';
-    right = `<span class="dots" aria-hidden="true">${slots.map(x => `<i${x.e ? ' class="f"' : ''}></i>`).join('')}</span>`;
-  } else {
-    const n = (r.items || []).length;
-    sub = 'na troca de fralda · ' + (n === 1 ? '1 pomada' : n + ' pomadas');
-    right = '<span></span>';
-  }
-  return `<button class="trow" data-act="tOpen" data-val="${esc(r.id)}"><span class="ti">${ICON[r.kind]}</span><span><b>${esc(taskName(r))}</b><small>${esc(sub)}</small></span>${right || '<span></span>'}<span class="cv" aria-hidden="true">›</span></button>`;
+  if (r.schedule === 'count') return rRow('tOpen', r.id, r.kind, taskName(r), taskWhen(r) + ' · ' + done + ' de ' + r.per_day, `<span class="dots" aria-hidden="true">${slots.map(x => `<i${x.e ? ' class="f"' : ''}></i>`).join('')}</span>`);
+  return rRow('tOpen', r.id, r.kind, taskName(r), r.schedule === 'fixed' ? taskTimes(r).join(', ') : taskWhen(r), rNext(slots, 'care'));
 }
 const taskAlertKey = id => 'cad-tarefaalert-' + id;
 const taskAlertOn = () => !!st.baby && lsGet(taskAlertKey(st.baby.id)) === '1';
 function drawTasks() {
-  let h = `<div class="grab"></div><div class="shead"><h3>Tarefas<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
-  if (!st.routines.length) h += `<p class="dim tvazio">Nada por aqui ainda, programe uma tarefa primeiro!</p><div class="lake">${CAPI.replace(' class="capi"', '')}</div><button class="save" data-act="tNew">Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>`;
-  else {
-    h += `<div class="tlist">${st.routines.map(taskRow).join('')}</div>`;
-    if (medNotif) h += `<button class="li tg" role="switch" aria-checked="${taskAlertOn()}" data-act="tAlert"><span>Ativar notificações de tarefas</span><span class="sw${taskAlertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
-    h += '<button class="ghost" data-act="tNew">+ Programar tarefa</button><button class="ghost" data-act="tLoose">Anotar uma tarefa avulsa</button>'
-      + '<p class="dim">Só a família programa. O Soneca lembra os horários e não cobra o que ficou para depois.</p>';
-  }
-  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+  const body = st.routines.length ? `<div class="tlist">${st.routines.map(taskRow).join('')}</div>` : `<div class="lake">${CAPI.replace(' class="capi"', '')}</div>`;
+  rPanel(rHead('Tarefas', 'de ' + st.baby.name, { info: 1 }), body, '<button class="save" data-act="tNew">Programar tarefa</button><button class="rlink" data-act="tLoose">Anotar tarefa avulsa</button>');
 }
-// Programar: primeiro escolhe qual tarefa; cada uma abre a sua tela. As que já estão na rotina não
-// aparecem (a outra tarefa pode ter várias).
+// Programar: primeiro escolhe qual tarefa. As que já estão na rotina não aparecem (a outra tarefa pode ter várias).
 function pickSheet() {
   S = { mode: 'taskpick' };
   const free = TASKS.filter(([k]) => k === 'care' || !st.routines.some(r => r.kind === k));
-  openPanel(`<div class="grab"></div><div class="shead"><h3>Programar tarefa<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>
-    <div class="tlist">${free.map(([k, n]) => `<button class="trow" data-act="tPick" data-val="${k}"><span class="ti">${ICON[k]}</span><span><b>${esc(n)}</b></span><span></span><span class="cv" aria-hidden="true">›</span></button>`).join('')}</div>`);
-  $('sheet').scrollTop = 0;
+  rPanel(rHead('Programar tarefa', 'de ' + st.baby.name), `<div class="tlist">${free.map(([k, n]) => `<button class="trow" data-act="tPick" data-val="${k}"><span class="ti">${ICON[k]}</span><span><b>${esc(n)}</b></span><span></span><span class="cv" aria-hidden="true">›</span></button>`).join('')}</div>`);
 }
-// A tela de uma tarefa só (nova ou já programada). from: de onde veio, para o "voltar".
+// Tarefa programada abre a tela dela; tarefa nova, o formulário. from: de onde veio. ret: a Fralda esperando.
 function taskScreen(r, from, kind, ret) {
-  const k = r ? r.kind : kind;
-  S = { mode: 'task', r: r || null, kind: k, from, ret: ret || null, name: r?.name || '', sched: r?.schedule || (k === 'ointment' ? 'diaper' : 'fixed'),
-        times: r && r.schedule === 'fixed' ? taskTimes(r) : ['09:00'], per: r?.per_day || 3, items: [...(r?.items || [])],
-        oint: new Set(), item: '', addOpen: false, openTime: null, err: '', confirmStop: false };
-  drawTask(); $('sheet').scrollTop = 0;
+  if (!r) return taskForm(null, from, kind, ret);
+  S = { mode: 'task', r, kind: r.kind, from, oint: new Set(), err: '' };
+  drawTask();
 }
 function slotRow(r, x) {
   const name = esc(taskName(r)), when = x.hh || x.n + 'ª vez';
-  if (x.e) return `<div class="dose done"><span class="ck" aria-hidden="true">${CHECK}</span><span class="di"><span><b>${name}</b><span class="st">${esc(fem(r.kind, 'feito', 'feita') + ' por ' + whoGave(x.e) + ' às ' + hm(x.e.t))}</span></span><span class="tm">${when}</span></span></div>`;
-  return `<div class="dose later can"><button class="ck" role="checkbox" aria-checked="false" data-act="tTick" aria-label="Marcar ${name} (${when}) como feito">${CHECK}</button><span class="di"><span><b>${name}</b><span class="st"></span></span><span class="tm">${when}</span></span></div>`;
+  if (x.e) return `<div class="dose slim ritem done"><span class="ck" aria-hidden="true">${CHECK}</span><span class="di"><span class="tm">${when}</span><span class="nm st">${esc(fem(r.kind, 'feito', 'feita') + ' por ' + whoGave(x.e) + ' às ' + hm(x.e.t))}</span></span></div>`;
+  return `<div class="dose slim ritem later can"><button class="ck" role="checkbox" aria-checked="false" data-act="tTick" aria-label="Marcar ${name} (${when}) como feito">${CHECK}</button><span class="di"><span class="tm">${when}</span><span class="nm"></span></span></div>`;
 }
 function drawTask() {
-  const isNew = !S.r, k = S.kind, b = st.baby;
-  if (!isNew && !st.routines.some(r => r.id === S.r.id)) return tasksSheet();   // tirada da rotina em outro celular
-  const nm = k === 'care' ? (S.name.trim() || TASK_NAME.care) : TASK_NAME[k];
-  let h = `<div class="tbar"><button class="bk" data-act="tBack">${BACK}${S.ret ? 'Fralda' : isNew ? 'Programar tarefa' : 'Tarefas'}</button></div>
-    <div class="thero"><span class="ti">${ICON[k]}</span><div><h3>${esc(nm)}</h3><small>${isNew ? 'Nova tarefa na rotina de ' : 'Tarefa da rotina de '}${esc(b.name)}</small></div></div>`;
-  if (k === 'care') h += `<div><label class="lbl" for="tName">Nome da tarefa</label><input class="field" id="tName" maxlength="40" placeholder="Ex.: Cortar as unhas" value="${esc(S.name)}"></div>`;
-  // Hoje: cada horário (ou cada vez) com o círculo para marcar; a pomada, quais foram passadas agora.
-  if (!isNew && S.r.schedule !== 'diaper' && k !== 'ointment') h += `<div class="sec cs"><h4>Hoje</h4><div class="doses">${taskSlots(S.r).map(x => slotRow(S.r, x)).join('')}</div></div>`;
-  if (!isNew && k === 'ointment' && S.items.length)
-    h += `<div class="sec"><h4>Passou agora</h4><div class="olist">${S.items.map(n => { const on = S.oint.has(n);
+  const r = st.routines.find(x => x.id === S.r.id); if (!r) return tasksSheet();   // tirada da rotina em outro celular
+  S.r = r;
+  const t0 = startOfDay(Date.now()), mine = sortedEntries().filter(e => sameTask(r, e));
+  let body = '', foot = '';
+  if (r.kind === 'ointment') {
+    body = `<div class="rg2"><div class="lbl">Passou agora</div><div class="olist">${(r.items || []).map(n => { const on = S.oint.has(n);
       return `<button class="oline${on ? ' on' : ''}" data-act="tOint" data-val="${esc(n)}" role="checkbox" aria-checked="${on}"><span class="ck">${CHECK}</span><span>${esc(n)}</span></button>`; }).join('')}</div></div>`;
-  h += `<div class="cs"><div class="lbl">Quando</div><div class="seg" style="background:none">${k === 'ointment' ? opt('Na troca de fralda', S.sched === 'diaper', 'tSched', 'diaper') : ''}${opt('Horários fixos', S.sched === 'fixed', 'tSched', 'fixed')}${opt('Vezes por dia', S.sched === 'count', 'tSched', 'count')}</div></div>`;
-  if (S.sched === 'fixed')
-    h += `<div class="cs"><div class="lbl">Horários</div><div class="tchips">${S.times.map((t, i) => `<span class="tchip${S.openTime === i ? ' on' : ''}"><button class="t" data-act="tOpenTime" data-val="${i}" aria-expanded="${S.openTime === i}"><b id="ttl-${i}">${t}</b></button>${S.times.length > 1 ? `<button data-act="tRmTime" data-val="${i}" aria-label="Tirar este horário">×</button>` : ''}</span>`).join('')}${S.times.length < 8 ? '<button class="small" data-act="tAddTime">+ horário</button>' : ''}</div>${S.openTime != null && S.times[S.openTime] != null ? clockHtml('tt-' + S.openTime, S.times[S.openTime], 'care', 'Horário ' + (S.openTime + 1)) : ''}</div>`
-      + `<div class="note cs">${ICON.care}<span>Na hora marcada, a tarefa aparece em destaque no alto da tela, com a caixinha para marcar. Fica assim até alguém marcar ou o dia acabar.</span></div>`;
-  if (S.sched === 'count') h += `<div><div class="ml"><button data-act="tPer" data-val="-1" aria-label="Menos uma vez">−</button><output>${S.per}</output><em>${S.per === 1 ? 'vez por dia' : 'vezes por dia'}</em><button data-act="tPer" data-val="1" aria-label="Mais uma vez">+</button></div></div>`;
+    if (S.oint.size) foot = rSave('care', 'Marcar', 'tMark');
+  }
+  if (r.schedule === 'fixed' || r.schedule === 'count') body += `<div class="rg2 cs"><div class="lbl">Hoje</div><div class="doses">${taskSlots(r).map(x => slotRow(r, x)).join('')}</div></div>`;
+  if (r.schedule === 'need') {
+    const todays = mine.filter(e => e.t >= t0).reverse();
+    body += `<div class="rg2"><div class="lbl">Hoje</div>${todays.length ? `<div class="hist2">${todays.map(e => `<div><span>${hm(e.t)}</span><span>${esc(byText(e))}</span></div>`).join('')}</div>` : '<p class="dim rnone">Nada hoje.</p>'}</div>`;
+    foot = rSave('care', 'Fiz agora', 'tTick');
+  }
+  body += pastRows(mine.filter(e => e.t < t0 && e.t >= addDays(t0, -7)).slice(-5).reverse().map(e => [cap1(whenText(e.t)) + (e.kind === 'ointment' ? ' · ' + e.ointments.join(', ') : ''), byText(e)]));
+  rPanel(rHead(taskName(r), taskWhen(r), { back: fromList(S.from) ? 'toTasks' : '', edit: 'tEdit' }), body, foot);
+}
+function taskForm(r, from, kind, ret) {
+  const k = r ? r.kind : kind, sc = r?.schedule || (k === 'ointment' ? 'diaper' : 'fixed');
+  S = { mode: 'taskform', r: r || null, kind: k, from, ret: ret || null, name: r?.name || '',
+        sched: sc === 'need' || sc === 'diaper' ? sc : 'day', timed: sc !== 'count',
+        times: r && sc === 'fixed' ? taskTimes(r) : ['09:00'], per: r?.per_day || 3, items: [...(r?.items || [])], item: '', addOpen: false,
+        dateSet: true, base: startOfDay(Date.now()), time: '09:00', openT: false, err: '' };
+  drawTaskForm();
+}
+function drawTaskForm() {
+  const k = S.kind;
+  let h = '';
+  if (k === 'care') h += `<div class="g2"><input class="field rf span2" id="tName" maxlength="40" placeholder="Nome da tarefa" aria-label="Nome da tarefa" value="${esc(S.name)}"></div>`;
+  h += `<div class="g2 k-care rq" style="background:none">${k === 'ointment'
+    ? opt('Na troca de fralda', S.sched === 'diaper', 'tSched', 'diaper', 1) + opt('Todo dia', S.sched === 'day', 'tSched', 'day', 1)
+    : opt('Todo dia', S.sched === 'day', 'tSched', 'day', 1) + opt('Quando precisar', S.sched === 'need', 'tSched', 'need', 1)}</div>`;
+  if (S.sched === 'day') {
+    h += `<div class="g2"><button class="cell rsw span2" role="switch" aria-checked="${S.timed}" data-act="tTimed"><span>Com horário</span><span class="sw${S.timed ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`
+      + (S.timed ? formTimes() : stepCell('tPer', S.per, S.per === 1 ? 'vez por dia' : 'vezes por dia', 'Menos uma vez', 'Mais uma vez')) + '</div>';
+  }
   if (k === 'ointment') {
-    h += `<div class="sec"><h4>Pomadas de ${esc(b.name)}</h4>${S.items.map((n, i) => `<div class="li"><span>${esc(n)}</span><button data-act="tRmItem" data-val="${i}">Tirar</button></div>`).join('')}`
+    h += `<div class="rg2"><div class="lbl">Pomadas</div>${S.items.map((n, i) => `<div class="li"><span>${esc(n)}</span><button data-act="tRmItem" data-val="${i}">Tirar</button></div>`).join('')}`
       + (S.addOpen || !S.items.length ? `<div class="addrow"><input class="field" id="tItem" maxlength="40" placeholder="Nome da pomada" value="${esc(S.item)}"><button class="small" data-act="tAddItem">Adicionar</button></div>`
                                       : (S.items.length < 12 ? '<button class="ghost" data-act="tNewItem">+ Nova pomada</button>' : '')) + '</div>';
-    h += '<p class="dim">As pomadas aparecem na Fralda, para marcar na hora da troca.</p>';
   }
-  // Últimos dias: os registros desta tarefa antes de hoje, do mais novo para o mais antigo.
-  if (!isNew) {
-    const t0 = startOfDay(Date.now()), past = sortedEntries().filter(e => e.t < t0 && e.t >= addDays(t0, -7) && sameTask(S.r, e)).slice(-5).reverse();
-    if (past.length) h += `<div class="sec"><h4>Últimos dias</h4><div class="hist2">${past.map(e => `<div><span>${esc(cap1(whenText(e.t)))}${e.kind === 'ointment' ? ' · ' + esc(e.ointments.join(', ')) : ''}</span><span>${esc(byText(e))}</span></div>`).join('')}</div></div>`;
-  }
-  h += `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save" data-act="tSave">Salvar</button>${isNew ? '' : `<button class="del" data-act="tStop">${S.confirmStop ? 'Toque de novo para tirar da rotina' : 'Tirar da rotina'}</button>`}</div>`;
-  const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
+  const sub = k === 'care' ? (S.r ? S.r.name : '') : TASK_NAME[k];
+  rPanel(rHead(S.r ? 'Editar tarefa' : 'Programar tarefa', sub, { info: 1, trash: S.r ? 'tStop' : '' }), h, rSave('care', 'Salvar', 'tSave'), clockWin('care'));
 }
-const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 async function saveTask(btn) {
   const k = S.kind, name = S.name.trim();
-  const times = S.sched === 'fixed' ? [...new Set(S.times.filter(Boolean))].sort() : null;
-  if (k === 'care' && !name) { S.err = 'Escreva o nome da tarefa.'; return drawTask(); }
-  if (S.sched === 'fixed' && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawTask(); }
+  const sched = S.sched === 'day' ? (S.timed ? 'fixed' : 'count') : S.sched;
+  const times = sched === 'fixed' ? [...new Set(S.times.filter(Boolean))].sort() : null;
+  if (k === 'care' && !name) { S.err = 'Escreva o nome da tarefa.'; return drawTaskForm(); }
+  if (sched === 'fixed' && !times.length) { S.err = 'Escolha pelo menos um horário.'; return drawTaskForm(); }
   if (k === 'ointment' && S.item.trim() && !S.items.includes(S.item.trim())) S.items.push(S.item.trim().slice(0, 40));
-  if (k === 'ointment' && !S.items.length) { S.err = 'Escreva o nome de pelo menos uma pomada.'; return drawTask(); }
-  const row = { name: k === 'care' ? name : null, schedule: S.sched, times, per_day: S.sched === 'count' ? S.per : null,
+  if (k === 'ointment' && !S.items.length) { S.err = 'Escreva o nome de pelo menos uma pomada.'; return drawTaskForm(); }
+  const row = { name: k === 'care' ? name : null, schedule: sched, times, per_day: sched === 'count' ? S.per : null,
                 items: k === 'ointment' ? S.items : null };
-  const oint = [...S.oint].filter(n => S.items.includes(n)), r0 = S.r, ret = S.ret, added = S.items;
+  const r0 = S.r, ret = S.ret, added = S.items, from = S.from;
   busy(btn, true);
   const q = r0 ? sb.from('routines').update(row).eq('id', r0.id)
                : sb.from('routines').insert({ family_id: st.family.id, baby_id: st.baby.id, kind: k, ...row });
   const { data, error } = await q.select().single();
   busy(btn, false);
-  if (error) { S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTask(); }
+  if (error) { S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTaskForm(); }
   st.routines = [...st.routines.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
   avFam.tarefa = true;
   // Veio da Fralda: volta para a mesma troca, com as pomadas novas já marcadas.
   if (ret) { S = ret; for (const n of added) S.oint.add(n); drawEntry(); toast('Salvo'); return taskAlertsLater(); }
-  tasksSheet();
-  if (oint.length) await doTask(data, oint); else toast('Salvo');
+  if (from === 'pane') closeSheet(); else if (r0) taskScreen(data, from); else tasksSheet();
+  toast('Salvo');
   taskAlertsLater();
 }
 // Tirar da rotina não apaga: a tarefa some da lista e do alto, e os registros continuam na linha do tempo.
 async function stopTask(btn) {
+  const id = S.r.id;
   busy(btn, true);
-  const { error } = await sb.from('routines').update({ stopped_at: new Date().toISOString() }).eq('id', S.r.id);
+  const { error } = await sb.from('routines').update({ stopped_at: new Date().toISOString() }).eq('id', id);
   busy(btn, false);
-  if (error) { S.err = 'Não foi possível tirar da rotina. Confira a conexão e tente de novo.'; return drawTask(); }
-  st.routines = st.routines.filter(x => x.id !== S.r.id);
+  if (error) return toast('Não foi possível tirar da rotina. Confira a conexão e tente de novo.');
+  st.routines = st.routines.filter(x => x.id !== id);
   tasksSheet(); toast('Tirada da rotina'); taskAlertsLater();
 }
 function taskInput(el) {
   const id = el.id, v = el.value;
-  if (id === 'tName') { S.name = v; const t = $('sheetIn').querySelector('.thero h3'); if (t) t.textContent = v.trim() || TASK_NAME.care; }
+  if (id === 'tName') S.name = v;
   else if (id === 'tItem') S.item = v;
-  else if (id.startsWith('tt-')) { S.times[+id.slice(3)] = v; const l = $('ttl-' + id.slice(3)); if (l) l.textContent = v; }
   if (S.err) { S.err = ''; $('sheetIn').querySelector('.err')?.remove(); }
 }
 async function taskAction(a, v, btn) {
+  if (a === 'rInfo') return routineInfo('care');
+  if (a === 'toTasks') return tasksSheet();
   if (S.mode === 'tasks') {
     if (a === 'tNew') return pickSheet();
     if (a === 'tLoose') return openEntry('care', null, true);
     if (a === 'tOpen') { const r = st.routines.find(x => x.id === v); return r && taskScreen(r, 'tasks'); }
-    if (a === 'tAlert') return setTaskAlert(!taskAlertOn());
     return;
   }
-  if (S.mode === 'taskpick') { if (a === 'tPick') taskScreen(null, 'pick', v); return; }
-  if (a === 'tBack') { if (S.ret) { S = S.ret; return drawEntry(); } return S.r ? tasksSheet() : pickSheet(); }
+  if (S.mode === 'taskpick') { if (a === 'tPick') taskForm(null, 'pick', v); return; }
+  if (S.mode === 'task') {
+    if (a === 'tEdit') return taskForm(S.r, S.from);
+    if (a === 'tTick') { await doTask(S.r); return S?.mode === 'task' && drawTask(); }
+    if (a === 'tMark') { const r = S.r, o = [...S.oint]; S.oint.clear(); await doTask(r, o); return S?.mode === 'task' && drawTask(); }
+    if (a === 'tOint') { if (S.oint.has(v)) S.oint.delete(v); else S.oint.add(v); }
+    return drawTask();
+  }
   if (a === 'tSave') return saveTask(btn);
-  if (a === 'tStop') { if (S.confirmStop) return stopTask(btn); S.confirmStop = true; }
-  else if (a === 'tTick') { const r = S.r; await doTask(r); return S?.mode === 'task' && drawTask(); }
-  else if (a === 'tOint') { if (S.oint.has(v)) S.oint.delete(v); else S.oint.add(v); }
-  else if (a === 'tSched') S.sched = v;
-  else if (a === 'tPer') S.per = Math.max(1, Math.min(12, S.per + (+v)));
-  else if (a === 'tAddTime') { const [H, M] = (S.times.filter(Boolean).at(-1) || '09:00').split(':').map(Number); S.times.push(pad((H + 6) % 24) + ':' + pad(M)); S.openTime = S.times.length - 1; }
-  else if (a === 'tRmTime') { S.times.splice(+v, 1); if (S.openTime === +v) S.openTime = null; else if (S.openTime > +v) S.openTime--; }
-  else if (a === 'tOpenTime') S.openTime = S.openTime === +v ? null : +v;
-  else if (a === 'tNewItem') S.addOpen = true;
-  else if (a === 'tAddItem') { const n = S.item.trim().slice(0, 40); if (n && !S.items.includes(n) && S.items.length < 12) S.items.push(n); S.item = ''; S.addOpen = false; }
-  else if (a === 'tRmItem') { const [n] = S.items.splice(+v, 1); S.oint.delete(n); }
-  S.err = ''; drawTask();
+  if (a === 'tStop') return askConfirm('Tirar da rotina?', 'Os registros continuam no Diário.', 'Tirar', stopTask);
+  if (!timeAction(a, v)) {
+    if (a === 'tSched') S.sched = v;
+    else if (a === 'tTimed') S.timed = !S.timed;
+    else if (a === 'tPer') S.per = Math.max(1, Math.min(12, S.per + (+v)));
+    else if (a === 'tNewItem') S.addOpen = true;
+    else if (a === 'tAddItem') { const n = S.item.trim().slice(0, 40); if (n && !S.items.includes(n) && S.items.length < 12) S.items.push(n); S.item = ''; S.addOpen = false; }
+    else if (a === 'tRmItem') S.items.splice(+v, 1);
+  }
+  S.err = ''; drawTaskForm();
 }
 
 // Aviso na hora da tarefa (só no app, como o do remédio): o celular agenda os horários fixos dos próximos
@@ -3854,7 +3883,7 @@ const fRow = (act, val, text, go = '') => `<button class="fc frow" data-act="${a
 const fSub = (title, color, body) => `<div class="fsub"><h5 style="--sw:var(${color})"><i></i>${title}</h5>${body}</div>`;
 const fAdd = (act, t) => `<button class="ghost" data-act="${act}">${t}</button>`;
 const medLine = m => m.name + ' · ' + (m.schedule === 'prn' ? 'quando precisar' : m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia às ' + medTimes(m).join(' e '));
-const careLine = r => taskName(r) + ' · ' + (r.schedule === 'fixed' ? 'todo dia às ' + taskTimes(r).join(' e ') : r.schedule === 'count' ? (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') : 'a cada troca');
+const careLine = r => taskName(r) + ' · ' + (r.schedule === 'fixed' ? 'todo dia às ' + taskTimes(r).join(' e ') : r.schedule === 'count' ? (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') : r.schedule === 'need' ? 'quando precisar' : 'a cada troca');
 const qDay = q => q.asked_on || localDate(Date.parse(q.created_at));
 const answered = () => st.questions.filter(q => q.answer || q.asked_on).sort((a, b) => qDay(a) < qDay(b) ? 1 : qDay(a) > qDay(b) ? -1 : byCreated(a, b));
 const unanswered = () => openQuestions().filter(q => !q.answer);
@@ -4245,7 +4274,7 @@ async function paneAction(a, v, btn) {
   const f = st.family;
   // Rotina
   if (a === 'openMeds') return medsSheet();
-  if (a === 'oneMed') { medOnly = v; return medsSheet(); }
+  if (a === 'oneMed') return medItem(v, 'pane');
   if (a === 'openTasks') return tasksSheet();
   if (a === 'openMarcos') return milestonesSheet();   // sem entrada na Família desde o item 102; os marcos ganham lugar no item 89
   if (a === 'openDuv') return duvSheet();
@@ -4255,7 +4284,7 @@ async function paneAction(a, v, btn) {
   if (a === 'sonoInfo') return sonoInfoSheet();
   if (a === 'goNotif') return goTab('profile', 'profNotif');
   if (a === 'newCare') return pickSheet();
-  if (a === 'openCare') { const r = st.routines.find(x => x.id === v); return r && taskScreen(r, 'tasks'); }
+  if (a === 'openCare') { const r = st.routines.find(x => x.id === v); return r && taskScreen(r, 'pane'); }
   if (a === 'nightCard') return setNightCard(st.nightCard === false);
   if (a === 'allMeds') return medsSheet();
   if (a === 'newMed') return medForm(null, 'pane');
@@ -4332,7 +4361,7 @@ $('sheetIn').addEventListener('input', e => {
     return;
   }
   if (S?.mode === 'medform' || S?.mode === 'dose') return medInput(e.target);
-  if (S?.mode === 'task') return taskInput(e.target);
+  if (S?.mode === 'taskform') return taskInput(e.target);
   if (S?.mode === 'weight' || S?.mode === 'milestone') return logInput(e.target);
   if (S?.mode === 'question') return questionInput(e.target);
   if (S?.mode !== 'entry') return;
@@ -4363,8 +4392,8 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'night') return nightAction(a, b);
   if (S.mode === 'nov60') return novAction(a);
   if (S.mode === 'cal') return calAction(a, v);
-  if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
-  if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);
+  if (S.mode === 'meds' || S.mode === 'med' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
+  if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task' || S.mode === 'taskform') return taskAction(a, v, b);
   if (S.mode === 'milestones') return milestonesAction(a, v);
   if (S.mode === 'duv') { if (a === 'duvAdd') return duvAdd(); if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'duv'); return; }
   if (S.mode === 'orient') { if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'orient'); return; }
@@ -4487,6 +4516,7 @@ $('meds').addEventListener('click', e => {
   if (b.dataset.act === 'skipDose') return markHome(b, true);
   if (b.dataset.act === 'dose') return doseSheet(b.dataset.val);
   if (b.dataset.act === 'allMeds') return medsSheet();
+  if (b.dataset.act === 'missed') return openMissed();
 });
 $('tasks').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
