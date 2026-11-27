@@ -2244,9 +2244,12 @@ function dateText() {
 // registro não for de hoje, como já era). Ao tocar no lápis a linha some e abre o bloco: a data (com o seu lápis, que abre o
 // seletor de data) e o relógio redondo com os atalhos.
 function timeRow(k) {
-  // Item 99: na Mamada nova o relógio abre na mesma janela da edição. Na folha, ao lado do horário, só o −5 min:
-  // cada toque tira mais 5 (Patrick, 26/11). Na edição não há atalho.
-  if (k === 'feed') { const tc = timeCells(); return `<div class="g2"><button class="cell back5" data-act="back" data-val="5">−5 min</button>${tc.cell}</div>` + tc.rest; }
+  // Item 99: na Mamada nova o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
+  // embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
+  if (k === 'feed') {
+    const tc = timeCells(' tbig span2');
+    return `<div class="g2 tblock">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(m => `<button class="cell qk" data-act="back" data-val="${m}">−${m} min</button>`).join('')}</div></div>` + tc.rest;
+  }
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
@@ -2274,10 +2277,10 @@ function drawSleepCompact() {
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
-function timeCells() {
+function timeCells(more = '') {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  const cell = `<button class="cell tm" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
+  const cell = `<button class="cell tm${more}" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (!S.openT) return { cell, rest: '' };
   const dt = tdlgDate(), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
   return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
