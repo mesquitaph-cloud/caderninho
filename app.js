@@ -2536,8 +2536,9 @@ async function saveEntry(btn) {
   // Vômito, escolhido em Sintomas, grava o registro de vômito de sempre. A tarefa avulsa grava a tarefa escolhida.
   const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
   // Na tela curta, sem mexer no horário, vale o instante do toque (não o minuto cheio): assim um "Dormiu
-  // agora" logo depois de um "Acordou" fica depois dele. Na edição do Sono, fica o horário que já estava.
-  if (!(S.edit && k === 'sleep') && S.compact && S.time === S.t0 && S.base === startOfDay(Date.now())) ev.t = Date.now();
+  // agora" logo depois de um "Acordou" fica depois dele.
+  // Só no registro novo: a edição guarda o horário que já estava salvo.
+  if (!S.edit && S.compact && S.time === S.t0 && S.base === startOfDay(Date.now())) ev.t = Date.now();
   // Só manda o colo quando há o que mandar (ou apagar): sem o 020, o resto do sono continua salvando.
   // No sono que pegou sozinho, o colo vai vazio.
   const lap = k === 'sleep' && lapShown() && S.dmin !== '';
