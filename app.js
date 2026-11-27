@@ -2054,7 +2054,7 @@ const sideRow = (key, name) => `<div class="side${S[key] ? ' on' : ''}" id="row-
   <input id="min-${key}" inputmode="numeric" value="${esc(S[key + 'min'])}" placeholder="–" aria-label="Minutos no peito ${name.toLowerCase()} (opcional)"><em>min</em>
   <button data-act="minstep" data-val="${key}:1" aria-label="Mais 1 minuto no peito ${name.toLowerCase()}">+</button></div></div>`;
 // Cada peito no seu lado, uma coluna para cada (v10d): o mesmo bloco na edição e na Mamada nova.
-const sideCols = () => `<div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div>`;
+const sideCols = (more = '') => `<div class="g2">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}${more}</div>`;
 const totalText = () => { const t = (+S.lmin || 0) + (+S.rmin || 0); return t ? 'Total: ' + dur(t * MIN) : ''; };
 function markSide(key) { const r = $('row-' + key); if (!r) return; r.classList.toggle('on', S[key]); r.querySelector('.pick').setAttribute('aria-pressed', S[key]); }
 
@@ -2262,14 +2262,14 @@ function drawSleepCompact() {
   h += sfoot('sleep', changed ? 'Salvar' : S.sk === 'sleep' ? 'Dormiu agora' : 'Acordou agora');
   openPanel(h);
 }
-// Edição do Sono (item 88): a grade da edição da Mamada. Dormiu | Acordou; minutos no colo | horário;
-// "pegou no sono sozinha" na linha toda; Quem fez.
+// Edição do Sono (item 88): a grade da edição da Mamada. Dormiu | Acordou; minutos no colo; horário grande e
+// centralizado, como no registro novo; "pegou no sono sozinha" na linha toda; Quem fez.
 function drawSleepEditCompact() {
   S.sfix = true;
-  const tc = timeCells('', 'sleep'), lap = lapShown();
+  const tc = timeCells(' tbig span2', 'sleep'), lap = lapShown();
   let h = editHead() + `<div class="sbody">${sleepSeg()}`;
-  if (lap) h += `<div class="g2 k-sleep" style="background:none"><div class="lbl">No colo</div><div></div><div class="cell mlcell"><div class="step"><button data-act="lapstep" data-val="-5" aria-label="Menos 5 minutos no colo">−</button><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="–" aria-label="Minutos no colo (opcional)"><em>min</em><button data-act="lapstep" data-val="5" aria-label="Mais 5 minutos no colo">+</button></div></div>${tc.cell}</div>`;
-  else h += `<div class="g2">${tc.cell}</div>`;
+  if (lap) h += `<div class="g2 k-sleep" style="background:none"><div class="lbl span2">No colo</div><div class="cell mlcell span2"><div class="step"><button data-act="lapstep" data-val="-5" aria-label="Menos 5 minutos no colo">−</button><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="–" aria-label="Minutos no colo (opcional)"><em>min</em><button data-act="lapstep" data-val="5" aria-label="Mais 5 minutos no colo">+</button></div></div></div>`;
+  h += `<div class="g2">${tc.cell}</div>`;
   if (S.sk === 'sleep') h += `<div class="g2 k-sleep" style="background:none">${opt(aloneLabel(), S.alone, 'alone', 1, 1).replace('opt big', 'opt big span2')}</div>`;
   h += whoRows('sleep') + '</div>' + sfoot('sleep', 'Salvar') + tc.rest;
   openPanel(h); fitWho();
@@ -2289,7 +2289,7 @@ function timeCells(more = '', kind = 'feed') {
     ${dialHtml(kind)}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
-// Edição da Mamadeira (item 88): mesma grade do peito. Linha 2: quantidade (− 140 ml +) | horário; os atalhos de 30 a 180 ml
+// Edição da Mamadeira (item 88): mesma grade do peito. Quantidade (− 140 ml +) na linha toda e, embaixo, o horário grande; os atalhos de 30 a 180 ml
 // saem da edição (o campo aceita digitar). "Quem fez" só com duas pessoas ou mais, dois botões por linha, com o rótulo em cima.
 // Item 96: Leite materno | Fórmula, uma em cada coluna. Nasce no padrão do bebê (Fórmula já vem marcada; "Leite + Fórmula" começa em Leite materno; sem padrão: nenhuma);
 // mamadeira antiga não tem tipo; tocar de novo desmarca.
@@ -2300,7 +2300,7 @@ function whoRows(k) {
   return `<div class="g2 k-${k}${ms.length <= 3 ? ' g3 who' : ''}" style="background:none"><div class="lbl span2">Quem fez</div>${ms.map(m => opt(m.user_id === st.user.id ? 'Você' : esc(firstName(m.user_id)), S.by === m.user_id, 'by', esc(m.user_id), 1)).join('')}</div>`;
 }
 function mlEditRows(timeCell) {
-  return `<div class="g2"><div class="cell mlcell"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>${timeCell}</div>${whoRows('feed')}`;
+  return `<div class="g2"><div class="cell mlcell span2"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div></div><div class="g2">${timeCell}</div>${whoRows('feed')}`;
 }
 // "Quem fez" numa linha só: nome comprido não vira reticências, a fonte da linha toda diminui (de 18 até 13 px, o mínimo legível) até caber no botão.
 function fitWho() {
@@ -2313,11 +2313,11 @@ const editHead = () => `<div class="grab"></div><div class="shead"><h3>Editar</h
 function drawFeedEditCompact() {
   let h = editHead();
   S.sfix = true;   // cabeçalho e Salvar fixos, só o meio rola
-  // Grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; Esquerdo | Direito (minutos dentro do cartão); Total | horário.
-  const tc = timeCells();
+  // Grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; Esquerdo | Direito (minutos dentro do cartão) e o Total embaixo; horário grande na linha toda.
+  const tc = timeCells(' tbig span2');
   h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
-      ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `${sideCols()}
-      <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div>`}</div>` + sfoot('feed', 'Salvar') + tc.rest;
+      ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `${sideCols(`<div class="cell tcell span2" id="total">${totalText() || 'Total: –'}</div>`)}
+      <div class="g2">${tc.cell}</div>`}</div>` + sfoot('feed', 'Salvar') + tc.rest;
   openPanel(h); fitWho();
 }
 function drawFeedCompact() {
