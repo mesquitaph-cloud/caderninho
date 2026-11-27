@@ -2168,9 +2168,9 @@ function openEntry(k, edit, avulsa) {
         by: edit?.done_by || null, alone: !!edit?.self_settled,
         oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
-  // Sono (novo e edição), Mamada, Fralda e Ordenha novos abrem a tela curta.
+  // Sono e Fralda (novos e edição) e Mamada e Ordenha novas abrem a tela curta.
   S.seg = !edit && S.sk === 'wake';
-  S.compact = S.k === 'sleep' || (!edit && (S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
+  S.compact = S.k === 'sleep' || S.k === 'diaper' || (!edit && (S.k === 'feed' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -2232,12 +2232,12 @@ let dialDown = false;
 document.addEventListener('pointerdown', e => { const b = e.target.closest('#dialBox svg'); if (!b) return; dialDown = true; dialPoint(e); e.preventDefault(); });
 document.addEventListener('pointermove', e => { if (dialDown && $('dialBox')) dialPoint(e); });
 document.addEventListener('pointerup', () => { if (!dialDown) return; dialDown = false; if ($('dialBox') && (S.dm || 'h') === 'h') { S.dm = 'm'; $('dialBox').innerHTML = dialInner($('dialBox').dataset.ink); } });
-// Linha do horário das telas curtas. Na Fralda e na Ordenha, tocar na linha abre ali mesmo a data
+// Linha do horário das telas curtas. Na Ordenha, tocar na linha abre ali mesmo a data
 // (com o lápis, que abre o seletor do celular), o relógio redondo e os atalhos.
 function timeRow(k) {
-  // Item 99: na Mamada e no Sono novos o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
+  // Item 99: na Mamada, no Sono e na Fralda novos o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
   // embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
-  if (k === 'feed' || k === 'sleep') {
+  if (k !== 'pump') {
     const tc = timeCells(' tbig span2', k);
     return `<div class="g2 tblock">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(m => `<button class="cell qk" data-act="back" data-val="${m}">−${m} min</button>`).join('')}</div></div>` + tc.rest;
   }
@@ -2362,6 +2362,18 @@ function drawDiaperCompact() {
   h += timeRow('diaper') + sfoot('diaper', 'Salvar');
   openPanel(h);
 }
+// Edição da Fralda (item 88): a grade da edição da Mamada. Xixi | Cocô; com cocô, os quatro tamanhos numa linha e o
+// alerta marrom; Pomada; horário grande e centralizado, como no registro novo; Quem fez; Observação.
+function drawDiaperEditCompact() {
+  S.sfix = true;
+  const tc = timeCells(' tbig span2', 'diaper');
+  let h = editHead() + `<div class="sbody"><div class="g2 k-diaper" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}`;
+  if (S.poo) h += `<div class="span2 dpoo">${pooHtml()}</div>`;
+  S.wig = false;
+  h += `</div>${ointList(diaperOint(S.edit.id)?.ointments)}<div class="g2">${tc.cell}</div>${whoRows('diaper')}`;
+  h += `<div class="g2"><div class="span2 dnote">${noteField('Observação (opcional)')}</div></div></div>` + sfoot('diaper', 'Salvar') + tc.rest;
+  openPanel(h); fitWho();
+}
 // Ordenha: a última ordenha, o peito (opcional, um ou os dois) e os ml, como na mamadeira. Sem "Quem fez"
 // (só quem amamenta faz), então sem Outras opções.
 function drawPumpCompact() {
@@ -2407,7 +2419,7 @@ function drawEntry() {
   if (S.compact && k === 'sleep') return S.edit ? drawSleepEditCompact() : drawSleepCompact();
   if (S.compact && S.edit && k === 'feed') return drawFeedEditCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
-  if (S.compact && k === 'diaper') return drawDiaperCompact();
+  if (S.compact && k === 'diaper') return S.edit ? drawDiaperEditCompact() : drawDiaperCompact();
   if (S.compact && k === 'pump') return drawPumpCompact();
   let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar tarefa' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
@@ -2578,7 +2590,7 @@ async function saveEntry(btn) {
   busy(btn, true);
   if (S.edit) {
     const id = S.edit.id;
-    const conf0 = S.compact && (k === 'feed' || k === 'sleep') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
+    const conf0 = S.compact && (k === 'feed' || k === 'sleep' || k === 'diaper') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
     if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); await conf0?.done; closeSheet(); toast(savedText(ev)); } else { conf0?.cancel(); busy(btn, false); }
     return;
   }
@@ -4303,7 +4315,7 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') { if (S.k === 'feed' || S.k === 'sleep') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'openT') { if (S.k !== 'pump') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
   else if (a === 'tok') S.openT = false;
   else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
   else if (a === 'dm') S.dm = v;
