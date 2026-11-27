@@ -2011,6 +2011,9 @@ function confirmSave(btn, icon) {
   })().catch(() => {});
   return { done, cancel: () => { as.forEach(a => a.cancel()); ok.remove(); } };
 }
+// Nos botões de Remédios e Tarefas: trava o botão e confirma; se não salvar, volta como estava.
+const startConfirm = btn => { busy(btn, true); return confirmSave(btn, CHECK); };
+const stopConfirm = (btn, conf) => { conf?.cancel(); busy(btn, false); };
 // Caixa de confirmação para apagar (e sair, remover): o primeiro toque abre a caixa, só o botão de
 // dentro age. Cancelar, Esc ou um toque fora fecham sem fazer nada.
 let askYes = null;
@@ -2911,23 +2914,25 @@ function nowDose(m) {
 // Vibração bem curta quando a dose fica marcada: o toque leve do sistema. Se falhar, segue sem vibrar.
 const haptics = NATIVE ? window.Capacitor.registerPlugin('Haptics') : null;
 const buzz = () => haptics?.impact({ style: 'LIGHT' }).catch(() => {});
-async function giveDose(id, t, note, skipped, by) {
+async function giveDose(id, t, note, skipped, by, after) {
   const d = doseById(id); if (!d) return;
   const row = await addEntry({ kind: 'med', t, medicine_id: d.m.id, med_name: d.m.name, med_amount: d.m.amount,
                                dose_at: new Date(d.due).toISOString(), skipped: skipped || null, note: note || null, ...(by ? { done_by: by } : {}) });
   if (!row) return;
   if (!skipped) buzz();
+  await after?.();
   if (S?.mode === 'meds' || S?.mode === 'med') { redrawMeds(); $('sheetIn').querySelector(`.ck[data-val="${id}"]`)?.closest('.dose').classList.add('ticking'); }
   const msg = skipped ? 'Dose de ' + d.m.name + ' pulada'
     : d.due - t > SOON ? 'Dose das ' + d.hhmm + ' marcada às ' + hm(t) : 'Dose de ' + d.m.name + ' marcada às ' + hm(t);
   toast(msg, async () => { if (await deleteEntry(row.id)) redrawMeds(); });
   return row;
 }
-async function prnNow(mid) {
+async function prnNow(mid, after) {
   const m = st.meds.find(x => x.id === mid); if (!m) return;
   const row = await addEntry({ kind: 'med', t: Date.now(), medicine_id: m.id, med_name: m.name, med_amount: m.amount });
   if (!row) return;
   buzz();
+  await after?.();
   redrawMeds();
   toast('Dose de ' + m.name + ' marcada às ' + hm(Date.parse(row.at)), async () => { if (await deleteEntry(row.id)) redrawMeds(); });
 }
@@ -3001,15 +3006,16 @@ async function saveMed(btn) {
   const row = { name, amount: amount || null, schedule: prn ? 'prn' : 'fixed', times, every_hours: prn && S.every ? S.every : null,
                 days: !prn && S.dur === 'days' ? S.days : null };
   const back = S.back, isNew = !S.edit;
-  busy(btn, true);
+  const s0 = S, conf = startConfirm(btn);
   const q = S.edit ? sb.from('medicines').update(row).eq('id', S.edit.id)
                    : sb.from('medicines').insert({ family_id: st.family.id, baby_id: st.baby.id, start_date: localDate(Date.now()), ...row });
   const { data, error } = await q.select().single();
-  busy(btn, false);
-  if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
+  if (error) { stopConfirm(btn, conf); S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawMedForm(); }
   st.meds = [...st.meds.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
   avFam.remedio = true;
-  leaveMedForm(back, isNew ? null : data.id); toast('Salvo');
+  await conf?.done;
+  if (S === s0) leaveMedForm(back, isNew ? null : data.id);
+  toast('Salvo');
   // Quem programa o primeiro remédio de horário fica com o aviso ligado neste celular.
   if (medNotif && isNew && row.schedule !== 'prn' && lsGet(alertKey(st.baby.id)) == null) setMedAlert(true);
 }
@@ -3110,7 +3116,10 @@ async function medAction(a, v, btn) {
     if (a === 'editMed') return medForm(m, S.from);
     if (a === 'prnNow') {
       if (m && prnNext(m) && !S.prnAsk) { S.prnAsk = true; return drawMed(); }
-      S.prnAsk = false; return prnNow(S.id);
+      S.prnAsk = false;
+      const conf = startConfirm(btn);
+      if (!await prnNow(S.id, () => conf?.done)) stopConfirm(btn, conf);
+      return;
     }
     if (a === 'check') return giveDose(v, Date.now());
     if (a === 'skipDose') return giveDose(v, Date.now(), null, true);
@@ -3126,8 +3135,13 @@ async function medAction(a, v, btn) {
     else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
     else if (a === 'dm') S.dm = v;
     else if (a === 'give' || a === 'skip') {
-      const { id, note, by } = S, t = a === 'give' ? computeT() : Date.now();
-      leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), a === 'skip', a === 'give' ? by : null);
+      const s0 = S, { id, note, by } = S, t = a === 'give' ? computeT() : Date.now();
+      if (a === 'skip') { leaveDose(); return giveDose(id, t, note.trim().slice(0, 300), true, null); }
+      const conf = startConfirm(btn);
+      // Se a pessoa fechou a folha durante a animação, ela não volta.
+      const row = await giveDose(id, t, note.trim().slice(0, 300), false, by, async () => { await conf?.done; if (S === s0) leaveDose(); });
+      if (!row) stopConfirm(btn, conf);
+      return;
     }
     else if (a === 'unmark') {
       const d = doseById(S.id); leaveDose();
@@ -3319,14 +3333,15 @@ async function saveTask(btn) {
   const row = { name: k === 'care' ? name : null, schedule: sched, times, per_day: sched === 'count' ? S.per : null,
                 items: k === 'ointment' ? S.items : null };
   const r0 = S.r, ret = S.ret, added = S.items, from = S.from;
-  busy(btn, true);
+  const s0 = S, conf = startConfirm(btn);
   const q = r0 ? sb.from('routines').update(row).eq('id', r0.id)
                : sb.from('routines').insert({ family_id: st.family.id, baby_id: st.baby.id, kind: k, ...row });
   const { data, error } = await q.select().single();
-  busy(btn, false);
-  if (error) { S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTaskForm(); }
+  if (error) { stopConfirm(btn, conf); S.err = error.code === '23505' ? 'Esta tarefa já está na rotina.' : 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawTaskForm(); }
   st.routines = [...st.routines.filter(x => x.id !== data.id), data].sort((a, b) => a.created_at < b.created_at ? -1 : 1);
   avFam.tarefa = true;
+  await conf?.done;
+  if (S !== s0) { toast('Salvo'); return taskAlertsLater(); }
   // Veio da Fralda: volta para a mesma troca, com as pomadas novas já marcadas.
   if (ret) { S = ret; for (const n of added) S.oint.add(n); drawEntry(); toast('Salvo'); return taskAlertsLater(); }
   if (from === 'pane') closeSheet(); else if (r0) taskScreen(data, from); else tasksSheet();
@@ -3361,8 +3376,14 @@ async function taskAction(a, v, btn) {
   if (S.mode === 'taskpick') { if (a === 'tPick') taskForm(null, 'pick', v); return; }
   if (S.mode === 'task') {
     if (a === 'tEdit') return taskForm(S.r, S.from);
-    if (a === 'tTick') { await doTask(S.r); return S?.mode === 'task' && drawTask(); }
-    if (a === 'tMark') { const r = S.r, o = [...S.oint]; S.oint.clear(); await doTask(r, o); return S?.mode === 'task' && drawTask(); }
+    if (a === 'tTick' || a === 'tMark') {
+      // A caixinha de um horário (tTick sem .sgi) tem a animação dela; confirmSave só age no botão grande.
+      const s0 = S, o = a === 'tMark' ? [...S.oint] : undefined, conf = startConfirm(btn);
+      if (!await doTask(S.r, o)) return stopConfirm(btn, conf);
+      await conf?.done;
+      if (o) s0.oint.clear();
+      return S?.mode === 'task' && drawTask();
+    }
     if (a === 'tOint') { if (S.oint.has(v)) S.oint.delete(v); else S.oint.add(v); }
     return drawTask();
   }
