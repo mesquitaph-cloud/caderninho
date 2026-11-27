@@ -2273,6 +2273,7 @@ function drawSleepCompact() {
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
+// No registro novo a janela tem ainda os atalhos de −5, −10 e −30 min (Patrick, 26/11); na edição, não.
 function timeCells(cls = 'cell') {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
@@ -2281,7 +2282,7 @@ function timeCells(cls = 'cell') {
   const dt = tdlgDate(), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
   return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
     <div class="g2 tdate"><div class="cell tm datrow"><span class="v" id="tdate">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
-    ${dialHtml(INK.feed || 'feed')}
+    ${dialHtml(INK.feed || 'feed')}${S.edit ? '' : QUICK_EDIT}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
 // Edição da Mamadeira (item 88): mesma grade do peito. Linha 2: quantidade (− 140 ml +) | horário; os atalhos de 30 a 180 ml
