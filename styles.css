@@ -1431,6 +1431,10 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .g2.g3.bmilk .opt.big{display:grid;place-items:center;white-space:normal;overflow:visible;padding:8px 4px;min-height:56px;font-size:15px;line-height:20px;text-align:center;cursor:pointer}
 .bmilk input:checked+span{box-shadow:inset 0 0 0 1.5px currentColor;background:var(--kbg)}
 .bmilk input:focus-visible+span{outline:2px solid var(--focus);outline-offset:2px}
+/* Edição e relógio do Sono (item 88) */
+.tbox.t-sleep .tbtns .ok{background:var(--sleep);color:var(--sleep-ink)}
+.g2.k-sleep .mlcell .step button{color:var(--sleep-ink)}
+
 /* Gorro de Papai Noel em dezembro (item 107, util.js). Sem a classe "natal" no <html>, não existe. */
 .gorro{display:none}
 .natal .gorro{display:inline}
