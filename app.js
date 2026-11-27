@@ -2168,8 +2168,9 @@ function openEntry(k, edit, avulsa) {
         by: edit?.done_by || null, alone: !!edit?.self_settled,
         oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
-  // Sono (com o bebê acordado), Mamada, Fralda e Ordenha novos abrem a tela curta.
-  S.compact = (!edit && ((S.k === 'sleep' && S.sk === 'sleep') || S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
+  // Sono (novo e edição), Mamada, Fralda e Ordenha novos abrem a tela curta.
+  S.seg = !edit && S.sk === 'wake';
+  S.compact = S.k === 'sleep' || (!edit && (S.k === 'feed' || S.k === 'diaper' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -2231,13 +2232,13 @@ let dialDown = false;
 document.addEventListener('pointerdown', e => { const b = e.target.closest('#dialBox svg'); if (!b) return; dialDown = true; dialPoint(e); e.preventDefault(); });
 document.addEventListener('pointermove', e => { if (dialDown && $('dialBox')) dialPoint(e); });
 document.addEventListener('pointerup', () => { if (!dialDown) return; dialDown = false; if ($('dialBox') && (S.dm || 'h') === 'h') { S.dm = 'm'; $('dialBox').innerHTML = dialInner($('dialBox').dataset.ink); } });
-// Linha do horário das telas curtas. No Sono, na Fralda e na Ordenha, tocar na linha abre ali mesmo a data
+// Linha do horário das telas curtas. Na Fralda e na Ordenha, tocar na linha abre ali mesmo a data
 // (com o lápis, que abre o seletor do celular), o relógio redondo e os atalhos.
 function timeRow(k) {
-  // Item 99: na Mamada nova o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
+  // Item 99: na Mamada e no Sono novos o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
   // embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
-  if (k === 'feed') {
-    const tc = timeCells(' tbig span2');
+  if (k === 'feed' || k === 'sleep') {
+    const tc = timeCells(' tbig span2', k);
     return `<div class="g2 tblock">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(m => `<button class="cell qk" data-act="back" data-val="${m}">−${m} min</button>`).join('')}</div></div>` + tc.rest;
   }
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
@@ -2247,35 +2248,54 @@ function timeRow(k) {
   return `<div class="ofold"><div class="orow tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div>${dialHtml(INK[k] || k)}${QUICK_TIME}</div>`;
 }
 const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button></div>`;
+// Com um sono aberto, Dormiu | Acordou no alto (nasce em Acordou). Outras opções: no Dormiu, "pegou no sono
+// sozinha", colo e quem fez; no Acordou, só o colo, e some quando o sono pegou sozinho.
+const sleepSeg = () => `<div class="g2 k-sleep" style="background:none">${opt('Dormiu', S.sk === 'sleep', 'sk', 'sleep', 1)}${opt('Acordou', S.sk === 'wake', 'sk', 'wake', 1)}</div>`;
+const aloneLabel = () => { const t = aloneText(st.baby.sex); return t[0].toUpperCase() + t.slice(1); };
 function drawSleepCompact() {
-  let h = head('Sono') + orow('openO', 'Outras opções', S.openO);
-  if (S.openO) {
-    const t = aloneText(st.baby.sex);
-    h += `<div class="ofold"><div class="alone k-sleep" style="background:none">${opt(t[0].toUpperCase() + t.slice(1), S.alone, 'alone', 1)}</div>`;
-    if (lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
-      <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
-    if (canBy()) h += byHtml('sleep', 'Quem fez');
-    h += '</div>';
+  let h = head('Sono') + (S.seg ? sleepSeg() : '');
+  if (S.sk === 'sleep' || lapShown()) {
+    h += orow('openO', 'Outras opções', S.openO);
+    if (S.openO) {
+      h += '<div class="ofold">';
+      if (S.sk === 'sleep') h += `<div class="alone k-sleep" style="background:none">${opt(aloneLabel(), S.alone, 'alone', 1)}</div>`;
+      if (lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
+        <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
+      if (canBy()) h += byHtml('sleep', 'Quem fez');
+      h += '</div>';
+    }
   }
   h += timeRow('sleep');
   // "Dormiu agora" salva com a hora de agora; mexeu em algo, o botão vira "Salvar".
-  const changed = S.openO || S.openT || S.time !== S.t0 || S.base !== startOfDay(Date.now());
-  h += sfoot('sleep', changed ? 'Salvar' : 'Dormiu agora');
+  const changed = S.openO || S.time !== S.t0 || S.base !== startOfDay(Date.now());
+  h += sfoot('sleep', changed ? 'Salvar' : S.sk === 'sleep' ? 'Dormiu agora' : 'Acordou agora');
   openPanel(h);
+}
+// Edição do Sono (item 88): a grade da edição da Mamada. Dormiu | Acordou; minutos no colo | horário;
+// "pegou no sono sozinha" na linha toda; Quem fez.
+function drawSleepEditCompact() {
+  S.sfix = true;
+  const tc = timeCells('', 'sleep'), lap = lapShown();
+  let h = editHead() + `<div class="sbody">${sleepSeg()}`;
+  if (lap) h += `<div class="g2 k-sleep" style="background:none"><div class="lbl">No colo</div><div></div><div class="cell mlcell"><div class="step"><button data-act="lapstep" data-val="-5" aria-label="Menos 5 minutos no colo">−</button><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="–" aria-label="Minutos no colo (opcional)"><em>min</em><button data-act="lapstep" data-val="5" aria-label="Mais 5 minutos no colo">+</button></div></div>${tc.cell}</div>`;
+  else h += `<div class="g2">${tc.cell}</div>`;
+  if (S.sk === 'sleep') h += `<div class="g2 k-sleep" style="background:none">${opt(aloneLabel(), S.alone, 'alone', 1, 1).replace('opt big', 'opt big span2')}</div>`;
+  h += whoRows('sleep') + '</div>' + sfoot('sleep', 'Salvar') + tc.rest;
+  openPanel(h); fitWho();
 }
 // Edição da Mamada (item 88), no desenho da tela curta.
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
-function timeCells(more = '') {
+function timeCells(more = '', kind = 'feed') {
   const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   const cell = `<button class="cell tm${more}" data-act="openT" aria-haspopup="dialog" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   if (!S.openT) return { cell, rest: '' };
   const dt = tdlgDate(), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
-  return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox" role="dialog" aria-modal="true" aria-label="Horário">
+  return { cell, rest: `<div class="tdlg"><div class="tscrim" data-act="tcancel"></div><div class="tbox t-${kind}" role="dialog" aria-modal="true" aria-label="Horário">
     <div class="g2 tdate"><div class="cell tm datrow"><span class="v" id="tdate">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div></div>
-    ${dialHtml(INK.feed || 'feed')}
+    ${dialHtml(kind)}
     <div class="g2 tbtns"><button data-act="tcancel">Cancelar</button><button class="ok" data-act="tok">OK</button></div></div></div>` };
 }
 // Edição da Mamadeira (item 88): mesma grade do peito. Linha 2: quantidade (− 140 ml +) | horário; os atalhos de 30 a 180 ml
@@ -2283,10 +2303,13 @@ function timeCells(more = '') {
 // Item 96: Leite materno | Fórmula, uma em cada coluna. Nasce no padrão do bebê (Fórmula já vem marcada; "Leite + Fórmula" começa em Leite materno; sem padrão: nenhuma);
 // mamadeira antiga não tem tipo; tocar de novo desmarca.
 const milkRow = () => `<div class="g2 k-feed" style="background:none">${opt('Leite materno', S.milk === 'breast_milk', 'milk', 'breast_milk', 1)}${opt('Fórmula', S.milk === 'formula', 'milk', 'formula', 1)}</div>`;
-function mlEditRows(timeCell) {
+function whoRows(k) {
+  if (!canBy()) return '';
   const ms = [...st.members].sort((a, b) => (b.user_id === st.user.id) - (a.user_id === st.user.id));
-  const who = canBy() ? `<div class="g2 k-feed${ms.length <= 3 ? ' g3 who' : ''}" style="background:none"><div class="lbl span2">Quem fez</div>${ms.map(m => opt(m.user_id === st.user.id ? 'Você' : esc(firstName(m.user_id)), S.by === m.user_id, 'by', esc(m.user_id), 1)).join('')}</div>` : '';
-  return `<div class="g2"><div class="cell mlcell"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>${timeCell}</div>${who}`;
+  return `<div class="g2 k-${k}${ms.length <= 3 ? ' g3 who' : ''}" style="background:none"><div class="lbl span2">Quem fez</div>${ms.map(m => opt(m.user_id === st.user.id ? 'Você' : esc(firstName(m.user_id)), S.by === m.user_id, 'by', esc(m.user_id), 1)).join('')}</div>`;
+}
+function mlEditRows(timeCell) {
+  return `<div class="g2"><div class="cell mlcell"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div>${timeCell}</div>${whoRows('feed')}`;
 }
 // "Quem fez" numa linha só: nome comprido não vira reticências, a fonte da linha toda diminui (de 18 até 13 px, o mínimo legível) até caber no botão.
 function fitWho() {
@@ -2295,8 +2318,9 @@ function fitWho() {
   bs.forEach(b => { b.style.fontSize = px + 'px'; });
   while (px > 13 && over()) { px--; bs.forEach(b => { b.style.fontSize = px + 'px'; }); }
 }
+const editHead = () => `<div class="grab"></div><div class="shead"><h3>Editar</h3><div class="rt"><button class="tr" data-act="del" aria-label="Apagar registro">${TRASH}</button><button class="x" data-act="close" aria-label="Fechar">×</button></div></div>`;
 function drawFeedEditCompact() {
-  let h = `<div class="grab"></div><div class="shead"><h3>Editar</h3><div class="rt"><button class="tr" data-act="del" aria-label="Apagar registro">${TRASH}</button><button class="x" data-act="close" aria-label="Fechar">×</button></div></div>`;
+  let h = editHead();
   S.sfix = true;   // cabeçalho e Salvar fixos, só o meio rola
   // Grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; Esquerdo | Direito (minutos dentro do cartão); Total | horário.
   const tc = timeCells();
@@ -2380,7 +2404,7 @@ const diaperOint = id => { for (const e of st.entries.values()) if (e.kind === '
 
 function drawEntry() {
   const k = S.k, c = 'k-' + k;
-  if (S.compact && k === 'sleep' && S.sk === 'sleep') return drawSleepCompact();
+  if (S.compact && k === 'sleep') return S.edit ? drawSleepEditCompact() : drawSleepCompact();
   if (S.compact && S.edit && k === 'feed') return drawFeedEditCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
   if (S.compact && k === 'diaper') return drawDiaperCompact();
@@ -2403,7 +2427,6 @@ function drawEntry() {
     if (S.src === 'bottle') h += mlBlock(k);
   }
   if (k === 'pump') h += `<div><div class="lbl">Qual peito <small>(opcional, marque um ou os dois)</small></div><div class="seg ${c}" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div></div>` + mlBlock(k);
-  if (k === 'sleep') h += `<div class="seg ${c}" style="background:none">${opt('Dormiu', S.sk === 'sleep', 'sk', 'sleep', 1)}${opt('Acordou', S.sk === 'wake', 'sk', 'wake', 1)}</div>`;
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
   if (k === 'diaper' && S.poo) h += `<div>${pooHtml()}</div>`;
@@ -2436,11 +2459,6 @@ function drawEntry() {
   h += daySeg();
   if (S.other) h += `<div><div class="lbl">Dia</div><input class="field" type="date" id="dayIn" min="${localDate(addDays(startOfDay(Date.now()), -BACK_DAYS))}" max="${localDate(Date.now())}" value="${localDate(S.base)}"></div>`;
   h += `<div><div class="lbl">Horário</div>${clockHtml('timeIn', S.time, INK[k] || k)}${QUICK_TIME}</div>`;
-  // Sono: no Dormiu, se pegou no sono sozinho (marcado, o colo e o quem fez somem); quanto tempo foi no
-  // colo, opcional, no Dormiu ou no Acordou.
-  if (k === 'sleep' && S.sk === 'sleep') { const t = aloneText(st.baby.sex); h += `<div class="alone k-sleep" style="background:none">${opt(t[0].toUpperCase() + t.slice(1), S.alone, 'alone', 1)}</div>`; }
-  if (k === 'sleep' && lapShown()) h += `<div><div class="lbl">Quanto tempo no colo <small>(opcional)</small></div><div class="ml"><input id="durIn" inputmode="numeric" value="${esc(S.dmin)}" placeholder="20" aria-label="Minutos no colo"><em>min</em></div>
-    <div class="seg k-sleep" style="margin-top:8px;background:none">${LAP_CHIPS.map(m => `<button class="small${+S.dmin === m ? ' on' : ''}" data-act="dchip" data-val="${m}">${m === 60 ? '1 h' : m + ' min'}</button>`).join('')}</div></div>`;
   if (canBy()) h += byHtml(k, k === 'med' ? 'Quem deu' : 'Quem fez');
   // Sono, Mamada e Ordenha não têm Observação (07/11), nem ao editar; a que já existe continua salva.
   if (!['other', 'sleep', 'feed', 'pump'].includes(k)) h += noteField((k === 'symptom' && S.sym === 'outro') || (k === 'care' && S.ck === 'care') ? 'O que foi feito' : 'Observação (opcional)');
@@ -2519,7 +2537,7 @@ async function saveEntry(btn) {
   const ev = { kind: k === 'sleep' ? S.sk : k === 'symptom' && S.sym === 'vomito' ? 'vomit' : k === 'care' ? S.ck : k, t: computeT() };
   // Na tela curta, sem mexer no horário, vale o instante do toque (não o minuto cheio): assim um "Dormiu
   // agora" logo depois de um "Acordou" fica depois dele.
-  if (S.compact && S.time === S.t0 && S.base === startOfDay(Date.now())) ev.t = Date.now();
+  if (!S.edit && S.compact && S.time === S.t0 && S.base === startOfDay(Date.now())) ev.t = Date.now();
   // Só manda o colo quando há o que mandar (ou apagar): sem o 020, o resto do sono continua salvando.
   // No sono que pegou sozinho, o colo vai vazio.
   const lap = k === 'sleep' && lapShown() && S.dmin !== '';
@@ -2559,7 +2577,7 @@ async function saveEntry(btn) {
   busy(btn, true);
   if (S.edit) {
     const id = S.edit.id;
-    const conf0 = S.compact && k === 'feed' ? confirmSave(btn, CHECK) : null;
+    const conf0 = S.compact && (k === 'feed' || k === 'sleep') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
     if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); await conf0?.done; closeSheet(); toast(savedText(ev)); } else { conf0?.cancel(); busy(btn, false); }
     return;
   }
@@ -4284,10 +4302,11 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') { if (S.k === 'feed') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'openT') { if (S.k === 'feed' || S.k === 'sleep') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
   else if (a === 'tok') S.openT = false;
   else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
   else if (a === 'dm') S.dm = v;
+  else if (a === 'lapstep') { const n = Math.min(600, (+S.dmin || 0) + +v); S.dmin = n > 0 ? String(n) : ''; S.err = ''; }
   else if (a === 'ftTap' && S.compact && !ftGet()) { ftTap(v); return closeSheet(); }
   else if (a === 'ftTap') ftTap(v);
   else if (a === 'ftEnd') return ftFinish();
