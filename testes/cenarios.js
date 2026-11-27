@@ -538,3 +538,9 @@ if (CEN === 'janela-noite') {
   window.testeBvDesde = NOW + 1e9;   // sem cartões de boas-vindas
   window.testeNovDesde = 1;          // sem o aviso "Novidade" da janela
 }
+
+// ?data=2026-12-24 finge a data só para o gorro de dezembro (item 107); o resto segue no relógio de verdade.
+// Fica guardada na aba, como o cenário. ?data= (vazio) volta ao normal. Este arquivo não entra no app.
+const DATA = new URLSearchParams(location.search).get('data');
+if (DATA !== null) sessionStorage.setItem('teste-data', DATA);
+if (sessionStorage.getItem('teste-data')) window.testeHoje = Date.parse(sessionStorage.getItem('teste-data') + 'T12:00:00');
