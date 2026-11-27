@@ -2363,10 +2363,10 @@ function drawDiaperCompact() {
   openPanel(h);
 }
 // Edição da Fralda (item 88): a grade da edição da Mamada. Xixi | Cocô; com cocô, os quatro tamanhos numa linha e o
-// alerta marrom; Pomada; horário; Quem fez; Observação.
+// alerta marrom; Pomada; horário grande e centralizado, como no registro novo; Quem fez; Observação.
 function drawDiaperEditCompact() {
   S.sfix = true;
-  const tc = timeCells('', 'diaper');
+  const tc = timeCells(' tbig span2', 'diaper');
   let h = editHead() + `<div class="sbody"><div class="g2 k-diaper" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}`;
   if (S.poo) h += `<div class="span2 dpoo">${pooHtml()}</div>`;
   S.wig = false;
