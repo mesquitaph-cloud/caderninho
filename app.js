@@ -2168,9 +2168,9 @@ function openEntry(k, edit, avulsa) {
         by: edit?.done_by || null, alone: !!edit?.self_settled,
         oint: new Set(edit?.kind === 'ointment' ? edit.ointments : edit?.kind === 'diaper' ? diaperOint(edit.id)?.ointments || [] : []) };
   S.other = startOfDay(t) < addDays(startOfDay(Date.now()), -1);
-  // Sono e Fralda (novos e edição) e Mamada e Ordenha novas abrem a tela curta.
+  // Sono, Fralda e Ordenha (novos e edição) e Mamada nova abrem a tela curta.
   S.seg = !edit && S.sk === 'wake';
-  S.compact = S.k === 'sleep' || S.k === 'diaper' || (!edit && (S.k === 'feed' || S.k === 'pump')) || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
+  S.compact = S.k === 'sleep' || S.k === 'diaper' || S.k === 'pump' || (!edit && S.k === 'feed') || !!(edit && S.k === 'feed' && (edit.src === 'breast' || edit.src === 'bottle')); S.openO = false; S.openT = false; S.t0 = S.time;
   drawEntry();
 }
 // Cor do ajuste de horário para cada tipo de registro.
@@ -2232,20 +2232,11 @@ let dialDown = false;
 document.addEventListener('pointerdown', e => { const b = e.target.closest('#dialBox svg'); if (!b) return; dialDown = true; dialPoint(e); e.preventDefault(); });
 document.addEventListener('pointermove', e => { if (dialDown && $('dialBox')) dialPoint(e); });
 document.addEventListener('pointerup', () => { if (!dialDown) return; dialDown = false; if ($('dialBox') && (S.dm || 'h') === 'h') { S.dm = 'm'; $('dialBox').innerHTML = dialInner($('dialBox').dataset.ink); } });
-// Linha do horário das telas curtas. Na Ordenha, tocar na linha abre ali mesmo a data
-// (com o lápis, que abre o seletor do celular), o relógio redondo e os atalhos.
+// Linha do horário das telas curtas. Item 99: o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
+// embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
 function timeRow(k) {
-  // Item 99: na Mamada, no Sono e na Fralda novos o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
-  // embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
-  if (k !== 'pump') {
-    const tc = timeCells(' tbig span2', k);
-    return `<div class="g2 tblock">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(m => `<button class="cell qk" data-act="back" data-val="${m}">−${m} min</button>`).join('')}</div></div>` + tc.rest;
-  }
-  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
-  const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
-  if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
-  const dt = d0 >= addDays(t0, -1) ? dayTitle(d0) : shortDate(localDate(d0)), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
-  return `<div class="ofold"><div class="orow tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div>${dialHtml(INK[k] || k)}${QUICK_TIME}</div>`;
+  const tc = timeCells(' tbig span2', k);
+  return `<div class="g2 tblock">${tc.cell}<div class="g2 g3 span2">${[5, 10, 30].map(m => `<button class="cell qk" data-act="back" data-val="${m}">−${m} min</button>`).join('')}</div></div>` + tc.rest;
 }
 const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button></div>`;
 // Com um sono aberto, Dormiu | Acordou no alto (nasce em Acordou). Outras opções: no Dormiu, "pegou no sono
@@ -2385,6 +2376,16 @@ function drawPumpCompact() {
   h += timeRow('pump') + sfoot('pump', 'Salvar');
   openPanel(h);
 }
+// Edição da Ordenha (item 88): a grade da edição da Mamada. Esquerdo | Direito; a quantidade na linha toda (os atalhos
+// de 30 a 180 ml saem da edição, como na Mamadeira); horário grande e centralizado, como no registro novo.
+function drawPumpEditCompact() {
+  S.sfix = true;
+  const tc = timeCells(' tbig span2', 'pump');
+  let h = editHead() + `<div class="sbody"><div class="g2 k-pump" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div>`;
+  h += `<div class="g2 k-pump" style="background:none"><div class="cell mlcell span2"><div class="step"><button data-act="mlstep" data-val="-10" aria-label="Menos 10 ml">−</button><input id="mlIn" inputmode="numeric" value="${esc(S.ml)}" placeholder="0" aria-label="Mililitros"><em>ml</em><button data-act="mlstep" data-val="10" aria-label="Mais 10 ml">+</button></div></div></div>`;
+  h += `<div class="g2">${tc.cell}</div></div>` + sfoot('pump', 'Salvar') + tc.rest;
+  openPanel(h);
+}
 const noteField = ph => `<input class="field" id="noteIn" maxlength="300" placeholder="${ph}" value="${esc(S.note)}">`;
 // O tamanho do cocô e, embaixo, o alerta marrom, para quando vazou da fralda.
 const pooHtml = () => `<div class="psize">${Object.entries(POO_SIZE).map(([id, n]) => opt(n[0].toUpperCase() + n.slice(1), S.psize === id, 'psize', id)).join('')}</div>
@@ -2420,7 +2421,7 @@ function drawEntry() {
   if (S.compact && S.edit && k === 'feed') return drawFeedEditCompact();
   if (S.compact && k === 'feed' && !S.manual && !ftGet()) return drawFeedCompact();
   if (S.compact && k === 'diaper') return S.edit ? drawDiaperEditCompact() : drawDiaperCompact();
-  if (S.compact && k === 'pump') return drawPumpCompact();
+  if (S.compact && k === 'pump') return S.edit ? drawPumpEditCompact() : drawPumpCompact();
   let h = head(S.edit ? (k === 'symptom' ? 'Editar sintoma' : k === 'care' ? 'Editar tarefa' : 'Editar ' + TITLE[k].toLowerCase()) : TITLE[k]);
   if (k === 'feed') {
     h += `<div><div class="lbl">Como foi</div><div class="seg ${c}" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div></div>`;
@@ -2438,7 +2439,6 @@ function drawEntry() {
     }
     if (S.src === 'bottle') h += mlBlock(k);
   }
-  if (k === 'pump') h += `<div><div class="lbl">Qual peito <small>(opcional, marque um ou os dois)</small></div><div class="seg ${c}" style="background:none">${opt('Esquerdo', S.l, 'pick', 'l', 1)}${opt('Direito', S.r, 'pick', 'r', 1)}</div></div>` + mlBlock(k);
   if (k === 'diaper') h += `<div><div class="lbl">Marque o que tinha</div><div class="seg ${c}" style="background:none">${opt('Xixi', S.pee, 'pee', 1, 1)}${opt('Cocô', S.poo, 'poo', 1, 1)}</div></div>`;
   // Com cocô: o tamanho, opcional, e embaixo o alerta marrom, para quando vazou da fralda.
   if (k === 'diaper' && S.poo) h += `<div>${pooHtml()}</div>`;
@@ -2590,7 +2590,7 @@ async function saveEntry(btn) {
   busy(btn, true);
   if (S.edit) {
     const id = S.edit.id;
-    const conf0 = S.compact && (k === 'feed' || k === 'sleep' || k === 'diaper') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
+    const conf0 = S.compact && (k === 'feed' || k === 'sleep' || k === 'diaper' || k === 'pump') ? confirmSave(btn, k === 'sleep' ? ICON.sleep : CHECK) : null;
     if (await updateEntry(id, ev)) { if (oint) await setDiaperOint(id, ev, oint); await conf0?.done; closeSheet(); toast(savedText(ev)); } else { conf0?.cancel(); busy(btn, false); }
     return;
   }
@@ -4315,7 +4315,7 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') { if (S.k !== 'pump') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'openT') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; S.dm = 'h'; }
   else if (a === 'tok') S.openT = false;
   else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
   else if (a === 'dm') S.dm = v;

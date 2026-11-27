@@ -1376,11 +1376,6 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .sheet.sfix .shead{border-bottom:1px solid var(--line);margin:0 -16px;padding:2px calc(var(--sp-2)*2) 10px;flex:none}
 .sheet.sfix .sbody{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:var(--sp-3);padding-top:var(--sp-3);padding-bottom:var(--sp-3)}
 .sheet.sfix .sfoot{position:static;flex:none}
-/* A linha do horário e a da data têm a mesma fonte e altura em hoje, ontem e datas antigas, com o lápis sempre à direita */
-.orow.tm{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 14px;text-align:left}
-.orow.tm .v{white-space:nowrap;min-width:0}
-.orow.tm .pen{margin-left:0;flex:none}
-
 /* Grade de 2 colunas com 4 linhas internas. Margem 16 (--sp-2), vão entre colunas 8 (--sp-1), recuo interno P = 16 (--sp-2) a partir da borda de
    TODO cartão (o contorno de 1,5 px é um inset box-shadow, não ocupa espaço). Vertical: 8 entre linhas do mesmo grupo, 24 (--sp-3) entre grupos, e o recuo vertical interno também é P. */
 .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-1)}
@@ -1421,6 +1416,11 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .g2 .cell.mlcell{padding:var(--sp-2)}
 .g2 .mlcell .step{opacity:1}
 .g2 .mlcell .step button{background:var(--surface);color:var(--feed-ink)}
+/* Na linha toda (o horário grande ficou com a linha de baixo): − e + nas linhas internas, número e unidade juntos no centro */
+.g2 .mlcell.span2 .step{justify-content:center}
+.g2 .mlcell.span2 .step input{flex:0 0 4ch}
+.g2 .mlcell.span2 .step button:first-child{margin-right:auto}
+.g2 .mlcell.span2 .step button:last-child{margin-left:auto}
 /* Edição da Mamadeira: "Quem fez" com até 3 pessoas numa linha só, larguras iguais e vão 8, exceção à grade de 2 colunas; nome comprido: a fonte diminui (fitWho em app.js), reticências só se nem 13 px couber */
 .g2.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g2.g3 .opt.big{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1459,3 +1459,6 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .sbody .oline{box-sizing:border-box;min-height:48px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);padding:8px var(--sp-2)}
 .sbody .oline.on{box-shadow:inset 0 0 0 1.5px var(--c-care)}
 .dnote .field{box-sizing:border-box;min-height:56px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:16px;padding:10px var(--sp-2)}
+/* Edição e relógio da Ordenha (item 88) */
+.tbox.t-pump .tbtns .ok{background:var(--pump);color:var(--pump-ink)}
+.g2.k-pump .mlcell .step button{color:var(--pump-ink)}
