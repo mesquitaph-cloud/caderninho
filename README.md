@@ -9,6 +9,17 @@ linha do tempo compartilhada. App do iPhone (App Store) e do Android (teste fech
 - **Login:** e-mail + código de 6 dígitos (modelos "Confirm sign up" e "Magic link" usam `{{ .Token }}`).
   Entrar com Google (site e app) e com a Apple (só no app do iPhone), ligados em `config.js`.
 
+## Aba Família: um assunto, um lugar (27/11, itens 102 e 31, no código, falta publicar)
+
+- Blocos: Sobre o bebê, Rotina de sono, Remédios e cuidados, Consulta com o pediatra e Nosso time (árvore da
+  família). Prévia v03 aprovada pelo Patrick: https://claude.ai/artifact/UVrqXdXucV38oAd1Dpc7nh
+- Bebê novo começa com a noite das 19h às 6h; quem já tem horário salvo continua com ele (`noite.js`).
+- "Lembrar de começar a rotina da noite?" vale para a família: **rodar `supabase/030_cartao_da_noite_da_familia.sql`
+  antes de publicar.**
+- Como mama e já come outros alimentos mudam em Editar bebê. Dúvidas: a resposta se escreve embaixo de cada uma;
+  respondidas vão para "Orientações do pediatra".
+- Falta: os marcos ficaram sem entrada no app (item 89); os avisos que dizem "Família > Sono" precisam de texto novo.
+
 ## Próximos passos (atualizado em 06/11)
 
 Tudo o que falta, juntado das seções abaixo (os detalhes continuam lá). O app foi enviado para a revisão

@@ -1,6 +1,6 @@
 // A noite de cada bebê (item 65; decidido com o Patrick em 13/11; prévias aprovadas:
 // https://claude.ai/artifact/8qdYxEkgAWJ5LdszNH7bMZ e https://claude.ai/artifact/MLAYnM3BS8u4eMxnp35AyL).
-// A família diz o que é a noite: começo (16h a 23h) e fim (4h a 9h), de hora em hora; padrão 18h às 6h.
+// A família diz o que é a noite: começo (16h a 23h) e fim (4h a 9h), de hora em hora; bebê novo começa em 19h às 6h.
 //   Do começo da noite em diante, todo sono é sono da noite. Um sono que começa antes e passa do começo
 //   conta inteiro como noite. Os outros, entre o fim de uma noite e o começo da outra, são sonecas.
 //   Despertar: acordar e voltar a dormir durante a noite, depois do primeiro sono dela.
@@ -11,7 +11,10 @@
 // do bebê desde a 2ª etapa do item 60 (janela.js, 16/11).
 import { HOUR, addDays, localDate } from './util.js';
 
-export const NIGHT_START = 18, NIGHT_END = 6;
+// NIGHT_START é a reserva de quem não tem horário nenhum salvo, e o limite da regra antiga: continua 18h.
+// NEW_NIGHT_START é o horário que o app grava num bebê novo (item 102, 27/11). Quem já tem horário salvo
+// continua com ele.
+export const NIGHT_START = 18, NEW_NIGHT_START = 19, NIGHT_END = 6;
 export const STARTS = [16, 17, 18, 19, 20, 21, 22, 23], ENDS = [4, 5, 6, 7, 8, 9];
 export const ONB_STARTS = [18, 19, 20, 21, 22];   // a pergunta do onboarding (só o começo)
 const okItem = x => x && /^\d{4}-\d{2}-\d{2}$/.test(x.from) && STARTS.includes(x.start) && ENDS.includes(x.end);

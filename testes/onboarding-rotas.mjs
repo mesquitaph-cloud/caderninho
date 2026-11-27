@@ -41,7 +41,8 @@ async function caso(nome, fn) {
 const vis = (page, id) => page.locator('#' + id).isVisible();
 const esperaTela = (page, id) => page.locator('#' + id).waitFor({ state: 'visible', timeout: 6000 });
 const passo = page => page.locator('#scrOnb').getAttribute('data-step');
-const escritas = page => page.evaluate(() => window.escritas);
+// Sem o "abriu o app" (item 93, rpc:log_open), que sai em toda abertura com login e não é dado da família.
+const escritas = page => page.evaluate(() => window.escritas.filter(x => x !== 'rpc:log_open'));
 const abrir = (page, cen, q = '') => page.goto(BASE + '?cenario=' + cen + q);
 const ls = (page, k) => page.evaluate(k => localStorage.getItem(k), k);
 
