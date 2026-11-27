@@ -1447,3 +1447,15 @@ svg.trc .trsel{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2
 .natal .zz{transform:translate(13px,-5px)}
 /* Puxar para atualizar: o gorro também é só traço, nas cores do desenho */
 .ptr .gorro path{fill:none}
+/* Edição e relógio da Fralda (item 88) */
+.tbox.t-diaper .tbtns .ok{background:var(--diaper);color:var(--diaper-ink)}
+/* Tamanho do cocô: os quatro numa linha, nas bordas e no centro da grade. Alerta marrom e pomada com o texto nas linhas internas (16 da borda). */
+.dpoo .psize{gap:var(--sp-1)}
+.dpoo .psize .opt{border:0;box-shadow:inset 0 0 0 1.5px var(--line);min-height:48px}
+.dpoo .psize .opt.on{box-shadow:inset 0 0 0 1.5px currentColor}
+.dpoo .brown{margin-top:var(--sp-1);box-sizing:border-box}
+.sbody .olist{gap:var(--sp-1)}
+.sbody .lbl{padding-left:var(--sp-2)}
+.sbody .oline{box-sizing:border-box;min-height:48px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);padding:8px var(--sp-2)}
+.sbody .oline.on{box-shadow:inset 0 0 0 1.5px var(--c-care)}
+.dnote .field{box-sizing:border-box;min-height:56px;border:0;box-shadow:inset 0 0 0 1.5px var(--line);border-radius:16px;padding:10px var(--sp-2)}
