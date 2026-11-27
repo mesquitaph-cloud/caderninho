@@ -2,7 +2,7 @@
 // de antes da mudança e o histórico dos horários. Sem navegador nem banco: `node --no-warnings testes/noite.mjs`.
 // Sai com erro (código 1) se algum caso falhar.
 import { nights } from '../noites.js';
-import { nightRule, napsOf, nightSave, nightNow, deName } from '../noite.js';
+import { nightRule, napsOf, nightSave, nightNow, deName, NEW_NIGHT_START, NIGHT_END } from '../noite.js';
 import { periodStats } from '../report.js';
 
 import { localDate, addDays, startOfDay, HOUR, MIN } from '../util.js';
@@ -82,4 +82,12 @@ ok(ps.napDay === HOUR && ps.napSpan === 'das 6h às 20h', 'resumo: sono de dia '
   const e = [[H(d17, 13), H(d17, 14, 30)], [H(d17, 21), H(d18, 6)]].flatMap(([x, y]) => [{ kind: 'sleep', t: x }, { kind: 'wake', t: y }]);
   const r = dayRows([d17, d18], e, H(d18, 8), rule);
   ok(r[0].dayNap === 1.5 * HOUR && r[0].dayNight === 3 * HOUR && r[1].dayNight === 6 * HOUR && r[1].dayNap === 0, 'Sono: parte de dia e parte da noite dentro do dia de calendário');
+}
+
+// Noite padrão (item 102): bebê novo ganha 19h às 6h; quem tem horário salvo continua; sem nada salvo, a reserva é 18h.
+{
+  const novo = { night: nightSave(null, NEW_NIGHT_START, NIGHT_END, Date.now()) };
+  ok(nightNow(novo).start === 19 && nightNow(novo).end === 6, 'bebê novo: 19h às 6h');
+  ok(nightNow({ night: [{ from: '2026-11-14', start: 18, end: 6 }] }).start === 18, 'quem já tem 18h salvo continua com 18h');
+  ok(nightNow({}).start === 18, 'sem horário salvo: reserva de 18h');
 }

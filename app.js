@@ -14,7 +14,7 @@ import { avisoMarco, avisoEscolher, avisoHtml, avisoKey } from './aviso83.js';
 import { convite35Key, convite35Ler, convite35Mostrar, convite35Fechar, convite35Encerrado, convite35Html } from './convite35.js';
 import { monthsOld, wakeRef, winText, rulerHtml, winNotice, forms, WAKE_MAX, babyWin, nearNight, nightOf, counterHtml, asleepNearNight, NAP_ASLEEP_TEXT,
          novTitle, novText, NOV_ASK, swapTitle, swapText, INFO_TITLE, infoHtml } from './janela.js';
-import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, isDefault, deName, nightTitle } from './noite.js';
+import { OLD_RULE, STARTS, ENDS, ONB_STARTS, NEW_NIGHT_START, NIGHT_END, nightRule, nightNow, nightSave, nightText, deName, nightTitle } from './noite.js';
 import { ONB_KEY, LOGIN_FLAG, NAP_LENGTHS, blank, onbSave, onbLoad, onbClear, hasAnswers, entryRoute, onbSteps, resumeStep, nextStep, prevStep, skipSleep,
          clk, sleepStart, wakeStart, windowInfo, minutosText, napWarnText } from './onboarding.js';
 import { reportStats, reportHtml, reportPlain, periodShort, pdfName } from './pediatra.js';
@@ -680,8 +680,8 @@ async function onbCreate() {
   }
   // A duração da última soneca fica só neste aparelho (ainda não entra na conta da janela).
   if (bid && O.sleep === 'wake' && O.nap) lsSet('cad-ultsoneca-' + bid, O.nap);
-  // O começo da noite do bebê (sem resposta de sono, fica 18h às 6h) e o aviso da janela da pessoa (024).
-  if (bid && O.sleep && O.night !== NIGHT_START) await sb.from('babies').update({ night: nightSave(null, O.night, NIGHT_END, now) }).eq('id', bid);
+  // O começo da noite do bebê (sem resposta de sono, 19h às 6h: o banco cria com 18h) e o aviso da janela da pessoa (024).
+  if (bid) await sb.from('babies').update({ night: nightSave(null, O.sleep ? O.night : NEW_NIGHT_START, NIGHT_END, now) }).eq('id', bid);
   if (O.sleep === 'wake' && O.alert !== null) await setWinAlert(O.alert, true);
   onbClear(); O = null;
   await loadFamilies(); openFamily(fid);
@@ -702,7 +702,7 @@ async function openFamily(fid) {
     // "Acompanhar o sono" (025): sem linha da família, ou sem o 025, fica ligado.
     sb.from('family_settings').select('*').eq('family_id', fid).maybeSingle(),
   ]);
-  st.babies = babies || []; st.members = mem || []; st.track = fset?.sleep_track !== false;
+  st.babies = babies || []; st.members = mem || []; st.track = fset?.sleep_track !== false; st.nightCard = fset?.night_card !== false;
   await loadNames(st.members.map(m => m.user_id));
   const savedBaby = lsGet('cad-baby-' + fid);
   st.baby = st.babies.find(b => b.id === savedBaby) || st.babies[0] || null;
@@ -1171,6 +1171,12 @@ addEventListener('resize', stickLast);
 // só liga e desliga a janela de sono (a faixa no cartão e o aviso no celular).
 const ruleMemo = new WeakMap();
 const ruleOf = b => { if (!b) return OLD_RULE; let r = ruleMemo.get(b); if (!r) ruleMemo.set(b, r = nightRule(b)); return r; };
+// "Lembrar de começar a rotina da noite?" (item 102): o cartão da rotina da noite, para a família toda (030).
+async function setNightCard(on) {
+  st.nightCard = on; render();
+  const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, night_card: on });
+  if (error) { st.nightCard = !on; render(); toast(errMsg(error)); }
+}
 async function setTrack(on) {
   st.track = on; render(); winSyncLater();
   const { error } = await sb.from('family_settings').upsert({ family_id: st.family.id, sleep_track: on });
@@ -1205,7 +1211,7 @@ function drawNight() {
     + `<div class="nbox">${nightRuler({ start, end })}</div>`
     + '<p class="dim">Vale para todos da família, a partir de hoje. Os dias anteriores ficam como estavam.</p>'
     + '<div class="err" id="nErr" hidden></div><button class="save" data-act="saveNight">Salvar</button>'
-    + `<button class="link" data-act="nightReset">Voltar para ${NIGHT_START}h às ${NIGHT_END}h</button>`;
+    + `<button class="link" data-act="nightReset">Voltar para ${NEW_NIGHT_START}h às ${NIGHT_END}h</button>`;
   openPanel(h);
 }
 async function saveNight(btn) {
@@ -1219,7 +1225,7 @@ async function saveNight(btn) {
 }
 function nightAction(a, b) {
   if (a === 'nInfo') { S.info = !S.info; return drawNight(); }
-  if (a === 'nightReset') { S.start = NIGHT_START; S.end = NIGHT_END; return drawNight(); }
+  if (a === 'nightReset') { S.start = NEW_NIGHT_START; S.end = NIGHT_END; return drawNight(); }
   if (a === 'saveNight') return saveNight(b);
 }
 $('sheetIn').addEventListener('change', e => {
@@ -1406,13 +1412,11 @@ $('paneHome').addEventListener('click', e => {
 });
 
 /* ---------- Cartão da rotina da noite (item 82, prévia aprovada em 22/11) ---------- */
-// Na tela Hoje, a partir de 1 h antes de a noite do bebê começar (noite.js; padrão 18h, então 17h) até o começo
-// dela, e só com o bebê acordado (item 95). O × dispensa só por hoje; "Cartão da rotina da noite" no Perfil desliga de vez. As 4 ações são tarefas
+// Na tela Hoje, a partir de 1 h antes de a noite do bebê começar (noite.js) até o começo
+// dela, e só com o bebê acordado (item 95). O × dispensa só por hoje, neste celular (cad-noite82-dia); a família liga e desliga em "Lembrar de começar a rotina da noite?" (item 102, supabase/030). As 4 ações são tarefas
 // normais (item 29): marcar grava o mesmo registro da tarefa avulsa (Banho = 'bath'; as outras, 'care' com o
-// nome) e aparece no Diário. Quem já tem a tarefa Banho na rotina a vê marcada, porque é o mesmo registro. Os dois
-// ajustes ficam só neste celular (cad-noite82-off, cad-noite82-dia). Sem SQL.
-const N82_OFF = 'cad-noite82-off', N82_DIA = 'cad-noite82-dia';
-const noite82On = () => lsGet(N82_OFF) !== '1';
+// nome) e aparece no Diário. Quem já tem a tarefa Banho na rotina a vê marcada, porque é o mesmo registro.
+const N82_DIA = 'cad-noite82-dia';
 const N82 = [['Com o bebê', [['bath', 'Banho'], ['care', 'Levar o bebê para um ambiente com menos estímulos']]],
              ['Para a casa', [['care', 'Diminuir as luzes'], ['care', 'Fazer menos barulho']]]];
 const n82Done = (k, nome) => { const d0 = startOfDay(Date.now());
@@ -1420,7 +1424,7 @@ const n82Done = (k, nome) => { const d0 = startOfDay(Date.now());
 let n82Busy = false;
 function noite82Card() {
   const b = st.baby, now = Date.now();
-  if (!b || st.track === false || !noite82On() || lsGet(N82_DIA) === localDate(now)) return '';
+  if (!b || st.nightCard === false || lsGet(N82_DIA) === localDate(now)) return '';
   const ini = startOfDay(now) + nightNow(b).start * HOUR;
   if (now < ini - HOUR || now >= ini) return '';
   // Item 95 (25/11): com o bebê dormindo, o cartão espera ele acordar, para a tela não ficar poluída.
@@ -1888,16 +1892,18 @@ function openPanel(html) {
   const from = sheetFrom, was = !$('sheet').hidden; sheetFrom = null;
   $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
   // A tela de uma tarefa ocupa a tela inteira (prévia de 08/11).
-  $('sheet').classList.toggle('full', S?.mode === 'task');
+  $('sheet').classList.toggle('full', ['task', 'duv', 'orient'].includes(S?.mode));
   $('sheet').classList.toggle('sfix', !!S?.sfix);
   if (was) return;
   sheetK = from ? from.home : null; stripAtOpen = stripK;
   if (from && !reduceMotion()) growSheet(from);
 }
 function closeSheet() {
+  if (S?.mode === 'duv' && document.activeElement?.dataset?.ans) document.activeElement.blur();
   const sh = $('sheet'), k = sheetK, anim = !sh.hidden && k && !reduceMotion() && !$('dock').hidden;
   const r = anim ? sh.getBoundingClientRect() : null, surf = anim ? getComputedStyle(sh).backgroundColor : '';
   sheetK = null; closing = !!anim;
+  medOnly = null;
   S = null; $('scrim').hidden = true; sh.hidden = true; sh.classList.remove('full'); render(); closing = false;
   // A faixa do sono ou da mamada que começou com a tela aberta esperou escondida: a tela encolhe até
   // ela (quando é o mesmo registro) ou ela sai do botão como antes.
@@ -2806,14 +2812,18 @@ function medSub() {
 }
 
 // Remédios e horários: as doses de hoje, cada uma com caixinha, e os remédios programados.
+// Aberto por uma linha da Família, mostra só aquele remédio, com as doses de hoje (item 102). Fechar a folha volta ao normal.
+let medOnly = null;
 function medsSheet() { S = { mode: 'meds' }; drawMeds(); $('sheet').scrollTop = 0; }
 function drawMeds() {
-  const ds = todayDoses(), t0 = startOfDay(Date.now()), meds = st.meds.filter(m => medEnd(m) > t0);
+  const t0 = startOfDay(Date.now());
+  if (medOnly && !st.meds.some(m => m.id === medOnly && medEnd(m) > t0)) medOnly = null;
+  const ds = todayDoses().filter(d => !medOnly || d.m.id === medOnly), meds = st.meds.filter(m => medEnd(m) > t0 && (!medOnly || m.id === medOnly));
   let h = `<div class="grab"></div><div class="shead"><h3>Remédios e horários<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
-  if (medNotif) h += `<button class="li tg" role="switch" aria-checked="${alertOn()}" data-act="medAlert"><span>Ativar notificações de remédios</span><span class="sw${alertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+  if (medNotif && !medOnly) h += `<button class="li tg" role="switch" aria-checked="${alertOn()}" data-act="medAlert"><span>Ativar notificações de remédios</span><span class="sw${alertOn() ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
   if (ds.length) h += `<div class="sec"><h4>Doses de hoje</h4><div class="doses">${ds.map(d => doseRow(d, { all: true })).join('')}</div></div>`;
   h += meds.length
-    ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div><button class="ghost" data-act="newMed">+ Programar outro remédio</button>`
+    ? `<div class="sec"><h4>Remédios programados</h4><div class="mlist">${meds.map(medCard).join('')}</div></div>${medOnly ? '' : '<button class="ghost" data-act="newMed">+ Programar outro remédio</button>'}`
     : '<ol class="steps"><li><span class="n">1</span><span>Anote o remédio, quanto dar e quando: em horários fixos, de tantas em tantas horas ou só quando precisar.</span></li>'
       + '<li><span class="n">2</span><span>Uma hora antes, a dose aparece no alto do Diário. Quem der marca, e todos da família veem.</span></li>'
       // O aviso na hora só existe no app do celular, não no site.
@@ -3473,52 +3483,24 @@ function drawTrendsPane() {
   if (t.tab === 'peso' && st.growthOk) bindZoom();
 }
 /* ---------- dúvidas para a consulta ---------- */
-// A família anota a dúvida quando lembra; na consulta, marca "perguntei" e, se quiser, o que o
-// pediatra disse. As que faltam perguntar vão no relatório. O Soneca só guarda.
+// A família anota a dúvida quando lembra e escreve a resposta embaixo dela (itens 31 e 102). Com resposta, a
+// dúvida vai para "Orientações do pediatra". As que faltam vão no relatório. O Soneca só guarda.
 const Q_MAX = 300, A_MAX = 500;
 const byCreated = (a, b) => a.created_at < b.created_at ? -1 : 1;
 const openQuestions = () => st.questions.filter(q => !q.asked_on).sort(byCreated);
-const askedQuestions = () => st.questions.filter(q => q.asked_on).sort((a, b) => a.asked_on !== b.asked_on ? (a.asked_on < b.asked_on ? 1 : -1) : -byCreated(a, b));
 const putQuestion = q => { st.questions = [...st.questions.filter(x => x.id !== q.id), q]; };
-function questionsHtml() {
-  let h = '<div class="sec" id="babyQuestions"><h4>Dúvidas para a consulta</h4>';
-  if (!st.questionsOk) return h + '<div class="soft">Não foi possível carregar as dúvidas. Confira a conexão e abra de novo.</div></div>';
-  const open = openQuestions(), asked = askedQuestions();
-  h += open.length
-    ? `<div class="qs">${open.map(q => `<div class="qi"><button class="ck" data-act="askQ" data-val="${esc(q.id)}" aria-label="Marcar como perguntada: ${esc(q.body)}">${CHECK}</button><button class="qt" data-act="editQ" data-val="${esc(q.id)}"><b>${esc(q.body)}</b><small>${esc(shortDate(localDate(Date.parse(q.created_at))))}</small></button></div>`).join('')}</div>`
-    : `<div class="soft">Anote o que quiser perguntar na próxima consulta de ${esc(st.baby.name)}. As dúvidas vão junto no relatório para pediatra.</div>`;
-  h += '<button class="ghost" data-act="newQ">+ Anotar dúvida</button>';
-  if (asked.length) h += `<button class="li tg" data-act="answers"><span>Respostas do pediatra <small>${asked.length}</small></span><span class="go">Ver</span></button>`;
-  return h + '</div>';
-}
-async function setAsked(id, asked_on) {
-  const { data, error } = await sb.from('questions').update({ asked_on }).eq('id', id).select().single();
-  if (error) { toast('Não foi possível salvar. Confira a conexão.'); return null; }
-  putQuestion(data); render(); if (S?.mode === 'consult') consultSheet(); return data;
-}
-async function askQuestion(id) {
-  if (await setAsked(id, localDate(Date.now()))) toast('Foi para Respostas do pediatra', () => setAsked(id, null));
-}
 function questionForm(q, back) {
-  S = { mode: 'question', edit: q || null, back: back || null, body: q?.body || '', asked: q?.asked_on || null, answer: q?.answer || '', err: '' };
+  S = { mode: 'question', edit: q, back: back || null, body: q.body, answer: q.answer || '', err: '' };
   drawQuestion(); $('sheet').scrollTop = 0;
 }
 function drawQuestion() {
   const q = S.edit;
-  let h = head(q ? 'Dúvida' : 'Anotar dúvida')
-    + `<p class="dsub">${q ? 'Anotada em ' + esc(shortDate(localDate(Date.parse(q.created_at)))) : 'Para a próxima consulta de ' + esc(st.baby.name)}</p>`;
-  h += `<div><label class="lbl" for="qBody">A dúvida</label><textarea class="field" id="qBody" maxlength="${Q_MAX}" placeholder="Ex.: Ela pode tomar sol pela janela?">${esc(S.body)}</textarea>
+  let h = head('Dúvida') + `<p class="dsub">Anotada em ${esc(shortDate(localDate(Date.parse(q.created_at))))}</p>`;
+  h += `<div><label class="lbl" for="qBody">A dúvida</label><textarea class="field" id="qBody" maxlength="${Q_MAX}">${esc(S.body)}</textarea>
     <div class="fbmeta"><span></span><span id="qCount">${S.body.length} de ${Q_MAX}</span></div></div>`;
-  if (!q) h += '<p class="dim">Aparece para todos da família e vai no relatório para pediatra até alguém marcar que perguntou.</p>';
-  else {
-    h += S.asked
-      ? `<button class="given q" data-act="qAsked"><span class="ck">${CHECK}</span><span>Perguntei em ${esc(shortDate(S.asked))}<small>tocar para desmarcar</small></span></button>`
-      : `<button class="given q off" data-act="qAsked"><span class="ck"></span><span>Ainda não perguntei<small>tocar para marcar como perguntada</small></span></button>`;
-    if (S.asked) h += `<div><label class="lbl" for="qAnswer">O que o pediatra disse <small>(se quiser)</small></label><textarea class="field short" id="qAnswer" maxlength="${A_MAX}" placeholder="Com as palavras da família">${esc(S.answer)}</textarea></div>`;
-  }
+  h += `<div><label class="lbl" for="qAnswer">O que o pediatra disse <small>(se quiser)</small></label><textarea class="field short" id="qAnswer" maxlength="${A_MAX}" placeholder="Com as palavras da família">${esc(S.answer)}</textarea></div>`;
   if (S.err) h += `<div class="err">${esc(S.err)}</div>`;
-  h += '<button class="save" data-act="saveQ">Salvar</button>';
-  if (q) h += '<button class="del" data-act="delQ">Apagar dúvida</button>';
+  h += '<button class="save" data-act="saveQ">Salvar</button><button class="del" data-act="delQ">Apagar dúvida</button>';
   const top = $('sheet').scrollTop; openPanel(h); $('sheet').scrollTop = top;
 }
 function questionInput(el) {
@@ -3530,10 +3512,9 @@ async function saveQuestion(btn) {
   const body = S.body.trim();
   if (!body) { S.err = 'Escreva a dúvida.'; return drawQuestion(); }
   busy(btn, true);
-  const q = S.edit
-    ? sb.from('questions').update({ body, asked_on: S.asked, answer: S.answer.trim() || null }).eq('id', S.edit.id)
-    : sb.from('questions').insert({ family_id: st.family.id, baby_id: st.baby.id, body });
-  const { data, error } = await q.select().single();
+  // Com resposta, vale a data em que ela foi escrita; sem resposta, a dúvida volta para as que faltam.
+  const answer = S.answer.trim() || null, asked_on = answer ? S.edit.asked_on || localDate(Date.now()) : S.edit.answer ? null : S.edit.asked_on;
+  const { data, error } = await sb.from('questions').update({ body, asked_on, answer }).eq('id', S.edit.id).select().single();
   busy(btn, false);
   if (error) { S.err = 'Não foi possível salvar. Confira a conexão e tente de novo.'; return drawQuestion(); }
   putQuestion(data); leaveForm(S.back); toast('Salvo');
@@ -3547,18 +3528,8 @@ async function delQuestion(btn) {
   st.questions = st.questions.filter(x => x.id !== id);
   leaveForm(S.back); toast('Apagado');
 }
-// Respostas do pediatra: as já perguntadas, da mais recente para a mais antiga, para consultar depois.
-function answersSheet() {
-  S = { mode: 'answers' };
-  const asked = askedQuestions();
-  openPanel(head('Respostas do pediatra') + `<p class="dsub">${asked.length} ${asked.length === 1 ? 'dúvida perguntada' : 'dúvidas perguntadas'}</p>`
-    + (asked.length ? `<div class="recs">${asked.map(q => `<button class="rec" data-act="editQ" data-val="${esc(q.id)}"><span><b>${esc(q.body)}</b><small>Perguntada em ${esc(shortDate(q.asked_on))}</small>${q.answer ? `<small class="nt">${esc(q.answer)}</small>` : '<small>Sem resposta anotada</small>'}</span></button>`).join('')}</div>` : '<div class="soft">Nenhuma dúvida perguntada ainda.</div>')
-    + '<p class="dim">O Soneca só guarda o que a família anotou da consulta.</p>');
-  $('sheet').scrollTop = 0;
-}
 function questionAction(a, v, btn) {
   if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v));
-  if (a === 'qAsked') { S.asked = S.asked ? null : S.edit.asked_on || localDate(Date.now()); return drawQuestion(); }
   if (a === 'saveQ') return saveQuestion(btn);
   if (a === 'delQ') return askConfirm('Apagar esta dúvida?', 'Não dá para desfazer.', 'Apagar', delQuestion);
 }
@@ -3653,29 +3624,15 @@ function milestonesSheet() {
   }
   openPanel(h); $('sheet').scrollTop = 0;
 }
-function consultSheet() {
-  S = { mode: 'consult' };
-  const top = $('sheet').scrollTop;
-  openPanel(`<div class="grab"></div><div class="shead"><h3>Relatório e dúvidas<span class="ps">de ${esc(st.baby.name)}</span></h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`
-    + `<button class="consult" data-act="report"><span class="ci" aria-hidden="true">${ICON.clip}</span><span><b>Emitir relatório para pediatra</b><small>Em PDF, com as últimas semanas</small></span><span class="go" aria-hidden="true">›</span></button>`
-    + questionsHtml());
-  $('sheet').scrollTop = top;
-}
 function milestonesAction(a, v) {
   if (a === 'newMilestone') return logForm('milestone', null, 'marcos');
   if (a === 'editMilestone') return logForm('milestone', st.milestones.find(m => m.id === v), 'marcos');
 }
-function consultAction(a, v) {
-  if (a === 'report') return reportSheet();
-  if (a === 'newQ') return questionForm(null, 'consult');
-  if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'consult');
-  if (a === 'askQ') return askQuestion(v);
-  if (a === 'answers') return answersSheet();
-}
 // Depois de salvar ou apagar, volta para a folha de onde veio (ou fecha, se veio de outro lugar).
 function leaveForm(back) {
   if (back === 'marcos') { render(); return milestonesSheet(); }
-  if (back === 'consult') { render(); return consultSheet(); }
+  if (back === 'duv') { render(); return duvSheet(); }
+  if (back === 'orient') { render(); return orientSheet(); }
   closeSheet();
 }
 
@@ -3768,7 +3725,8 @@ function growthAction(a, v, btn) {
 /* ---------- bebê e nome ---------- */
 const CHECK_BOX = '<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span>';
 function babySheet(b) {
-  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', bm: b?.bottle_milk || '' };
+  S = { mode: 'baby', b, name: b?.name || '', birth: b?.birth_date || '', sex: b?.sex || '', bm: b?.bottle_milk || '',
+    feed: b?.feeding || '', food: b?.eats_food == null ? '' : b.eats_food ? '1' : '0' };
   drawBaby();
 }
 // Só o criador apaga um bebê (é a regra do banco); a confirmação fica na própria tela.
@@ -3780,13 +3738,20 @@ function drawBaby() {
      <div><div class="lbl" id="bSexLbl">Menina ou menino (opcional)</div>
        <div class="sexpick" role="radiogroup" aria-labelledby="bSexLbl">${[['F', 'Menina'], ['M', 'Menino']].map(([v, n]) => `<label><input type="radio" name="bSex" value="${v}"${S.sex === v ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div>
        <p class="hint" style="margin:6px 0 0">Para usar a curva certa da OMS no gráfico de peso e comprimento.${b ? ' Mudar aqui muda a curva.' : ''}</p></div>
-     <div><div class="lbl" id="bMilkLbl">O que vai na mamadeira?</div>
+     ${b ? `<div><div class="lbl" id="bFeedLbl">Como ${esc(oBebe(b))} mama hoje?</div>
+       <div class="g2 g3 bmilk k-feed" style="background:none" role="radiogroup" aria-labelledby="bFeedLbl">${babyRadios('bFeed', S.feed, [['breast', 'No peito'], ['bottle', 'Na mamadeira'], ['both', 'Nos dois']])}</div></div>` : ''}
+     <div id="bMilkWrap"${S.feed === 'breast' ? ' hidden' : ''}><div class="lbl" id="bMilkLbl">O que vai na mamadeira?</div>
        <div class="g2 g3 bmilk k-feed" style="background:none" role="radiogroup" aria-labelledby="bMilkLbl">${[['breast_milk', 'Leite materno'], ['formula', 'Fórmula'], ['both', 'Leite + Fórmula']].map(([v, n]) => `<label><input type="radio" name="bMilk" value="${v}"${S.bm === v ? ' checked' : ''}><span class="opt big">${n}</span></label>`).join('')}</div></div>
+     ${b ? `<div><div class="lbl" id="bFoodLbl">${esc(cap1(oBebe(b)))} já come outros alimentos?</div>
+       <div class="sexpick" role="radiogroup" aria-labelledby="bFoodLbl">${[['1', 'Já come'], ['0', 'Ainda não']].map(([v, n]) => `<label><input type="radio" name="bFood" value="${v}"${S.food === v ? ' checked' : ''}><span>${n}</span></label>`).join('')}</div></div>` : ''}
      ${b ? '' : `<label class="chk"><input type="checkbox" id="bOk">${CHECK_BOX}<span>Sou pai, mãe ou responsável legal por este bebê e autorizo o Soneca a guardar os dados dele, inclusive de saúde e amamentação, para o uso da minha família.</span></label>`}
      <div class="err" id="bErr" hidden></div><button class="save" data-act="saveBaby">Salvar</button>`;
   if (del) h += '<button class="danger-btn" data-act="askDelBaby">Apagar bebê</button>';
   openPanel(h);
 }
+const babyRadios = (name, now, list) => list.map(([v, n]) => `<label><input type="radio" name="${name}" value="${v}"${now === v ? ' checked' : ''}><span class="opt big">${n}</span></label>`).join('');
+// No peito não leva "O que vai na mamadeira?" (a regra do banco, 024).
+$('sheetIn').addEventListener('change', e => { if (S?.mode === 'baby' && e.target.name === 'bFeed') $('bMilkWrap').hidden = e.target.value === 'breast'; });
 const askDelBaby = () => askConfirm('Apagar ' + S.b.name + '?', S.b.name + ' e todos os seus registros serão apagados. Não dá para desfazer.', 'Apagar', delBaby);
 async function delBaby(btn) {
   const id = S.b.id;
@@ -3809,10 +3774,14 @@ async function saveBaby(btn) {
   if (!S.b && !$('bOk').checked) return err('bErr', 'Para adicionar, marque a autorização dos dados do bebê.');
   busy(btn, true);
   // Menina ou menino só vai quando há o que salvar: sem o 011, o resto continua salvando.
-  const bm = document.querySelector('input[name="bMilk"]:checked')?.value || null;
-  const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}), ...(bm !== (S.b?.bottle_milk || null) ? { bottle_milk: bm } : {}) };
+  // Como mama e já come só vão quando mudam, como a mamadeira.
+  const pick = n => document.querySelector(`input[name="${n}"]:checked`)?.value || null;
+  const feed = pick('bFeed'), food = pick('bFood'), bm = feed === 'breast' ? null : pick('bMilk');
+  const eats = food === null ? null : food === '1';
+  const row = { name, birth_date, ...(sex || S.b?.sex ? { sex } : {}), ...(bm !== (S.b?.bottle_milk || null) ? { bottle_milk: bm } : {}),
+    ...(feed && feed !== S.b?.feeding ? { feeding: feed } : {}), ...(eats !== null && eats !== S.b?.eats_food ? { eats_food: eats } : {}) };
   const q = S.b ? sb.from('babies').update(row).eq('id', S.b.id)
-                : sb.from('babies').insert({ family_id: st.family.id, ...row });
+                : sb.from('babies').insert({ family_id: st.family.id, ...row, night: nightSave(null, NEW_NIGHT_START, NIGHT_END, Date.now()) });
   const { data, error } = await q.select('*').single();
   busy(btn, false);
   if (error) return err('bErr', errMsg(error));
@@ -3868,80 +3837,189 @@ async function saveName(btn) {
 }
 
 /* ---------- Família ---------- */
-// Família (item 75, etapa 2): juntou a antiga aba do bebê com a Família. Nesta ordem: o bebê (nome, idade,
-// escolha entre bebês) e a fileira de atalhos; a Rotina; os Dados do bebê; Nossa família; sair ou apagar.
-// Prévia aprovada em 17/11: https://claude.ai/artifact/Kd41UYQRrJE8JZbpvJGMZS
-// O peso mora em Tendências › Peso (etapa 3): o número "último peso" leva até lá.
 const FP = { invite: null, kin: false };   // o link de convite gerado
 const NONE = 'Não informado';
-// Uma linha da Família: título, uma ou duas linhas pequenas embaixo e, à direita, o que o toque faz.
-function famRow(act, val, title, subs, go) {
-  const sub = [].concat(subs || []).filter(Boolean).map(t => `<small class="tsub">${esc(t)}</small>`).join('');
-  return `<button class="li tg" data-act="${act}"${val != null ? ` data-val="${esc(val)}"` : ''}><span>${esc(title)}${sub}</span><span class="go">${go || '›'}</span></button>`;
-}
+/* Família (item 102; prévia v03 aprovada pelo Patrick em 27/11: https://claude.ai/artifact/UVrqXdXucV38oAd1Dpc7nh).
+   Um assunto, um lugar: Sobre o bebê, Rotina de sono, Remédios e cuidados, Consulta com o pediatra e Nosso time. */
+const feedLines = b => [[{ breast: 'Peito', bottle: 'Mamadeira', both: 'Peito e mamadeira' }[b.feeding],
+  { breast_milk: 'Leite materno', formula: 'Fórmula', both: 'Leite + Fórmula' }[b.bottle_milk]].filter(Boolean).join(' · '),
+  b.eats_food == null ? '' : b.eats_food ? 'Já come' : 'Ainda não come'].filter(Boolean);
+const oBebe = b => artigo(b, 'a ', 'o ', '') + b.name;
+const fGo = t => `<span class="fgo">${t ? t + ' ' : ''}›</span>`;
+const fBlock = (id, title, body, extra = '') => `<section class="fb" id="${id}"><div class="fbh"><h4>${esc(title)}</h4>${extra}</div>${body}</section>`;
+const fRemind = () => medNotif ? '<div class="fc frow"><span>Me ajude a lembrar disso</span><button class="fpill" data-act="goNotif">Notificações ›</button></div>' : '';
+const fSwitch = (act, on, t) => `<button class="fc frow" role="switch" aria-checked="${on}" data-act="${act}"><span>${t}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
+// Uma linha por item, com o toque que abre; e a linha que acrescenta.
+const fRow = (act, val, text, go = '') => `<button class="fc frow" data-act="${act}"${val != null ? ` data-val="${esc(val)}"` : ''}><span>${esc(text)}</span>${fGo(go)}</button>`;
+const fSub = (title, color, body) => `<div class="fsub"><h5 style="--sw:var(${color})"><i></i>${title}</h5>${body}</div>`;
+const fAdd = (act, t) => `<button class="ghost" data-act="${act}">${t}</button>`;
+const medLine = m => m.name + ' · ' + (m.schedule === 'prn' ? 'quando precisar' : m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia às ' + medTimes(m).join(' e '));
+const careLine = r => taskName(r) + ' · ' + (r.schedule === 'fixed' ? 'todo dia às ' + taskTimes(r).join(' e ') : r.schedule === 'count' ? (r.per_day === 1 ? '1 vez por dia' : r.per_day + ' vezes por dia') : 'a cada troca');
+const qDay = q => q.asked_on || localDate(Date.parse(q.created_at));
+const answered = () => st.questions.filter(q => q.answer || q.asked_on).sort((a, b) => qDay(a) < qDay(b) ? 1 : qDay(a) > qDay(b) ? -1 : byCreated(a, b));
+const unanswered = () => openQuestions().filter(q => !q.answer);
 function famBaby(b) {
-  const ws = st.weights, ms = st.milestones, now = Date.now(), meds = st.meds.filter(m => medEnd(m) > startOfDay(now));
+  const meds = st.meds.filter(m => medEnd(m) > startOfDay(Date.now())), c = nightNow(b);
   let h = `<header class="hcard"><div class="baby">${babyIdent(b)}</div></header>`;
-  if (st.babies.length > 1) h += `<div class="babies">${babyChips()}</div>`;
-  h += '<div class="babies fnav" role="group" aria-label="Ir para"><button data-act="jump" data-val="famRotina">Rotina</button><button data-act="jump" data-val="babyData">Dados do bebê</button><button data-act="jump" data-val="famNossa">Família</button></div>';
-  // Os três números do alto: o peso leva à guia Peso de Tendências; remédios e marcos abrem a própria tela.
-  const lw = ws.at(-1), lm = ms.at(-1), next = dosesFrom(now, now + DAY).find(d => !d.e);
-  const medText = !meds.length ? 'nenhum' : next ? (dayWord(next.due) || 'hoje') + ' ' + next.hhmm : 'quando precisar';
-  const tile = (act, val, color, k, v, t) => `<button data-act="${act}"${val ? ` data-val="${val}"` : ''} style="--sw:var(${color})"><span class="k"><i></i>${k}</span><b>${esc(v)}</b><span>${esc(t)}</span></button>`;
-  h += '<div class="jump">' + tile('openWeight', '', '--c-weight', 'último peso', lw ? kg(lw.grams) : '–', lw ? shortDate(lw.measured_on) : 'sem peso')
-    + tile('openMeds', '', '--c-med', 'remédios', String(meds.length), medText)
-    + tile('openMarcos', '', '--accent', 'marcos', String(ms.length), lm ? lm.title : 'nenhum') + '</div>';
-  // Rotina de [nome]: cada linha abre a tela que já existia.
-  const nr = st.routines.length, nm = ms.length, nmed = meds.length;
-  const medSubTxt = !nmed ? 'Nenhum remédio programado' : `${nmed} ${nmed === 1 ? 'programado' : 'programados'}` + (next && !dayWord(next.due) ? ', próximo às ' + next.hhmm : '');
-  h += `<div class="sec fsec" id="famRotina"><h4>Rotina de ${esc(b.name)}</h4>`
-    + famRow('openMeds', null, 'Remédios', medSubTxt)
-    + famRow('openTasks', null, 'Tarefas', nr ? nr + ' na rotina' : 'Nenhuma na rotina')
-    + famRow('openMarcos', null, 'Marcos', nm ? `${nm} ${nm === 1 ? 'anotado' : 'anotados'}` : 'Nenhum anotado')
-    + famRow('openConsult', null, 'Relatório e dúvidas', 'Relatório para o pediatra, dúvidas para a consulta') + '</div>';
-  // Dados de [nome]: nome, nascimento e menina ou menino abrem a edição do bebê; a noite tem a sua.
-  const c = nightNow(b);
-  h += `<div class="sec fsec" id="babyData"><h4>Dados de ${esc(b.name)}</h4>`
-    + famRow('editBaby', b.id, 'Nome', b.name, 'Editar')
-    + famRow('editBaby', b.id, 'Nascimento', b.birth_date ? fullDate(b.birth_date) : NONE, 'Editar')
-    + famRow('editBaby', b.id, 'Menina ou menino', { F: 'Menina', M: 'Menino' }[b.sex] || NONE, 'Editar')
-    + famRow('editBaby', b.id, 'O que vai na mamadeira', { breast_milk: 'Leite materno', formula: 'Fórmula', both: 'Leite + Fórmula' }[b.bottle_milk] || NONE, 'Editar')
-    + famRow('editNight', b.id, 'Noite do bebê', ['Define quando o dia começa', nightText(c) + (isDefault(c) ? ' · padrão' : '')], 'Mudar') + '</div>';
+  h += fBlock('famSobre', 'Sobre ' + oBebe(b), `<button class="fc" data-act="editBaby" data-val="${esc(b.id)}"><span class="ftop"><span>${esc([b.birth_date ? 'Nasceu ' + fullDate(b.birth_date) : null, { F: 'Menina', M: 'Menino' }[b.sex]].filter(Boolean).join(' · ') || NONE)}</span>${fGo('Editar')}</span>${feedLines(b).map(t => `<small>${esc(t)}</small>`).join('')}</button>`);
+  h += fBlock('famSleep', 'Rotina de sono ' + deName(b),
+    `<button class="fc frow" data-act="editNight" data-val="${esc(b.id)}"><span>Noite do bebê</span><span class="fval">${esc(nightText(c))}</span>${fGo('Mudar')}</button>`
+    + fSwitch('sleepTrack', st.track !== false, 'Mostrar a próxima janela de sono?')
+    + fSwitch('nightCard', st.nightCard !== false, 'Lembrar de começar a rotina da noite?')
+    + fRemind(), '<button class="tri" data-act="sonoInfo" aria-label="Sobre a rotina de sono">i</button>');
+  h += fBlock('famRotina', 'Remédios e cuidados ' + deName(b),
+    fSub('Remédios', '--c-med', meds.map(m => fRow('oneMed', m.id, medLine(m))).join('') + fAdd('newMed', '+ Programar remédio'))
+    + fSub('Cuidados', '--c-care', st.routines.map(r => fRow('openCare', r.id, careLine(r))).join('') + fAdd('newCare', '+ Programar cuidado'))
+    + (medNotif ? `<div class="fsub">${fRemind()}</div>` : ''));
+  h += fBlock('famConsulta', 'Consulta com o pediatra',
+    unanswered().map(q => fRow('openDuv', null, q.body)).join('') + fAdd('addDuv', '+ Anotar dúvida')
+    + fRow('openOrient', null, 'Orientações do pediatra')
+    + fRow('openReport', null, 'Relatório para o pediatra', 'Emitir'));
   return h;
+}
+// "Nosso time": árvore genealógica. Quadrado é homem, círculo é mulher, nome embaixo. Lado da mãe à
+// esquerda, lado do pai à direita. Babá, outro cuidador, primos e quem não disse o parentesco (ou o lado)
+// ficam numa linha à parte.
+const KIN_MALE = new Set(['pai', 'avo', 'tio', 'primo']);
+function famTree(people, babies, current) {
+  const par = k => people.filter(p => p.c === k);
+  const parents = [...par('mae'), ...par('pai')].slice(0, 2);
+  const side = (kinds, s) => people.filter(p => kinds.includes(p.c) && p.sd === s);
+  const halves = ['mae', 'pai'].map(s => ({ s, gp: side(['avoa', 'avo'], s), unc: side(['tia', 'tio'], s) }));
+  // Os pais: a mãe à esquerda e o pai à direita; duas mães ou dois pais ocupam os dois lugares.
+  let L = par('mae')[0] || null, R = par('pai')[0] || null;
+  if (parents.length === 2 && !L) [L, R] = parents;
+  if (parents.length === 2 && !R) [L, R] = parents;
+  // Quem tem avô ou tio de um lado sem o pai ou a mãe no app ganha um lugar vazio, sem nome.
+  if (!L && (halves[0].gp.length || halves[0].unc.length)) L = { empty: true, male: false };
+  if (!R && (halves[1].gp.length || halves[1].unc.length)) R = { empty: true, male: true };
+  const used = new Set([L, R, ...halves.flatMap(h => [...h.gp, ...h.unc])]);
+  const outside = people.filter(p => !used.has(p));
+  const hasGp = halves.some(h => h.gp.length), PY = hasGp ? 96 : 0, BY = L || R ? PY + 96 : 0, H = BY + 64;
+  const nodes = [], lines = [];
+  const ln = (x1, y1, x2, y2) => lines.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`);
+  const node = (p, x, y, w) => nodes.push({ p, x, y, w });
+  const px = [];
+  halves.forEach((h, i) => {
+    const par1 = i ? R : L; if (!par1) return;
+    const row = i ? [par1, ...h.unc] : [...h.unc, par1], slot = 50 / Math.max(row.length, 1), x0 = i * 50;
+    const only = !(L && R) && !h.unc.length && !h.gp.length;   // pai ou mãe sozinho no app: no centro
+    const xs = row.map((_, k) => only ? 50 : x0 + (k + .5) * slot);
+    row.forEach((p, k) => node(p, xs[k], PY, Math.min(slot, 40)));
+    px[i] = xs[row.indexOf(par1)];
+    const gp = h.gp.slice().sort((a, b) => a.male - b.male);
+    const mid = x0 + 25, gslot = 50 / Math.max(gp.length, 2);
+    if (gp.length) {
+      const gx = gp.map((_, k) => mid + (k - (gp.length - 1) / 2) * gslot);
+      gp.forEach((p, k) => node(p, gx[k], 0, gslot));
+      if (gp.length > 1) ln(gx[0], 20, gx.at(-1), 20);
+      const bus = PY - 14;
+      ln(mid, gp.length > 1 ? 20 : 62, mid, bus);
+      ln(Math.min(mid, ...xs), bus, Math.max(mid, ...xs), bus);
+      for (const x of xs) ln(x, bus, x, PY);
+    } else if (h.unc.length) {   // irmãos sem avós no app: a linha comum fica em cima deles
+      const bus = PY - 14;
+      if (!hasGp) return;
+      ln(xs[0], bus, xs.at(-1), bus); for (const x of xs) ln(x, bus, x, PY);
+    }
+  });
+  // Tios sem avós no app: abre espaço em cima para a linha comum dos irmãos.
+  const pad = !hasGp && halves.some(h => h.unc.length) ? 18 : 0;
+  if (pad) halves.forEach((h, i) => {
+    if (!h.unc.length) return;
+    const xs = nodes.filter(n => n.y === PY && (n.x < 50) === !i).map(n => n.x);
+    ln(Math.min(...xs), PY - 14, Math.max(...xs), PY - 14); for (const x of xs) ln(x, PY - 14, x, PY);
+  });
+  if (babies.length) {
+    const xs0 = px.filter(x => x != null), cx = xs0.length ? xs0.reduce((a, b) => a + b, 0) / xs0.length : 50;
+    const slot = Math.min(25, 100 / babies.length), span = slot * (babies.length - 1);
+    const first = Math.max(slot / 2, Math.min(cx - span / 2, 100 - slot / 2 - span));
+    const bx = babies.map((_, k) => first + k * slot);
+    babies.forEach((b, k) => node({ baby: b }, bx[k], BY, slot));
+    if (xs0.length) {
+      const from = xs0.length > 1 ? PY + 20 : PY + 62, bus = BY - 14;
+      if (xs0.length > 1) ln(xs0[0], PY + 20, xs0[1], PY + 20);
+      ln(cx, from, cx, bus);
+      ln(Math.min(cx, ...bx), bus, Math.max(cx, ...bx), bus);
+      for (const x of bx) ln(x, bus, x, BY);
+    }
+  }
+  const shape = (male, extra = '') => `<i class="fsh ${male == null ? 'nd' : male ? 'sq' : 'ci'}${extra}"></i>`;
+  const html = n => {
+    const at = `style="left:${n.x}%;top:${n.y + pad}px;width:${n.w}%"`, p = n.p;
+    if (p.baby) {
+      const on = p.baby.id === current;
+      return `<button class="ftn${on ? ' me' : ''}" ${at} data-act="openBaby" data-val="${esc(p.baby.id)}"${on ? ' aria-current="true"' : ''}>${shape(p.baby.sex === 'M' ? true : p.baby.sex === 'F' ? false : null, on ? ' hl' : '')}<span>${esc(p.baby.name)}</span></button>`;
+    }
+    if (p.empty) return `<div class="ftn" ${at} aria-hidden="true">${shape(p.male, ' vz')}</div>`;
+    return p.act ? `<button class="ftn" ${at} ${p.act}>${shape(p.male)}<span>${esc(p.name)}</span></button>` : `<div class="ftn" ${at}>${shape(p.male)}<span>${esc(p.name)}</span></div>`;
+  };
+  const tree = `<div class="ftree" style="height:${H + pad}px"><svg viewBox="0 0 100 ${H + pad}" preserveAspectRatio="none" aria-hidden="true"><g transform="translate(0 ${pad})">${lines.join('')}</g></svg>${nodes.map(html).join('')}</div>`;
+  const rest = outside.length ? `<div class="fout">${outside.map(p => p.act ? `<button ${p.act}>${esc(p.name)}</button>` : `<span>${esc(p.name)}</span>`).join('')}</div>` : '';
+  return tree + rest;
+}
+function famTeam(b) {
+  const f = st.family, creator = f.creator_id === st.user.id;
+  const people = st.members.map(m => {
+    const [c, sd] = st.kin[m.user_id] || [], me = m.user_id === st.user.id;
+    return { c, sd, male: KIN_MALE.has(c), name: me ? st.profile.display_name : st.names[m.user_id] || 'Alguém',
+      act: me ? `data-act="kinOpen" aria-expanded="${!!FP.kin}"` : creator ? `data-act="rm" data-val="${esc(m.user_id)}"` : '' };
+  });
+  let h = famTree(people, st.babies, b?.id);
+  if (FP.kin) h += kinEditor() + '<button class="save" data-act="kinOpen">Pronto</button>';
+  if (creator) h += FP.invite
+    ? `<div class="invite">${esc(FP.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
+    : '<button class="ghost" data-act="invite">Convidar alguém</button>';
+  h += `<div class="fc frow fbabies"><span>Bebês: ${st.babies.map(x => `<button data-act="openBaby" data-val="${esc(x.id)}"${st.babies.length > 1 && x.id === st.baby?.id ? ' class="on"' : ''}>${esc(x.name)}</button>`).join(', ')}</span><button class="fadd" data-act="addBaby">+ Adicionar bebê</button></div>`;
+  return fBlock('famMembers', 'Nosso time', h, creator ? `<button class="fname" data-act="famName">${esc(f.name)} ›</button>` : `<span class="fname off">${esc(f.name)}</span>`);
 }
 function drawFamilyPane() {
   const f = st.family, creator = f.creator_id === st.user.id, b = st.baby;
   let h = b ? famBaby(b)
     : `<div class="ptitle"><h2>${esc(f.name)}</h2></div><div class="soft">Cadastre o bebê da família para anotar o peso, os remédios e os marcos.</div>`;
-  // Nossa família: o nome, os membros e o convite, os bebês e adicionar bebê.
-  h += `<div class="sec fsec" id="famNossa"><h4>Nossa família</h4><div class="li"><span>Nome da família<small class="tsub">${esc(f.name)}</small><small class="tsub">Só quem criou muda</small></span>${creator ? '<button data-act="famName">Mudar</button>' : ''}</div>`;
-  // Cada membro com o parentesco ("Avó, lado da mãe"). "Você" abre o editor, o mesmo do Perfil; os outros só mostram.
-  h += '<div class="sec" id="famMembers"><h4>Membros</h4>' + st.members.map(m => {
-    const kin = kinText(...(st.kin[m.user_id] || [])), crt = m.user_id === f.creator_id ? ' <small>criador</small>' : '';
-    if (m.user_id === st.user.id) {
-      return `<button class="li tg" data-act="kinOpen" aria-expanded="${!!FP.kin}"><span>Você${crt}<small class="tsub">${esc(kin || 'Toque para dizer quem você é na família')}</small></span><span class="go">${FP.kin ? 'Fechar' : 'Editar'}</span></button>`
-        + (FP.kin ? kinEditor() + '<button class="save" data-act="kinOpen">Pronto</button>' : '');
-    }
-    const rm = creator ? `<button class="danger" data-act="rm" data-val="${esc(m.user_id)}">Remover</button>` : '';
-    return `<div class="li"><span>${esc(st.names[m.user_id] || 'Alguém')}${crt}<small class="tsub">${esc(kin ? kin + '. ' : '')}Cada pessoa muda o próprio.</small></span>${rm}</div>`;
-  }).join('');
-  if (creator) h += FP.invite
-    ? `<div class="invite">${esc(FP.invite)}</div><div class="row2"><button class="ghost" data-act="copyInv">Copiar link</button>${navigator.share ? '<button class="ghost" data-act="shareInv">Compartilhar</button>' : ''}</div><div class="lbl">O link serve para uma pessoa e vale 7 dias.</div>`
-    : '<button class="ghost" data-act="invite">Convidar alguém</button>';
-  h += '</div><div class="sec"><h4>Bebês</h4>' +
-    st.babies.map(x => `<button class="li tg" data-act="openBaby" data-val="${esc(x.id)}"><span>${esc(x.name)}${x.birth_date ? ' <small>' + esc(ageText(x.birth_date)) + '</small>' : ''}</span><span class="go">Abrir</span></button>`).join('') +
-    '<button class="ghost" data-act="addBaby">Adicionar bebê</button></div>';
-  // Sono (item 65): "Acompanhar o sono" liga e desliga a janela de sono para a família toda. A noite de cada
-  // bebê fica em "Dados de [nome]".
-  const on = st.track !== false;
-  h += `<div class="sec" id="famSleep"><h4>Sono</h4><button class="li tg" role="switch" aria-checked="${on}" data-act="sleepTrack"><span>Acompanhar o sono<small class="tsub">Para todos da família</small></span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button></div></div>`;
+  h += famTeam(b);
   h += creator
     ? '<button class="danger-btn" data-act="delFam">Apagar família</button>'
     : '<button class="danger-btn" data-act="leave">Sair da família</button>';
   $('paneFamily').innerHTML = h;
-  // As guias "Ir para" grudam logo abaixo do cartão do bebê, qualquer que seja a altura dele (nome comprido, fonte maior)
-  const fh = $('paneFamily').querySelector('.hcard'); if (fh && fh.offsetHeight) $('paneFamily').style.setProperty('--fch', fh.offsetHeight - 1 + 'px');
 }
+// O (i) da Rotina de sono: uma janela no meio da tela. Textos aprovados pelo Patrick em 27/11.
+function sonoInfoSheet() {
+  const b = st.baby, c = nightNow(b), quem = oBebe(b);
+  const fazer = b.sex === 'F' ? 'fazê-la' : b.sex === 'M' ? 'fazê-lo' : 'fazer o bebê';
+  const item = (t, p) => `<h4>${t}</h4><p>${esc(p)}</p>`;
+  $('ask').innerHTML = `<div class="cbox finfo" role="dialog" aria-modal="true" aria-labelledby="fiT"><h3 id="fiT">${esc('Rotina de sono ' + deName(b))}</h3>`
+    + item('Noite do bebê', `É o horário que vocês escolheram para tentar fazer ${quem} dormir à noite: das ${c.start}h às ${c.end}h.`)
+    + item('Janela de sono', `Mostra no Diário quando ${quem} deve sentir sono de novo. É uma boa hora para tentar ${fazer} dormir.`)
+    + item('Rotina da noite', `Uma rotina antes de dormir pode ajudar ${quem} a entender o que é noite e o que é dia, e a dormir melhor no horário que vocês escolheram. A sugestão aparece no Diário 1 h antes das ${c.start}h.`)
+    + '<button class="save" data-finfo>Entendi</button></div>';
+  $('ask').hidden = false; $('ask').querySelector('.save').focus();
+}
+$('ask').addEventListener('click', e => { if (e.target.closest('[data-finfo]')) closeAsk(); });
+// Dúvidas: a dúvida nova no alto e o campo da resposta já aberto embaixo de cada uma, sem check.
+const sheetTop = t => `<div class="grab"></div><div class="shead"><h3>${t}</h3><button class="x" data-act="close" aria-label="Fechar">×</button></div>`;
+function duvSheet(focus) {
+  S = { mode: 'duv', sfix: true };
+  if (!st.questionsOk) return openPanel(sheetTop('Dúvidas') + '<div class="sbody"><div class="soft">Não foi possível carregar as dúvidas. Confira a conexão e abra de novo.</div></div>');
+  openPanel(sheetTop('Dúvidas') + '<div class="sbody"><div class="fc frow fnew"><input class="field" id="duvNew" maxlength="' + Q_MAX + '" placeholder="Escreva sua dúvida..." aria-label="Escreva sua dúvida"><button class="fpill" data-act="duvAdd">Anotar</button></div>'
+    + unanswered().map(q => `<div class="fc fq"><button data-act="editQ" data-val="${esc(q.id)}"><b>${esc(q.body)}</b></button><label for="a-${esc(q.id)}">Resposta do pediatra:</label><input class="field" id="a-${esc(q.id)}" data-ans="${esc(q.id)}" maxlength="${A_MAX}" placeholder="escreva aqui..."></div>`).join('') + '</div>');
+  if (focus) $('duvNew').focus();
+}
+function orientSheet() {
+  S = { mode: 'orient', sfix: true };
+  const days = new Map();
+  for (const q of answered()) { const k = qDay(q); if (!days.has(k)) days.set(k, []); days.get(k).push(q); }
+  openPanel(sheetTop('Orientações do pediatra') + '<div class="sbody">' + [...days].map(([d, l]) => `<div class="fb"><div class="fbh"><h4>Consulta de ${esc(shortDate(d))}</h4></div>`
+    + l.map(q => `<button class="fc" data-act="editQ" data-val="${esc(q.id)}"><b>${esc(q.body)}</b><span class="fans">${q.answer ? '→ ' + esc(q.answer) : 'Sem resposta anotada'}</span></button>`).join('') + '</div>').join('') + '<p class="dim">O Soneca só guarda o que a família anotou da consulta.</p></div>');
+}
+async function duvAdd() {
+  const body = $('duvNew').value.trim();
+  if (!body) return $('duvNew').focus();
+  const { data, error } = await sb.from('questions').insert({ family_id: st.family.id, baby_id: st.baby.id, body }).select().single();
+  if (error) return toast('Não foi possível salvar. Confira a conexão.');
+  putQuestion(data); render(); duvSheet();
+}
+
 // Mudar o nome da família: só quem criou (é a regra do banco).
 function famNameSheet() {
   S = { mode: 'famname' };
@@ -3974,7 +4052,7 @@ function notifBlock() {
   const row = (act, on, title, sub) => `<button class="li tg" role="switch" aria-checked="${on}" data-act="${act}"${act !== 'nAll' && off ? ' disabled' : ''}><span>${title}${sub ? `<small class="tsub">${sub}</small>` : ''}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
   const remSub = !rem && lsGet('cad-lembrete-auto') ? 'Desligado depois de 3 lembretes seguidos sem registro. Ligue de novo quando quiser.'
     : 'Avisa depois de 3 horas sem registro feito neste celular. Entre 18h e 7h, não avisa. Vale só neste aparelho.';
-  return '<div class="sec"><h4>Notificações neste celular</h4>'
+  return '<div class="sec" id="profNotif"><h4>Notificações neste celular</h4>'
     + row('nAll', all, 'Todas as notificações', 'Só neste celular. Os outros membros não mudam.')
     + row('nWin', winOn(), 'Janela de sono') + row('nMed', medAny(), 'Remédios') + row('nTask', taskAny(), 'Tarefas')
     + row('nRem', rem, 'Me lembrar de registrar', esc(remSub))
@@ -4024,7 +4102,6 @@ function drawProfilePane() {
   let h = `<div class="ptitle"><h2>${esc(st.profile.display_name)}</h2><small>Seu nome e os ajustes que valem só para você</small></div>`;
   h += `<div class="sec"><h4>Sobre você</h4><div class="li"><span>Seu nome<small class="tsub">Como você aparece para a família</small><small class="tsub">${esc(st.profile.display_name)}</small></span><button data-act="rename">Mudar</button></div>${kinEditor()}</div>`;
   if (medNotif) h += notifBlock();
-  h += `<div class="sec"><h4>Avisos e cartões</h4><button class="li tg" role="switch" aria-checked="${noite82On()}" data-act="n82"><span>Cartão da rotina da noite<small class="tsub">Aparece cerca de 1 h antes da noite do bebê</small></span><span class="sw${noite82On() ? ' on' : ''}" aria-hidden="true"><i></i></span></button></div>`;
   h += `<div class="sec"><h4>Aparência</h4><div class="seg3" role="group" aria-label="Aparência">${THEMES.map(([v, t]) => `<button data-act="theme" data-val="${v}" aria-pressed="${theme === v}">${t}</button>`).join('')}</div>`
     + '<p class="dim">"Do celular" segue o modo noturno do celular. Vale só neste aparelho.</p></div>';
   h += '<div class="sec"><h4>Minhas famílias</h4>' + st.families.map(x => x.id === st.family.id
@@ -4167,12 +4244,19 @@ async function afterLeavingFamily() {
 async function paneAction(a, v, btn) {
   const f = st.family;
   // Rotina
-  if (a === 'jump') return spotlight(v);
   if (a === 'openMeds') return medsSheet();
+  if (a === 'oneMed') { medOnly = v; return medsSheet(); }
   if (a === 'openTasks') return tasksSheet();
-  if (a === 'openMarcos') return milestonesSheet();
-  if (a === 'openConsult') return consultSheet();
-  if (a === 'openWeight') { st.trend.tab = 'peso'; st.trend.info = null; return goTab('trends'); }
+  if (a === 'openMarcos') return milestonesSheet();   // sem entrada na Família desde o item 102; os marcos ganham lugar no item 89
+  if (a === 'openDuv') return duvSheet();
+  if (a === 'addDuv') return duvSheet(true);
+  if (a === 'openOrient') return orientSheet();
+  if (a === 'openReport') return reportSheet();
+  if (a === 'sonoInfo') return sonoInfoSheet();
+  if (a === 'goNotif') return goTab('profile', 'profNotif');
+  if (a === 'newCare') return pickSheet();
+  if (a === 'openCare') { const r = st.routines.find(x => x.id === v); return r && taskScreen(r, 'tasks'); }
+  if (a === 'nightCard') return setNightCard(st.nightCard === false);
   if (a === 'allMeds') return medsSheet();
   if (a === 'newMed') return medForm(null, 'pane');
   if (a === 'editMed') return medForm(st.meds.find(m => m.id === v), 'pane');
@@ -4224,7 +4308,6 @@ async function paneAction(a, v, btn) {
   if (a === 'shareApp') return navigator.share({ title: 'Soneca', text: REFER_TEXT, url: LINK_BASE + '/' }).catch(() => {});
   if (a === 'copyApp') return navigator.clipboard.writeText(REFER_TEXT + ' ' + LINK_BASE + '/').then(() => toast('Texto copiado'), () => toast('Selecione o endereço e copie'));
   if (a === 'feedback') return feedbackSheet();
-  if (a === 'n82') { lsSet(N82_OFF, noite82On() ? '1' : null); return drawProfilePane(); }
   if (a === 'nAll') return setAllNotif(!allOn());
   if (['nWin', 'nMed', 'nTask', 'nRem'].includes(a)) return notifSwitch(a);
   if (a === 'reminder') return setReminder(!remOn());
@@ -4234,6 +4317,14 @@ async function paneAction(a, v, btn) {
 }
 
 /* ---------- eventos ---------- */
+// Item 102: a resposta é gravada ao sair do campo; com resposta, a dúvida passa para as Orientações.
+$('sheetIn').addEventListener('change', async e => {
+  const id = e.target.dataset?.ans, answer = e.target.value?.trim();
+  if (S?.mode !== 'duv' || !id || !answer) return;
+  const { data, error } = await sb.from('questions').update({ answer, asked_on: localDate(Date.now()) }).eq('id', id).select().single();
+  if (error) return toast('Não foi possível salvar. Confira a conexão.');
+  putQuestion(data); render(); document.querySelector(`#sheetIn [data-ans="${id}"]`)?.closest('.fq').remove(); toast('Salvo');
+});
 $('sheetIn').addEventListener('input', e => {
   if (e.target.id === 'fbText') {
     FB.text = e.target.value; $('fbCount').textContent = FB.text.length + ' de ' + FB_MAX;
@@ -4275,9 +4366,10 @@ $('sheetIn').addEventListener('click', async e => {
   if (S.mode === 'meds' || S.mode === 'medform' || S.mode === 'dose') return medAction(a, v, b);
   if (S.mode === 'tasks' || S.mode === 'taskpick' || S.mode === 'task') return taskAction(a, v, b);
   if (S.mode === 'milestones') return milestonesAction(a, v);
-  if (S.mode === 'consult') return consultAction(a, v);
+  if (S.mode === 'duv') { if (a === 'duvAdd') return duvAdd(); if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'duv'); return; }
+  if (S.mode === 'orient') { if (a === 'editQ') return questionForm(st.questions.find(q => q.id === v), 'orient'); return; }
   if (S.mode === 'weight' || S.mode === 'milestone') return growthAction(a, v, b);
-  if (S.mode === 'question' || S.mode === 'answers') return questionAction(a, v, b);
+  if (S.mode === 'question') return questionAction(a, v, b);
   if (S.mode === 'report') return reportAction(a, v);
   if (S.mode === 'hist') return histAction(a, v);
   if (S.mode !== 'entry') return;
