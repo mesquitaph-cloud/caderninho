@@ -1889,7 +1889,7 @@ function openPanel(html) {
   $('scrim').hidden = false; $('sheet').hidden = false; $('sheetIn').innerHTML = html;
   // A tela de uma tarefa ocupa a tela inteira (prévia de 08/11).
   $('sheet').classList.toggle('full', S?.mode === 'task');
-  $('sheet').classList.toggle('sfix', !!S?.sfix); $('sheet').classList.toggle('sfsmall', S?.sfix === 'small'); $('sheet').classList.toggle('strip', !!S?.sfix && location.search.includes('folha=faixa'));   // RASCUNHO v06: cabeçalho e Salvar fixos, só o meio rola
+  $('sheet').classList.toggle('sfix', !!S?.sfix);
   if (was) return;
   sheetK = from ? from.home : null; stripAtOpen = stripK;
   if (from && !reduceMotion()) growSheet(from);
@@ -2178,8 +2178,8 @@ const INK = { wake: 'sleep', vomit: 'vomit', symptom: 'vomit' };
 // comum num toque, e o resto em "Outras opções" e no horário, recolhidos. O botão grande fica no pé,
 // perto do polegar. Sem Observação no Sono, na Mamada e na Ordenha (07/11); a Fralda tem, em Outras opções (08/11).
 const orow = (act, txt, open) => `<button class="orow${open ? ' open' : ''}" data-act="${act}" aria-expanded="${open}"><span>${txt}</span><i class="cv" aria-hidden="true">›</i></button>`;
-// RASCUNHO da prévia v03b (item 55/88): relógio de ponteiro do próprio Soneca. Toca ou arrasta nas horas
-// (anel de fora 1 a 12, de dentro 13 a 00) e, ao soltar, passa para os minutos. Não vai para o app sem aprovação.
+// Relógio redondo do Soneca (item 88). Toca ou arrasta nas horas (anel de fora 1 a 12, de dentro 13 a 00)
+// e, ao soltar, passa para os minutos.
 const DIAL_R = 104, DIAL_C = 130;
 const dialPt = (i, r) => [DIAL_C + r * Math.sin(i * Math.PI / 6), DIAL_C - r * Math.cos(i * Math.PI / 6)];
 function dialInner(ink) {
@@ -2231,18 +2231,8 @@ let dialDown = false;
 document.addEventListener('pointerdown', e => { const b = e.target.closest('#dialBox svg'); if (!b) return; dialDown = true; dialPoint(e); e.preventDefault(); });
 document.addEventListener('pointermove', e => { if (dialDown && $('dialBox')) dialPoint(e); });
 document.addEventListener('pointerup', () => { if (!dialDown) return; dialDown = false; if ($('dialBox') && (S.dm || 'h') === 'h') { S.dm = 'm'; $('dialBox').innerHTML = dialInner($('dialBox').dataset.ink); } });
-// RASCUNHO: na edição o "Agora" sai (Patrick, 23/11; 1% das edições usam); no registro novo continua.
-const QUICK_EDIT = QUICK_TIME.replace('<div class="time quick">', '<div class="time quick q3">').replace('<button class="small" data-act="now">Agora</button>', '');
-// RASCUNHO v04 (item 88): duas linhas, cada uma com o seu lápis. A data (Hoje/Ontem/dia da semana + dd/mm) abre o seletor de
-// data do celular; o horário abre o relógio redondo e a linha some enquanto ele está aberto. Sai o Hoje/Ontem/Outro dia.
-const WEEKDAY = ['Dom.', 'Seg.', 'Ter.', 'Qua.', 'Qui.', 'Sex.', 'Sáb.'];   // texto provisório
-function dateText() {
-  const d0 = startOfDay(computeT()), t0 = startOfDay(Date.now());
-  return (d0 === t0 ? 'Hoje' : d0 === addDays(t0, -1) ? 'Ontem' : WEEKDAY[new Date(d0).getDay()]) + ', ' + ymdDdmm(localDate(d0));
-}
-// RASCUNHO v05 (item 88): a visão inicial tem só a linha do horário com o lápis ("17:33", ou "Ontem, 23:34" / "21/11, 08:10" se o
-// registro não for de hoje, como já era). Ao tocar no lápis a linha some e abre o bloco: a data (com o seu lápis, que abre o
-// seletor de data) e o relógio redondo com os atalhos.
+// Linha do horário das telas curtas. No Sono, na Fralda e na Ordenha, tocar na linha abre ali mesmo a data
+// (com o lápis, que abre o seletor do celular), o relógio redondo e os atalhos.
 function timeRow(k) {
   // Item 99: na Mamada nova o relógio abre na mesma janela da edição. Na folha, o horário grande na linha toda e,
   // embaixo, −5, −10 e −30 min, que somam a cada toque (Patrick, 26/11). Na edição não há atalho.
@@ -2254,7 +2244,7 @@ function timeRow(k) {
   const day = d0 < addDays(t0, -1) ? shortDate(localDate(d0)) + ', ' : d0 === addDays(t0, -1) ? 'Ontem, ' : '';
   if (!S.openT) return `<button class="orow tm" data-act="openT" aria-expanded="false" aria-label="Horário: ${day}${S.time}. Editar o horário"><span class="v">${day}${S.time}</span><span class="pen" aria-hidden="true">${ICON.edit}</span></button>`;
   const dt = d0 >= addDays(t0, -1) ? dayTitle(d0) : shortDate(localDate(d0)), lo = localDate(addDays(t0, -BACK_DAYS)), hi = localDate(Date.now());
-  return `<div class="ofold"><div class="orow tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div>${dialHtml(INK[k] || k)}${S.edit ? QUICK_EDIT : QUICK_TIME}</div>`;
+  return `<div class="ofold"><div class="orow tm datrow"><span class="v">${dt}</span><span class="pen" aria-hidden="true">${ICON.edit}</span><input type="date" id="dayNative" min="${lo}" max="${hi}" value="${localDate(d0)}" aria-label="Data: ${dt}. Escolher a data"></div>${dialHtml(INK[k] || k)}${QUICK_TIME}</div>`;
 }
 const sfoot = (k, txt) => `<div class="sfoot">${S.err ? `<div class="err">${esc(S.err)}</div>` : ''}<button class="save sgo k-${k}" data-act="save"><span class="sgi">${ICON[k]}<span>${txt}</span></span></button></div>`;
 function drawSleepCompact() {
@@ -2273,7 +2263,7 @@ function drawSleepCompact() {
   h += sfoot('sleep', changed ? 'Salvar' : 'Dormiu agora');
   openPanel(h);
 }
-// RASCUNHO da prévia (item 88): edição da Mamada no peito no desenho da tela curta. Não vai para o app sem aprovação.
+// Edição da Mamada (item 88), no desenho da tela curta.
 const TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v5M14 11v5"/></svg>';
 // v10d: o horário é sempre um cartão de uma coluna da grade. Tocar nele abre só o relógio numa janela pequena por cima da folha
 // (a folha fica atrás, escurecida), com Cancelar e OK. Cancelar devolve a hora e o dia que estavam antes de abrir.
@@ -2306,21 +2296,14 @@ function fitWho() {
   while (px > 13 && over()) { px--; bs.forEach(b => { b.style.fontSize = px + 'px'; }); }
 }
 function drawFeedEditCompact() {
-  const small = !S.full;   // RASCUNHO v08: abre a versão pequena; "Editar mais" (texto provisório) abre a tela toda
   let h = `<div class="grab"></div><div class="shead"><h3>Editar</h3><div class="rt"><button class="tr" data-act="del" aria-label="Apagar registro">${TRASH}</button><button class="x" data-act="close" aria-label="Fechar">×</button></div></div>`;
-  S.sfix = small ? 'small' : true;
-  // v10: grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; "Qual peito" com Esquerdo | Direito (minutos dentro do cartão); Total | horário.
-  if (small) {
-    const tc = timeCells();
-    h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
+  S.sfix = true;   // cabeçalho e Salvar fixos, só o meio rola
+  // Grade invisível de 2 colunas (veja .g2 no styles.css). Peito | Mamadeira; Esquerdo | Direito (minutos dentro do cartão); Total | horário.
+  const tc = timeCells();
+  h += `<div class="sbody"><div class="g2 k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>
       ${S.src === 'bottle' ? milkRow() + mlEditRows(tc.cell) : `${sideCols()}
       <div class="g2"><div class="cell tcell" id="total">${totalText() || 'Total: –'}</div>${tc.cell}</div>`}</div>` + sfoot('feed', 'Salvar') + tc.rest;
-    openPanel(h); fitWho(); return;
-  }
-  h += `<div class="sbody"><div class="seg k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>`;
-  h += `<div><div class="lbl">Qual peito <small>(minutos opcionais)</small></div><div class="sides">${sideRow('l', 'Esquerdo')}${sideRow('r', 'Direito')}</div><div class="total" id="total">${totalText()}</div></div>`;
-  h += timeRow('feed') + '</div>' + sfoot('feed', 'Salvar');
-  openPanel(h);
+  openPanel(h); fitWho();
 }
 function drawFeedCompact() {
   let h = head('Mamada') + `<div class="seg k-feed" style="background:none">${opt('Peito', S.src === 'breast', 'src', 'breast', 1)}${opt('Mamadeira', S.src === 'bottle', 'src', 'bottle', 1)}</div>`;
@@ -4242,7 +4225,7 @@ $('sheetIn').addEventListener('input', e => {
   if (id === 'min-l' || id === 'min-r') {
     const key = id.slice(4); S[key + 'min'] = e.target.value.replace(/\D/g, '').slice(0, 3);
     if (S[key + 'min']) { S[key] = true; markSide(key); }
-    $('total').textContent = S.edit ? (totalText() || (S.sfix === 'small' ? 'Total: –' : '')) : '';
+    $('total').textContent = S.edit ? totalText() || 'Total: –' : '';
   }
 });
 $('sheetIn').addEventListener('click', async e => {
@@ -4301,10 +4284,9 @@ $('sheetIn').addEventListener('click', async e => {
   }
   else if (a === 'save') return saveEntry(b);
   else if (a === 'openO') S.openO = !S.openO;
-  else if (a === 'openT') { if (S.sfix === 'small' || S.k === 'feed') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
+  else if (a === 'openT') { if (S.k === 'feed') { S.openT = true; S.tsnap = { time: S.time, base: S.base, dateSet: S.dateSet }; } else S.openT = !S.openT; S.dm = 'h'; }
   else if (a === 'tok') S.openT = false;
   else if (a === 'tcancel') { Object.assign(S, S.tsnap || {}); S.openT = false; }
-  else if (a === 'editMore') S.more = true;
   else if (a === 'dm') S.dm = v;
   else if (a === 'ftTap' && S.compact && !ftGet()) { ftTap(v); return closeSheet(); }
   else if (a === 'ftTap') ftTap(v);
