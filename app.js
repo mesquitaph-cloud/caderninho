@@ -1471,6 +1471,14 @@ function symptomSub(last, now) {
 const rowKeys = () => [...FIXED, ...(isOn('pump') && st.baby?.feeding !== 'bottle' ? ['pump'] : []),
   ...(st.baby?.eats_food ? ['food'] : []), 'more'];
 const popKeys = () => [...['med', 'symptom', 'care'].filter(isOn), 'other'];
+// Contador de pendências (item 113): doses e tarefas de hoje que passaram da hora e ninguém marcou nem pulou
+// ("Hoje não" conta como pulada, só neste celular). Tarefa sem horário não conta. Sem nada, some.
+const lateMeds = id => todayDoses().filter(d => d.state === 'late' && (!id || d.m.id === id)).length;
+const lateTasks = id => st.routines.filter(r => r.schedule === 'fixed' && (!id || r.id === id))
+  .reduce((n, r) => n + taskSlots(r).filter(x => x.due < Date.now() && !x.e && !isOff(x.id)).length, 0);
+const pendingOf = k => k === 'med' ? lateMeds() : k === 'care' ? lateTasks() : k === 'more' ? popKeys().reduce((n, x) => n + (x === 'med' || x === 'care' ? pendingOf(x) : 0), 0) : 0;
+const badge = n => n ? `<i class="bdg" aria-hidden="true">${n}</i>` : '';
+const pendingText = n => !n ? '' : n === 1 ? ', 1 pendente' : `, ${n} pendentes`;
 function renderGrid(last, open, now, joined) {
   // Há quanto tempo, só para o leitor de tela: na tela, a linha do tempo logo acima já mostra a hora.
   const sub = k => {
@@ -1487,10 +1495,10 @@ function renderGrid(last, open, now, joined) {
   $('grid').style.setProperty('--n', ks.length);
   $('grid').classList.toggle('n6', ks.length > 5);   // com Comida e Ordenha: seis botões, letra menor
   $('grid').innerHTML = ks.map((k, i) => {
-    if (k === 'more') return `<button class="rb k-other" data-k="more" aria-haspopup="dialog" aria-expanded="false">${ICON.other}<b>Outros</b></button>`;
+    if (k === 'more') return `<button class="rb k-other" data-k="more" aria-haspopup="dialog" aria-expanded="false" aria-label="Outros${pendingText(pendingOf('more'))}">${ICON.other}<b>Outros</b>${badge(pendingOf('more'))}</button>`;
     if (k === 'food') return `<button class="rb k-food" data-k="food" aria-haspopup="dialog">${ICON.food}<b>Comida</b></button>`;
     const j = k === joined ? ` joined${i === 0 ? ' jl' : ''}` : '';
-    return `<button class="rb ${BTN[k][1]}${j}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])} (${esc(sub(k))}). Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b>${j ? '<span class="neck" aria-hidden="true"><i class="l"></i><i class="r"></i></span>' : ''}</button>`;
+    return `<button class="rb ${BTN[k][1]}${j}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])} (${esc(sub(k))})${pendingText(pendingOf(k))}. Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b>${badge(pendingOf(k))}${j ? '<span class="neck" aria-hidden="true"><i class="l"></i><i class="r"></i></span>' : ''}</button>`;
   }).join('');
 }
 // Outros: a linha com os outros registros, do mesmo tamanho, logo acima dos botões; um toque fora fecha.
@@ -1500,7 +1508,7 @@ function openPop() {
   $('popIn').classList.toggle('n6', rowKeys().length > 5);
   $('popIn').innerHTML = ks.map(k => k === 'other'
     ? `<button class="rb k-other" data-k="other">${ICON.edit}<b>Livre</b></button>`
-    : `<button class="rb ${BTN[k][1]}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}. Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b></button>`).join('');
+    : `<button class="rb ${BTN[k][1]}" data-k="${k}" aria-label="Anotar ${esc(ADD[k])}${pendingText(pendingOf(k))}. Segure para ver os últimos 3 dias">${ICON[k]}<b>${BTN[k][0]}</b>${badge(pendingOf(k))}</button>`).join('');
   $('pop').style.bottom = (window.innerHeight - bt.top + 12) + 'px';
   $('pop').hidden = $('popScrim').hidden = false;
   document.body.classList.add('pop-open');
@@ -2792,7 +2800,7 @@ async function markHome(b, skipped) {
     row.remove();
     if (medsBusy === 1 && !$('meds').querySelector('.dose') && !homeDoses().shown.length) { $('meds').classList.add('gone'); await pause(250); }
   }
-  medsBusy--; if (!medsBusy) { $('meds').classList.remove('gone'); renderMeds(); }
+  medsBusy--; if (!medsBusy) { $('meds').classList.remove('gone'); render(); }
 }
 function renderMeds() {
   if (medsBusy) return;
@@ -3207,7 +3215,7 @@ async function markTaskHome(b, off) {
     row.remove();
     if (tasksBusy === 1 && !$('tasks').querySelector('.dose')) { $('tasks').classList.add('gone'); await pause(250); }
   }
-  tasksBusy--; if (!tasksBusy) { $('tasks').classList.remove('gone'); renderTasks(); taskAlertsLater(); }
+  tasksBusy--; if (!tasksBusy) { $('tasks').classList.remove('gone'); render(); taskAlertsLater(); }
 }
 // Marca a tarefa agora: o mesmo registro da tarefa avulsa, com a vibração leve da dose.
 async function doTask(r, ointments) {
@@ -3879,7 +3887,7 @@ const fBlock = (id, title, body, extra = '') => `<section class="fb" id="${id}">
 const fRemind = () => medNotif ? '<div class="fc frow"><span>Me ajude a lembrar disso</span><button class="fpill" data-act="goNotif">Notificações ›</button></div>' : '';
 const fSwitch = (act, on, t) => `<button class="fc frow" role="switch" aria-checked="${on}" data-act="${act}"><span>${t}</span><span class="sw${on ? ' on' : ''}" aria-hidden="true"><i></i></span></button>`;
 // Uma linha por item, com o toque que abre; e a linha que acrescenta.
-const fRow = (act, val, text, go = '') => `<button class="fc frow" data-act="${act}"${val != null ? ` data-val="${esc(val)}"` : ''}><span>${esc(text)}</span>${fGo(go)}</button>`;
+const fRow = (act, val, text, go = '', n = 0) => `<button class="fc frow" data-act="${act}"${val != null ? ` data-val="${esc(val)}"` : ''}${n ? ` aria-label="${esc(text)}${pendingText(n)}"` : ''}><span>${esc(text)}</span>${badge(n)}${fGo(go)}</button>`;
 const fSub = (title, color, body) => `<div class="fsub"><h5 style="--sw:var(${color})"><i></i>${title}</h5>${body}</div>`;
 const fAdd = (act, t) => `<button class="ghost" data-act="${act}">${t}</button>`;
 const medLine = m => m.name + ' · ' + (m.schedule === 'prn' ? 'quando precisar' : m.schedule === 'every' ? `de ${m.every_hours} em ${m.every_hours} horas` : 'todo dia às ' + medTimes(m).join(' e '));
@@ -3897,8 +3905,8 @@ function famBaby(b) {
     + fSwitch('nightCard', st.nightCard !== false, 'Lembrar de começar a rotina da noite?')
     + fRemind(), '<button class="tri" data-act="sonoInfo" aria-label="Sobre a rotina de sono">i</button>');
   h += fBlock('famRotina', 'Remédios e cuidados ' + deName(b),
-    fSub('Remédios', '--c-med', meds.map(m => fRow('oneMed', m.id, medLine(m))).join('') + fAdd('newMed', '+ Programar remédio'))
-    + fSub('Cuidados', '--c-care', st.routines.map(r => fRow('openCare', r.id, careLine(r))).join('') + fAdd('newCare', '+ Programar cuidado'))
+    fSub('Remédios', '--c-med', meds.map(m => fRow('oneMed', m.id, medLine(m), '', lateMeds(m.id))).join('') + fAdd('newMed', '+ Programar remédio'))
+    + fSub('Cuidados', '--c-care', st.routines.map(r => fRow('openCare', r.id, careLine(r), '', lateTasks(r.id))).join('') + fAdd('newCare', '+ Programar cuidado'))
     + (medNotif ? `<div class="fsub">${fRemind()}</div>` : ''));
   h += fBlock('famConsulta', 'Consulta com o pediatra',
     unanswered().map(q => fRow('openDuv', null, q.body)).join('') + fAdd('addDuv', '+ Anotar dúvida')
